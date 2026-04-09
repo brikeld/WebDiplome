@@ -9,7 +9,8 @@ const PROFILES_DIR = path.join(__dirname, 'profiles');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+// Allow larger payloads (wallpaperBase64 + personaPosts).
+app.use(express.json({ limit: '10mb' }));
 
 // Ensure profiles/ directory exists on startup
 await fs.mkdir(PROFILES_DIR, { recursive: true });
@@ -28,6 +29,10 @@ app.post('/api/profile', async (req, res) => {
   const filepath = path.join(PROFILES_DIR, filename);
 
   try {
+    // Delete all existing profiles before saving the new one.
+    const existing = (await fs.readdir(PROFILES_DIR)).filter((f) => f.endsWith('.json'));
+    await Promise.all(existing.map((f) => fs.unlink(path.join(PROFILES_DIR, f))));
+
     await fs.writeFile(filepath, JSON.stringify(body, null, 2), 'utf8');
     res.status(200).json({ id: `${first}-${last}`, filename });
   } catch (err) {
@@ -38,14 +43,18 @@ app.post('/api/profile', async (req, res) => {
 // GET /api/profiles — return array of all saved profiles
 app.get('/api/profiles', async (_req, res) => {
   try {
-    const files = (await fs.readdir(PROFILES_DIR)).filter(f => f.endsWith('.json'));
-    const profiles = await Promise.all(
+    const files = (await fs.readdir(PROFILES_DIR)).filter((f) => f.endsWith('.json'));
+    const profilesWithMeta = await Promise.all(
       files.map(async (file) => {
-        const raw = await fs.readFile(path.join(PROFILES_DIR, file), 'utf8');
-        return JSON.parse(raw);
-      })
+        const filepath = path.join(PROFILES_DIR, file);
+        const stat = await fs.stat(filepath);
+        const raw = await fs.readFile(filepath, 'utf8');
+        return { mtimeMs: stat.mtimeMs, data: JSON.parse(raw) };
+      }),
     );
-    res.json(profiles);
+    // Sort newest first so the UI picks the latest profile when multiple exist.
+    profilesWithMeta.sort((a, b) => b.mtimeMs - a.mtimeMs);
+    res.json(profilesWithMeta.map((p) => p.data));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
