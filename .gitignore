@@ -1,0 +1,11 @@
+# Dependencies / build output
+node_modules/
+dist/
+
+# Fonts (ignore all font binaries anywhere)
+**/*.woff
+**/*.woff2
+**/*.ttf
+**/*.otf
+**/*.eot
+

@@ -3,15 +3,18 @@ export default function TabBar({ activeTab, onTabChange }) {
     { id: 'posts', label: 'Posts' },
     { id: 'badges', label: 'Badges' },
     { id: 'profile', label: 'Profile' },
-    { id: 'leaderboards', label: 'Leaderboards' },
+    { id: 'leaderboards', label: 'Rankings' },
   ];
 
   return (
-    <div className="tab-bar">
+    <div className="tabs-row" role="tablist" aria-label="Profile sections">
       {tabs.map((t) => (
         <button
           key={t.id}
-          className={activeTab === t.id ? 'active' : ''}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === t.id}
+          className={`tab${activeTab === t.id ? ' active' : ''}`}
           onClick={() => onTabChange(t.id)}
         >
           {t.label}
@@ -20,4 +23,3 @@ export default function TabBar({ activeTab, onTabChange }) {
     </div>
   );
 }
-
