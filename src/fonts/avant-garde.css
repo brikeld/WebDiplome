@@ -1,0 +1,24 @@
+/* ITC Avant Garde Gothic (BT) — Demi primary, Bold emphasis, Demi Oblique for @ handle */
+@font-face {
+  font-family: 'AvantGarde ITC BT';
+  src: url('./AvantGarde/AvantGardeITCbyBT-Demi.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AvantGarde ITC BT';
+  src: url('./AvantGarde/AvantGardeITCbyBT-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AvantGarde ITC BT';
+  src: url('./AvantGarde/AvantGardeITCbyBT-DemiOblique.otf') format('opentype');
+  font-weight: 600;
+  font-style: oblique;
+  font-display: swap;
+}

@@ -1,0 +1,28 @@
+/* Home view only: “for you” + feed (see base.css for post cards). */
+/* ── HOME (feed only; no profile capsule) ── */
+.home-tab {
+  position: relative;
+  padding-top: 10px;
+  margin-bottom: 36px;
+  width: 100%;
+}
+
+.home-top-label {
+  position: static;
+  width: 100%;
+  max-width: 100%;
+  font-family: var(--font-avant);
+  font-size: clamp(12px, 2.2vw, 20px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  margin: 8px 0 18px;
+}
+.page-outer.persona-popularity .home-top-label {
+  color: #000;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+

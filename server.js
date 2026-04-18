@@ -7,6 +7,26 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
 
+/** Merge camelCase + snake_case for summary fields; stored JSON uses camelCase. */
+function normalizeProfilePayload(body) {
+  const out = { ...body };
+  if (
+    body.profileSummary !== undefined ||
+    body.profile_summary !== undefined
+  ) {
+    out.profileSummary = body.profileSummary ?? body.profile_summary;
+  }
+  if (
+    body.userDescription !== undefined ||
+    body.user_description !== undefined
+  ) {
+    out.userDescription = body.userDescription ?? body.user_description;
+  }
+  delete out.profile_summary;
+  delete out.user_description;
+  return out;
+}
+
 const app = express();
 app.use(cors());
 // Allow larger payloads (wallpaperBase64 + personaPosts).
@@ -33,7 +53,8 @@ app.post('/api/profile', async (req, res) => {
     const existing = (await fs.readdir(PROFILES_DIR)).filter((f) => f.endsWith('.json'));
     await Promise.all(existing.map((f) => fs.unlink(path.join(PROFILES_DIR, f))));
 
-    await fs.writeFile(filepath, JSON.stringify(body, null, 2), 'utf8');
+    const toStore = normalizeProfilePayload(body);
+    await fs.writeFile(filepath, JSON.stringify(toStore, null, 2), 'utf8');
     res.status(200).json({ id: `${first}-${last}`, filename });
   } catch (err) {
     res.status(500).json({ error: err.message });

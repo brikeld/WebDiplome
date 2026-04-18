@@ -73,6 +73,22 @@ export function displayNameFromProfile(p) {
   return 'User';
 }
 
+/**
+ * Profile bio / summary for the hero: prefers profileSummary, then userDescription.
+ * Accepts camelCase or snake_case (as returned from GET or sent on POST).
+ */
+export function profileBioText(p) {
+  if (!p || typeof p !== 'object') return '';
+  const summary = p.profileSummary ?? p.profile_summary;
+  const desc = p.userDescription ?? p.user_description;
+  const pick = (v) => {
+    if (v == null) return '';
+    const s = String(v).trim();
+    return s;
+  };
+  return pick(summary) || pick(desc);
+}
+
 export function getGlobalScore(p) {
   if (p?.globalScore != null && Number.isFinite(Number(p.globalScore))) return Number(p.globalScore);
   if (p?.score != null && Number.isFinite(Number(p.score))) return Number(p.score);

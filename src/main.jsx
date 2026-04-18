@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import './fonts/avant-garde.css';
 import './fonts/abc-schengen-a.css';
 import './styles.css';
 

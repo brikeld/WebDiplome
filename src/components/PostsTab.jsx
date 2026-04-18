@@ -24,6 +24,14 @@ export default function PostsTab({ profile }) {
     const raw = profile.personaPosts ?? [];
     const displayName = displayNameFromProfile(profile);
     const avatarInitials = initialsFromProfile(profile);
+    const handle = profile?.machineName ? `@${profile.machineName}` : '@—';
+    const avatarSrc =
+      profile?.wallpaperBase64 ??
+      profile?.wallpaper_base64 ??
+      profile?.wallpaperUrl ??
+      profile?.wallpaper_url ??
+      profile?.wallpaper ??
+      null;
     const dateLabel = formatPostDate(
       profile.lastAnalysisAt ??
         profile.last_analysis_at ??
@@ -38,16 +46,20 @@ export default function PostsTab({ profile }) {
       noteColor: PERSONA_COLORS[p.persona] ?? '#2323FF',
       personaLabel: PERSONA_LABELS[p.persona] ?? p.persona,
       displayName,
+      handle,
       avatarInitials,
+      avatarSrc,
       dateLabel,
     }));
   }, [profile]);
 
   return (
-    <div className="posts-tab">
-      {posts.map((p) => (
-        <PostCard key={p.id} post={p} />
-      ))}
+    <div className="posts-capsule">
+      <div className="posts-tab">
+        {posts.map((p) => (
+          <PostCard key={p.id} post={p} />
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,0 +1,51 @@
+{
+  "firstname": "Albano",
+  "lastname": "Brikeld",
+  "machineName": "Brikeld’s MacBook Pro",
+  "hardware_chip": "Apple M3 Max",
+  "globalScore": 74,
+  "collectedAt": "2026-04-18T15:33:49.181Z",
+  "wallpaperBase64": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMjAwJyBoZWlnaHQ9JzgwMCcgdmlld0JveD0nMCAwIDEyMDAgODAwJz48cmVjdCB3aWR0aD0nMTIwMCcgaGVpZ2h0PSc4MDAnIGZpbGw9JyMzMkFERTYnLz48L3N2Zz4=",
+  "uptimeDays": "8",
+  "lastAnalysisAt": "2026-04-18 17:30:49",
+  "ram": "36 GB",
+  "batteryCycles": 213,
+  "storageUsed": "336.9 GB",
+  "storageTotal": "994.7 GB",
+  "applications": 58,
+  "systemLanguages": [
+    "en-CH",
+    "de-CH",
+    "fr-CH",
+    "it-CH"
+  ],
+  "mostUsedApps": [
+    "Google Chrome",
+    "FigmaAgent",
+    "Xcode"
+  ],
+  "appearance": "Dark Mode",
+  "osVersion": "26.0",
+  "personaPosts": [
+    {
+      "persona": "productivite",
+      "content": "You're crushing it! 80 file changes in a week shows serious dedication to your WebDiplome project.",
+      "sentiment": "positive",
+      "createdAt": "2026-04-18T15:32:44.233Z"
+    },
+    {
+      "persona": "popularite",
+      "content": "Albano is a creative tech wizard: Mastering Adobe & Blender while crafting a WebDiplome project. Stay inspired!",
+      "sentiment": "positive",
+      "createdAt": "2026-04-18T15:33:49.176Z"
+    },
+    {
+      "persona": "securite",
+      "content": "Great setup, Albano! FileVault is on. Please enable the firewall and update macOS to patch security gaps.",
+      "sentiment": "positive",
+      "createdAt": "2026-04-18T15:33:33.224Z"
+    }
+  ],
+  "profileSummary": "Utilisateur étudiant suisse (25 ans) travaillant intensivement sur un MacBook Pro M3 Max : développement web (React/Node), design multimédia Adobe, 3D",
+  "userDescription": "Utilisateur étudiant suisse (25 ans) travaillant intensivement sur un MacBook Pro M3 Max : développement web (React/Node), design multimédia Adobe, 3D"
+}
