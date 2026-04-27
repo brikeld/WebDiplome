@@ -42,9 +42,17 @@
 /* ── PROFILE HERO (single white capsule, score left / avatar right) ── */
 .profile-header-stack {
   position: relative;
-  padding-top: 10px;
+  padding-top: 0;
+  /* Reserve space for the fixed @ handle (see .profile-top-handle) so content doesn't sit under it */
+  --profile-top-handle-band: 32px;
   /* Increase spacing between profile capsule and tabs/content section */
   margin-bottom: 65px;
+}
+
+.profile-header-stack::before {
+  content: '';
+  display: block;
+  height: var(--profile-top-handle-band);
 }
 
 .profile-hero-capsule {
@@ -63,24 +71,79 @@
   border: 3px solid var(--persona-accent, #2323ff);
   /* Maximum "pill" radius (fully rounded ends) */
   border-radius: 9999px;
-  overflow: hidden;
+  /* Allow the small top avatar to overlap outside the pill */
+  overflow: visible;
   position: relative;
+  /* Push the capsule down without moving the @ handle (separate element above) */
+  margin-top: clamp(44px, 10vw, 72px);
+}
+
+.profile-cap-avatar {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 2px solid var(--cap-avatar-stroke, var(--persona-accent, #2323ff));
+  background: radial-gradient(circle at 50% 35%, #ffd700 0%, #ff8c00 100%);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.profile-cap-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-cap-avatar-initials {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 420px) {
+  .profile-cap-avatar {
+    width: 64px;
+    height: 64px;
+  }
+
+  .profile-cap-avatar-initials {
+    font-size: 18px;
+  }
 }
 
 /* Centered on viewport, same horizontal band as `.project-name` (top: 16px) */
 .profile-top-handle {
-  position: static;
+  /* Match `.project-name` vertical band (see `base.css`: top: 16px) */
+  position: fixed;
+  top: 16px;
+  left: 0;
+  right: 0;
+  z-index: 60;
   width: 100%;
   max-width: 100%;
   font-family: var(--font-avant);
-  /* Same size as the tabs row labels */
-  font-size: 15px;
-  font-weight: 600;
+  /* Match `base.css` `.project-name` sizing for the same visual line */
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.15;
   color: var(--ink);
   text-align: center;
-  margin: 8px 0 18px;
+  margin: 0;
+  padding: 0 16px;
+  box-sizing: border-box;
+  pointer-events: none;
   opacity: 0.75;
 }
 
@@ -199,8 +262,8 @@
   width: var(--profile-score-size);
   height: var(--profile-score-size);
   border-radius: 50%;
-  /* Productivity blue fill; no ring/stroke (the capsule already provides the outer border) */
-  background: var(--prod);
+  /* Solid persona fill (set inline via `--score-fill`); no ring/stroke (capsule provides outer border) */
+  background: var(--score-fill, var(--persona-accent, var(--prod)));
   border: none;
   color: #fff;
   box-sizing: border-box;

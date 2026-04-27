@@ -7,10 +7,13 @@ import PostsTab from '@/features/feed/PostsTab.jsx';
 import HomeTab from '@/features/home/HomeTab.jsx';
 import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
-import { getGlobalScore } from '@/lib/profileUtils.js';
 
 const PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 const PERSONA_ALIASES = {
+  productivity: 'productivity',
+  security: 'security',
+  popularity: 'popularity',
+  social: 'popularity',
   productivite: 'productivity',
   securite: 'security',
   popularite: 'popularity',
@@ -23,6 +26,17 @@ const PERSONA_COLORS = {
 
 function topPersonaFromProfile(profile) {
   if (!profile) return 'productivity';
+
+  const rawDominant = String(
+    profile?.dominantPersona ?? profile?.dominant_persona ?? ''
+  ).toLowerCase();
+  if (rawDominant) {
+    const key =
+      PERSONA_ALIASES[rawDominant] ??
+      (PERSONA_KEYS.includes(rawDominant) ? rawDominant : null);
+    if (key) return key;
+  }
+
   const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
   if (posts.length > 0) {
     const counts = Object.fromEntries(PERSONA_KEYS.map((k) => [k, 0]));
@@ -34,12 +48,7 @@ function topPersonaFromProfile(profile) {
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
     if (sorted[0][1] > 0) return sorted[0][0];
   }
-  const score = getGlobalScore(profile) ?? 0;
-  const w1 = Math.round(score * 0.95);
-  const w2 = Math.round(score * 0.88);
-  const w3 = Math.round(score * 0.8);
-  const weights = { productivity: w1, security: w2, popularity: w3 };
-  return Object.entries(weights).sort((a, b) => b[1] - a[1])[0][0];
+  return 'productivity';
 }
 
 export default function App() {
