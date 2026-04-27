@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
-import Sidebar from './components/Sidebar.jsx';
-import ProfileHeader from './components/ProfileHeader.jsx';
-import TabBar from './components/TabBar.jsx';
-import ProfileTab from './components/ProfileTab.jsx';
-import PostsTab from './components/PostsTab.jsx';
-import HomeTab from './components/HomeTab.jsx';
-import BadgesTab from './components/BadgesTab.jsx';
-import LeaderboardsTab from './components/LeaderboardsTab.jsx';
-import { getGlobalScore } from './lib/profileUtils.js';
+import Sidebar from '@/layout/Sidebar.jsx';
+import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
+import TabBar from '@/features/profile/TabBar.jsx';
+import ProfileTab from '@/features/profile/ProfileTab.jsx';
+import PostsTab from '@/features/feed/PostsTab.jsx';
+import HomeTab from '@/features/home/HomeTab.jsx';
+import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
+import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
+import { getGlobalScore } from '@/lib/profileUtils.js';
 
 const PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 const PERSONA_ALIASES = {
@@ -18,7 +18,7 @@ const PERSONA_ALIASES = {
 const PERSONA_COLORS = {
   productivity: '#2323FF',
   security: '#FF4E00',
-  popularity: '#CEFE46',
+  popularity: '#0FA020',
 };
 
 function topPersonaFromProfile(profile) {
@@ -47,6 +47,7 @@ export default function App() {
   const [mainView, setMainView] = useState('home');
   const [activeTab, setActiveTab] = useState('posts');
   const [profile, setProfile] = useState(null);
+  const [personaOverride, setPersonaOverride] = useState(null); // 'productivity' | 'popularity' | 'security' | null
 
   useEffect(() => {
     let cancelled = false;
@@ -60,13 +61,12 @@ export default function App() {
         .then((data) => {
           if (cancelled) return;
           if (!Array.isArray(data) || data.length === 0) {
-            setProfile(null);
-            return;
+            return; /* keep previous profile; avoid clearing on transient [] */
           }
           setProfile(data[0]);
         })
         .catch(() => {
-          if (!cancelled) setProfile(null);
+          if (cancelled) return; /* keep previous profile on network error */
         });
     };
 
@@ -78,14 +78,39 @@ export default function App() {
     };
   }, []);
 
-  const personaKey = useMemo(() => topPersonaFromProfile(profile), [profile]);
+  const calculatedPersonaKey = useMemo(() => topPersonaFromProfile(profile), [profile]);
+  const personaKey = personaOverride ?? calculatedPersonaKey;
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
+
+  const personaToggleLabel =
+    personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
+
+  const cyclePersona = () => {
+    // productivity → social(popularity) → security → productivity
+    const order = ['productivity', 'popularity', 'security'];
+    const idx = Math.max(0, order.indexOf(personaKey));
+    const next = order[(idx + 1) % order.length];
+    setPersonaOverride(next);
+  };
 
   return (
     <div
       className={`page-outer persona-${personaKey}`}
-      style={{ '--persona-bg': personaColor }}
+      style={{ '--persona-accent': personaColor }}
     >
+      <button
+        type="button"
+        className="persona-toggle-btn"
+        aria-label="Change persona theme"
+        onClick={cyclePersona}
+        style={{
+          borderColor: '#000',
+          color: '#fff',
+          background: personaColor,
+        }}
+      >
+        {personaToggleLabel}
+      </button>
       <Sidebar mainView={mainView} onSelectView={setMainView} />
       <div className="page">
         <div className="main-col">
@@ -96,13 +121,25 @@ export default function App() {
                 profile={profile}
                 personaKey={personaKey}
                 personaColor={personaColor}
+                showTopHandle
               />
-              <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
-              <div className="tab-content">
-                {activeTab === 'profile' && <ProfileTab />}
-                {activeTab === 'posts' && <PostsTab profile={profile} />}
-                {activeTab === 'badges' && <BadgesTab />}
-                {activeTab === 'leaderboards' && <LeaderboardsTab />}
+
+              <TabBar
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                className="tabs-row--above-capsule"
+              />
+
+              <div
+                className="profile-content-capsule"
+                style={{ '--profile-accent': personaColor }}
+              >
+                <div className="tab-content">
+                  {activeTab === 'profile' && <ProfileTab />}
+                  {activeTab === 'posts' && <PostsTab profile={profile} />}
+                  {activeTab === 'badges' && <BadgesTab />}
+                  {activeTab === 'leaderboards' && <LeaderboardsTab />}
+                </div>
               </div>
             </>
           )}

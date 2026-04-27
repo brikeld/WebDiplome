@@ -1,29 +1,3 @@
-/** Parse human-readable sizes (e.g. "500 GB", "1.2 TB") to comparable units for %. */
-export function parseStorageNumber(val) {
-  if (val == null || val === '') return NaN;
-  if (typeof val === 'number' && Number.isFinite(val)) return val;
-  const s = String(val).trim();
-  const match = s.match(/^([\d.]+)/);
-  if (!match) return NaN;
-  const n = parseFloat(match[1]);
-  const lower = s.toLowerCase();
-  if (lower.includes('tb')) return n * 1e12;
-  if (lower.includes('gb')) return n * 1e9;
-  if (lower.includes('mb')) return n * 1e6;
-  if (lower.includes('kb')) return n * 1e3;
-  return n;
-}
-
-export function storagePercent(p) {
-  const u = p?.storageUsed ?? p?.storage_used;
-  const t = p?.storageTotal ?? p?.storage_total;
-  if ((u == null || u === '') && (t == null || t === '')) return null;
-  const nu = parseStorageNumber(u);
-  const nt = parseStorageNumber(t);
-  if (!Number.isFinite(nu) || !Number.isFinite(nt) || nt <= 0) return null;
-  return Math.min(100, Math.round((nu / nt) * 100));
-}
-
 /** e.g. "3 hours and 47 minutes ago" */
 export function formatRelativeTimeAgo(isoOrDate) {
   const d = new Date(isoOrDate);
@@ -95,14 +69,6 @@ export function getGlobalScore(p) {
   return null;
 }
 
-/** "Apple M3 Max" → "M3 Max" */
-export function formatChipShort(p) {
-  const raw = p?.hardware_chip ?? p?.hardwareChip;
-  if (raw == null || raw === '') return '—';
-  const s = String(raw).trim();
-  return s.replace(/^Apple\s+/i, '');
-}
-
 export function formatPostDate(isoOrStr) {
   const d = new Date(isoOrStr);
   if (Number.isNaN(d.getTime())) return '';
@@ -113,26 +79,3 @@ export function formatPostDate(isoOrStr) {
   });
 }
 
-export function activeSinceLabel(p) {
-  const raw = p?.uptimeDays ?? p?.uptime_days ?? p?.machineActiveSince ?? p?.machine_active_since;
-  if (raw === '' || raw == null) return '—';
-  const n = Number(raw);
-  if (Number.isFinite(n)) return `${n} day${n === 1 ? '' : 's'}`;
-  return String(raw);
-}
-
-export function systemLanguagesCount(p) {
-  const arr = p?.systemLanguages ?? p?.system_languages ?? p?.languages;
-  if (Array.isArray(arr)) return String(arr.length);
-  return '—';
-}
-
-export function mostUsedAppsLine(p) {
-  const arr = p?.mostUsedApps ?? p?.most_used_apps ?? p?.top_apps;
-  if (!Array.isArray(arr) || arr.length === 0) return '—';
-  return arr
-    .map((item) =>
-      typeof item === 'string' ? item : item?.name ?? item?.app ?? String(item),
-    )
-    .join(' · ');
-}

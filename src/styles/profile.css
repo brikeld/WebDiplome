@@ -1,15 +1,70 @@
-/* Profile shell: hero capsule, top @, tab bar, tab content, Profile tab (gauges). */
+/* Profile view: two capsules (profile capsule + content capsule) */
+.profile-content-capsule {
+  box-sizing: border-box;
+  width: 100%;
+  border-radius: var(--capsule-radius);
+  background: #fff;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  padding: 24px 28px 28px;
+}
+
+/* Tabs sit just above the second capsule */
+.tabs-row.tabs-row--above-capsule {
+  margin: 0 0 10px;
+  padding: 2px 2px 8px;
+}
+
+.tabs-row.tabs-row--above-capsule .tab {
+  color: var(--ink);
+  opacity: 0.5;
+}
+
+.tabs-row.tabs-row--above-capsule .tab.active {
+  position: relative;
+  color: var(--ink);
+  opacity: 1;
+  border-bottom-color: transparent;
+}
+
+.tabs-row.tabs-row--above-capsule .tab.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 2px;
+  background: var(--persona-accent, var(--ink));
+  border-radius: 999px;
+}
+
 /* ── PROFILE HERO (single white capsule, score left / avatar right) ── */
 .profile-header-stack {
   position: relative;
   padding-top: 10px;
-  margin-bottom: 36px;
+  /* Increase spacing between profile capsule and tabs/content section */
+  margin-bottom: 65px;
 }
 
 .profile-hero-capsule {
+  /* Match the capsule style used by individual post bubbles */
+  box-sizing: border-box;
+  width: 100%;
+  /* Taller pill than a single post bubble; also drives the score circle sizing */
+  /* Keep vertical padding in one place so the score can scale to the *outer* pill height */
+  --profile-hero-vert-pad: 24px;
+  --profile-hero-bubble-h: calc(var(--post-bubble-h) + 4.25rem);
+  /* Outer height includes vertical padding (this is what you visually perceive as "capsule height") */
+  --profile-hero-outer-h: calc(var(--profile-hero-bubble-h) + (var(--profile-hero-vert-pad) * 2));
+  /* Score circle = fixed proportion of the outer capsule height (then capped for very wide screens) */
+  --profile-score-size: min(calc(var(--profile-hero-outer-h) * 0.75), 20rem);
+  background: color-mix(in srgb, var(--persona-accent, #2323ff) 15%, #fff);
+  border: 3px solid var(--persona-accent, #2323ff);
+  /* Maximum "pill" radius (fully rounded ends) */
+  border-radius: 9999px;
   overflow: hidden;
-  border-radius: var(--capsule-radius);
-  background: #fff;
+  position: relative;
 }
 
 /* Centered on viewport, same horizontal band as `.project-name` (top: 16px) */
@@ -18,67 +73,39 @@
   width: 100%;
   max-width: 100%;
   font-family: var(--font-avant);
-  font-size: clamp(12px, 2.2vw, 20px);
+  /* Same size as the tabs row labels */
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.02em;
   line-height: 1.15;
-  color: #fff;
+  color: var(--ink);
   text-align: center;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   margin: 8px 0 18px;
-}
-
-.page-outer.persona-popularity .profile-top-handle {
-  color: #000;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+  opacity: 0.75;
 }
 
 .profile-hero-main {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 18px;
-  padding: 34px 36px 36px;
+  display: flex;
   align-items: center;
-  min-height: 276px;
+  gap: clamp(22px, 3vw, 36px);
+  /* Give a bit more room on the right for long lines next to the score */
+  padding: var(--profile-hero-vert-pad) 18px var(--profile-hero-vert-pad) 20px;
+  min-height: var(--profile-hero-bubble-h);
+  box-sizing: border-box;
 }
 
 .profile-hero-left {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  /* Tighter spacing between name → @handle → bio */
+  gap: 3px;
+  /* Critical: allow flex child to shrink/wrap so text doesn't hide under the score */
   min-width: 0;
-  padding-left: 18px;
-}
-
-.profile-id-row {
-  display: flex;
+  width: 0;
+  flex: 1 1 0;
   align-items: flex-start;
-  gap: 10px;
-}
-
-.profile-score-block {
-  width: 62px;
-  height: 62px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.profile-score-num {
-  font-size: 40px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: #fff;
-  transform: translateY(3px);
-}
-
-.profile-id-text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  text-align: left;
+  padding-left: 30px;
 }
 
 .profile-name-row {
@@ -86,13 +113,33 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  justify-content: flex-start;
+  min-width: 0;
+  width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.profile-handle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  margin-top: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .profile-name-lg {
-  font-size: 23px;
+  font-size: 33px;
   font-weight: 700;
   color: #000;
   line-height: 1.15;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .profile-connect-btn {
@@ -122,40 +169,63 @@
   font-weight: 600;
   color: var(--muted);
   line-height: 1.1;
-}
-
-.profile-badges-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  color: #000;
-}
-
-.profile-badges-row svg {
-  display: block;
-}
-
-.profile-badges-count {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
+  margin: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .profile-bio {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.28;
   color: #000;
   font-weight: 500;
-  margin: 0;
-  max-width: 46ch;
+  /* Keep the bio close to the handle row (tighter than default paragraph spacing) */
+  margin: 6px 0 0;
+  max-width: 100%;
+  width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.profile-score-avatar {
+  position: relative;
+  flex: 0 0 auto;
+  z-index: 1;
+  /* Force a true circle (avoid flex/stretch ovals) */
+  align-self: center;
+  width: var(--profile-score-size);
+  height: var(--profile-score-size);
+  border-radius: 50%;
+  /* Productivity blue fill; no ring/stroke (the capsule already provides the outer border) */
+  background: var(--prod);
+  border: none;
+  color: #fff;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Digits track with the circle (fixed proportion) */
+  font-size: calc(var(--profile-score-size) * 0.54);
+  font-weight: 800;
+  font-family: var(--font-sans);
+}
+
+.profile-score-avatar-num {
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #fff;
+  transform: translateY(2px);
 }
 
 .profile-mini-badges {
   display: flex;
   justify-content: flex-start;
   gap: 20px;
-  margin-top: 10px;
+  margin-top: 16px;
 }
 
 .mini-badge-item {
@@ -167,385 +237,95 @@
 
 .mini-badge {
   box-sizing: border-box;
-  width: 60px;
-  height: 60px;
+  width: 90px;
+  height: 90px;
   border-radius: 10px;
   background: #000;
   border: 2px solid var(--badge-persona, var(--prod));
 }
 
 .mini-badge-label {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 500;
   color: #000;
   line-height: 1.15;
   letter-spacing: 0.01em;
   text-transform: lowercase;
   text-align: left;
-  max-width: 60px;
+  max-width: 90px;
 }
 
 .profile-last-analysis {
-  margin-top: 26px;
-  font-size: 11px;
+  margin-top: 34px;
+  font-size: 15px;
   color: #000;
   letter-spacing: 0.02em;
+  /* Optical nudge without affecting surrounding layout */
+  transform: translateY(3px);
+  max-width: 100%;
+  width: 100%;
 }
 
-.profile-hero-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  align-self: stretch;
-  min-width: 196px;
-}
-
-.profile-avatar-wrap {
-  position: relative;
-  flex-shrink: 0;
-  align-self: center;
-}
-
-.profile-avatar-lg {
-  width: 236px;
-  height: 236px;
-  border-radius: 50%;
-  background: #b38b6d;
-  color: #fff;
-  border: 1px solid #000;
-  overflow: hidden;
-  display: flex;
+.profile-last-analysis-pill {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  gap: 6px;
+  padding: 4px 10px 5px;
+  border-radius: 999px;
+  font-size: inherit;
   font-weight: 600;
-  flex-shrink: 0;
-  transform: translate(-26px, -14px);
+  line-height: 1.15;
+  max-width: 100%;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-.profile-avatar-lg-img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
+@media (max-width: 420px) {
+  .profile-hero-main { padding-right: 16px; }
 }
 
 .persona-pill {
-  position: absolute;
-  left: 50%;
-  bottom: 5px;
-  transform: translateX(-5%);
   z-index: 2;
   font-family: var(--font-avant);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
   gap: 0;
-  padding: 4px 4px 4px 4px;
-  border-radius: 10px;
-  font-size: 12px;
-  color: #fff;
+  padding: 10px 16px 11px;
+  border-radius: 12px;
+  font-size: 23px;
+  font-weight: 700;
+  color: var(--pill-accent, var(--ink));
+  background: #000;
+  
   text-transform: lowercase;
   line-height: 1.1;
   letter-spacing: 0.02em;
-  max-width: 168px;
-  text-align: left;
+  white-space: nowrap;
+}
+
+.persona-pill--under-capsule {
+  padding: 5px 5px 5px;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+  
 }
 
 .persona-pill-line {
-  display: block;
-  width: 100%;
+  display: inline;
+  width: auto;
 }
 
+/* Keep persona text color (don't force black on social) */
 .page-outer.persona-popularity .persona-pill {
-  color: #000;
-}
-
-.badges-label {
-  font-size: 7.2px;
-  color: #aaa;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.top-badges {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  margin-bottom: 0;
-}
-
-/* ~70% smaller badge tiles (scale; keeps labels readable) */
-.profile-badges-mini .badges-label {
-  font-size: 6px;
-  margin-bottom: 4px;
-  opacity: 0.75;
-}
-
-.profile-badges-mini .badge-scale-wrap {
-  overflow: visible;
-  max-width: 100%;
-}
-
-.profile-badges-mini .badge-scale-wrap .top-badges {
-  transform: scale(1);
-  transform-origin: left top;
-  width: 333.33%;
-}
-
-/* Ensure squares in the mini badge strip */
-.profile-badges-mini .badge-scale-wrap .top-badges {
-  grid-template-columns: repeat(3, 44px);
-}
-.profile-badges-mini .badge-square {
-  width: 44px;
-}
-
-.badge-square {
-  border-radius: 10px;
-  border: 1px solid;
-  padding: 8px 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  text-align: center;
-  aspect-ratio: 1;
-}
-
-.badge-square .b-icon {
-  font-size: 14.4px;
-  line-height: 1;
-}
-
-.badge-square .b-name {
-  font-size: 6.4px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-}
-
-.badge-square.badge-prod {
-  border-color: var(--prod);
-  color: var(--ink);
-  background: rgba(35, 35, 255, 0.08);
-}
-
-.badge-square.badge-sec {
-  border-color: var(--sec);
-  color: var(--ink);
-  background: rgba(255, 78, 0, 0.08);
-}
-
-.badge-square.badge-pop {
-  border-color: var(--pop);
-  color: var(--ink);
-  background: rgba(206, 254, 70, 0.2);
-}
-
-.stats-row {
-  display: flex;
-  gap: 18px;
-}
-
-.stat-val {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.stat-key {
-  font-size: 9px;
-  color: var(--muted);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-top: 1px;
-}
-
-.profile-stats-pills {
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.stat-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border-radius: 999px;
-  background: #000;
-  color: #fff;
-  padding: 5px 10px 5px 8px;
-  min-height: 0;
-}
-
-.stat-pill-icon-svg {
-  flex-shrink: 0;
-  opacity: 0.95;
-}
-
-.stat-pill-num {
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1;
-  color: #fff;
-}
-
-.profile-hero-score {
-  padding: 18px;
-  background-color: var(--bg);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-width: 0;
-  border-radius: 0 32px 32px 0;
-}
-
-.score-huge {
-  font-size: 76px;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1;
-  letter-spacing: -0.05em;
-}
-
-.top-trait-line {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-  color: var(--ink);
-}
-.top-trait-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-}
-.top-trait-name {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--ink);
-}
-.top-trait-val {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--trait-color, var(--ink));
-}
-.sub-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 500;
-  margin-bottom: 2px;
-}
-
-.bar-track {
-  height: 4px;
-  background: var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.bar-fill {
-  height: 4px;
-  border-radius: 2px;
-  max-width: 100%;
-}
-
-.last-analysis-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  
-  border-radius: 14px;
-  padding: 10px 16px;
-}
-
-.la-label {
-  font-size: 10px;
-  color: #aaa;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.la-val {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.metrics-grid,
-.metrics-grid-2 {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-}
-
-.metric-card {
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 11px 13px;
-  background: var(--bg);
-}
-
-.metric-card-span-2 {
-  grid-column: span 2;
-}
-
-.metric-key {
-  font-size: 9px;
-  color: #aaa;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.metric-val {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.metric-val.ok {
-  color: #3b6d11;
-}
-
-.metric-val.warn {
-  color: #854f0b;
-}
-
-.metric-val.bad {
-  color: #a32d2d;
-}
-
-.metric-val-apps {
-  font-size: 12px;
-  font-weight: 500;
-  margin-top: 2px;
-  line-height: 1.35;
-}
-
-.metric-sub {
-  font-size: 9px;
-  color: #aaa;
-  margin-top: 2px;
+  color: var(--pill-accent, var(--ink));
 }
 
 /* ── TABS (flat row: far from profile, close to content capsule) ── */
@@ -591,68 +371,4 @@
   margin-top: 0;
   width: 100%;
 }
-
-/* ── PROFILE TAB ── */
-.time-section {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  margin-bottom: 8px;
-}
-.time-value {
-  font-family: var(--font-sans);
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-}
-.time-label {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 4px;
-  font-family: var(--font-sans);
-}
-.profile-badges { display: flex; gap: 12px; }
-.profile-badge { text-align: center; }
-.profile-badge-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 13px;
-}
-.profile-badge-circle.lime-badge { color: var(--ink); }
-.profile-badge-name {
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 5px;
-}
-.hr { border: none; border-top: 1px solid #E0E0E0; margin: 24px 0; }
-.gauges-row { display: flex; justify-content: space-around; align-items: flex-start; }
-.gauge { display: flex; flex-direction: column; align-items: center; }
-.gauge-label {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 13px;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.gauge-indicator { font-size: 11px; }
-.donut-section h3 {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 16px;
-}
-.donut-row { display: flex; align-items: center; gap: 40px; }
-.app-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-.app-list li { font-size: 12px; color: var(--ink); font-family: var(--font-sans); }
 

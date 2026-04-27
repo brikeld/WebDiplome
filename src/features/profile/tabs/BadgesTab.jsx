@@ -1,4 +1,4 @@
-import { badgeSections } from '../data/badges.js';
+import { badgeSections } from '@/data/badges.js';
 
 export default function BadgesTab() {
   return (

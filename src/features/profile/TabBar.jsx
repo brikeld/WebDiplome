@@ -1,4 +1,4 @@
-export default function TabBar({ activeTab, onTabChange }) {
+export default function TabBar({ activeTab, onTabChange, className = '' }) {
   const tabs = [
     { id: 'posts', label: 'Posts' },
     { id: 'badges', label: 'Badges' },
@@ -7,7 +7,11 @@ export default function TabBar({ activeTab, onTabChange }) {
   ];
 
   return (
-    <div className="tabs-row" role="tablist" aria-label="Profile sections">
+    <div
+      className={`tabs-row ${className}`.trim()}
+      role="tablist"
+      aria-label="Profile sections"
+    >
       {tabs.map((t) => (
         <button
           key={t.id}

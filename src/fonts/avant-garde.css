@@ -1,15 +1,23 @@
-/* ITC Avant Garde Gothic (BT) — Demi primary, Bold emphasis, Demi Oblique for @ handle */
+/* ITC Avant Garde Gothic (BT) — woff2 from ./AvantGarde/woff2/ */
 @font-face {
   font-family: 'AvantGarde ITC BT';
-  src: url('./AvantGarde/AvantGardeITCbyBT-Demi.otf') format('opentype');
+  src: url('./AvantGarde/woff2/AvantGardeITCbyBT-Demi.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
+  font-family: 'AvantGarde ITC BT Book Oblique';
+  src: url('./AvantGarde/woff2/AvantGardeITCbyBT-BookOblique.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'AvantGarde ITC BT';
-  src: url('./AvantGarde/AvantGardeITCbyBT-Bold.otf') format('opentype');
+  src: url('./AvantGarde/woff2/AvantGardeITCbyBT-Bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -17,7 +25,7 @@
 
 @font-face {
   font-family: 'AvantGarde ITC BT';
-  src: url('./AvantGarde/AvantGardeITCbyBT-DemiOblique.otf') format('opentype');
+  src: url('./AvantGarde/woff2/AvantGardeITCbyBT-DemiOblique.woff2') format('woff2');
   font-weight: 600;
   font-style: oblique;
   font-display: swap;
