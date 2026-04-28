@@ -1,0 +1,102 @@
+[
+  {
+    "persona": "productivite",
+    "content": "My current workflow is peak chaos: building a JSX component while cross-referencing Hermès scarf types and running Python scripts for quote generation. Send coffee.",
+    "sentiment": "positive",
+    "createdAt": "2026-04-28T17:25:45.712Z",
+    "attachedImage": null
+  },
+  {
+    "persona": "popularite",
+    "content": "Need to put this on repeat for my next round of design work. The vibe is exactly what I needed after staring at code and wireframes all day.",
+    "sentiment": "positive",
+    "createdAt": "2026-04-28T17:25:45.394Z",
+    "attachedImage": {
+      "filename": "Drone Me Up, Flashy - &Me Remix.jpg",
+      "relativePath": "assets/recent_images/Drone Me Up, Flashy - &Me Remix.jpg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "I feel like my workflow requires half the apps on this laptop. Coding, Photoshop, Claude, Blender... I don't know which tool I need for what anymore. Send coffee and focus.",
+    "sentiment": "negative",
+    "createdAt": "2026-04-28T17:25:44.852Z",
+    "attachedImage": null
+  },
+  {
+    "persona": "productivite",
+    "content": "This abstract loop art is actually perfect for visualizing some of the data flow I'm working on right now. Sometimes you just need a nice visual break like this to reset the brain.",
+    "sentiment": "positive",
+    "createdAt": "2026-04-28T17:26:10.591Z",
+    "attachedImage": {
+      "filename": "Dreams.jpg",
+      "relativePath": "assets/recent_images/Dreams.jpg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Pretty sure I spent my whole day researching pattern repeats for scarves. My brain needs a break from haute couture geometry.",
+    "sentiment": "positive",
+    "createdAt": "2026-04-28T17:26:11.490Z",
+    "attachedImage": null
+  },
+  {
+    "persona": "securite",
+    "content": "My computer storage is basically just an archive of everything I’ve ever looked up or semi-coded. Am I making useful things or just digital junk? 😂",
+    "sentiment": "negative",
+    "createdAt": "2026-04-28T17:26:09.795Z",
+    "attachedImage": null
+  },
+  {
+    "persona": "productivite",
+    "content": "Pretty sure my workflow is 70% writing code and 30% asking ChatGPT how to write code better. At least I'm making progress somewhere.",
+    "sentiment": "positive",
+    "createdAt": "2026-04-28T17:26:57.073Z",
+    "attachedImage": null
+  },
+  {
+    "persona": "popularite",
+    "content": "Needed this visual break from the code today. È sempre bello averti intorno—such a perfect reminder that these simple connections make everything worth it.",
+    "sentiment": "positive",
+    "createdAt": "2026-04-28T17:26:54.211Z",
+    "attachedImage": {
+      "filename": "È sempre bello.jpg",
+      "relativePath": "assets/recent_images/È sempre bello.jpg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "I swear my hard drive is now 50% Adobe assets and the other 50% endless screenshots of fancy silk squares. I think I'm data-overwhelmed.",
+    "sentiment": "negative",
+    "createdAt": "2026-04-28T17:26:56.643Z",
+    "attachedImage": null
+  },
+  {
+    "persona": "productivite",
+    "content": "Juggling gradients in Photoshop, writing backend scripts, and talking to AI models is weirdly my normal now. At least it's productive weirdness.",
+    "sentiment": "positive",
+    "createdAt": "2026-04-28T17:27:38.633Z",
+    "attachedImage": null
+  },
+  {
+    "persona": "popularite",
+    "content": "My brain capacity seems to be split between debugging my diploma project and researching vintage Hermès squares. I need help, preferably in the form of coffee and good taste.",
+    "sentiment": "positive",
+    "createdAt": "2026-04-28T17:27:39.460Z",
+    "attachedImage": null
+  },
+  {
+    "persona": "securite",
+    "content": "I was just debugging code and now my brain has seen this. Seriously unsettling; feels like a massive system crash for my sense of reality.",
+    "sentiment": "negative",
+    "createdAt": "2026-04-28T17:27:39.905Z",
+    "attachedImage": {
+      "filename": "Eazy.jpg",
+      "relativePath": "assets/recent_images/Eazy.jpg",
+      "visionAnalysed": true
+    }
+  }
+]

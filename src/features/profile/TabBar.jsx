@@ -1,4 +1,4 @@
-export default function TabBar({ activeTab, onTabChange, className = '' }) {
+export default function TabBar({ activeTab, onTabChange, personaColor, className = '' }) {
   const tabs = [
     { id: 'posts', label: 'Posts' },
     { id: 'badges', label: 'Badges' },
@@ -20,6 +20,7 @@ export default function TabBar({ activeTab, onTabChange, className = '' }) {
           aria-selected={activeTab === t.id}
           className={`tab${activeTab === t.id ? ' active' : ''}`}
           onClick={() => onTabChange(t.id)}
+          style={activeTab === t.id ? { background: personaColor } : {}}
         >
           {t.label}
         </button>

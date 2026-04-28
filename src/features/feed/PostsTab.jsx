@@ -23,6 +23,18 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
       profile?.wallpaper_url ??
       profile?.wallpaper ??
       null;
+
+    const stablePct = (seed) => {
+      // Deterministic 1..5 (so it doesn't change every render)
+      let h = 0;
+      for (let i = 0; i < seed.length; i += 1) {
+        h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+      }
+      return (h % 5) + 1;
+    };
+
+    const createdAtFallback = (i) => Date.now() - (i + 1) * 6 * 60 * 60 * 1000; // 6h steps
+
     return raw.map((p, i) => ({
       id: i,
       persona: p.persona,
@@ -32,6 +44,14 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
       handle,
       avatarInitials,
       avatarSrc,
+      createdAt:
+        p?.createdAt ??
+        p?.created_at ??
+        p?.created ??
+        p?.timestamp ??
+        p?.time ??
+        createdAtFallback(i),
+      systemDeltaPct: stablePct(`${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
     }));
   }, [profile]);
 
