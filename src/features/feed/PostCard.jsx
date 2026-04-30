@@ -51,37 +51,35 @@ export default function PostCard({ post }) {
         '--post-accent': noteColor,
       }}
     >
-      <div className="post-card-bubble">
-        <div className="post-card-head">
-          <div className="post-avatar" aria-hidden>
-            {avatarSrc ? (
-              <img className="post-avatar-img" src={avatarSrc} alt="" />
-            ) : (
-              avatarInitials
-            )}
-          </div>
-          <div className="post-card-text">
-            <div className="post-card-lead">
-              <p className="post-lead">{content}</p>
+      <div className={attachment ? 'post-composite' : undefined}>
+        <div className="post-card-bubble">
+          <div className="post-card-head">
+            <div className="post-avatar" aria-hidden>
+              {avatarSrc ? <img className="post-avatar-img" src={avatarSrc} alt="" /> : avatarInitials}
             </div>
-            <div className="post-card-byline">
-              <p className="post-card-name">{displayName}</p>
-              {handle ? <p className="post-card-handle">{handle}</p> : null}
+            <div className="post-card-text">
+              <div className="post-card-lead">
+                <p className="post-lead">{content}</p>
+              </div>
+              <div className="post-card-byline">
+                <p className="post-card-name">{displayName}</p>
+                {handle ? <p className="post-card-handle">{handle}</p> : null}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {attachment ? (
-        <div className="post-attachment-block">
-          <img
-            className="post-attachment-img"
-            src={attachment.url}
-            alt={attachment.filename || ''}
-            loading="lazy"
-          />
-        </div>
-      ) : null}
+        {attachment ? (
+          <div className="post-attachment-block">
+            <img
+              className="post-attachment-img"
+              src={attachment.url}
+              alt={attachment.filename || ''}
+              loading="lazy"
+            />
+          </div>
+        ) : null}
+      </div>
 
       <div className="post-meta-row" aria-label="Post metadata">
         <div className="post-meta-left">

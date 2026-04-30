@@ -217,6 +217,31 @@ body {
   color: var(--ink);
 }
 
+/* Parent shell for posts with attachment: one consistent capsule */
+.post-composite {
+  box-sizing: border-box;
+  width: 100%;
+  border: 3px solid var(--post-accent);
+  border-radius: 120px;
+  padding: 0;
+  /* Parent shell is neutral white; gaps (from rounded image) should look empty. */
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Inside the parent shell, remove the inner border to avoid double-strokes */
+.post-card--has-attachment .post-card-bubble {
+  /* Restore the post capsule look (rounded bottom + stroke). */
+  border: 3px solid var(--post-accent);
+  background: color-mix(in srgb, var(--post-accent) 15%, #fff);
+  border-radius: 9999px;
+  /* Overlap the parent stroke so lines merge (no double-edge at the outer perimeter). */
+  margin: -3px -3px 0;
+}
+
 .post-meta-row {
   position: relative;
   z-index: 2;
@@ -357,7 +382,7 @@ body {
   max-height: 16rem;
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 6px solid var(--post-accent);
+  border: none;
   box-sizing: border-box;
   object-fit: cover;
   display: block;
@@ -368,24 +393,25 @@ body {
   position: relative;
   z-index: 0;
   box-sizing: border-box;
-  background: color-mix(in srgb, var(--post-accent) 12%, #fff);
-  border: 3px solid var(--post-accent);
+  background: #fff;
+  border: none;
   /* Top corners match bubble (9999px) so curves align; bottom corners = 120px */
-  border-radius: 120px 120px 120px 120px;
-  /* -3px merges the two borders into one visible line; bubble (z-index:1) sits on top */
-  margin-top: -3px;
-  min-height: var(--post-bubble-h);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 0 0 120px 120px;
+  margin-top: 0;
+  min-height: 0;
+  display: block;
   overflow: hidden;
 }
 
 .post-attachment-img {
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: cover;
   display: block;
+  border: none;
+  outline: none;
+  border-top-left-radius: 120px;
+  border-top-right-radius: 120px;
 }
 
 .post-card-text {
