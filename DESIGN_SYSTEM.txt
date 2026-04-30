@@ -1,0 +1,394 @@
+WebDiplome — Current Design System (as implemented in CSS)
+Last updated: 2026-04-30
+
+Source of truth
+- Primary token source: src/styles/base.css (:root variables)
+- Component styles: src/styles/base.css, src/styles/profile.css, src/styles/home.css
+- Dynamic (runtime) tokens are set in React inline styles in src/app/App.jsx and src/features/feed/PostCard.jsx
+
+----------------------------------------------------------------------
+1) Foundations
+----------------------------------------------------------------------
+
+1.1 Color tokens (CSS variables in :root)
+Defined in src/styles/base.css
+
+Neutrals
+- --bg:            #F2F0EF  (page background)
+- --card:          #FFFFFF  (white surfaces / capsules)
+- --ink:           #000000  (primary text)
+- --muted:         #888888  (secondary text)
+- --border:        #cccac7  (capsule borders / separators)
+- --panel-muted:   #eceae7  (muted panel background)
+- --dot:           #bfbcb8  (decorative dot/neutral)
+
+Persona accents (used as “theme” / accent colors)
+- --prod:          #2323FF  (Productivity)
+- --sec:           #FF4E00  (Security)
+- --pop:           #0FA020  (Popularity / Social)
+
+Dynamic persona accent (runtime)
+- --persona-accent: set on .page-outer in src/app/App.jsx
+  - values (from App.jsx):
+    - productivity: #2323FF
+    - security:     #FF4E00
+    - popularity:   #0FA020
+
+Tabs capsule background (runtime)
+- --tabs-capsule-fill: set on .page-outer in src/app/App.jsx
+  - values (from App.jsx):
+    - productivity: #D9D9FD
+    - security:     #FFE3D7
+    - popularity:   #E1FFE4
+
+Post accent (per post)
+- --post-accent: set per PostCard in src/features/feed/PostCard.jsx
+  - derived from persona in PostsTab.jsx:
+    - productivite: #2323FF
+    - securite:     #FF4E00
+    - popularite:   #0FA020
+
+Score fill (profile)
+- --score-fill: set inline in ProfileHeader (see src/features/profile/ProfileHeader.jsx)
+  - generally equal to current persona accent.
+
+
+1.2 Typography
+
+Font families (CSS variables)
+- --font-avant:
+  'AvantGarde ITC BT', system-ui, -apple-system, sans-serif
+- --font-avant-book-oblique:
+  'AvantGarde ITC BT Book Oblique', 'AvantGarde ITC BT', system-ui, sans-serif
+- --font-sans: var(--font-avant)
+
+Global body text (base.css body)
+- font-family: var(--font-sans)
+- font-size: 13px
+- font-weight: 600
+- line-height: 1.6
+
+Key text styles (as implemented)
+- Posts (base.css tokens)
+  - Post body:
+    - font-size: var(--post-body-size) = 28px
+    - font-weight: var(--post-body-weight) = 700
+    - line-height: var(--post-body-line) = 0.95
+    - letter-spacing: -0.01em
+    - color: var(--post-accent)
+  - Display name (in post):
+    - font-size: var(--post-name-size) = 19.2px
+    - font-weight: var(--post-name-weight) = 700
+    - line-height: 1
+    - letter-spacing: -0.01em
+    - color: var(--post-accent)
+  - Handle (@) in post:
+    - font-family: var(--font-avant-book-oblique)
+    - font-size: var(--post-handle-size) = 12.8px
+    - font-weight: 600
+    - line-height: 1.1
+    - white-space: nowrap; overflow: hidden; text-overflow: ellipsis
+
+- Tabs labels (profile.css)
+  - font-size: 15px
+  - font-weight: 500 (inactive), 700 (active)
+  - letter-spacing: 0.03em
+
+- Home “for you” label (home.css)
+  - font-size: clamp(12px, 2.2vw, 20px)
+  - font-weight: 600
+  - letter-spacing: 0.02em
+  - line-height: 1.15
+  - opacity: 0.75
+
+- Profile name (profile.css .profile-name-lg)
+  - font-size: calc(33px * 1.3)  (~42.9px)
+  - font-weight: 700
+  - line-height: 1.15
+  - color: #000
+
+- Profile bio (profile.css .profile-bio)
+  - font-size: 18px
+  - font-weight: 500
+  - line-height: 1.32
+  - color: #000
+
+
+1.3 Layout + spacing primitives
+
+Page container
+- .page max-width: 1012px
+- .page padding: 16px 16px 16px 72px
+  - left padding makes room for fixed sidebar rail
+
+Common vertical rhythm
+- Many capsule stacks use margin-bottom: 36px
+  - Example: .home-tab margin-bottom: 36px
+  - Example: .profile-header-stack margin-bottom: 36px
+
+Capsule insets
+- Posts capsule padding: 24px 28px 28px
+- Profile content capsule padding: 24px 28px 28px
+
+Micro gaps
+- .icon-rail gap: 2px, padding: 4px
+- .tabs-row gap: 2px, padding: 4px
+- Post header row gap: clamp(16px, 2vw, 24px)
+
+
+1.4 Shape / radius
+
+Radii tokens and conventions
+- Capsule radius token: --capsule-radius = 56px
+  - used for outer shells like .posts-capsule and .profile-content-capsule
+
+“Pill / stadium” convention
+- Use border-radius: 9999px for fully-rounded pills:
+  - post bubble (.post-card-bubble)
+  - profile hero capsule (.profile-hero-capsule)
+  - tabs row container (.tabs-row)
+  - small pills (meta pills, last-analysis pill, etc.)
+
+Circles
+- border-radius: 50% for avatars / score / badges
+
+
+1.5 Borders + shadows
+
+Borders
+- Outer capsules: 1px solid var(--border)
+  - .posts-capsule, .profile-content-capsule
+- Accent bubbles (posts, profile hero, badge capsule): 3px solid accent variable
+  - Post bubble border: 3px solid var(--post-accent)
+  - Profile hero capsule border: 3px solid var(--persona-accent)
+  - Badge capsule border: 3px solid var(--persona-accent)
+- Tabs/rail containers: 2px solid rgba(0, 0, 0, 0.08)
+
+Shadow
+- Persona toggle button:
+  - box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14)
+
+
+1.6 Background tinting rule (important for “look”)
+
+Instead of using solid accent backgrounds, most large pills use a subtle tint:
+- Post bubble fill:
+  - background: color-mix(in srgb, var(--post-accent) 15%, #fff)
+- Post avatar fill:
+  - background: color-mix(in srgb, var(--post-accent) 20%, #fff)
+- Profile hero capsule fill:
+  - background: color-mix(in srgb, var(--persona-accent) 15%, #fff)
+
+This makes the UI feel “paper + ink” rather than flat neon blocks.
+
+
+----------------------------------------------------------------------
+2) Components (CSS “recipes”)
+----------------------------------------------------------------------
+
+2.1 Sidebar icon rail
+File: src/styles/base.css
+
+.icon-rail
+- display: flex (column)
+- padding: 4px
+- gap: 2px
+- border-radius: 9999px
+- border: 2px solid rgba(0,0,0,0.08)
+- background: var(--tabs-capsule-fill)
+
+.rail-btn (each icon)
+- size: 67px x 67px, border-radius: 999px
+- font-size: 36px, opacity: 0.55
+- active: background var(--persona-accent), color #fff, opacity 1
+- hover (inactive): background rgba(255,255,255,0.28)
+- focus-visible: outline 2px solid #000, outline-offset 2px
+
+
+2.2 Persona toggle floating button
+File: src/styles/base.css
+
+.persona-toggle-btn
+- fixed right: 18px, centered vertically (top: 50%, transform translateY(-50%))
+- size: 56px, circle (border-radius: 999px)
+- border: 2px solid #000
+- box-shadow: 0 10px 24px rgba(0,0,0,0.14)
+- text: font-weight 800, font-size 16px
+
+
+2.3 Capsules (outer white shells)
+Files: src/styles/base.css, src/styles/profile.css
+
+Posts capsule (.posts-capsule)
+- border-radius: var(--capsule-radius) = 56px
+- background: #fff
+- border: 1px solid var(--border)
+- padding: 24px 28px 28px
+
+Profile content capsule (.profile-content-capsule)
+- same as posts capsule (padding + radius + border)
+
+
+2.4 Tabs (pill container + active pill)
+File: src/styles/profile.css (tabs section)
+
+.tabs-row
+- display: flex; gap: 2px; padding: 4px
+- border-radius: 9999px
+- border: 2px solid rgba(0,0,0,0.08)
+- background: var(--tabs-capsule-fill)
+
+.tabs-row .tab
+- font-size: 15px; font-weight: 500
+- padding: 8px 10px 9px
+- border-radius: 9999px
+- letter-spacing: 0.03em
+- hover (inactive): background rgba(0,0,0,0.06)
+- active: background var(--persona-accent), color #fff, font-weight 700
+
+
+2.5 Post card (stacked bubbles + meta strip)
+File: src/styles/base.css
+
+Post bubble (.post-card-bubble)
+- background: color-mix(in srgb, var(--post-accent) 15%, #fff)
+- border: 3px solid var(--post-accent)
+- border-radius: 9999px (stadium)
+- padding: 10px 24px 10px 10px
+- min-height: --post-bubble-h = 12.5rem
+- overflow: hidden
+
+Post “head” layout (.post-card-head)
+- flex row, align-items: stretch
+- gap: clamp(16px, 2vw, 24px)
+
+Avatar (.post-avatar)
+- circle with border: 6px solid var(--post-accent)
+- fill: color-mix(in srgb, var(--post-accent) 20%, #fff)
+- aspect-ratio: 1
+- min-height: 6.75rem
+- max-width: min(12.5rem, 46%, 100%)
+- max-height: 16rem
+- image uses object-fit: cover
+
+Attachment image (if present)
+- Implemented as a second circle on the right (same sizing philosophy as avatar)
+- Style lives in base.css (.post-attachment) and uses:
+  - border: 6px solid var(--post-accent)
+  - border-radius: 50%
+  - aspect-ratio: 1
+  - object-fit: cover
+
+Meta row between stacked bubbles (.post-meta-row)
+- grid: 1fr auto 1fr, column-gap: 54px
+- height: 66px
+- margin-top/bottom: -18px (so it “sits” between two bubbles)
+- pointer-events: none
+
+Meta pill (.post-meta-pill)
+- border-radius: 9999px
+- padding: 5px 12px 6px
+- background: var(--post-accent)
+- color: #fff
+- font-size: var(--post-name-size) = 19.2px
+
+Special-case for Social/Popularity post text color
+- For data-persona='popularite', text becomes darker green (#04660f) for better contrast:
+  - applied to .post-lead, .post-card-name, .post-card-handle, .post-avatar
+
+
+2.6 Profile hero capsule (score circle + text)
+File: src/styles/profile.css
+
+.profile-hero-capsule
+- background: color-mix(in srgb, var(--persona-accent) 15%, #fff)
+- border: 3px solid var(--persona-accent)
+- border-radius: 9999px
+- overflow: visible
+- margin-top: clamp(44px, 10vw, 72px)
+
+Sizing tokens inside hero capsule
+- --profile-hero-vert-pad: 24px
+- --profile-hero-bubble-h: calc(--post-bubble-h + 4.25rem)
+- --profile-hero-outer-h: bubble-h + (vert-pad * 2)
+- --profile-score-size: min(outer-h * 0.75, 20rem)
+
+Score circle (.profile-score-avatar)
+- width/height: var(--profile-score-size)
+- border-radius: 50%
+- background: var(--score-fill, var(--persona-accent))
+- font-size: calc(var(--profile-score-size) * 0.54)
+- font-weight: 800
+- number text letter-spacing: -0.03em
+
+Badge capsule (.profile-badge-capsule)
+- border: 3px solid var(--persona-accent)
+- border-radius: 9999px
+- padding: 14px 22px
+- gap: 16px
+- overlaps hero capsule via margin-top: -40px
+
+
+----------------------------------------------------------------------
+3) Interaction + accessibility conventions
+----------------------------------------------------------------------
+
+Focus rings
+- Buttons use :focus-visible outlines:
+  - outline: 2px solid #000
+  - outline-offset: 2px to 3px depending on component
+
+Hover/active feedback
+- Active “press” is typically a tiny scale or translate:
+  - persona toggle: scale(0.98) while active
+  - rail buttons: translateY(1px) while active
+
+
+----------------------------------------------------------------------
+4) Implementation notes for the Mac app
+----------------------------------------------------------------------
+
+If you want the Mac app to match precisely, mirror these as “design tokens”:
+
+Colors
+- Background: #F2F0EF
+- Surface: #FFFFFF
+- Text primary: #000000
+- Text secondary: #888888
+- Border neutral: #CCCAC7
+- Persona accents:
+  - Productivity: #2323FF
+  - Security:     #FF4E00
+  - Popularity:   #0FA020
+- Tabs background by persona:
+  - Productivity: #D9D9FD
+  - Security:     #FFE3D7
+  - Popularity:   #E1FFE4
+
+Corner radius
+- Capsule radius: 56px
+- Pill radius: “max” (9999px equivalent)
+- Circle: 50%
+
+Stroke widths
+- Neutral capsule border: 1px
+- Accent borders: 3px
+- Avatar rings: 6px
+- Rail/tabs container stroke: 2px @ ~8% black
+
+Tinted fills (most important “feel” detail)
+- Large accent pills use a white mix with ~15% accent, not solid accent.
+- Avatars use ~20% accent mix.
+
+Typography
+- Body baseline: 13px @ 600 weight, line-height 1.6
+- Posts:
+  - 28px @ 700, line-height 0.95, letter-spacing -0.01em
+  - name 19.2px @ 700
+  - handle 12.8px @ 600 with “Book Oblique” family
+
+Spacing
+- Outer page padding: 16px all around, but left is 72px to accommodate sidebar
+- Capsule padding: 24px 28px 28px
+- Common section spacing: 36px between stacks
+

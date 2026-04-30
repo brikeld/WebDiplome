@@ -9,3 +9,5 @@ dist/
 **/*.otf
 **/*.eot
 
+# User uploads (served from /uploads; do not commit binary media)
+public/uploads/

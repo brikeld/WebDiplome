@@ -9,6 +9,7 @@ export default function PostCard({ post }) {
     createdAt,
     systemDeltaPct = 1,
     persona,
+    attachment,
   } = post;
 
   const personaLabel = (() => {
@@ -44,7 +45,7 @@ export default function PostCard({ post }) {
 
   return (
     <article
-      className="post-card"
+      className={`post-card${attachment ? ' post-card--has-attachment' : ''}`}
       data-persona={post.persona}
       style={{
         '--post-accent': noteColor,
@@ -70,6 +71,17 @@ export default function PostCard({ post }) {
           </div>
         </div>
       </div>
+
+      {attachment ? (
+        <div className="post-attachment-block">
+          <img
+            className="post-attachment-img"
+            src={attachment.url}
+            alt={attachment.filename || ''}
+            loading="lazy"
+          />
+        </div>
+      ) : null}
 
       <div className="post-meta-row" aria-label="Post metadata">
         <div className="post-meta-left">

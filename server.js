@@ -3,10 +3,13 @@ import cors from 'cors';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
 const POSTS_DIR = path.join(__dirname, 'posts');
+const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 
 async function readPostsForId(id) {
   try {
@@ -25,9 +28,10 @@ async function writePostsForId(id, personaPosts) {
     if (!img || typeof img !== 'object') return null;
     const filename = img.filename ?? img.fileName ?? img.file_name ?? null;
     const relativePath = img.relativePath ?? img.relative_path ?? null;
+    const url = img.url ?? img.imageUrl ?? img.image_url ?? null;
     const visionAnalysed =
       img.visionAnalysed ?? img.vision_analysed ?? img.visionAnalyzed ?? img.vision_analyzed ?? null;
-    return { filename, relativePath, visionAnalysed };
+    return { filename, relativePath, url, visionAnalysed };
   };
 
   const normalizePost = (p) => {
@@ -84,6 +88,66 @@ app.use(express.json({ limit: '10mb' }));
 // Ensure profiles/ directory exists on startup
 await fs.mkdir(PROFILES_DIR, { recursive: true });
 await fs.mkdir(POSTS_DIR, { recursive: true });
+await fs.mkdir(UPLOADS_DIR, { recursive: true });
+
+// Serve uploaded media files
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+// ── Upload endpoint ─────────────────────────────────────────────────────────
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+  filename: (_req, file, cb) => {
+    // Temp name; we will rename to a hash-based name after upload (dedupe).
+    const orig = String(file.originalname || 'upload');
+    const safe = orig.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
+    const ext = path.extname(safe) || '';
+    const unique = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    cb(null, `tmp-${unique}${ext}`);
+  },
+});
+
+const upload = multer({ storage, limits: { fileSize: 15 * 1024 * 1024 } });
+
+function extFromMime(mime) {
+  const m = String(mime || '').toLowerCase();
+  if (m === 'image/jpeg') return '.jpg';
+  if (m === 'image/png') return '.png';
+  if (m === 'image/webp') return '.webp';
+  if (m === 'image/gif') return '.gif';
+  if (m === 'image/avif') return '.avif';
+  return '';
+}
+
+// POST /api/upload — upload one file, returns URL
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'missing file' });
+    const tmpPath = req.file.path;
+    const buf = await fs.readFile(tmpPath);
+    const hash = crypto.createHash('sha256').update(buf).digest('hex');
+
+    const mimeExt = extFromMime(req.file.mimetype);
+    const origExt = path.extname(String(req.file.originalname || '')).toLowerCase();
+    const tmpExt = path.extname(String(req.file.filename || '')).toLowerCase();
+    const ext = mimeExt || origExt || tmpExt || '';
+
+    const finalFilename = `${hash}${ext}`;
+    const finalPath = path.join(UPLOADS_DIR, finalFilename);
+
+    try {
+      await fs.access(finalPath);
+      // File already exists → delete temp upload and reuse canonical filename.
+      await fs.unlink(tmpPath);
+    } catch (_notFound) {
+      // New content → rename temp to canonical hash name.
+      await fs.rename(tmpPath, finalPath);
+    }
+
+    res.status(200).json({ filename: finalFilename, url: `/uploads/${finalFilename}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // POST /api/profile — save a profile as {firstname}-{lastname}.json
 app.post('/api/profile', async (req, res) => {
