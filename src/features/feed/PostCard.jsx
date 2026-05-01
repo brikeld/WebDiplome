@@ -1,4 +1,5 @@
 import PostImage from './PostImage.jsx';
+import PostActions from './PostActions.jsx';
 
 export default function PostCard({ post }) {
   const {
@@ -91,9 +92,8 @@ export default function PostCard({ post }) {
           </span>
         </div>
 
-        <div className="post-meta-right" aria-hidden>
-          <span className="post-meta-circle">L</span>
-          <span className="post-meta-circle">C</span>
+        <div className="post-meta-right">
+          <PostActions />
         </div>
       </div>
     </article>

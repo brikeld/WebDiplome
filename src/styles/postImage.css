@@ -51,11 +51,4 @@
   pointer-events: none;
 }
 
-/* ── Hover – dissolve back to original ────────────────────────────────── */
-.post-image-fx:hover::after {
-  opacity: 0;
-}
-
-.post-image-fx:hover .post-attachment-img {
-  filter: saturate(1) contrast(1) brightness(1);
-}
+/* Always-on effects: no interaction disables the FX */

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import Sidebar from '@/layout/Sidebar.jsx';
+import ScrollArea from '@/layout/ScrollArea.jsx';
 import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
 import TabBar from '@/features/profile/TabBar.jsx';
 import ProfileTab from '@/features/profile/ProfileTab.jsx';
@@ -124,6 +125,17 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [personaOverride, setPersonaOverride] = useState(null); // 'productivity' | 'popularity' | 'security' | null
 
+  // Lock body scroll in home mode; release it for profile (full-page scroll).
+  useEffect(() => {
+    const isHome = mainView === 'home';
+    document.documentElement.style.overflowY = isHome ? 'hidden' : '';
+    document.body.style.overflowY = isHome ? 'hidden' : '';
+    return () => {
+      document.documentElement.style.overflowY = '';
+      document.body.style.overflowY = '';
+    };
+  }, [mainView]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -173,10 +185,11 @@ export default function App() {
 
   return (
     <div
-      className={`page-outer persona-${personaKey}`}
+      className={`page-outer persona-${personaKey} view-${mainView}`}
       style={{
         '--persona-accent': personaColor,
         '--tabs-capsule-fill': personaTabFill,
+        '--persona-secondary': personaTabFill,
       }}
     >
       <button
@@ -192,48 +205,51 @@ export default function App() {
       >
         {personaToggleLabel}
       </button>
+      <div className="project-name">projectName</div>
       <Sidebar mainView={mainView} onSelectView={setMainView} />
       <div className="page">
         <div className="main-col">
-          {mainView === 'home' && <HomeTab profile={profile} />}
-          {mainView === 'profile' && (
-            <>
-              <ProfileHeader
-                profile={profile}
-                personaKey={personaKey}
-                personaColor={personaColor}
-              />
+          <ScrollArea key={mainView} mode={mainView}>
+            {mainView === 'home' && <HomeTab profile={profile} />}
+            {mainView === 'profile' && (
+              <>
+                <ProfileHeader
+                  profile={profile}
+                  personaKey={personaKey}
+                  personaColor={personaColor}
+                />
 
-              <TabBar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                personaColor={personaColor}
-              />
+                <TabBar
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  personaColor={personaColor}
+                />
 
-              {lastAnalysisText ? (
-                <div className="profile-last-analysis" aria-label="Last analysis">
-                  <span
-                    className="profile-last-analysis-pill"
-                    style={{ background: personaColor, color: '#fff' }}
-                  >
-                    Last analysis:&nbsp;{lastAnalysisText}
-                  </span>
+                {lastAnalysisText ? (
+                  <div className="profile-last-analysis" aria-label="Last analysis">
+                    <span
+                      className="profile-last-analysis-pill"
+                      style={{ background: personaColor, color: '#fff' }}
+                    >
+                      Last analysis:&nbsp;{lastAnalysisText}
+                    </span>
+                  </div>
+                ) : null}
+
+                <div
+                  className="profile-content-capsule"
+                  style={{ '--profile-accent': personaColor }}
+                >
+                  <div className="tab-content">
+                    {activeTab === 'profile' && <ProfileTab />}
+                    {activeTab === 'posts' && <PostsTab profile={profile} feedContext="profile" />}
+                    {activeTab === 'badges' && <BadgesTab />}
+                    {activeTab === 'leaderboards' && <LeaderboardsTab />}
+                  </div>
                 </div>
-              ) : null}
-
-              <div
-                className="profile-content-capsule"
-                style={{ '--profile-accent': personaColor }}
-              >
-                <div className="tab-content">
-                  {activeTab === 'profile' && <ProfileTab />}
-                  {activeTab === 'posts' && <PostsTab profile={profile} feedContext="profile" />}
-                  {activeTab === 'badges' && <BadgesTab />}
-                  {activeTab === 'leaderboards' && <LeaderboardsTab />}
-                </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </ScrollArea>
         </div>
       </div>
     </div>

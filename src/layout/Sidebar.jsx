@@ -1,7 +1,6 @@
 export default function Sidebar({ mainView = 'home', onSelectView }) {
   return (
     <>
-      <div className="project-name">projectName</div>
       <aside className="sidebar" aria-label="Navigation">
         <nav className="icon-rail" aria-label="Main">
           <button
