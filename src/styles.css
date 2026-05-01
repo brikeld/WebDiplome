@@ -2,3 +2,4 @@
 @import './styles/base.css';
 @import './styles/home.css';
 @import './styles/profile.css';
+@import './features/profile/ProfileOverview/profileOverview.css';

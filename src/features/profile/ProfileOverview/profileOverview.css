@@ -1,0 +1,535 @@
+/* ── Layout ── */
+.po-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.po-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .po-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Base card ── */
+.po-card {
+  box-sizing: border-box;
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #cccac7);
+  border-radius: var(--capsule-radius, 56px);
+  padding: 24px 28px;
+  font-family: var(--font-sans);
+}
+
+.po-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--persona-accent, #2323ff);
+  margin: 0 0 16px;
+}
+
+/* ── Pills / badges ── */
+.po-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.po-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px 5px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--panel-muted, #eceae7);
+  color: var(--ink, #000);
+  white-space: nowrap;
+}
+
+.po-pill--accent {
+  background: var(--persona-accent, #2323ff);
+  color: #fff;
+}
+
+.po-pill--warn {
+  background: #FFB733;
+  color: #000;
+}
+
+.po-pill--risk {
+  background: #FF3366;
+  color: #fff;
+}
+
+/* ── Bars ── */
+.po-bar-wrap {
+  margin-bottom: 16px;
+}
+
+.po-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink, #000);
+  margin-bottom: 6px;
+}
+
+.po-bar-track {
+  width: 100%;
+  height: 10px;
+  background: var(--panel-muted, #eceae7);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.po-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+/* ── Monospace data ── */
+.po-mono {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: var(--ink, #000);
+}
+
+/* ── Divider ── */
+.po-divider {
+  border: none;
+  border-top: 1px solid var(--border, #cccac7);
+  margin: 16px 0;
+}
+
+/* ── Secondary text ── */
+.po-secondary {
+  font-size: 12px;
+  color: var(--muted, #888);
+  line-height: 1.4;
+}
+
+/* ── Inline row ── */
+.po-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.po-row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ── IdentityCard ── */
+.po-identity-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.po-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.po-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid var(--persona-accent, #2323ff);
+  background: color-mix(in srgb, var(--persona-accent, #2323ff) 15%, #fff);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.po-avatar-initials {
+  font-family: var(--font-sans);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--persona-accent, #2323ff);
+  line-height: 1;
+}
+
+.po-status-dot {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.po-identity-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.po-identity-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink, #000);
+  margin: 0 0 4px;
+  line-height: 1.1;
+}
+
+.po-identity-label {
+  font-weight: 700;
+  color: var(--ink, #000);
+}
+
+/* ── ScoreBreakdown ── */
+.po-score-center {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.po-score-main-svg {
+  flex-shrink: 0;
+}
+
+.po-score-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.po-ring-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.po-ring-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.po-ring-item:hover {
+  transform: scale(1.06);
+}
+
+.po-ring-svg {
+  display: block;
+}
+
+.po-ring-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── ActivityPatterns ── */
+.po-day-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 80px;
+  margin-bottom: 4px;
+}
+
+.po-day-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.po-day-bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.po-day-bar {
+  width: 100%;
+  background: var(--persona-accent, #2323ff);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  opacity: 0.85;
+}
+
+.po-day-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.po-peak-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.po-peak-label {
+  flex: 0 0 64px;
+  font-weight: 600 !important;
+  color: var(--ink) !important;
+  font-size: 11px;
+}
+
+.po-peak-track {
+  flex: 1;
+  height: 20px;
+  background: var(--panel-muted, #eceae7);
+  border-radius: 4px;
+  position: relative;
+  overflow: visible;
+}
+
+.po-peak-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--persona-accent, #2323ff);
+  opacity: 0.6;
+  border-radius: 4px;
+}
+
+.po-peak-tick {
+  position: absolute;
+  bottom: -16px;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: var(--muted, #888);
+  white-space: nowrap;
+}
+
+/* ── TechStack ── */
+.po-app-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.po-app-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.po-app-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.po-app-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.po-app-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink, #000);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.po-app-category {
+  font-size: 10px;
+  color: var(--muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.po-ai-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.po-code-tag {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--panel-muted, #eceae7);
+  border-radius: 4px;
+  color: var(--ink, #000);
+}
+
+/* ── NetworkTrace ── */
+.po-network-list {
+  margin: 12px 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.po-network-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.po-network-icon {
+  font-size: 12px;
+  color: var(--muted, #888);
+  flex-shrink: 0;
+}
+
+.po-creepy-note {
+  font-size: 11px !important;
+  color: #FF3366 !important;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.po-network-vpn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2323FF;
+  flex-shrink: 0;
+}
+
+/* ── SecurityStatus ── */
+.po-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.po-check-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0FA020;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.po-check-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink, #000);
+  flex: 1;
+}
+
+/* ── LocationInference ── */
+.po-location-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.po-location-pin {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.po-location-place {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink, #000);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.po-location-clue {
+  margin-top: 12px;
+}
+
+.po-clue-label {
+  display: block;
+  font-weight: 700 !important;
+  color: var(--ink) !important;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.po-location-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink, #000);
+}
+
+/* ── BehavioralTags ── */
+.po-behavioral-type {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink, #000);
+  margin: 0 0 4px;
+  line-height: 1.1;
+}
+
+.po-lifestyle-section {
+  margin-top: 12px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .po-card {
+    border-radius: 24px;
+    padding: 18px 16px;
+  }
+
+  .po-identity-top {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .po-identity-info {
+    align-items: center;
+  }
+
+  .po-score-center {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .po-app-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .po-ring-row {
+    gap: 24px;
+  }
+}
