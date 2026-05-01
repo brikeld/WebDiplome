@@ -1,0 +1,61 @@
+/* ── Post image persona-color effects ──────────────────────────────────────
+   All effects are pure CSS (GPU-accelerated). No canvas, no heavy libs.
+   To add a new effect: add a layer via ::before / ::after, or extend
+   the .post-attachment-img filter chain below.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.post-image-fx {
+  position: relative;
+  /* Keep blend layers isolated and ensure any exposed corner gaps read as "empty/white". */
+  isolation: isolate;
+  background: #fff;
+}
+
+/* The image has rounded top corners (set in base.css). Clip FX layers to match
+   so overlays/vignette don't paint into the rounded-corner "gap" area. */
+.post-image-fx::before,
+.post-image-fx::after {
+  border-top-left-radius: 120px;
+  border-top-right-radius: 120px;
+}
+
+/* ── Layer 1 – base image: slight desaturation so color wash pops ──────── */
+.post-image-fx .post-attachment-img {
+  filter: saturate(0.65) contrast(1.08) brightness(0.97);
+  transition: filter 0.45s ease;
+}
+
+/* ── Layer 2 – persona color wash (sits above image) ──────────────────────
+   mix-blend-mode: color maps the hue + saturation from the persona color
+   onto the image's luminosity — gives a true duotone-style tint.        */
+.post-image-fx::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--fx-color, #888888);
+  mix-blend-mode: color;
+  opacity: 0.52;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+
+/* ── Layer 3 – cinematic vignette (sits above color wash) ─────────────────
+   Darkens edges for depth without flattening the center.                */
+.post-image-fx::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: radial-gradient(ellipse at 50% 38%, transparent 28%, rgba(0, 0, 0, 0.34) 100%);
+  pointer-events: none;
+}
+
+/* ── Hover – dissolve back to original ────────────────────────────────── */
+.post-image-fx:hover::after {
+  opacity: 0;
+}
+
+.post-image-fx:hover .post-attachment-img {
+  filter: saturate(1) contrast(1) brightness(1);
+}

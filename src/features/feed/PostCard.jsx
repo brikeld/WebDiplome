@@ -1,3 +1,5 @@
+import PostImage from './PostImage.jsx';
+
 export default function PostCard({ post }) {
   const {
     content,
@@ -70,14 +72,11 @@ export default function PostCard({ post }) {
         </div>
 
         {attachment ? (
-          <div className="post-attachment-block">
-            <img
-              className="post-attachment-img"
-              src={attachment.url}
-              alt={attachment.filename || ''}
-              loading="lazy"
-            />
-          </div>
+          <PostImage
+            src={attachment.url}
+            alt={attachment.filename || ''}
+            accentColor={noteColor}
+          />
         ) : null}
       </div>
 
