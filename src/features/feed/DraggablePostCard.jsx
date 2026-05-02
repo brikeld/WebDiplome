@@ -3,7 +3,7 @@ import PostCard from './PostCard.jsx';
 
 const SNAP_THRESHOLD = 0.50;
 const RESISTANCE = 2.5;
-const SEGMENT_THRESHOLDS = [0.08, 0.20, 0.34, 0.50, 0.68, 0.85];
+const SEGMENT_THRESHOLDS = [0.06, 0.15, 0.26, 0.38, 0.50, 0.60];
 
 function splitThinking(text) {
   if (!text) return ['...', '', '', '', '', ''];
@@ -22,10 +22,12 @@ export default function DraggablePostCard({ post }) {
   const cardRef = useRef(null);
   const dragState = useRef({ active: false, startX: 0, currentOffset: 0 });
   const animFrameRef = useRef(null);
+  const snapTimerRef = useRef(null);
 
   const [snapState, setSnapState] = useState('idle');
   const [dragOffset, setDragOffset] = useState(0);
   const [visibleSegments, setVisibleSegments] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const isOpen = snapState === 'open';
   const segments = splitThinking(post.thinking ?? '');
@@ -50,32 +52,36 @@ export default function DraggablePostCard({ post }) {
   }, [getCardWidth]);
 
   const snapOpen = useCallback(() => {
+    clearTimeout(snapTimerRef.current);
     const cardWidth = getCardWidth();
     setSnapState('snapping');
     setDragOffset(cardWidth);
     setVisibleSegments(6);
-    setTimeout(() => setSnapState('open'), 450);
+    snapTimerRef.current = setTimeout(() => setSnapState('open'), 450);
   }, [getCardWidth]);
 
   const snapBack = useCallback(() => {
+    clearTimeout(snapTimerRef.current);
     setSnapState('snapping-back');
     setDragOffset(0);
     setVisibleSegments(0);
-    setTimeout(() => setSnapState('idle'), 320);
+    snapTimerRef.current = setTimeout(() => setSnapState('idle'), 320);
   }, []);
 
   const onPointerDown = useCallback((e) => {
     if (isOpen) return;
+    clearTimeout(snapTimerRef.current);
     if (e.button !== undefined && e.button !== 0) return;
-    const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+    const clientX = e.clientX;
     dragState.current = { active: true, startX: clientX, currentOffset: 0 };
+    setIsDragging(true);
     setSnapState('idle');
     if (e.pointerId != null) cardRef.current?.setPointerCapture?.(e.pointerId);
   }, [isOpen]);
 
   const onPointerMove = useCallback((e) => {
     if (!dragState.current.active) return;
-    const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+    const clientX = e.clientX;
     const rawDx = clientX - dragState.current.startX;
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     animFrameRef.current = requestAnimationFrame(() => applyOffset(rawDx));
@@ -84,6 +90,7 @@ export default function DraggablePostCard({ post }) {
   const onPointerUp = useCallback(() => {
     if (!dragState.current.active) return;
     dragState.current.active = false;
+    setIsDragging(false);
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
 
     const cardWidth = getCardWidth();
@@ -102,10 +109,10 @@ export default function DraggablePostCard({ post }) {
   useEffect(() => {
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      clearTimeout(snapTimerRef.current);
     };
   }, []);
 
-  const isDragging = dragState.current.active;
   const cardClassName = [
     'post-reveal-card',
     isDragging ? 'is-dragging' : '',
@@ -118,7 +125,11 @@ export default function DraggablePostCard({ post }) {
       <div
         className={`thinking-layer${isOpen ? ' is-open' : ''}`}
         onClick={onThinkingClick}
-        aria-hidden={!isOpen}
+        onKeyDown={isOpen ? (e) => { if (e.key === 'Enter' || e.key === ' ') onThinkingClick(); } : undefined}
+        role={isOpen ? 'button' : undefined}
+        tabIndex={isOpen ? 0 : -1}
+        aria-label={isOpen ? 'Close thinking layer' : undefined}
+        aria-hidden={isOpen ? undefined : true}
       >
         <div className="thinking-layer-inner">
           {segments.map((seg, i) => (
@@ -130,7 +141,7 @@ export default function DraggablePostCard({ post }) {
             </span>
           ))}
         </div>
-        {isOpen && <span className="thinking-close-hint">← swipe to close</span>}
+        {isOpen && <span className="thinking-close-hint">tap to close</span>}
       </div>
 
       <div
