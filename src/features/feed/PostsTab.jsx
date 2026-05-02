@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import DraggablePostCard from './DraggablePostCard.jsx';
+import PostCard from './PostCard.jsx';
 import { sanitizePostContent } from '@/lib/postContent.js';
 import { displayNameFromProfile, initialsFromProfile } from '@/lib/profileUtils.js';
 
@@ -80,7 +80,7 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
   const list = (
     <div className={`posts-tab${feedContext === 'profile' ? ' posts-tab--profile-inline' : ''}`}>
       {posts.map((p) => (
-        <DraggablePostCard key={p.id} post={p} />
+        <PostCard key={p.id} post={p} />
       ))}
     </div>
   );
