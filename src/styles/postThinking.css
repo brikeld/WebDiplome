@@ -2,8 +2,6 @@
 
 .post-reveal-wrapper {
   position: relative;
-  overflow: hidden;
-  border-radius: 9999px;
   isolation: isolate;
 }
 
