@@ -19,17 +19,6 @@ function resolveAttachment(img) {
   return { url: absolute, filename: img.filename ?? '' };
 }
 
-const PLACEHOLDER_THINKING = {
-  productivite: "okay so... 3 jsx files open, figma tab, shell history full of npm run dev. something isn't compiling right. cursor + claude both active — ai-assisted dev, deadline behavior. productivity axis: is this competence or overwhelm? both. the chaos framing gets more engagement. going with self-aware builder voice. +4% productivity feels right.",
-  securite: "hmm. VPN on, incognito tab, two-factor prompt dismissed twice. that's avoidance, not security hygiene. signal: aware of the risk, choosing convenience. security score delta is negative but small — passive exposure, not active breach. frame as a nudge not an alarm. don't moralize. cold factual tone.",
-  popularite: "checked notifications 4 times in 8 minutes. likes pattern: responds within 90s to comments. follower growth is flat but engagement rate is healthy — this is a micro-influence plateau. frame as: reach is the bottleneck, not resonance. social persona +3% sounds right given the engagement numbers.",
-};
-
-function placeholderThinking(persona) {
-  const key = String(persona ?? '').toLowerCase();
-  return PLACEHOLDER_THINKING[key] ?? PLACEHOLDER_THINKING.productivite;
-}
-
 export default function PostsTab({ profile, feedContext = 'home' }) {
   const posts = useMemo(() => {
     if (!profile) return [];
@@ -46,6 +35,7 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
       null;
 
     const stablePct = (seed) => {
+      // Deterministic 1..5 (so it doesn't change every render)
       let h = 0;
       for (let i = 0; i < seed.length; i += 1) {
         h = (h * 31 + seed.charCodeAt(i)) >>> 0;
@@ -53,7 +43,7 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
       return (h % 5) + 1;
     };
 
-    const createdAtFallback = (i) => Date.now() - (i + 1) * 6 * 60 * 60 * 1000;
+    const createdAtFallback = (i) => Date.now() - (i + 1) * 6 * 60 * 60 * 1000; // 6h steps
 
     return raw.map((p, i) => ({
       id: i,
@@ -73,7 +63,6 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
         createdAtFallback(i),
       systemDeltaPct: stablePct(`${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
       attachment: resolveAttachment(p.attachedImage ?? p.attached_image),
-      thinking: p.thinking ?? placeholderThinking(p.persona),
     }));
   }, [profile]);
 
