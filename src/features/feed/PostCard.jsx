@@ -56,7 +56,8 @@ export default function PostCard({ post }) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [avatarDx, setAvatarDx] = useState(0);
 
-  const dragRef = useRef({ active: false, startX: 0, dx: 0 });
+  // Holds active document-level drag listeners so we can remove them
+  const activeDragRef = useRef(null);
   const timerRef = useRef(null);
 
   const clearTimer = useCallback(() => {
@@ -66,13 +67,20 @@ export default function PostCard({ post }) {
     }
   }, []);
 
+  // Captured in the pointerdown closure — always current at drag-start
+  const modeRef = useRef(mode);
+  const displayedTextRef = useRef(displayedText);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { displayedTextRef.current = displayedText; }, [displayedText]);
+
   const triggerFlip = useCallback(() => {
     clearTimer();
-    const toText = mode === 'post' ? (thinking ?? content) : content;
-    const nextMode = mode === 'post' ? 'thinking' : 'post';
+    const currentMode = modeRef.current;
+    const toText = currentMode === 'post' ? (thinking ?? content) : content;
+    const nextMode = currentMode === 'post' ? 'thinking' : 'post';
 
     setIsAnimating(true);
-    let buf = displayedText;
+    let buf = displayedTextRef.current;
 
     // Phase 1: erase current text
     timerRef.current = setInterval(() => {
@@ -94,31 +102,45 @@ export default function PostCard({ post }) {
         }, TYPE_MS);
       }
     }, ERASE_MS);
-  }, [mode, content, thinking, displayedText, clearTimer]);
+  }, [thinking, content, clearTimer]);
 
   const onAvatarPointerDown = useCallback((e) => {
     if (isAnimating) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    dragRef.current = { active: true, startX: e.clientX, dx: 0 };
-  }, [isAnimating]);
+    if (activeDragRef.current) return; // already dragging
+    // Only left button / primary touch
+    if (e.button !== undefined && e.button !== 0) return;
 
-  const onAvatarPointerMove = useCallback((e) => {
-    if (!dragRef.current.active) return;
-    const dx = Math.max(0, e.clientX - dragRef.current.startX);
-    dragRef.current.dx = dx;
-    // Resist: logarithmic feel, max 28px visual travel
-    setAvatarDx(Math.min(28, dx * 0.38));
-  }, []);
+    const startX = e.clientX;
+    let dx = 0;
 
-  const onAvatarPointerUp = useCallback(() => {
-    if (!dragRef.current.active) return;
-    const dx = dragRef.current.dx;
-    dragRef.current.active = false;
-    setAvatarDx(0);
-    if (dx >= DRAG_THRESHOLD) triggerFlip();
-  }, [triggerFlip]);
+    const onMove = (ev) => {
+      dx = Math.max(0, ev.clientX - startX);
+      setAvatarDx(Math.min(28, dx * 0.38));
+    };
 
-  useEffect(() => () => clearTimer(), [clearTimer]);
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      activeDragRef.current = null;
+      setAvatarDx(0);
+      if (dx >= DRAG_THRESHOLD) triggerFlip();
+    };
+
+    activeDragRef.current = { onMove, onUp };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  }, [isAnimating, triggerFlip]);
+
+  // Clean up everything on unmount
+  useEffect(() => {
+    return () => {
+      clearTimer();
+      if (activeDragRef.current) {
+        document.removeEventListener('pointermove', activeDragRef.current.onMove);
+        document.removeEventListener('pointerup', activeDragRef.current.onUp);
+      }
+    };
+  }, [clearTimer]);
 
   // Reset when content changes (e.g. profile switch)
   useEffect(() => {
@@ -141,15 +163,14 @@ export default function PostCard({ post }) {
               className="post-avatar"
               style={{
                 transform: `translateX(${avatarDx}px)`,
-                transition: avatarDx === 0 ? 'transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none',
+                transition: avatarDx === 0 && !activeDragRef.current
+                  ? 'transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94)'
+                  : 'none',
                 cursor: isAnimating ? 'default' : 'grab',
                 touchAction: 'none',
                 userSelect: 'none',
               }}
               onPointerDown={onAvatarPointerDown}
-              onPointerMove={onAvatarPointerMove}
-              onPointerUp={onAvatarPointerUp}
-              onPointerCancel={onAvatarPointerUp}
               aria-hidden
             >
               {avatarSrc ? <img className="post-avatar-img" src={avatarSrc} alt="" /> : avatarInitials}
