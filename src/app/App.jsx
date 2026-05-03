@@ -6,6 +6,7 @@ import TabBar from '@/features/profile/TabBar.jsx';
 import ProfileTab from '@/features/profile/ProfileTab.jsx';
 import PostsTab from '@/features/feed/PostsTab.jsx';
 import HomeTab from '@/features/home/HomeTab.jsx';
+import LandingPage from '@/landing-page/LandingPage.jsx';
 import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 
@@ -119,8 +120,8 @@ function topPersonaFromProfile(profile) {
 }
 
 export default function App() {
-  /** 'home' = feed only; 'profile' = profile capsule + tab bar + sections */
-  const [mainView, setMainView] = useState('home');
+  /** 'landing' = onboarding/intro; 'home' = feed only; 'profile' = profile capsule + tab bar + sections */
+  const [mainView, setMainView] = useState('landing');
   const [activeTab, setActiveTab] = useState('posts');
   const [profile, setProfile] = useState(null);
   const [personaOverride, setPersonaOverride] = useState(null); // 'productivity' | 'popularity' | 'security' | null
@@ -182,6 +183,10 @@ export default function App() {
     const next = order[(idx + 1) % order.length];
     setPersonaOverride(next);
   };
+
+  if (mainView === 'landing') {
+    return <LandingPage onEnterDemo={() => setMainView('home')} />;
+  }
 
   return (
     <div

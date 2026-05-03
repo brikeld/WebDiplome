@@ -17,6 +17,10 @@
   --font-sans: var(--font-avant);
   /* Shared by profile hero + posts shell (slightly less pill-like than before) */
   --capsule-radius: 56px;
+  /* White shell (feed + profile content): stroke width.
+     Edit THIS value to test (e.g. 20px). Do NOT use `var(--capsule-shell-border-width, 20px)` —
+     the fallback is ignored whenever the variable is defined (common mistake). */
+  --capsule-shell-border-width: 2px;
   /* Post type (Figma diploma-FILE, node 212:1262): Demi = body, name, meta; Book Oblique = @ handle */
   --post-bubble-h: 12.5rem;
   --post-body-size: 28px;
@@ -68,11 +72,15 @@ body {
   box-sizing: border-box;
   width: 100%;
   /* Wider capsules (+~15%) */
-  max-width: 900px;
+  max-width: 1040px;
   margin: 0 auto;
   padding: 16px 16px 16px 72px;
   min-height: 100vh;
   background: transparent;
+  /* Center scaled .main-col so overflow clips symmetrically (fixes right-edge capsule clip) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .sidebar {
@@ -200,8 +208,6 @@ body {
 .view-home .page {
   height: 100vh;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .view-home .main-col {
@@ -218,10 +224,12 @@ body {
   width: 100%;
   border-radius: var(--capsule-radius);
   background: #fff;
-  border: 1px solid var(--border);
+  border-style: solid;
+  border-color: var(--persona-accent, var(--border));
+  border-width: var(--capsule-shell-border-width);
   overflow: hidden;
   /* Inset from the outer white shell so post cards aren’t flush to the edge */
-  padding: 24px 28px 28px;
+  padding: 36px 40px 40px;
 }
 
 /* Home mode: capsule becomes the scroll viewport.

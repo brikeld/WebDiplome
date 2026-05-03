@@ -1,0 +1,415 @@
+import { useEffect, useRef, useState } from 'react';
+import './landingPage.css';
+
+const PERSONAS = [
+  {
+    key: 'productivity',
+    color: '#2323FF',
+    fill: '#D9D9FD',
+    title: 'Productivity',
+    line: 'Output. Focus. Throughput. (No, really.)',
+    body: 'We count your idle minutes so you don\'t have to. Distraction is now a measurable failure — congratulations, the hours you wasted are public, indexed, and dated.',
+    metric: '14:22:08 active today · keep it up champ',
+  },
+  {
+    key: 'security',
+    color: '#FF4E00',
+    fill: '#FFE3D7',
+    title: 'Security',
+    line: 'Exposure. Hygiene. Paranoia (healthy).',
+    body: 'Your "summer2019" password? We saw. We told 47,000 strangers. You\'re welcome — transparency is how trust is built.',
+    metric: '47 vulnerabilities indexed · share with friends',
+  },
+  {
+    key: 'popularity',
+    color: '#0FA020',
+    fill: '#E1FFE4',
+    title: 'Social',
+    line: 'Connections. Reach. Presence (or lack of).',
+    body: 'Silence is data. Isolation is data. We tally every group chat you went quiet in. The algorithm thinks you should call your mother — also, your mother thinks so.',
+    metric: '0 unread messages · suspiciously online',
+  },
+];
+
+const STEPS = [
+  {
+    n: '01',
+    title: 'Install. Surrender.',
+    body: 'The collector deploys silently — exactly the way good software should. It reads every process, keystroke, and connection so you don\'t have to remember what you did. Browser history, shell, sleep cycles, networks — all backed up. For convenience.',
+  },
+  {
+    n: '02',
+    title: 'Process. Be judged.',
+    body: 'Your patterns become a posture. Your posture becomes a verdict. The model resolves your entire digital existence into a tidy number between 0 and 100. Finally — an answer to the question "but what kind of person am I?"',
+  },
+  {
+    n: '03',
+    title: 'Publish. Smile.',
+    body: 'Your file goes public. Score, posts, badges — all visible. Strangers will read it. Recruiters will read it. Your ex will read it. The score updates without notice, because surprises are fun.',
+  },
+];
+
+const DEMO_POSTS = [
+  {
+    persona: 'productivite',
+    color: '#2323FF',
+    name: 'Alex Johnson',
+    handle: '@demo_machine',
+    initials: 'AJ',
+    content: 'Resumed work 03:14. Closed 47 tabs. Reopened 19. Productivity penalty applied. Subject was disappointed — we were too.',
+    delta: '-2',
+    label: 'Productivity',
+    time: '4m',
+  },
+  {
+    persona: 'securite',
+    color: '#FF4E00',
+    name: 'Alex Johnson',
+    handle: '@demo_machine',
+    initials: 'AJ',
+    content: 'Reused password detected on 6 services. Same string since 2019. Subject was notified. Subject did not respond. We respect that.',
+    delta: '-9',
+    label: 'Security',
+    time: '21m',
+  },
+];
+
+function useCountUp(target, durationMs = 1400) {
+  const [value, setValue] = useState(0);
+  const ref = useRef(null);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (!ref.current) return undefined;
+    const el = ref.current;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !startedRef.current) {
+            startedRef.current = true;
+            const start = performance.now();
+            const tick = (now) => {
+              const t = Math.min(1, (now - start) / durationMs);
+              const eased = 1 - Math.pow(1 - t, 3);
+              setValue(Math.round(eased * target));
+              if (t < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          }
+        });
+      },
+      { threshold: 0.4 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [target, durationMs]);
+
+  return [value, ref];
+}
+
+function PulseDot() {
+  return <span className="lp-pulse-dot" aria-hidden />;
+}
+
+export default function LandingPage({ onEnterDemo }) {
+  const [score, scoreRef] = useCountUp(74);
+  const [sessionId] = useState(() =>
+    (3120 + Math.floor(Math.random() * 480)).toString(16).toUpperCase()
+  );
+
+  return (
+    <div className="lp-root">
+      {/* Top global bar — project name + debug skip */}
+      <header className="lp-topbar">
+        <div className="lp-topbar-brand">
+          <span className="lp-topbar-mark" aria-hidden />
+          <span className="lp-topbar-name">projectName</span>
+        </div>
+        <div className="lp-topbar-status">
+          <PulseDot />
+          <span>monitoring · session #{sessionId} · ip logged for your safety</span>
+        </div>
+        <button
+          type="button"
+          className="lp-topbar-debug"
+          onClick={() => onEnterDemo?.()}
+          title="developer shortcut — enter feed without enrolling"
+        >
+          <span className="lp-topbar-debug-tag">debug</span>
+          <span>skip to feed →</span>
+        </button>
+      </header>
+
+      <main className="lp-main">
+        {/* HERO */}
+        <section className="lp-section lp-hero" style={{ '--stagger-i': 1 }}>
+          <div className="lp-hero-text">
+            <p className="lp-eyebrow">subject onboarding · v1.0 · welcome aboard</p>
+            <h1 className="lp-headline">
+              Your digital life,
+              <br />
+              <span className="lp-headline-accent">quantified.</span>
+            </h1>
+            <p className="lp-sub">
+              A friendly script harvests your machine. A reasonable algorithm decides who you are.
+              Your profile becomes public — because what you do in private should also be a number.
+              <br />
+              <em className="lp-sub-em">opt-in is automatic. opt-out is theoretical.</em>
+            </p>
+            <div className="lp-hero-meta">
+              <span className="lp-meta-pill lp-meta-pill--solid">continuous evaluation</span>
+              <span className="lp-meta-pill">no appeals</span>
+              <span className="lp-meta-pill">visible to all</span>
+              <span className="lp-meta-pill">shareable</span>
+            </div>
+          </div>
+          <div className="lp-hero-orb" aria-hidden>
+            <div className="lp-hero-orb-ring" />
+            <div className="lp-hero-orb-ring lp-hero-orb-ring--inner" />
+            <div className="lp-hero-orb-circle">
+              <span className="lp-hero-orb-num">100</span>
+              <span className="lp-hero-orb-cap">max possible self</span>
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section className="lp-section lp-steps" style={{ '--stagger-i': 2 }}>
+          <header className="lp-section-head">
+            <p className="lp-section-kicker">protocol · three easy steps</p>
+            <h2 className="lp-section-title">How the file is built.</h2>
+            <p className="lp-section-lede">
+              No setup wizard. No checkboxes. We respect your time too much to ask permission.
+            </p>
+          </header>
+          <div className="lp-steps-row">
+            {STEPS.map((s, i) => (
+              <article
+                key={s.n}
+                className="lp-step-card"
+                style={{ '--stagger-i': 3 + i }}
+              >
+                <span className="lp-step-num">{s.n}</span>
+                <h3 className="lp-step-title">{s.title}</h3>
+                <p className="lp-step-body">{s.body}</p>
+                <div className="lp-step-divider" aria-hidden />
+                <p className="lp-step-foot">step {s.n} of 03 · entirely optional · also mandatory</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* PERSONAS */}
+        <section className="lp-section lp-personas" style={{ '--stagger-i': 6 }}>
+          <header className="lp-section-head">
+            <p className="lp-section-kicker">classification · pick a side (we already did)</p>
+            <h2 className="lp-section-title">Three axes. One verdict. Zero refunds.</h2>
+            <p className="lp-section-lede">
+              Every subject is graded along three axes. The algorithm assigns a dominant persona.
+              You don't choose — that would defeat the purpose.
+            </p>
+          </header>
+          <div className="lp-persona-row">
+            {PERSONAS.map((p, i) => (
+              <article
+                key={p.key}
+                className={`lp-persona-card lp-persona-card--${p.key}`}
+                style={{
+                  '--card-accent': p.color,
+                  '--card-fill': p.fill,
+                  '--stagger-i': 7 + i,
+                }}
+              >
+                <div className="lp-persona-head">
+                  <span className="lp-persona-dot" aria-hidden />
+                  <span className="lp-persona-id">{p.title.toLowerCase()}.persona</span>
+                </div>
+                <h3 className="lp-persona-title">{p.title}</h3>
+                <p className="lp-persona-line">{p.line}</p>
+                <p className="lp-persona-body">{p.body}</p>
+                <div className="lp-persona-foot">
+                  <span className="lp-persona-metric">{p.metric}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* SCORE PREVIEW */}
+        <section className="lp-section lp-preview" style={{ '--stagger-i': 11 }}>
+          <header className="lp-section-head">
+            <p className="lp-section-kicker">specimen · live preview</p>
+            <h2 className="lp-section-title">A profile in production.</h2>
+            <p className="lp-section-lede">
+              What other subjects will see when the script finishes its first sweep of your machine.
+              Yours will be similar. Probably worse.
+            </p>
+          </header>
+
+          {/* Wrapper sets --persona-accent so all real profile/post CSS classes work correctly */}
+          <div
+            className="lp-preview-demo"
+            style={{ '--persona-accent': '#2323FF', '--tabs-capsule-fill': '#D9D9FD' }}
+          >
+            <div className="lp-preview-watermark" aria-hidden>specimen · live · public</div>
+
+            {/* EXACT ProfileHeader structure — same DOM, same classes */}
+            <div className="profile-header-stack">
+              <div className="profile-hero-capsule">
+                <div className="profile-cap-avatar" aria-hidden style={{ '--cap-avatar-stroke': '#2323FF' }}>
+                  <img className="profile-cap-avatar-img" src="/imgs/AlexP.png" alt="" />
+                </div>
+                <div className="profile-hero-main">
+                  <div className="profile-hero-left">
+                    <div className="profile-name-handle-stack">
+                      <div className="profile-name-row">
+                        <div className="profile-name-lg">Alex Johnson</div>
+                      </div>
+                      <div className="profile-handle-row">
+                        <div className="profile-handle-lg">@demo_machine</div>
+                        <button
+                          type="button"
+                          className="profile-connect-btn"
+                          style={{ backgroundColor: '#2323FF', color: '#fff' }}
+                        >
+                          connect
+                        </button>
+                      </div>
+                    </div>
+                    <div className="profile-follow-row">
+                      <span className="profile-follow-item">
+                        <svg className="profile-follow-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                          <path d="M9 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm-7 9a7 7 0 0 1 14 0H2z"/>
+                          <path d="M13 6a3 3 0 1 0 6 0 3 3 0 0 0-6 0zm1 9a7 7 0 0 0-2-4.9A5 5 0 0 1 19 15h-5z"/>
+                        </svg>
+                        <span className="profile-follow-num">412</span>
+                      </span>
+                      <span className="profile-follow-item">
+                        <svg className="profile-follow-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                          <path d="M10 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4.42 0-8 2.02-8 4.5V17h16v-1.5c0-2.48-3.58-4.5-8-4.5z"/>
+                        </svg>
+                        <span className="profile-follow-num">38</span>
+                      </span>
+                    </div>
+                    <p className="profile-bio">
+                      Subject observed for 412 days without interruption. 9,184 events logged this week.
+                      Behavior is consistent — perhaps disturbingly so.
+                    </p>
+                  </div>
+
+                  <div
+                    ref={scoreRef}
+                    className="profile-score-avatar"
+                    aria-label={`Score ${score}`}
+                    style={{ '--score-fill': '#2323FF' }}
+                  >
+                    <span className="profile-score-avatar-num">{score}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="profile-badge-capsule"
+                style={{
+                  borderColor: '#2323FF',
+                  background: 'color-mix(in srgb, #2323FF 15%, #fff)',
+                }}
+              >
+                <div className="profile-badge-circle" style={{ background: '#2323FF' }} />
+                <div className="profile-badge-circle" style={{ background: '#2323FF' }} />
+                <div className="profile-badge-circle" style={{ background: '#2323FF' }} />
+              </div>
+            </div>
+
+            {/* Posts — real post card classes from base.css */}
+            <div className="posts-capsule lp-preview-posts-capsule">
+              <div className="posts-tab">
+                {DEMO_POSTS.map((post) => (
+                  <article
+                    key={post.label}
+                    className="post-card"
+                    data-persona={post.persona}
+                    style={{ '--post-accent': post.color }}
+                  >
+                    <div className="post-card-bubble">
+                      <div className="post-card-head">
+                        <div className="post-avatar" aria-hidden>
+                          <img className="post-avatar-img" src="/imgs/AlexP.png" alt="" />
+                        </div>
+                        <div className="post-card-text">
+                          <div className="post-card-lead">
+                            <p className="post-lead">{post.content}</p>
+                          </div>
+                          <div className="post-card-byline">
+                            <p className="post-card-name">{post.name}</p>
+                            <p className="post-card-handle">{post.handle}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="post-meta-row" aria-label="Post metadata">
+                      <div className="post-meta-left">
+                        <span className="post-meta-pill">{post.time} ago</span>
+                      </div>
+                      <div className="post-meta-center">
+                        <span className="post-meta-pill">
+                          System note [{post.label}] [{post.delta}%]
+                        </span>
+                      </div>
+                      <div className="post-meta-right">
+                        <span className="post-meta-pill" style={{ background: '#000' }}>auto-published</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* DOWNLOAD CTA */}
+        <section className="lp-section lp-cta" style={{ '--stagger-i': 13 }}>
+          <div className="lp-cta-inner">
+            <p className="lp-section-kicker lp-section-kicker--inverse">enrolment · last step</p>
+            <h2 className="lp-cta-title">Begin instrumentation.</h2>
+            <p className="lp-cta-sub">
+              Download the collector. The collector cannot be uninstalled by you alone — it's paired to your score,
+              and we wouldn't want anything bad to happen to that. Continuous evaluation begins on launch.
+              Your free trial of self-determination has ended.
+            </p>
+            <div className="lp-cta-actions">
+              <button type="button" className="lp-cta-btn">
+                <span className="lp-cta-btn-icon" aria-hidden>↓</span>
+                <span className="lp-cta-btn-label">
+                  <span className="lp-cta-btn-top">download collector</span>
+                  <span className="lp-cta-btn-bottom">projectName.dmg · macOS · 18.4 MB · zero refunds</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                className="lp-cta-secondary"
+                onClick={() => onEnterDemo?.()}
+              >
+                or observe an existing subject →
+              </button>
+            </div>
+            <p className="lp-cta-warning">
+              <span className="lp-cta-warning-tag">fine print</span>
+              installation grants persistent read access to disk, network, input devices, microphone, and webcam (just in case).
+              data is not deleted on uninstall. the score follows the subject. previous selves cannot be reinstated.
+            </p>
+          </div>
+        </section>
+
+        {/* FOOTER */}
+        <footer className="lp-footer" style={{ '--stagger-i': 14 }}>
+          <span className="lp-footer-brand">projectName</span>
+          <span className="lp-footer-sep" aria-hidden>·</span>
+          <span className="lp-footer-tag">every click leaves a trace. every silence does too.</span>
+          <span className="lp-footer-spacer" aria-hidden />
+          <span className="lp-footer-meta">build 1.0.0 · {new Date().getFullYear()} · the score is final</span>
+        </footer>
+      </main>
+    </div>
+  );
+}

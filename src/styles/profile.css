@@ -4,9 +4,11 @@
   width: 100%;
   border-radius: var(--capsule-radius);
   background: #fff;
-  border: 1px solid var(--border);
+  border-style: solid;
+  border-color: var(--persona-accent, var(--border));
+  border-width: var(--capsule-shell-border-width);
   overflow: hidden;
-  padding: 24px 28px 28px;
+  padding: 36px 40px 40px;
 }
 
 /* (tabs-row--above-capsule kept for any legacy reference, no extra overrides needed) */
