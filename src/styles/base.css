@@ -20,10 +20,11 @@
   /* Post type (Figma diploma-FILE, node 212:1262): Demi = body, name, meta; Book Oblique = @ handle */
   --post-bubble-h: 12.5rem;
   --post-body-size: 28px;
-  --post-body-weight: 700;
+  /* 600 matches @font-face for AvantGardeITCbyBT-Demi.woff2 (700 would load Bold) */
+  --post-body-weight: 600;
   --post-body-line: 0.95;
   --post-name-size: 19.2px;
-  --post-name-weight: 700;
+  --post-name-weight: 600;
   --post-name-line: 1.2;
   --post-handle-size: 12.8px;
   /* Handle uses BookOblique; synthetic bolder face for display */
@@ -504,6 +505,7 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   padding-top: 3px;
+  padding-right: 20px;
 }
 
 /* Fills space under short posts (with @ at bottom); no overflow-y — long posts grow the card */
@@ -532,7 +534,8 @@ body {
   line-height: var(--post-body-line);
   letter-spacing: -0.01em;
   color: var(--post-accent);
-  font-family: var(--font-sans);
+  /* Demi face: AvantGardeITCbyBT-Demi.woff2 @ weight 600 */
+  font-family: var(--font-avant);
   white-space: pre-line;
   margin: 0;
   /* Shorter measure → lines break sooner; still full width on narrow cards */
