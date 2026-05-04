@@ -1,12 +1,13 @@
 /* Landing page — fully self-contained.
-   Uses tokens defined in src/styles/base.css (:root) but renders OUTSIDE
-   the regular .page / .main-col / Sidebar shell, so it can occupy the
-   full viewport width and own its own layout. */
+   Renders OUTSIDE the regular .page / .main-col / Sidebar shell.
+   Chrome stays monochrome (black / grey / white). Persona accent colors
+   appear ONLY inside persona cards and the Alex demo profile. */
 
 .lp-root {
-  --lp-max-width: 1480px;
+  --lp-max-width: 1560px;
   --lp-edge-pad: clamp(20px, 4vw, 56px);
   --lp-section-gap: clamp(48px, 8vw, 96px);
+  --lp-line: #d8d6d3;
 
   width: 100%;
   min-height: 100vh;
@@ -29,9 +30,74 @@
   50%      { opacity: 0.45; transform: scale(0.85); }
 }
 
-@keyframes lp-orb-drift {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+@keyframes lp-macbook-float {
+  0%, 100% { transform: rotateX(8deg) rotateY(-7deg) translateY(0); }
+  50%      { transform: rotateX(8deg) rotateY(-7deg) translateY(-12px); }
+}
+
+/* Lid open — uses two-stage easing keyframes for a hinge that swings up,
+   over-rotates slightly past vertical, then gently rocks back to rest. */
+@keyframes lp-macbook-open {
+  0% {
+    transform: rotateX(86deg);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.45, 1);
+  }
+  62% {
+    transform: rotateX(-6deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  82% {
+    transform: rotateX(2deg);
+    animation-timing-function: ease-out;
+  }
+  92% {
+    transform: rotateX(-0.6deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+/* Base "settles" first — slight scale pulse to suggest the laptop being
+   placed on the surface */
+@keyframes lp-macbook-base-settle {
+  0% {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes lp-scan {
+  0%   { transform: translateY(-110%); }
+  100% { transform: translateY(420%); }
+}
+
+@keyframes lp-screen-glow {
+  0%, 30%  { opacity: 0; }
+  70%, 100% { opacity: 1; }
+}
+
+@keyframes lp-mini-post-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-110%) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lp-ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 .lp-section,
@@ -46,7 +112,6 @@
   height: 9px;
   border-radius: 50%;
   background: #FF4E00;
-  box-shadow: 0 0 0 0 rgba(255, 78, 0, 0.4);
   display: inline-block;
   flex-shrink: 0;
   animation: lp-pulse 1.6s ease-in-out infinite;
@@ -58,11 +123,11 @@
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 18px var(--lp-edge-pad) 18px;
+  padding: 18px var(--lp-edge-pad);
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(242, 240, 239, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -76,21 +141,15 @@
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.005em;
-  color: var(--ink);
+  color: #000;
 }
 
 .lp-topbar-mark {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #2323FF;
-  box-shadow:
-    inset 0 0 0 3px #fff,
-    inset 0 0 0 4px #2323FF;
-}
-
-.lp-topbar-name {
-  text-transform: none;
+  background: #000;
+  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px #000;
 }
 
 .lp-topbar-status {
@@ -131,7 +190,7 @@
 }
 
 .lp-topbar-debug:focus-visible {
-  outline: 2px solid #2323FF;
+  outline: 2px solid #000;
   outline-offset: 3px;
 }
 
@@ -141,8 +200,8 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   padding: 2px 6px 3px;
-  border-radius: 999px;
-  background: #FF4E00;
+  border-radius: 4px;
+  background: #000;
   color: #fff;
 }
 
@@ -158,12 +217,12 @@
   gap: var(--lp-section-gap);
 }
 
-/* ── section heads ──────────────────────────────────────────── */
+/* ── SECTION HEADS ──────────────────────────────────────────── */
 
 .lp-section-head {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 36px;
   text-align: center;
   align-items: center;
@@ -171,28 +230,26 @@
 
 .lp-section-kicker {
   font-family: var(--font-avant);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #2323FF;
-  padding: 6px 14px 7px;
-  border-radius: 9999px;
-  border: 1.5px solid #2323FF;
-  background: color-mix(in srgb, #2323FF 8%, #fff);
+  color: #fff;
+  background: #000;
+  padding: 6px 12px 7px;
+  border-radius: 4px;
 }
 
 .lp-section-kicker--inverse {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.4);
+  color: #000;
+  background: #fff;
 }
 
 .lp-section-title {
   font-family: var(--font-avant);
   font-size: clamp(36px, 5vw, 60px);
   font-weight: 700;
-  line-height: 1.02;
+  line-height: 1;
   letter-spacing: -0.025em;
   color: #000;
   max-width: 22ch;
@@ -207,51 +264,68 @@
   opacity: 0.78;
 }
 
-/* ── HERO ────────────────────────────────────────────────────── */
+/* ── HERO ───────────────────────────────────────────────────── */
 
 .lp-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: clamp(32px, 5vw, 80px);
+  /* Right column slightly bigger so the larger laptop has room to breathe */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(28px, 4vw, 56px);
   align-items: center;
-  padding: clamp(36px, 5vw, 64px) clamp(36px, 5vw, 64px);
-  border-radius: 64px;
+  padding: clamp(36px, 4.5vw, 64px) clamp(32px, 4vw, 56px);
+  border-radius: 56px;
   background: #fff;
-  border: 2px solid #2323FF;
+  border: 2px solid #000;
   position: relative;
   overflow: hidden;
 }
 
+/* subtle grid texture in the background */
 .lp-hero::before {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 100% 50%, color-mix(in srgb, #2323FF 14%, transparent) 0%, transparent 60%);
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px;
   pointer-events: none;
+  mask-image: radial-gradient(circle at 80% 50%, #000 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle at 80% 50%, #000 0%, transparent 70%);
 }
 
 .lp-hero-text {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
   min-width: 0;
 }
 
 .lp-eyebrow {
   font-family: var(--font-avant);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #2323FF;
-  opacity: 0.85;
+  color: #000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+}
+
+.lp-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: #000;
 }
 
 .lp-headline {
   font-family: var(--font-avant);
-  font-size: clamp(56px, 8vw, 112px);
+  font-size: clamp(56px, 8vw, 116px);
   font-weight: 700;
   line-height: 0.94;
   letter-spacing: -0.04em;
@@ -259,8 +333,49 @@
 }
 
 .lp-headline-accent {
-  color: #2323FF;
+  display: inline-block;
+  position: relative;
   font-style: italic;
+  color: #000;
+  padding: 0 4px;
+}
+
+.lp-headline-accent::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 8px;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.08);
+  z-index: -1;
+  border-radius: 2px;
+}
+
+/* Pull-quote tagline directly below the headline */
+.lp-hero-hook {
+  font-family: var(--font-avant);
+  font-size: clamp(18px, 1.7vw, 26px);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: #000;
+  max-width: 32ch;
+  position: relative;
+  padding-left: 18px;
+  margin-top: 4px;
+}
+
+.lp-hero-hook::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  width: 3px;
+  background: #000;
+  border-radius: 2px;
 }
 
 .lp-sub {
@@ -273,10 +388,13 @@
 
 .lp-sub-em {
   display: inline-block;
-  margin-top: 4px;
+  margin-top: 6px;
   font-style: italic;
-  color: #FF4E00;
-  font-weight: 600;
+  color: #000;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 1px 7px 2px;
+  border-radius: 3px;
 }
 
 .lp-hero-meta {
@@ -306,61 +424,666 @@
   color: #fff;
 }
 
-.lp-hero-orb {
+/* ── MACBOOK MOCKUP ─────────────────────────────────────────── */
+
+.lp-macbook-wrap {
   position: relative;
-  width: clamp(220px, 28vw, 360px);
-  aspect-ratio: 1;
-  margin-left: auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1800px;
+  padding: 24px 0 36px;
+}
+
+/* Soft ambient ground shadow under the laptop */
+.lp-macbook-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: 12px;
+  left: 12%;
+  right: 12%;
+  height: 26px;
+  background:
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0.18) 35%, transparent 70%);
+  filter: blur(14px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  animation: lp-screen-glow 1.4s ease-out 1.8s forwards;
+}
+
+.lp-macbook {
+  position: relative;
+  width: clamp(320px, 40vw, 600px);
+  flex-shrink: 0;
+  transform-style: preserve-3d;
+  /* Initial tilt held during the lid-open animation; float kicks in afterwards */
+  transform: rotateX(8deg) rotateY(-7deg);
+  animation: lp-macbook-float 7s ease-in-out 3.2s infinite;
+}
+
+.lp-macbook-display {
+  position: relative;
+  /* Aluminum frame: subtle vertical gradient with darker top + bottom rim */
+  background:
+    linear-gradient(180deg, #131313 0%, #0a0a0a 50%, #050505 100%);
+  border-radius: 14px 14px 4px 4px;
+  /* Thinner bezels — closer to modern MacBook Pro proportions */
+  padding: 12px 10px 16px;
+  border: 1px solid #2c2c2c;
+  /* Multi-layer shadow stack:
+       1) inset top edge highlight (light catching aluminum top edge)
+       2) inset bottom edge shadow
+       3) inset side edges
+       4) ambient drop shadow (large + soft)
+       5) tighter contact shadow */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+    inset 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset -1px 0 0 rgba(0, 0, 0, 0.4),
+    0 38px 80px rgba(0, 0, 0, 0.42),
+    0 14px 28px rgba(0, 0, 0, 0.28);
+  transform-origin: bottom;
+  transform-style: preserve-3d;
+  /* Start closed (rotated flat against base) and open after a small delay */
+  transform: rotateX(86deg);
+  animation: lp-macbook-open 1.8s 1.0s forwards;
+}
+
+.lp-macbook-display::before {
+  /* MacBook notch — small black pill hanging just into the top of the screen */
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16%;
+  height: 8px;
+  background: #050505;
+  border-radius: 0 0 7px 7px;
+  border: 1px solid #1a1a1a;
+  border-top: none;
+  z-index: 8;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Subtle highlight along the very top edge of the display (light catching aluminum) */
+.lp-macbook-display::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 6%;
+  right: 6%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.22) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 7;
+}
+
+.lp-macbook-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/10;
+  background: #F2F0EF;
+  border-radius: 4px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Subtle inner shadow simulates the screen "sunk" inside the bezel */
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 4px rgba(0, 0, 0, 0.5);
+  /* Hide content while lid is closed; fade in as it opens */
+  opacity: 0;
+  animation: lp-screen-glow 1.8s ease-out 1.0s forwards;
+}
+
+/* Glass reflection / glare + corner vignette */
+.lp-macbook-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  border-radius: inherit;
+  background:
+    /* Top-left diagonal sheen — simulates ambient light hitting glass */
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.16) 0%,
+      rgba(255, 255, 255, 0.06) 18%,
+      rgba(255, 255, 255, 0.0) 38%,
+      transparent 100%
+    ),
+    /* Faint wide reflection band lower */
+    linear-gradient(
+      155deg,
+      transparent 0%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.05) 70%,
+      transparent 80%
+    ),
+    /* Vignette — corners slightly darker for that curved-glass feel */
+    radial-gradient(
+      ellipse 110% 110% at 50% 50%,
+      transparent 55%,
+      rgba(0, 0, 0, 0.18) 100%
+    );
+  mix-blend-mode: overlay;
+}
+
+.lp-macbook-screen::after {
+  /* moving scan band */
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 30%;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  animation: lp-scan 8s ease-in-out 3.6s infinite;
+  z-index: 5;
+}
+
+.lp-macbook-base {
+  position: relative;
+  width: 118%;
+  margin-left: -9%;
+  height: 18px;
+  /* Brushed aluminum: lighter highlight on top, deeper grey at the front edge */
+  background:
+    linear-gradient(
+      180deg,
+      #f0eeec 0%,
+      #d4d2cf 16%,
+      #b6b4b1 60%,
+      #8e8c89 100%
+    );
+  border-radius: 0 0 14px 14px;
+  border: 1px solid #989897;
+  border-top: none;
+  /* Multi-layer shadow:
+       1) inset top-edge bright highlight
+       2) inset front-edge dark line
+       3) ambient drop shadow (large, soft)
+       4) tighter contact shadow against the surface */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+    inset 1px 0 0 rgba(255, 255, 255, 0.25),
+    inset -1px 0 0 rgba(0, 0, 0, 0.08),
+    0 24px 38px rgba(0, 0, 0, 0.2),
+    0 6px 14px rgba(0, 0, 0, 0.14);
+  /* Subtle settle as the laptop lands on its surface */
+  animation: lp-macbook-base-settle 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s backwards;
+}
+
+.lp-macbook-base::before {
+  /* Trackpad cutout — small darker pill at the top-front of the base */
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24%;
+  height: 7px;
+  background: linear-gradient(180deg, #6b6b6a 0%, #8e8c89 100%);
+  border-radius: 0 0 8px 8px;
+  box-shadow:
+    inset 0 1px 1px rgba(0, 0, 0, 0.3),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ── MINI APP (inside the macbook screen) ──────────────────────
+   Mini-version of the actual profile-feed page: sidebar rail, profile
+   capsule with cap-avatar + score + badges, tabs row, posts capsule. */
+
+.lp-mini-app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  gap: 4px;
+  padding: 6px 6px 6px 5px;
+  background: #D9D9FD;
+  font-family: var(--font-avant);
+  overflow: hidden;
+}
+
+.lp-mini-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 1.5px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #D9D9FD;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.lp-mini-rail-btn {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 7px;
+  color: #000;
+  opacity: 0.5;
+}
+
+.lp-mini-rail-btn--active {
+  background: #2323FF;
+  color: #fff;
+  opacity: 1;
+}
+
+.lp-mini-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* ── mini profile capsule (mirrors profile-header-stack) ────── */
+
+.lp-mini-profile-stack {
+  position: relative;
+  margin-top: 14px;
+  padding-bottom: 4px;
+}
+
+.lp-mini-cap-avatar {
+  position: absolute;
+  left: 50%;
+  top: -8px;
+  transform: translateX(-50%);
+  z-index: 4;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid #2323FF;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+.lp-mini-cap-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lp-mini-profile {
+  position: relative;
+  background: #2323FF;
+  border: 1.2px solid #2323FF;
+  border-radius: 9999px;
+  padding: 5px 9px 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  width: 92%;
+  margin: 0 auto;
+}
+
+.lp-mini-profile-text {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.lp-mini-profile-name {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-mini-profile-handle {
+  font-size: 5.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: oblique;
+  line-height: 1.3;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.lp-mini-profile-connect {
+  font-style: normal;
+  background: #fff;
+  color: #2323FF;
+  padding: 1px 3px 1px;
+  border-radius: 999px;
+  font-size: 5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.lp-mini-profile-bio {
+  margin-top: 0;
+  font-size: 5.5px;
+  font-weight: 500;
+  color: #fff;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-mini-profile-score {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  color: #2323FF;
+  display: grid;
+  place-items: center;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── mini tabs row ──────────────────────────────────────────── */
+
+.lp-mini-tabs {
+  display: flex;
+  gap: 1px;
+  padding: 1.5px;
+  border-radius: 9999px;
+  border: 1px solid #2323FF;
+  background: #2323FF;
+  width: 92%;
+  margin: 0 auto;
+}
+
+.lp-mini-tab {
+  flex: 1;
+  text-align: center;
+  font-size: 6px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 3px 3px;
+  border-radius: 9999px;
+  color: #fff;
+}
+
+.lp-mini-tab--active {
+  background: #fff;
+  color: #2323FF;
+  font-weight: 700;
+}
+
+/* ── mini posts shell (mirrors posts-capsule) ───────────────── */
+
+.lp-mini-posts-shell {
+  flex: 1 1 0;
+  /* Narrower capsule — sits centered inside the mini col */
+  width: 68%;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #2323FF;
+  border-radius: 12px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.lp-mini-posts-stream {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+  padding-top: 2px;
+}
+
+.lp-mini-post-block {
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: lp-mini-post-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.lp-mini-post {
+  background: color-mix(in srgb, var(--p-accent) 14%, #fff);
+  border: 1px solid var(--p-accent);
+  border-radius: 9999px;
+  padding: 2px 5px 2px 2px;
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  min-height: 18px;
   flex-shrink: 0;
 }
 
-.lp-hero-orb-ring {
-  position: absolute;
-  inset: -10%;
+.lp-mini-post-avatar {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  border: 2px dashed #2323FF;
-  opacity: 0.45;
-  animation: lp-orb-drift 32s linear infinite;
+  border: 1px solid var(--p-accent);
+  overflow: hidden;
+  background: #fff;
+  align-self: center;
 }
 
-.lp-hero-orb-ring--inner {
-  inset: 6%;
-  border-style: dotted;
-  border-color: #FF4E00;
-  opacity: 0.3;
-  animation-direction: reverse;
-  animation-duration: 22s;
-}
-
-.lp-hero-orb-circle {
-  position: absolute;
-  inset: 14%;
-  border-radius: 50%;
-  background: #2323FF;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  text-align: center;
-  box-shadow: 0 28px 60px color-mix(in srgb, #2323FF 32%, transparent);
-}
-
-.lp-hero-orb-num {
-  font-family: var(--font-avant);
-  font-size: clamp(72px, 9vw, 130px);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.03em;
+.lp-mini-post-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
-.lp-hero-orb-cap {
-  display: block;
-  margin-top: 6px;
-  font-size: 12px;
+.lp-mini-post-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  min-width: 0;
+  flex: 1 1 0;
+  padding-right: 2px;
+}
+
+.lp-mini-post-lead {
+  font-size: 6px;
   font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--p-accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-mini-post-byline {
+  font-size: 4.5px;
+  font-weight: 600;
+  color: var(--p-accent);
+  font-style: oblique;
+}
+
+/* Mini metadata row — sits cleanly below its post, no overlap */
+.lp-mini-post-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  column-gap: 2px;
+  align-items: center;
+  padding: 0 2px;
+  margin-top: 1px;
+  min-height: 7px;
+  pointer-events: none;
+}
+
+.lp-mini-meta-left,
+.lp-mini-meta-center,
+.lp-mini-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.lp-mini-meta-left {
+  justify-content: flex-end;
+}
+
+.lp-mini-meta-center {
+  justify-content: center;
+}
+
+.lp-mini-meta-right {
+  justify-content: flex-start;
+}
+
+.lp-mini-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5px 2px 1px;
+  border-radius: 999px;
+  background: var(--p-accent);
+  color: #fff;
+  font-size: 3.2px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-mini-meta-pill--system {
+  font-size: 2.8px;
+  max-width: 52px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.05;
+  hyphens: auto;
+}
+
+.lp-mini-meta-pill--icon {
+  min-width: 8px;
+  padding: 0.5px 3px 1px;
+}
+
+.lp-mini-meta-pill--icon svg {
+  display: block;
+  width: 5px;
+  height: 5px;
+}
+
+/* ── SURVEILLANCE TICKER ────────────────────────────────────── */
+
+.lp-ticker {
+  width: 100%;
+  background: #000;
+  color: #fff;
+  border-radius: 9999px;
+  padding: 14px 0;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #1a1a1a;
+}
+
+.lp-ticker::before,
+.lp-ticker::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.lp-ticker::before {
+  left: 0;
+  background: linear-gradient(90deg, #000 30%, transparent);
+}
+
+.lp-ticker::after {
+  right: 0;
+  background: linear-gradient(-90deg, #000 30%, transparent);
+}
+
+.lp-ticker-track {
+  display: flex;
+  gap: 36px;
+  white-space: nowrap;
+  width: max-content;
+  animation: lp-ticker-scroll 90s linear infinite;
+}
+
+.lp-ticker-item {
+  font-family: var(--font-avant);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.lp-ticker-arrow {
+  font-weight: 700;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.lp-ticker-arrow--down { color: #FF4E00; }
+.lp-ticker-arrow--up   { color: #5af598; }
+
+.lp-ticker-tag {
+  font-family: var(--font-avant);
+  font-size: 9px;
+  font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  opacity: 0.85;
+  padding: 2px 7px 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.lp-ticker-sep {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
 }
 
 /* ── STEPS ──────────────────────────────────────────────────── */
@@ -377,13 +1100,20 @@
   gap: 14px;
   padding: 36px 32px 28px;
   border-radius: 40px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--lp-line);
   background: #fff;
   position: relative;
   opacity: 0;
   animation: lp-fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   animation-delay: calc(var(--stagger-i, 0) * 0.09s);
   min-height: 320px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.lp-step-card:hover {
+  transform: translateY(-3px);
+  border-color: #000;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.1);
 }
 
 .lp-step-num {
@@ -392,7 +1122,7 @@
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.05em;
-  color: #2323FF;
+  color: #000;
 }
 
 .lp-step-title {
@@ -414,15 +1144,15 @@
 
 .lp-step-divider {
   height: 1px;
-  background: var(--border);
+  background: var(--lp-line);
   margin: 8px 0 0;
 }
 
 .lp-step-foot {
   font-family: var(--font-avant);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -541,8 +1271,6 @@
 
 .lp-preview-demo {
   position: relative;
-  /* Top padding so the profile-cap-avatar (which overflows upward from
-     profile-hero-capsule top edge) is always fully visible */
   padding-top: 28px;
 }
 
@@ -559,49 +1287,55 @@
   opacity: 0.65;
 }
 
-/* Slim top-margin override so posts capsule sits just below the badge capsule */
 .lp-preview-posts-capsule {
   margin-top: 32px;
 }
 
-/* ── CTA ────────────────────────────────────────────────────── */
+/* ── CTA — REWORKED (no gradient, two-column with permission dialog) ── */
 
 .lp-cta {
-  border-radius: 64px;
-  background: #000;
+  border-radius: 56px;
+  background: #0a0a0a;
   color: #fff;
-  padding: clamp(56px, 6vw, 96px) clamp(36px, 5vw, 64px) clamp(48px, 5vw, 80px);
+  padding: clamp(48px, 5vw, 80px) clamp(32px, 4vw, 64px);
   position: relative;
   overflow: hidden;
 }
 
+/* dotted texture, subtle, no gradient */
 .lp-cta::before {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 0% 0%, color-mix(in srgb, #2323FF 32%, transparent) 0%, transparent 50%),
-    radial-gradient(circle at 100% 100%, color-mix(in srgb, #FF4E00 26%, transparent) 0%, transparent 50%);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
   pointer-events: none;
 }
 
-.lp-cta-inner {
+.lp-cta-grid {
   position: relative;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: clamp(28px, 4vw, 56px);
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.lp-cta-pitch {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  max-width: 820px;
-  margin: 0 auto;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
 }
 
 .lp-cta-title {
   font-family: var(--font-avant);
-  font-size: clamp(48px, 7vw, 88px);
+  font-size: clamp(48px, 6.5vw, 88px);
   font-weight: 700;
-  line-height: 1;
+  line-height: 0.95;
   letter-spacing: -0.035em;
+  color: #fff;
 }
 
 .lp-cta-sub {
@@ -609,78 +1343,76 @@
   font-weight: 500;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.78);
-  max-width: 56ch;
+  max-width: 52ch;
 }
 
-.lp-cta-actions {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.lp-cta-btn {
+.lp-cta-button {
   appearance: none;
   border: none;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px 32px 20px 26px;
-  border-radius: 9999px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-radius: 24px;
   background: #fff;
   color: #000;
   font-family: var(--font-avant);
   text-align: left;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 460px;
+  overflow: hidden;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.32);
+  box-shadow:
+    0 28px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-.lp-cta-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 28px 56px rgba(0, 0, 0, 0.45);
+.lp-cta-button:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 36px 70px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
-.lp-cta-btn:active {
-  transform: translateY(0);
-}
-
-.lp-cta-btn:focus-visible {
-  outline: 2px solid #fff;
+.lp-cta-button:focus-visible {
+  outline: 3px solid #fff;
   outline-offset: 4px;
 }
 
-.lp-cta-btn-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
+.lp-cta-button-icon {
+  width: 88px;
+  flex-shrink: 0;
   background: #000;
   color: #fff;
   display: grid;
   place-items: center;
-  font-size: 22px;
+  font-size: 36px;
   font-weight: 800;
 }
 
-.lp-cta-btn-label {
+.lp-cta-button-body {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  justify-content: center;
+  padding: 16px 24px 18px 22px;
+  gap: 4px;
 }
 
-.lp-cta-btn-top {
+.lp-cta-button-top {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.015em;
+  line-height: 1.05;
 }
 
-.lp-cta-btn-bottom {
-  font-size: 12px;
+.lp-cta-button-bottom {
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
   color: var(--muted);
 }
 
@@ -688,13 +1420,14 @@
   appearance: none;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   font-family: var(--font-avant);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: lowercase;
+  padding: 0;
   text-decoration: underline;
   text-underline-offset: 5px;
   transition: color 0.15s ease;
@@ -710,24 +1443,194 @@
   border-radius: 4px;
 }
 
-.lp-cta-warning {
+/* ── FAKE PERMISSION DIALOG (right column of CTA) ───────────── */
+
+.lp-perms {
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  border-radius: 22px;
+  overflow: hidden;
+  font-family: var(--font-avant);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+  transform: rotate(0.5deg);
+}
+
+.lp-perms-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 14px;
+  background: #232323;
+  border-bottom: 1px solid #2a2a2a;
+  position: relative;
+}
+
+.lp-perms-tl-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+.lp-perms-tl-dot--r { background: #ff5f57; }
+.lp-perms-tl-dot--y { background: #ffbd2e; }
+.lp-perms-tl-dot--g { background: #27c93f; }
+
+.lp-perms-tl-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: lowercase;
+}
+
+.lp-perms-body {
+  padding: 22px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lp-perms-head {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 22px;
-  padding: 12px 18px 13px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.04);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.72);
-  max-width: 70ch;
-  text-align: left;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #2a2a2a;
 }
 
-.lp-cta-warning-tag {
+.lp-perms-head-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #FF4E00;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.lp-perms-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lp-perms-head-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.005em;
+}
+
+.lp-perms-head-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.lp-perms-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lp-perms-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.01em;
+}
+
+.lp-perms-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: #5af598;
+  color: #000;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.lp-perms-item-state {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5af598;
+}
+
+.lp-perms-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.lp-perms-btn {
+  appearance: none;
+  cursor: pointer;
+  font-family: var(--font-avant);
+  border: none;
+  padding: 11px 14px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.lp-perms-btn--deny {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.35);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.lp-perms-btn--allow {
+  background: #5af598;
+  color: #000;
+}
+
+.lp-perms-btn--allow:hover  { filter: brightness(1.08); }
+.lp-perms-btn--allow:active { transform: translateY(1px); }
+
+/* fine print row at the bottom of the CTA */
+.lp-cta-foot {
+  position: relative;
+  margin: clamp(28px, 3vw, 48px) auto 0;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 1200px;
+  letter-spacing: 0.01em;
+}
+
+.lp-cta-foot-tag {
   flex-shrink: 0;
   font-family: var(--font-avant);
   font-size: 10px;
@@ -735,7 +1638,7 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   padding: 3px 9px 4px;
-  border-radius: 999px;
+  border-radius: 4px;
   background: #FF4E00;
   color: #fff;
 }
@@ -793,9 +1696,12 @@
     text-align: left;
   }
 
-  .lp-hero-orb {
-    margin: 0;
-    width: clamp(200px, 60vw, 320px);
+  .lp-macbook-wrap {
+    margin-top: 12px;
+  }
+
+  .lp-macbook {
+    width: clamp(260px, 80vw, 460px);
   }
 
   .lp-steps-row,
@@ -803,7 +1709,36 @@
     grid-template-columns: 1fr;
   }
 
+  .lp-cta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-perms {
+    transform: none;
+    max-width: 460px;
+    width: 100%;
+  }
+
   .lp-preview-demo {
     padding-top: 20px;
+  }
+}
+
+@media (max-width: 540px) {
+  .lp-ticker-track {
+    animation-duration: 60s;
+  }
+
+  .lp-cta-button-icon {
+    width: 64px;
+    font-size: 28px;
+  }
+
+  .lp-cta-button-top {
+    font-size: 18px;
+  }
+
+  .lp-perms-actions {
+    grid-template-columns: 1fr;
   }
 }

@@ -9,17 +9,20 @@
 
 .home-top-label {
   position: static;
-  width: 100%;
+  width: fit-content;
   max-width: 100%;
   font-family: var(--font-avant);
-  font-size: clamp(12px, 2.2vw, 20px);
+  font-size: clamp(12px, 1.8vw, 17px);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   line-height: 1.15;
   color: var(--persona-accent, var(--ink));
   text-align: center;
-  margin: 8px 0 18px;
-  opacity: 0.75;
+  margin: 8px auto 16px;
+  padding: 5px 18px 6px;
+  border: 2px solid var(--persona-accent, var(--ink));
+  border-radius: 999px;
+  background: transparent;
 }
 
 /* Home mode: home-tab passes flex height down to posts-capsule */
@@ -34,5 +37,6 @@
 /* for-you label doesn't grow; capsule takes the rest */
 .view-home .home-top-label {
   flex: 0 0 auto;
+  align-self: center;
 }
 

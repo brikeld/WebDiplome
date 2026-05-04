@@ -9,6 +9,7 @@ import HomeTab from '@/features/home/HomeTab.jsx';
 import LandingPage from '@/landing-page/LandingPage.jsx';
 import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
+import { getGlobalScore } from '@/lib/profileUtils.js';
 
 const PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 const PERSONA_ALIASES = {
@@ -24,6 +25,11 @@ const PERSONA_COLORS = {
   productivity: '#2323FF',
   security: '#FF4E00',
   popularity: '#0FA020',
+};
+const PERSONA_LABELS = {
+  productivity: 'Productivity',
+  security: 'Security',
+  popularity: 'Social',
 };
 
 /** Tab strip background (Posts / Badges / Profile / Rankings) per persona */
@@ -172,7 +178,7 @@ export default function App() {
   const personaTabFill =
     PERSONA_TAB_FILLS[personaKey] ?? PERSONA_TAB_FILLS.productivity;
   const lastAnalysisText = formatLastAnalysis(profile);
-
+  const globalScore = getGlobalScore(profile ?? {}) ?? 76;
   const personaToggleLabel =
     personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
 
@@ -197,19 +203,21 @@ export default function App() {
         '--persona-secondary': personaTabFill,
       }}
     >
-      <button
-        type="button"
-        className="persona-toggle-btn"
-        aria-label="Change persona theme"
-        onClick={cyclePersona}
-        style={{
-          borderColor: '#000',
-          color: '#fff',
-          background: personaColor,
-        }}
-      >
-        {personaToggleLabel}
-      </button>
+      {mainView !== 'home' && (
+        <button
+          type="button"
+          className="persona-toggle-btn persona-toggle-btn--compact"
+          aria-label="Change persona theme"
+          onClick={cyclePersona}
+          style={{
+            borderColor: personaColor,
+            color: personaColor,
+            background: `color-mix(in srgb, ${personaColor} 12%, #fff)`,
+          }}
+        >
+          {personaToggleLabel}
+        </button>
+      )}
       <div className="project-name">projectName</div>
       <Sidebar mainView={mainView} onSelectView={setMainView} />
       <div className="page">
@@ -256,6 +264,57 @@ export default function App() {
             )}
           </ScrollArea>
         </div>
+
+        {mainView === 'home' && (
+          <aside className="persona-side-panel" aria-label="Persona summary">
+            <div className="persona-side-top-group">
+              <button
+                type="button"
+                className="persona-side-type"
+                onClick={cyclePersona}
+                style={{ backgroundColor: personaColor, borderColor: personaColor }}
+              >
+                <span className="persona-side-type-label">
+                  {PERSONA_LABELS[personaKey]}
+                  <br />
+                  user
+                </span>
+              </button>
+              <button
+                type="button"
+                className="persona-toggle-btn persona-toggle-btn--score"
+                aria-label="Change persona theme"
+                onClick={cyclePersona}
+                style={{ borderColor: personaColor, color: personaColor }}
+              >
+                {globalScore}
+              </button>
+            </div>
+
+            <div className="persona-side-others">
+              {PERSONA_KEYS.filter((k) => k !== personaKey).map((k) => {
+                const otherColor = PERSONA_COLORS[k];
+                const offset = k === 'productivity' ? 8 : k === 'security' ? 14 : 11;
+                const value = Math.max(0, Math.min(100, globalScore - offset));
+                const R = 32;
+                const CIRC = 2 * Math.PI * R;
+                const dash = CIRC * (value / 100);
+                const gap = CIRC - dash;
+                return (
+                  <div key={k} className="persona-side-other" style={{ '--persona-other-accent': otherColor }}>
+                    <svg className="persona-side-other-ring" viewBox="0 0 80 80" aria-label={`${PERSONA_LABELS[k]} ${value}%`}>
+                      <circle cx="40" cy="40" r={R} fill="none" stroke={otherColor} strokeWidth="8" strokeOpacity="0.18" />
+                      <circle cx="40" cy="40" r={R} fill="none" stroke={otherColor} strokeWidth="8"
+                        strokeDasharray={`${dash} ${gap}`} strokeLinecap="round"
+                        style={{ transform: 'rotate(-90deg)', transformOrigin: '40px 40px' }} />
+                    </svg>
+                    <span className="persona-side-other-label">{PERSONA_LABELS[k].toLowerCase()}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   );

@@ -59,22 +59,24 @@ body {
   min-width: 360px;
 }
 
-/* ── PAGE (neutral backdrop; persona color is for accents only) ── */
+/* ── PAGE (page background uses the soft persona color so the whole
+       app is tinted to the active persona; capsules / pills sit on top) ── */
 .page-outer {
   width: 100%;
   min-height: 100vh;
-  background-color: var(--bg);
+  background-color: var(--tabs-capsule-fill, var(--bg));
   position: relative;
+  transition: background-color 0.3s ease;
 }
 
 /* Single column: Sidebar is position:fixed, not a grid sibling (avoids Fragment → 3 grid children bug). */
 .page {
   box-sizing: border-box;
   width: 100%;
-  /* Wider capsules (+~15%) */
-  max-width: 1040px;
+  /* Wider so the posts capsule has more horizontal real estate */
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 16px 16px 16px 72px;
+  padding: 16px 16px 16px 96px;
   min-height: 100vh;
   background: transparent;
   /* Center scaled .main-col so overflow clips symmetrically (fixes right-edge capsule clip) */
@@ -97,54 +99,160 @@ body {
   top: 50%;
   transform: translateY(-50%);
   z-index: 80;
-  width: 56px;
-  height: 56px;
   border-radius: 999px;
-  border: 2px solid #000;
+  border: 3px solid var(--persona-accent, #000);
   display: grid;
   place-items: center;
   cursor: pointer;
   user-select: none;
   font-family: var(--font-avant);
   font-weight: 800;
-  font-size: 16px;
   line-height: 1;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
 }
 
-.persona-toggle-btn:active {
-  transform: translateY(-50%) scale(0.98);
+.persona-toggle-btn--score {
+  /* Now lives inside .persona-side-panel (not fixed by itself). */
+  position: static;
+  transform: none;
+  width: 220px;
+  height: 220px;
+  font-size: 118px;
+  letter-spacing: -0.055em;
+  background: transparent;
+  box-shadow: none;
 }
+
+.persona-toggle-btn--compact {
+  width: 64px;
+  height: 64px;
+  font-size: 20px;
+  letter-spacing: 0;
+}
+
+.persona-toggle-btn:active { transform: none; }
 
 .persona-toggle-btn:focus-visible {
-  outline: 2px solid #000;
+  outline: 2px solid var(--persona-accent, #000);
   outline-offset: 3px;
+}
+
+/* ── RIGHT-SIDE PERSONA PANEL (home view only) ── */
+.persona-side-panel {
+  /* Natural flex sibling of .main-col — no fixed positioning needed */
+  position: static;
+  flex: 0 0 auto;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  /* Align to the posts capsule top (home has "for you" above the capsule) */
+  margin-top: 64px;
+  height: calc(100% - 64px);
+  padding: 0;
+  font-family: var(--font-avant);
+}
+
+.persona-side-top-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+}
+
+.persona-side-type {
+  appearance: none;
+  cursor: pointer;
+  border: 4px solid var(--persona-accent, #000);
+  border-radius: 42px;
+  background: var(--persona-accent, #000);
+  color: #fff;
+  padding: 18px 22px 20px;
+  font-family: var(--font-avant);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  text-align: left;
+  width: max-content;
+  max-width: 100%;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.persona-side-type:hover { filter: brightness(1.08); }
+.persona-side-type:active { transform: scale(0.98); }
+
+.persona-side-type-label {
+  display: block;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.persona-side-others {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.persona-side-other {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 14px 26px;
+  border: 4px solid var(--persona-other-accent, #000);
+  border-radius: 32px;
+  background: color-mix(in srgb, var(--persona-other-accent, #000) 10%, #fff);
+  color: var(--persona-other-accent, #000);
+  font-family: var(--font-avant);
+}
+
+.persona-side-other-label {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  line-height: 1.1;
+  text-transform: lowercase;
+  text-align: center;
+}
+
+/* SVG progress ring inside each other-persona capsule */
+.persona-side-other-ring {
+  display: block;
+  width: 100px;
+  height: 100px;
 }
 
 .project-name {
   position: fixed;
   left: 16px;
-  top: 24px;
+  top: 20px;
   z-index: 70;
   width: auto;
   margin: 0;
-  padding: 0;
+  padding: 8px 20px 9px;
   font-family: var(--font-avant);
-  font-size: clamp(12px, 2.2vw, 20px);
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: clamp(16px, 2.4vw, 26px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
   line-height: 1.15;
   color: var(--persona-accent, var(--ink));
+  border: 3px solid var(--persona-accent, var(--ink));
+  border-radius: 999px;
+  background: transparent;
 }
 
 .icon-rail {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 4px;
+  padding: 6px;
   border-radius: 9999px;
-  border: 2px solid rgba(0, 0, 0, 0.08);
-  background: var(--tabs-capsule-fill, #e1ffe4);
+  border: 3px solid var(--persona-accent, var(--ink));
+  background: color-mix(in srgb, var(--persona-accent, #2323ff) 10%, #fff);
 }
 
 .rail-btn {
@@ -154,8 +262,8 @@ body {
   font-family: var(--font-sans);
   font-size: 44px;
   line-height: 1;
-  color: var(--ink);
-  opacity: 0.55;
+  color: var(--persona-accent, var(--ink));
+  opacity: 0.45;
   cursor: pointer;
   width: 80px;
   height: 80px;
@@ -182,9 +290,9 @@ body {
   transform: translateY(1px);
 }
 .rail-btn:focus-visible {
-  outline: 2px solid #000;
+  outline: 2px solid var(--persona-accent, #000);
   outline-offset: 2px;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .main-col {
@@ -208,14 +316,23 @@ body {
 .view-home .page {
   height: 100vh;
   overflow: hidden;
+  max-width: 1680px;
+  /* Row so the feed column and side panel sit naturally next to each other */
+  flex-direction: row;
+  align-items: stretch;
+  padding-left: 104px;
+  padding-right: 24px;
+  gap: 24px;
 }
 
 .view-home .main-col {
-  /* Compensate for transform: scale(0.92) so visual height fills the viewport.
-     Page has 16px top + 16px bottom padding (32px total). */
-  flex: none;
-  height: calc((100vh - 32px) / var(--content-scale));
+  flex: 0 0 auto;
+  /* No scale transform on home — layout matches visual exactly */
+  transform: none;
+  --content-scale: 1;
+  height: 100%;
   min-height: 0;
+  width: clamp(640px, 64vw, 980px);
 }
 
 /* ── POSTS CAPSULE (one shell around all posts) ── */
@@ -226,21 +343,20 @@ body {
   background: #fff;
   border-style: solid;
   border-color: var(--persona-accent, var(--border));
-  border-width: var(--capsule-shell-border-width);
+  border-width: 6px;
   overflow: hidden;
-  /* Inset from the outer white shell so post cards aren’t flush to the edge */
-  padding: 36px 40px 40px;
+  padding: 36px 50px 40px;
 }
 
-/* Home mode: capsule becomes the scroll viewport.
-   overflow-y: auto lets Lenis control scrollTop; border-radius clips scrolling
-   content at the rounded corners for the "portal" effect. */
+/* Home mode: capsule becomes the scroll viewport */
 .view-home .posts-capsule {
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
+  /* Fill the fixed-width main-col so size never changes when moving left/right */
+  width: 100%;
 }
 
 .view-home .posts-capsule::-webkit-scrollbar {
@@ -372,20 +488,27 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Like / Comment buttons share .post-meta-circle for size + persona color;
-   this reset just removes <button> defaults and sizes the inner SVG. */
+/* Comment button — single pill that takes the space of the old like+comment pair. */
 .post-action-btn {
   appearance: none;
   border: none;
-  padding: 0;
   cursor: pointer;
   pointer-events: auto;
   transition: transform 0.15s ease, filter 0.15s ease;
 }
 
+.post-action-btn--comment {
+  /* Wider than a single circle; reads as a pill. Persona color via .post-meta-pill. */
+  min-width: 72px;
+  padding: 6px 16px 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .post-action-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   display: block;
 }
 

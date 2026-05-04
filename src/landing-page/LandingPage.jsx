@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import LandingMacbookMockup from './LandingMacbookMockup.jsx';
 import './landingPage.css';
 
 const PERSONAS = [
@@ -150,6 +151,9 @@ export default function LandingPage({ onEnterDemo }) {
               <br />
               <span className="lp-headline-accent">quantified.</span>
             </h1>
+            <p className="lp-hero-hook">
+              Who are you really? Let our algorithm answer that for you!
+            </p>
             <p className="lp-sub">
               A friendly script harvests your machine. A reasonable algorithm decides who you are.
               Your profile becomes public — because what you do in private should also be a number.
@@ -163,18 +167,68 @@ export default function LandingPage({ onEnterDemo }) {
               <span className="lp-meta-pill">shareable</span>
             </div>
           </div>
-          <div className="lp-hero-orb" aria-hidden>
-            <div className="lp-hero-orb-ring" />
-            <div className="lp-hero-orb-ring lp-hero-orb-ring--inner" />
-            <div className="lp-hero-orb-circle">
-              <span className="lp-hero-orb-num">100</span>
-              <span className="lp-hero-orb-cap">max possible self</span>
+          <LandingMacbookMockup />
+        </section>
+
+        {/* SURVEILLANCE TICKER — black bar of rolling subjects */}
+        <section className="lp-section lp-ticker-section" style={{ '--stagger-i': 2 }}>
+          <div className="lp-ticker" role="status" aria-label="Live subject ticker">
+            <div className="lp-ticker-track">
+              {[0, 1].map((dup) => (
+                <div key={dup} style={{ display: 'flex', gap: 36 }} aria-hidden={dup === 1}>
+                  <span className="lp-ticker-item">
+                    <span className="lp-ticker-tag">live</span>
+                    <span>@subject_4f81</span>
+                    <span className="lp-ticker-arrow lp-ticker-arrow--down">47 ↓</span>
+                    <span>classification: security risk</span>
+                  </span>
+                  <span className="lp-ticker-sep" />
+                  <span className="lp-ticker-item">
+                    <span>@m.dupont</span>
+                    <span className="lp-ticker-arrow lp-ticker-arrow--up">91 ↑</span>
+                    <span>productivity champion · 6 days streak</span>
+                  </span>
+                  <span className="lp-ticker-sep" />
+                  <span className="lp-ticker-item">
+                    <span>@kara_w</span>
+                    <span className="lp-ticker-arrow lp-ticker-arrow--down">22 ↓</span>
+                    <span>last seen typing 'how to delete account' at 02:14</span>
+                  </span>
+                  <span className="lp-ticker-sep" />
+                  <span className="lp-ticker-item">
+                    <span className="lp-ticker-tag">flagged</span>
+                    <span>@a.tomas</span>
+                    <span className="lp-ticker-arrow lp-ticker-arrow--down">8 ↓</span>
+                    <span>incognito session · 4h 22m</span>
+                  </span>
+                  <span className="lp-ticker-sep" />
+                  <span className="lp-ticker-item">
+                    <span>@demo_machine</span>
+                    <span className="lp-ticker-arrow lp-ticker-arrow--down">74 ↓</span>
+                    <span>reused password since 2019</span>
+                  </span>
+                  <span className="lp-ticker-sep" />
+                  <span className="lp-ticker-item">
+                    <span>@p.sato</span>
+                    <span className="lp-ticker-arrow lp-ticker-arrow--up">88 ↑</span>
+                    <span>social champion · 412 group chats</span>
+                  </span>
+                  <span className="lp-ticker-sep" />
+                  <span className="lp-ticker-item">
+                    <span className="lp-ticker-tag">new</span>
+                    <span>@user_91ef</span>
+                    <span className="lp-ticker-arrow lp-ticker-arrow--down">31 ↓</span>
+                    <span>classified as: idle</span>
+                  </span>
+                  <span className="lp-ticker-sep" />
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* HOW IT WORKS */}
-        <section className="lp-section lp-steps" style={{ '--stagger-i': 2 }}>
+        <section className="lp-section lp-steps" style={{ '--stagger-i': 3 }}>
           <header className="lp-section-head">
             <p className="lp-section-kicker">protocol · three easy steps</p>
             <h2 className="lp-section-title">How the file is built.</h2>
@@ -187,7 +241,7 @@ export default function LandingPage({ onEnterDemo }) {
               <article
                 key={s.n}
                 className="lp-step-card"
-                style={{ '--stagger-i': 3 + i }}
+                style={{ '--stagger-i': 4 + i }}
               >
                 <span className="lp-step-num">{s.n}</span>
                 <h3 className="lp-step-title">{s.title}</h3>
@@ -367,22 +421,21 @@ export default function LandingPage({ onEnterDemo }) {
           </div>
         </section>
 
-        {/* DOWNLOAD CTA */}
+        {/* DOWNLOAD CTA — two-column: pitch + fake permissions dialog */}
         <section className="lp-section lp-cta" style={{ '--stagger-i': 13 }}>
-          <div className="lp-cta-inner">
-            <p className="lp-section-kicker lp-section-kicker--inverse">enrolment · last step</p>
-            <h2 className="lp-cta-title">Begin instrumentation.</h2>
-            <p className="lp-cta-sub">
-              Download the collector. The collector cannot be uninstalled by you alone — it's paired to your score,
-              and we wouldn't want anything bad to happen to that. Continuous evaluation begins on launch.
-              Your free trial of self-determination has ended.
-            </p>
-            <div className="lp-cta-actions">
-              <button type="button" className="lp-cta-btn">
-                <span className="lp-cta-btn-icon" aria-hidden>↓</span>
-                <span className="lp-cta-btn-label">
-                  <span className="lp-cta-btn-top">download collector</span>
-                  <span className="lp-cta-btn-bottom">projectName.dmg · macOS · 18.4 MB · zero refunds</span>
+          <div className="lp-cta-grid">
+            <div className="lp-cta-pitch">
+              <p className="lp-section-kicker lp-section-kicker--inverse">enrolment · final step</p>
+              <h2 className="lp-cta-title">Begin instrumentation.</h2>
+              <p className="lp-cta-sub">
+                The collector cannot be uninstalled by you alone — it's paired to your score, and we wouldn't want anything
+                bad to happen to that. Your free trial of self-determination has ended.
+              </p>
+              <button type="button" className="lp-cta-button">
+                <span className="lp-cta-button-icon" aria-hidden>↓</span>
+                <span className="lp-cta-button-body">
+                  <span className="lp-cta-button-top">download collector</span>
+                  <span className="lp-cta-button-bottom">projectName.dmg · macOS · 18.4 MB · zero refunds</span>
                 </span>
               </button>
               <button
@@ -393,12 +446,68 @@ export default function LandingPage({ onEnterDemo }) {
                 or observe an existing subject →
               </button>
             </div>
-            <p className="lp-cta-warning">
-              <span className="lp-cta-warning-tag">fine print</span>
-              installation grants persistent read access to disk, network, input devices, microphone, and webcam (just in case).
-              data is not deleted on uninstall. the score follows the subject. previous selves cannot be reinstated.
-            </p>
+
+            <aside className="lp-perms" aria-label="Required permissions">
+              <div className="lp-perms-titlebar">
+                <span className="lp-perms-tl-dot lp-perms-tl-dot--r" />
+                <span className="lp-perms-tl-dot lp-perms-tl-dot--y" />
+                <span className="lp-perms-tl-dot lp-perms-tl-dot--g" />
+                <span className="lp-perms-tl-title">projectName · permissions</span>
+              </div>
+              <div className="lp-perms-body">
+                <div className="lp-perms-head">
+                  <span className="lp-perms-head-icon">!</span>
+                  <span className="lp-perms-head-text">
+                    <span className="lp-perms-head-title">"projectName" requires access</span>
+                    <span className="lp-perms-head-sub">required to keep your score accurate</span>
+                  </span>
+                </div>
+                <ul className="lp-perms-list">
+                  <li className="lp-perms-item">
+                    <span className="lp-perms-check" aria-hidden>✓</span>
+                    <span>full disk access</span>
+                    <span className="lp-perms-item-state">granted</span>
+                  </li>
+                  <li className="lp-perms-item">
+                    <span className="lp-perms-check" aria-hidden>✓</span>
+                    <span>screen recording</span>
+                    <span className="lp-perms-item-state">granted</span>
+                  </li>
+                  <li className="lp-perms-item">
+                    <span className="lp-perms-check" aria-hidden>✓</span>
+                    <span>keystroke logging</span>
+                    <span className="lp-perms-item-state">granted</span>
+                  </li>
+                  <li className="lp-perms-item">
+                    <span className="lp-perms-check" aria-hidden>✓</span>
+                    <span>microphone &amp; camera</span>
+                    <span className="lp-perms-item-state">granted</span>
+                  </li>
+                  <li className="lp-perms-item">
+                    <span className="lp-perms-check" aria-hidden>✓</span>
+                    <span>browser history &amp; cookies</span>
+                    <span className="lp-perms-item-state">granted</span>
+                  </li>
+                  <li className="lp-perms-item">
+                    <span className="lp-perms-check" aria-hidden>✓</span>
+                    <span>contacts, calendar, location</span>
+                    <span className="lp-perms-item-state">granted</span>
+                  </li>
+                </ul>
+                <div className="lp-perms-actions">
+                  <button type="button" className="lp-perms-btn lp-perms-btn--deny" disabled>deny</button>
+                  <button type="button" className="lp-perms-btn lp-perms-btn--allow">allow all (recommended)</button>
+                </div>
+              </div>
+            </aside>
           </div>
+
+          <p className="lp-cta-foot">
+            <span className="lp-cta-foot-tag">fine print</span>
+            installation grants persistent read access to disk, network, input devices, microphone, and webcam (just in case).
+            data is not deleted on uninstall. the score follows the subject. previous selves cannot be reinstated.
+            by clicking "allow all" you confirm you have read nothing.
+          </p>
         </section>
 
         {/* FOOTER */}

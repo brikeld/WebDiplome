@@ -25,7 +25,9 @@
 .profile-hero-capsule {
   /* Match the capsule style used by individual post bubbles */
   box-sizing: border-box;
-  width: 100%;
+  width: 82%;
+  margin-left: auto;
+  margin-right: auto;
   /* Taller pill than a single post bubble; also drives the score circle sizing */
   /* Keep vertical padding in one place so the score can scale to the *outer* pill height */
   --profile-hero-vert-pad: 24px;
@@ -34,7 +36,7 @@
   --profile-hero-outer-h: calc(var(--profile-hero-bubble-h) + (var(--profile-hero-vert-pad) * 2));
   /* Score circle = fixed proportion of the outer capsule height (then capped for very wide screens) */
   --profile-score-size: min(calc(var(--profile-hero-outer-h) * 0.75), 20rem);
-  background: color-mix(in srgb, var(--persona-accent, #2323ff) 15%, #fff);
+  background: var(--persona-accent, #2323ff);
   border: 3px solid var(--persona-accent, #2323ff);
   /* Maximum "pill" radius (fully rounded ends) */
   border-radius: 9999px;
@@ -150,7 +152,7 @@
 .profile-name-lg {
   font-size: calc(33px * 1.3);
   font-weight: 700;
-  color: #000;
+  color: #fff;
   line-height: 1.15;
   min-width: 0;
   flex: 1 1 auto;
@@ -162,7 +164,7 @@
   appearance: none;
   border: none;
   border-radius: 999px;
-  padding: 2px 6px;
+  padding: 4px 12px;
   line-height: 1.15;
   font-family: var(--font-sans);
   /* Same size as `.profile-handle-lg` */
@@ -172,10 +174,11 @@
   cursor: pointer;
   flex-shrink: 0;
   text-transform: lowercase;
+  background: #fff !important;
 }
 
 .profile-connect-btn:focus-visible {
-  outline: 2px solid #000;
+  outline: 2px solid #fff;
   outline-offset: 2px;
 }
 
@@ -184,7 +187,7 @@
   font-size: 15px;
   font-style: oblique;
   font-weight: 600;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.1;
   margin: 0;
   max-width: 100%;
@@ -206,14 +209,14 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #000;
+  color: #fff;
 }
 
 .profile-follow-icon {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  opacity: 0.75;
+  opacity: 0.9;
 }
 
 .profile-follow-num {
@@ -225,7 +228,7 @@
 .profile-bio {
   font-size: 18px;
   line-height: 1.32;
-  color: #000;
+  color: #fff;
   font-weight: 500;
   /* Keep the bio close to the handle row (tighter than default paragraph spacing) */
   margin: 6px 0 0;
@@ -245,9 +248,9 @@
   height: var(--profile-score-size);
   border-radius: 50%;
   /* Solid persona fill (set inline via `--score-fill`); no ring/stroke (capsule provides outer border) */
-  background: var(--score-fill, var(--persona-accent, var(--prod)));
+  background: #fff !important;
   border: none;
-  color: #fff;
+  color: var(--score-fill, var(--persona-accent, var(--prod)));
   box-sizing: border-box;
   overflow: hidden;
   /* Grid centers glyph metrics more reliably than flex for single-line digits */
@@ -264,7 +267,7 @@
   padding: 0;
   line-height: 1;
   letter-spacing: -0.03em;
-  color: #fff;
+  color: inherit;
   transform: translateY(10px);
 }
 
@@ -419,20 +422,23 @@
   align-items: center;
   gap: 2px;
   padding: 4px;
-  margin-bottom: 12px;
+  margin-bottom: 24px;
   border-radius: 9999px;
-  border: 2px solid rgba(0, 0, 0, 0.08);
-  background: var(--tabs-capsule-fill, #e1ffe4);
+  border: 3px solid var(--persona-accent, #2323ff);
+  background: var(--persona-accent, #2323ff);
+  width: 82%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .tabs-row .tab {
   flex: 1;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 8px 10px 9px;
   border-radius: 9999px;
   border: none;
-  color: var(--ink);
+  color: #fff;
   cursor: pointer;
   background: transparent;
   font-family: var(--font-sans);
@@ -442,13 +448,13 @@
 }
 
 .tabs-row .tab:hover:not(.active) {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .tabs-row .tab.active {
-  color: #fff;
-  font-weight: 700;
-  background: var(--persona-accent, #2323ff);
+  color: var(--persona-accent, #2323ff);
+  font-weight: 800;
+  background: #fff !important;
 }
 
 /* ── TAB CONTENT ── */

@@ -53,8 +53,7 @@ export default function ProfileHeader({
                     type="button"
                     className="profile-connect-btn"
                     style={{
-                      backgroundColor: personaColor,
-                      color: '#fff',
+                      color: personaColor,
                     }}
                   >
                     connect
