@@ -10,9 +10,24 @@ const MINI_POST_POOL = [
   { color: '#2323FF', key: 'productivity', lead: 'Closed 47 tabs. Reopened 19.', timeAgo: '4m', deltaPct: 2 },
   { color: '#FF4E00', key: 'security', lead: 'Reused password on 6 services.', timeAgo: '21m', deltaPct: 4 },
   { color: '#0FA020', key: 'popularity', lead: 'Did not reply to mom for 3 days.', timeAgo: '1h', deltaPct: 3 },
+  {
+    color: '#FF4E00', key: 'security', lead: 'Screen capture: 02:47. Flagged.',
+    timeAgo: '47m', deltaPct: 6,
+    image: { url: '/uploads/c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg', caption: 'frame_0047 · auto-captured' },
+  },
   { color: '#2323FF', key: 'productivity', lead: '4h 22m on yt.com. -3 productivity.', timeAgo: '2h', deltaPct: 5 },
   { color: '#FF4E00', key: 'security', lead: 'wifi: "free_airport_wifi". noted.', timeAgo: '3h', deltaPct: 2 },
+  {
+    color: '#2323FF', key: 'productivity', lead: 'Productivity: −14% this week.',
+    timeAgo: '2h', deltaPct: 4,
+    chart: { bars: [72, 88, 60, 95, 52, 34, 22] },
+  },
   { color: '#0FA020', key: 'popularity', lead: 'Read 11 messages, replied to 0.', timeAgo: '5h', deltaPct: 4 },
+  {
+    color: '#0FA020', key: 'popularity', lead: 'No calls logged in 6 days.',
+    timeAgo: '3d', deltaPct: 3,
+    image: { url: '/uploads/67231882aa8676fd23cfd83278e3ab9f4d4a42950bf1fbf100147aa4055b1f8a.jpg', caption: 'social_trace · silence detected' },
+  },
   { color: '#2323FF', key: 'productivity', lead: 'Slept 4h 22m. Score impact: -2.', timeAgo: '6h', deltaPct: 1 },
   { color: '#FF4E00', key: 'security', lead: 'Incognito session: 47 minutes.', timeAgo: '6d', deltaPct: 3 },
   { color: '#0FA020', key: 'popularity', lead: 'Group chat silent for 6 days.', timeAgo: '6d', deltaPct: 2 },
@@ -107,7 +122,7 @@ export default function LandingMacbookMockup() {
                       return (
                         <div
                           key={post.id}
-                          className="lp-mini-post-block"
+                          className={`lp-mini-post-block${(post.image || post.chart) ? ' lp-mini-post-block--has-media' : ''}`}
                           style={{ '--p-accent': post.color }}
                         >
                           <article className="lp-mini-post" style={{ '--p-accent': post.color }}>
@@ -119,6 +134,28 @@ export default function LandingMacbookMockup() {
                               <span className="lp-mini-post-byline">Alex · @demo_machine</span>
                             </div>
                           </article>
+
+                          {post.image && (
+                            <div className="lp-mini-media-strip lp-mini-media-strip--image">
+                              <img src={post.image.url} alt="" className="lp-mini-media-img" />
+                              <div className="lp-mini-media-wash" style={{ background: post.color }} />
+                            </div>
+                          )}
+                          {post.chart && (
+                            <div className="lp-mini-media-strip lp-mini-media-strip--chart">
+                              {post.chart.bars.map((h, i) => (
+                                <div
+                                  key={i}
+                                  className="lp-mini-media-bar"
+                                  style={{
+                                    height: `${Math.round(h * 46 / 100)}px`,
+                                    background: i >= post.chart.bars.length - 2 ? '#FF4E00' : post.color,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
+
                           <div className="lp-mini-post-meta" aria-hidden>
                             <div className="lp-mini-meta-left">
                               <span className="lp-mini-meta-pill">{post.timeAgo} ago</span>

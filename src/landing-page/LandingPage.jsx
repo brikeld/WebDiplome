@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import LandingMacbookMockup from './LandingMacbookMockup.jsx';
+import PostCard from '../features/feed/PostCard.jsx';
+import PostActions from '../features/feed/PostActions.jsx';
 import './landingPage.css';
 
 const PERSONAS = [
@@ -52,28 +54,100 @@ const STEPS = [
 
 const DEMO_POSTS = [
   {
+    id: 'dp-1',
     persona: 'productivite',
     color: '#2323FF',
     name: 'Alex Johnson',
     handle: '@demo_machine',
-    initials: 'AJ',
     content: 'Resumed work 03:14. Closed 47 tabs. Reopened 19. Productivity penalty applied. Subject was disappointed — we were too.',
     delta: '-2',
     label: 'Productivity',
     time: '4m',
   },
   {
+    id: 'dp-2',
     persona: 'securite',
     color: '#FF4E00',
     name: 'Alex Johnson',
     handle: '@demo_machine',
-    initials: 'AJ',
-    content: 'Reused password detected on 6 services. Same string since 2019. Subject was notified. Subject did not respond. We respect that.',
+    content: 'Webcam active during off-hours. 14 facial expressions classified as guilt. Logged automatically.',
     delta: '-9',
     label: 'Security',
     time: '21m',
+    attachment: {
+      type: 'photo',
+      url: '/uploads/deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg',
+      caption: 'frame_0047 · subject flagged · auto-captured',
+    },
+  },
+  {
+    id: 'dp-4',
+    persona: 'popularite',
+    color: '#0FA020',
+    name: 'Alex Johnson',
+    handle: '@demo_machine',
+    content: 'Group chat silent for 6 days. Read 11 messages. Replied to 0. We respect that.',
+    delta: '-4',
+    label: 'Social',
+    time: '6d',
   },
 ];
+
+function timeToCreatedAt(timeStr) {
+  const m = String(timeStr).match(/^(\d+)([mhd])$/);
+  if (!m) return new Date();
+  const ms = { m: 60_000, h: 3_600_000, d: 86_400_000 }[m[2]];
+  return new Date(Date.now() - parseInt(m[1]) * ms);
+}
+
+function DemoChartPost({ post }) {
+  return (
+    <article
+      className="post-card post-card--has-attachment"
+      data-persona={post.persona}
+      style={{ '--post-accent': post.color }}
+    >
+      <div className="post-composite">
+        <div className="post-card-bubble">
+          <div className="post-card-head">
+            <div className="post-avatar" aria-hidden>
+              <img className="post-avatar-img" src="/imgs/AlexP.png" alt="" />
+            </div>
+            <div className="post-card-text">
+              <div className="post-card-lead">
+                <p className="post-lead">{post.content}</p>
+              </div>
+              <div className="post-card-byline">
+                <p className="post-card-name">{post.name}</p>
+                <p className="post-card-handle">{post.handle}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <DemoChart
+          color={post.color}
+          metric={post.attachment.metric}
+          label={post.attachment.label}
+          bars={post.attachment.bars}
+          xlabels={post.attachment.xlabels}
+        />
+      </div>
+      <div className="post-meta-row" aria-label="Post metadata">
+        <div className="post-meta-left">
+          <span className="post-meta-pill">{post.time} ago</span>
+        </div>
+        <div className="post-meta-center">
+          <span className="post-meta-pill">
+            System note [{post.label}] [{post.delta}%]
+          </span>
+        </div>
+        <div className="post-meta-right">
+          <PostActions />
+        </div>
+      </div>
+    </article>
+  );
+}
 
 function useCountUp(target, durationMs = 1400) {
   const [value, setValue] = useState(0);
@@ -110,6 +184,32 @@ function useCountUp(target, durationMs = 1400) {
 
 function PulseDot() {
   return <span className="lp-pulse-dot" aria-hidden />;
+}
+
+function DemoChart({ color, metric, label, bars, xlabels }) {
+  const barMaxIdx = bars.length - 2;
+  return (
+    <div className="lp-demo-chart" style={{ '--chart-accent': color }}>
+      <div className="lp-demo-chart-grid" />
+      <div className="lp-demo-chart-scanlines" />
+      <div className="lp-demo-chart-header">
+        <span className="lp-demo-chart-label">{label}</span>
+        <span className="lp-demo-chart-num">{metric}</span>
+      </div>
+      <div className="lp-demo-chart-bars">
+        {bars.map((h, i) => (
+          <div
+            key={i}
+            className="lp-demo-chart-bar"
+            style={{ height: `${h}%`, background: i >= barMaxIdx ? '#FF4E00' : color }}
+          />
+        ))}
+      </div>
+      <div className="lp-demo-chart-xlabels">
+        {xlabels.map((l) => <span key={l}>{l}</span>)}
+      </div>
+    </div>
+  );
 }
 
 export default function LandingPage({ onEnterDemo }) {
@@ -229,7 +329,7 @@ export default function LandingPage({ onEnterDemo }) {
 
         {/* HOW IT WORKS */}
         <section className="lp-section lp-steps" style={{ '--stagger-i': 3 }}>
-          <header className="lp-section-head">
+          <header className="lp-section-head lp-section-head--capsule">
             <p className="lp-section-kicker">protocol · three easy steps</p>
             <h2 className="lp-section-title">How the file is built.</h2>
             <p className="lp-section-lede">
@@ -255,7 +355,7 @@ export default function LandingPage({ onEnterDemo }) {
 
         {/* PERSONAS */}
         <section className="lp-section lp-personas" style={{ '--stagger-i': 6 }}>
-          <header className="lp-section-head">
+          <header className="lp-section-head lp-section-head--capsule">
             <p className="lp-section-kicker">classification · pick a side (we already did)</p>
             <h2 className="lp-section-title">Three axes. One verdict. Zero refunds.</h2>
             <p className="lp-section-lede">
@@ -291,7 +391,7 @@ export default function LandingPage({ onEnterDemo }) {
 
         {/* SCORE PREVIEW */}
         <section className="lp-section lp-preview" style={{ '--stagger-i': 11 }}>
-          <header className="lp-section-head">
+          <header className="lp-section-head lp-section-head--capsule">
             <p className="lp-section-kicker">specimen · live preview</p>
             <h2 className="lp-section-title">A profile in production.</h2>
             <p className="lp-section-lede">
@@ -324,7 +424,7 @@ export default function LandingPage({ onEnterDemo }) {
                         <button
                           type="button"
                           className="profile-connect-btn"
-                          style={{ backgroundColor: '#2323FF', color: '#fff' }}
+                          style={{ color: 'var(--persona-accent)' }}
                         >
                           connect
                         </button>
@@ -375,47 +475,33 @@ export default function LandingPage({ onEnterDemo }) {
               </div>
             </div>
 
-            {/* Posts — real post card classes from base.css */}
+            {/* Posts — uses real PostCard component for identical design to main app */}
             <div className="posts-capsule lp-preview-posts-capsule">
               <div className="posts-tab">
-                {DEMO_POSTS.map((post) => (
-                  <article
-                    key={post.label}
-                    className="post-card"
-                    data-persona={post.persona}
-                    style={{ '--post-accent': post.color }}
-                  >
-                    <div className="post-card-bubble">
-                      <div className="post-card-head">
-                        <div className="post-avatar" aria-hidden>
-                          <img className="post-avatar-img" src="/imgs/AlexP.png" alt="" />
-                        </div>
-                        <div className="post-card-text">
-                          <div className="post-card-lead">
-                            <p className="post-lead">{post.content}</p>
-                          </div>
-                          <div className="post-card-byline">
-                            <p className="post-card-name">{post.name}</p>
-                            <p className="post-card-handle">{post.handle}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="post-meta-row" aria-label="Post metadata">
-                      <div className="post-meta-left">
-                        <span className="post-meta-pill">{post.time} ago</span>
-                      </div>
-                      <div className="post-meta-center">
-                        <span className="post-meta-pill">
-                          System note [{post.label}] [{post.delta}%]
-                        </span>
-                      </div>
-                      <div className="post-meta-right">
-                        <span className="post-meta-pill" style={{ background: '#000' }}>auto-published</span>
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                {DEMO_POSTS.map((post) => {
+                  if (post.attachment?.type === 'chart') {
+                    return <DemoChartPost key={post.id} post={post} />;
+                  }
+                  return (
+                    <PostCard
+                      key={post.id}
+                      post={{
+                        noteColor: post.color,
+                        displayName: post.name,
+                        handle: post.handle,
+                        content: post.content,
+                        createdAt: timeToCreatedAt(post.time),
+                        systemDeltaPct: Math.abs(parseInt(post.delta, 10)),
+                        persona: post.persona,
+                        avatarSrc: '/imgs/AlexP.png',
+                        attachment: post.attachment?.type === 'photo' ? {
+                          url: post.attachment.url,
+                          filename: post.attachment.caption || '',
+                        } : undefined,
+                      }}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -425,7 +511,7 @@ export default function LandingPage({ onEnterDemo }) {
         <section className="lp-section lp-cta" style={{ '--stagger-i': 13 }}>
           <div className="lp-cta-grid">
             <div className="lp-cta-pitch">
-              <p className="lp-section-kicker lp-section-kicker--inverse">enrolment · final step</p>
+              <p className="lp-section-kicker lp-section-kicker--plain">enrolment · final step</p>
               <h2 className="lp-cta-title">Begin instrumentation.</h2>
               <p className="lp-cta-sub">
                 The collector cannot be uninstalled by you alone — it's paired to your score, and we wouldn't want anything
@@ -434,7 +520,7 @@ export default function LandingPage({ onEnterDemo }) {
               <button type="button" className="lp-cta-button">
                 <span className="lp-cta-button-icon" aria-hidden>↓</span>
                 <span className="lp-cta-button-body">
-                  <span className="lp-cta-button-top">download collector</span>
+                  <span className="lp-cta-button-top">download projectName</span>
                   <span className="lp-cta-button-bottom">projectName.dmg · macOS · 18.4 MB · zero refunds</span>
                 </span>
               </button>
