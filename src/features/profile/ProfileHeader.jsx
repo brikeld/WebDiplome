@@ -92,7 +92,6 @@ export default function ProfileHeader({
           className="profile-badge-capsule"
           style={{
             borderColor: personaColor,
-            background: `color-mix(in srgb, ${personaColor} 15%, #fff)`,
           }}
         >
           <div className="profile-badge-circle" style={{ background: personaColor }} />

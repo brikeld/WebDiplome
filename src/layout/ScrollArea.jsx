@@ -4,7 +4,7 @@ import '../styles/scrollArea.css';
 
 export default function ScrollArea({ children, mode }) {
   useEffect(() => {
-    if (mode === 'home') {
+    if (mode === 'home' || mode === 'profile') {
       const capsule = document.querySelector('.posts-capsule');
       if (!capsule) return;
 
@@ -43,7 +43,7 @@ export default function ScrollArea({ children, mode }) {
       };
     }
 
-    // Profile mode — Lenis on window for free page scroll.
+    // Other modes (landing, etc) — Lenis on window for free page scroll.
     const lenis = new Lenis({
       duration: 0.9,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),

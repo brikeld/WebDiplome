@@ -4,9 +4,9 @@ import { sanitizePostContent } from '@/lib/postContent.js';
 import { displayNameFromProfile, initialsFromProfile } from '@/lib/profileUtils.js';
 
 const PERSONA_COLORS = {
-  productivite: '#2323FF',
-  securite: '#FF4E00',
-  popularite: '#0FA020',
+  productivite: '#D8D8D8',
+  securite: '#759AEF',
+  popularite: '#CCF847',
 };
 
 const API_ORIGIN = 'http://localhost:3001';

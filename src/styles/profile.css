@@ -1,15 +1,4 @@
-/* Profile view: two capsules (profile capsule + content capsule) */
-.profile-content-capsule {
-  box-sizing: border-box;
-  width: 100%;
-  border-radius: var(--capsule-radius);
-  background: #fff;
-  border-style: solid;
-  border-color: var(--persona-accent, var(--border));
-  border-width: var(--capsule-shell-border-width);
-  overflow: hidden;
-  padding: 36px 40px 40px;
-}
+/* Profile view: single capsule holds everything */
 
 /* (tabs-row--above-capsule kept for any legacy reference, no extra overrides needed) */
 
@@ -23,28 +12,21 @@
 }
 
 .profile-hero-capsule {
-  /* Match the capsule style used by individual post bubbles */
   box-sizing: border-box;
-  width: 82%;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
-  /* Taller pill than a single post bubble; also drives the score circle sizing */
-  /* Keep vertical padding in one place so the score can scale to the *outer* pill height */
-  --profile-hero-vert-pad: 24px;
-  --profile-hero-bubble-h: calc(var(--post-bubble-h) + 4.25rem);
-  /* Outer height includes vertical padding (this is what you visually perceive as "capsule height") */
+  --profile-hero-scale: 1.3;
+  --profile-hero-vert-pad: calc(24px * var(--profile-hero-scale));
+  --profile-hero-bubble-h: calc((var(--post-bubble-h) + 4.25rem) * var(--profile-hero-scale));
   --profile-hero-outer-h: calc(var(--profile-hero-bubble-h) + (var(--profile-hero-vert-pad) * 2));
-  /* Score circle = fixed proportion of the outer capsule height (then capped for very wide screens) */
   --profile-score-size: min(calc(var(--profile-hero-outer-h) * 0.75), 20rem);
   background: var(--persona-accent, #2323ff);
   border: 3px solid var(--persona-accent, #2323ff);
-  /* Maximum "pill" radius (fully rounded ends) */
-  border-radius: 9999px;
-  /* Allow the small top avatar to overlap outside the pill */
+  border-radius: 16px;
   overflow: visible;
   position: relative;
-  /* Push the capsule down without moving the @ handle (separate element above) */
-  margin-top: clamp(44px, 10vw, 72px);
+  margin-top: clamp(40px, 8vw, 60px);
 }
 
 .profile-cap-avatar {
@@ -53,11 +35,11 @@
   top: 0;
   transform: translate(-50%, -50%);
   z-index: 4;
-  width: calc(72px * 1.35 * 1.3);
-  height: calc(72px * 1.35 * 1.3);
+  width: calc(72px * 1.35 * 1.3 * var(--profile-hero-scale, 1));
+  height: calc(72px * 1.35 * 1.3 * var(--profile-hero-scale, 1));
   border-radius: 50%;
   box-sizing: border-box;
-  border: 2px solid var(--cap-avatar-stroke, var(--persona-accent, #2323ff));
+  border: none;
   background: radial-gradient(circle at 50% 35%, #ffd700 0%, #ff8c00 100%);
   display: grid;
   place-items: center;
@@ -74,7 +56,7 @@
 .profile-cap-avatar-initials {
   font-family: var(--font-sans);
   font-weight: 800;
-  font-size: calc(22px * 1.35 * 1.3);
+  font-size: calc(22px * 1.35 * 1.3 * var(--profile-hero-scale, 1));
   line-height: 1;
   color: #fff;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
@@ -82,12 +64,12 @@
 
 @media (max-width: 420px) {
   .profile-cap-avatar {
-    width: calc(64px * 1.35 * 1.3);
-    height: calc(64px * 1.35 * 1.3);
+    width: calc(64px * 1.35 * 1.3 * var(--profile-hero-scale, 1));
+    height: calc(64px * 1.35 * 1.3 * var(--profile-hero-scale, 1));
   }
 
   .profile-cap-avatar-initials {
-    font-size: calc(18px * 1.35 * 1.3);
+    font-size: calc(18px * 1.35 * 1.3 * var(--profile-hero-scale, 1));
   }
 }
 
@@ -150,9 +132,9 @@
 }
 
 .profile-name-lg {
-  font-size: calc(33px * 1.3);
+  font-size: calc(33px * 1.3 * var(--profile-hero-scale, 1));
   font-weight: 700;
-  color: #fff;
+  color: #000;
   line-height: 1.15;
   min-width: 0;
   flex: 1 1 auto;
@@ -163,18 +145,18 @@
 .profile-connect-btn {
   appearance: none;
   border: none;
-  border-radius: 999px;
+  border-radius: 8px;
   padding: 4px 12px;
   line-height: 1.15;
   font-family: var(--font-sans);
-  /* Same size as `.profile-handle-lg` */
-  font-size: 20px;
+  font-size: calc(20px * var(--profile-hero-scale, 1));
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
   flex-shrink: 0;
   text-transform: lowercase;
-  background: #fff !important;
+  background: #000 !important;
+  color: var(--persona-accent) !important;
 }
 
 .profile-connect-btn:focus-visible {
@@ -184,14 +166,13 @@
 
 .profile-handle-lg {
   font-family: var(--font-avant);
-  font-size: 15px;
+  font-size: calc(15px * var(--profile-hero-scale, 1));
   font-style: oblique;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.7);
   line-height: 1.1;
   margin: 0;
   max-width: 100%;
-  /* Don't grow: keeps `.profile-connect-btn` right beside the @ text */
   flex: 0 1 auto;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -201,7 +182,7 @@
 .profile-follow-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: calc(14px * var(--profile-hero-scale, 1));
   margin: 4px 0 0;
 }
 
@@ -209,26 +190,26 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #fff;
+  color: #000;
 }
 
 .profile-follow-icon {
-  width: 16px;
-  height: 16px;
+  width: calc(16px * var(--profile-hero-scale, 1));
+  height: calc(16px * var(--profile-hero-scale, 1));
   flex-shrink: 0;
   opacity: 0.9;
 }
 
 .profile-follow-num {
-  font-size: 13px;
+  font-size: calc(13px * var(--profile-hero-scale, 1));
   font-weight: 600;
   line-height: 1;
 }
 
 .profile-bio {
-  font-size: 18px;
+  font-size: calc(18px * var(--profile-hero-scale, 1));
   line-height: 1.32;
-  color: #fff;
+  color: #000;
   font-weight: 500;
   /* Keep the bio close to the handle row (tighter than default paragraph spacing) */
   margin: 6px 0 0;
@@ -248,7 +229,7 @@
   height: var(--profile-score-size);
   border-radius: 50%;
   /* Solid persona fill (set inline via `--score-fill`); no ring/stroke (capsule provides outer border) */
-  background: #fff !important;
+  background: #000 !important;
   border: none;
   color: var(--score-fill, var(--persona-accent, var(--prod)));
   box-sizing: border-box;
@@ -278,8 +259,9 @@
   justify-content: center;
   gap: 16px;
   padding: 14px 22px;
-  border-radius: 9999px;
+  border-radius: 12px;
   border: 3px solid var(--persona-accent, #2323ff);
+  background: #000;
   width: fit-content;
   margin: -40px auto 0;
   box-sizing: border-box;
@@ -290,7 +272,7 @@
 .profile-badge-circle {
   width: 72px;
   height: 72px;
-  border-radius: 50%;
+  border-radius: 12px;
   flex-shrink: 0;
 }
 
@@ -336,41 +318,88 @@
 }
 
 .profile-last-analysis {
-  /* Equal vertical rhythm: flex children don't collapse margins, so balance tab bar mb + pill mt vs pill mb + capsule padding-top */
-  margin: 24px 0 24px;
-  font-size: 15px; /* match tabs */
-  color: #fff;
+  /* Aligned to the bottom-right of the main capsule with a gap */
+  position: absolute;
+  left: calc(100% + 20px);
+  bottom: 12px;
+  margin: 0;
+  font-size: var(--post-name-size);
+  color: #000;
   letter-spacing: 0.02em;
   transform: none;
-  max-width: 100%;
-  width: 100%;
+  width: max-content;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  pointer-events: none;
+  z-index: 100;
 }
 
-/* When the last-analysis pill is shown, don't double-count `.tabs-row` margin-bottom + pill margin-top */
-.tabs-row:has(+ .profile-last-analysis) {
+/* Divider is directly under tabs — drop tab bottom margin so spacing is only via the divider (symmetric). */
+.tabs-row:has(+ .profile-tabs-divider) {
   margin-bottom: 0;
 }
-
 
 .profile-last-analysis-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 12px 9px;
-  border-radius: 999px;
+  padding: 6px 12px 7px;
+  border-radius: 12px;
   font-size: inherit;
   font-weight: 600;
   line-height: 1.15;
-  max-width: 100%;
   width: fit-content;
   text-align: center;
   box-sizing: border-box;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
+}
+
+.profile-persona-side {
+  position: absolute;
+  left: calc(100% + 20px);
+  top: 12px;
+  margin: 0;
+  width: max-content;
+  display: flex;
+  justify-content: flex-start;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.profile-persona-side-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px 7px;
+  border-radius: 12px;
+  font-size: var(--post-name-size);
+  font-weight: 700;
+  line-height: 1.15;
+  width: fit-content;
+  text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.profile-tabs-divider {
+  width: 100%;
+  height: 2px;
+  background: var(--persona-accent, #2323ff);
+  opacity: 0.7;
+  border-radius: 999px;
+  /* Equal gap above and below the rule (between tabs row and posts). */
+  margin: 52px 0 52px;
+}
+
+.profile-capsule-wrap {
+  position: relative;
+  width: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 420px) {
@@ -421,24 +450,24 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 4px;
+  padding: 6px;
   margin-bottom: 24px;
-  border-radius: 9999px;
+  border-radius: 12px;
   border: 3px solid var(--persona-accent, #2323ff);
   background: var(--persona-accent, #2323ff);
-  width: 82%;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
 
 .tabs-row .tab {
   flex: 1;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
-  padding: 8px 10px 9px;
-  border-radius: 9999px;
+  padding: 12px 12px 13px;
+  border-radius: 8px;
   border: none;
-  color: #fff;
+  color: #000;
   cursor: pointer;
   background: transparent;
   font-family: var(--font-sans);
@@ -448,13 +477,14 @@
 }
 
 .tabs-row .tab:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.08);
+  color: #000;
 }
 
 .tabs-row .tab.active {
   color: var(--persona-accent, #2323ff);
   font-weight: 800;
-  background: #fff !important;
+  background: #000 !important;
 }
 
 /* ── TAB CONTENT ── */

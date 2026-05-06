@@ -22,9 +22,9 @@ const PERSONA_ALIASES = {
   popularite: 'popularity',
 };
 const PERSONA_COLORS = {
-  productivity: '#2323FF',
-  security: '#FF4E00',
-  popularity: '#0FA020',
+  productivity: '#D8D8D8',
+  security: '#759AEF',
+  popularity: '#CCF847',
 };
 const PERSONA_LABELS = {
   productivity: 'Productivity',
@@ -32,11 +32,11 @@ const PERSONA_LABELS = {
   popularity: 'Social',
 };
 
-/** Tab strip background (Posts / Badges / Profile / Rankings) per persona */
+/** Page background — always black */
 const PERSONA_TAB_FILLS = {
-  productivity: '#D9D9FD',
-  security: '#FFE3D7',
-  popularity: '#E1FFE4',
+  productivity: '#000000',
+  security: '#000000',
+  popularity: '#000000',
 };
 
 function formatLastAnalysis(profile) {
@@ -77,25 +77,19 @@ function formatLastAnalysis(profile) {
   const diffMs = Date.now() - d.getTime();
   if (diffMs <= 0) return 'just now';
 
+  const totalSeconds = Math.floor(diffMs / 1000);
   const totalMinutes = Math.floor(diffMs / 60_000);
   const minutes = totalMinutes % 60;
   const totalHours = Math.floor(totalMinutes / 60);
   const hours = totalHours % 24;
   const days = Math.floor(totalHours / 24);
+  const seconds = totalSeconds % 60;
 
-  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-
-  if (days >= 1) {
-    // "2d & 6 hours ago"
-    return `${days}d & ${plural(hours, 'hour')} ago`;
-  }
-
-  if (totalHours >= 1) {
-    // "3h & 40 minutes ago"
-    return `${totalHours}h & ${plural(minutes, 'minute')} ago`;
-  }
-
-  return `${plural(totalMinutes, 'minute')} ago`;
+  // Compact, always includes seconds.
+  if (days >= 1) return `${days}d ${hours}h ${minutes}m ${seconds}s ago`;
+  if (totalHours >= 1) return `${totalHours}h ${minutes}m ${seconds}s ago`;
+  if (totalMinutes >= 1) return `${totalMinutes}m ${seconds}s ago`;
+  return `${Math.max(1, totalSeconds)}s ago`;
 }
 
 function topPersonaFromProfile(profile) {
@@ -131,6 +125,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('posts');
   const [profile, setProfile] = useState(null);
   const [personaOverride, setPersonaOverride] = useState(null); // 'productivity' | 'popularity' | 'security' | null
+  const [nowTick, setNowTick] = useState(0);
 
   // Lock body scroll in home mode; release it for profile (full-page scroll).
   useEffect(() => {
@@ -141,6 +136,13 @@ export default function App() {
       document.documentElement.style.overflowY = '';
       document.body.style.overflowY = '';
     };
+  }, [mainView]);
+
+  // Re-render once per second in profile mode so "Last analysis" stays live.
+  useEffect(() => {
+    if (mainView !== 'profile') return undefined;
+    const id = setInterval(() => setNowTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
   }, [mainView]);
 
   useEffect(() => {
@@ -177,7 +179,7 @@ export default function App() {
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
   const personaTabFill =
     PERSONA_TAB_FILLS[personaKey] ?? PERSONA_TAB_FILLS.productivity;
-  const lastAnalysisText = formatLastAnalysis(profile);
+  const lastAnalysisText = useMemo(() => formatLastAnalysis(profile), [profile, nowTick]);
   const globalScore = getGlobalScore(profile ?? {}) ?? 76;
   const personaToggleLabel =
     personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
@@ -211,56 +213,69 @@ export default function App() {
           onClick={cyclePersona}
           style={{
             borderColor: personaColor,
-            color: personaColor,
-            background: `color-mix(in srgb, ${personaColor} 12%, #fff)`,
+            backgroundColor: personaColor,
+            color: '#000',
           }}
         >
           {personaToggleLabel}
         </button>
       )}
-      <div className="project-name">projectName</div>
+      <div className="project-name">COMPLIANT</div>
       <Sidebar mainView={mainView} onSelectView={setMainView} />
       <div className="page">
         <div className="main-col">
           <ScrollArea key={mainView} mode={mainView}>
             {mainView === 'home' && <HomeTab profile={profile} />}
             {mainView === 'profile' && (
-              <>
-                <ProfileHeader
-                  profile={profile}
-                  personaKey={personaKey}
-                  personaColor={personaColor}
-                />
+              <div className="profile-capsule-wrap">
+                <div
+                  className="posts-capsule"
+                  style={{ '--persona-accent': personaColor }}
+                >
+                  <div className="posts-capsule-inner">
+                    <ProfileHeader
+                      profile={profile}
+                      personaKey={personaKey}
+                      personaColor={personaColor}
+                    />
 
-                <TabBar
-                  activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                  personaColor={personaColor}
-                />
+                    <TabBar
+                      activeTab={activeTab}
+                      onTabChange={setActiveTab}
+                      personaColor={personaColor}
+                    />
+
+                    <div className="profile-tabs-divider" aria-hidden />
+
+                    <div className="tab-content">
+                      {activeTab === 'profile' && <ProfileTab />}
+                      {activeTab === 'posts' && <PostsTab profile={profile} feedContext="profile" />}
+                      {activeTab === 'badges' && <BadgesTab />}
+                      {activeTab === 'leaderboards' && <LeaderboardsTab />}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="profile-persona-side" aria-label="Persona">
+                  <span
+                    className="profile-persona-side-pill"
+                    style={{ background: personaColor, color: '#000' }}
+                  >
+                    {String(PERSONA_LABELS[personaKey] ?? '').toLowerCase()} user
+                  </span>
+                </div>
 
                 {lastAnalysisText ? (
                   <div className="profile-last-analysis" aria-label="Last analysis">
                     <span
                       className="profile-last-analysis-pill"
-                      style={{ background: personaColor, color: '#fff' }}
+                      style={{ background: personaColor, color: '#000' }}
                     >
-                      Last analysis:&nbsp;{lastAnalysisText}
+                      Last analysis:&nbsp;<strong>{lastAnalysisText}</strong>
                     </span>
                   </div>
                 ) : null}
-
-                <div
-                  className="profile-content-capsule"
-                  style={{ '--profile-accent': personaColor }}
-                >
-                  <div className="tab-content">
-                    {activeTab === 'profile' && <ProfileTab />}
-                    {activeTab === 'posts' && <PostsTab profile={profile} feedContext="profile" />}
-                    {activeTab === 'badges' && <BadgesTab />}
-                    {activeTab === 'leaderboards' && <LeaderboardsTab />}
-                  </div>
-                </div>
-              </>
+              </div>
             )}
           </ScrollArea>
         </div>
@@ -285,7 +300,7 @@ export default function App() {
                 className="persona-toggle-btn persona-toggle-btn--score"
                 aria-label="Change persona theme"
                 onClick={cyclePersona}
-                style={{ borderColor: personaColor, color: personaColor }}
+                style={{ borderColor: personaColor, backgroundColor: personaColor, color: '#000' }}
               >
                 {globalScore}
               </button>
@@ -303,8 +318,8 @@ export default function App() {
                 return (
                   <div key={k} className="persona-side-other" style={{ '--persona-other-accent': otherColor }}>
                     <svg className="persona-side-other-ring" viewBox="0 0 80 80" aria-label={`${PERSONA_LABELS[k]} ${value}%`}>
-                      <circle cx="40" cy="40" r={R} fill="none" stroke={otherColor} strokeWidth="8" strokeOpacity="0.18" />
-                      <circle cx="40" cy="40" r={R} fill="none" stroke={otherColor} strokeWidth="8"
+                      <circle cx="40" cy="40" r={R} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="8" />
+                      <circle cx="40" cy="40" r={R} fill="none" stroke="#000" strokeWidth="8"
                         strokeDasharray={`${dash} ${gap}`} strokeLinecap="round"
                         style={{ transform: 'rotate(-90deg)', transformOrigin: '40px 40px' }} />
                     </svg>

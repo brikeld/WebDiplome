@@ -11,12 +11,10 @@
   background: #fff;
 }
 
-/* The image has rounded top corners (set in base.css). Clip FX layers to match
-   so overlays/vignette don't paint into the rounded-corner "gap" area. */
+/* Overlays need to match the block radius since we added a gap between rects. */
 .post-image-fx::before,
 .post-image-fx::after {
-  border-top-left-radius: 120px;
-  border-top-right-radius: 120px;
+  border-radius: 16px;
 }
 
 /* ── Layer 1 – base image: slight desaturation so color wash pops ──────── */
