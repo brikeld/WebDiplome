@@ -45,8 +45,9 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
 
     const createdAtFallback = (i) => Date.now() - (i + 1) * 6 * 60 * 60 * 1000; // 6h steps
 
-    return raw.map((p, i) => ({
-      id: i,
+    const mapped = raw.map((p, i) => ({
+      // Use stable id when present, fallback to index
+      id: p?.id ?? p?._id ?? p?.uuid ?? i,
       persona: p.persona,
       content: sanitizePostContent(p.content),
       noteColor: PERSONA_COLORS[p.persona] ?? '#2323FF',
@@ -64,6 +65,13 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
       systemDeltaPct: stablePct(`${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
       attachment: resolveAttachment(p.attachedImage ?? p.attached_image),
     }));
+
+    // Newest first (like an actual social feed).
+    return mapped.sort((a, b) => {
+      const at = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
+      const bt = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
+      return (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
+    });
   }, [profile]);
 
   const list = (

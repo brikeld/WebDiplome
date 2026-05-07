@@ -1,52 +1,13 @@
-/* ── Post image persona-color effects ──────────────────────────────────────
-   All effects are pure CSS (GPU-accelerated). No canvas, no heavy libs.
-   To add a new effect: add a layer via ::before / ::after, or extend
-   the .post-attachment-img filter chain below.
+/* ── Post image processing ────────────────────────────────────────────────
+   Feed images are processed in JS (blur→grayscale→halftone→monochrome tint).
+   This file only controls container/layout styling for the processed output.
    ─────────────────────────────────────────────────────────────────────── */
 
-.post-image-fx {
+.post-image-halftone {
   position: relative;
-  /* Keep blend layers isolated and ensure any exposed corner gaps read as "empty/white". */
-  isolation: isolate;
-  background: #fff;
+  background: #000;
 }
 
-/* Overlays need to match the block radius since we added a gap between rects. */
-.post-image-fx::before,
-.post-image-fx::after {
-  border-radius: 16px;
+.post-image-halftone .post-attachment-img {
+  filter: none;
 }
-
-/* ── Layer 1 – base image: slight desaturation so color wash pops ──────── */
-.post-image-fx .post-attachment-img {
-  filter: saturate(0.65) contrast(1.08) brightness(0.97);
-  transition: filter 0.45s ease;
-}
-
-/* ── Layer 2 – persona color wash (sits above image) ──────────────────────
-   mix-blend-mode: color maps the hue + saturation from the persona color
-   onto the image's luminosity — gives a true duotone-style tint.        */
-.post-image-fx::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: var(--fx-color, #888888);
-  mix-blend-mode: color;
-  opacity: 0.52;
-  pointer-events: none;
-  transition: opacity 0.45s ease;
-}
-
-/* ── Layer 3 – cinematic vignette (sits above color wash) ─────────────────
-   Darkens edges for depth without flattening the center.                */
-.post-image-fx::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  background: radial-gradient(ellipse at 50% 38%, transparent 28%, rgba(0, 0, 0, 0.34) 100%);
-  pointer-events: none;
-}
-
-/* Always-on effects: no interaction disables the FX */

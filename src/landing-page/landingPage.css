@@ -226,10 +226,10 @@
   display: inline-block;
   width: fit-content;
   max-width: 100%;
-  border: 3px solid #CCF847;
-  border-radius: var(--lp-pill-radius);
+  border: none;
+  border-radius: 0;
   background: transparent;
-  padding: 28px 30px 20px;
+  padding: 0;
   color: #CCF847;
   box-sizing: border-box;
 }

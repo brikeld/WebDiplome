@@ -122,6 +122,9 @@ body {
   background: transparent;
   box-shadow: none;
   border-radius: 50%;
+  /* Not interactive in home view */
+  pointer-events: none;
+  cursor: default;
 }
 
 .persona-toggle-btn--compact {
@@ -133,6 +136,9 @@ body {
 
 .persona-toggle-btn:active { transform: translateY(-50%); }
 
+/* Ensure score never shifts on press (even if pointer-events change later). */
+.persona-toggle-btn--score:active { transform: none; }
+
 .persona-toggle-btn:focus-visible {
   outline: 2px solid var(--persona-accent, #000);
   outline-offset: 3px;
@@ -143,15 +149,16 @@ body {
   /* Natural flex sibling of .main-col — no fixed positioning needed */
   position: static;
   flex: 0 0 auto;
-  width: 340px;
+  width: 440px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   /* Align to the posts capsule top (home has "for you" above the capsule) */
   margin-top: 64px;
   height: calc(100% - 64px);
-  padding: 0;
+  padding-bottom: 12px;
+  box-sizing: border-box;
   font-family: var(--font-avant);
 }
 
@@ -159,8 +166,28 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 20px;
+  /* Keep equal spacing between USER / Last analysis / Create new content */
+  gap: 12px;
   width: 100%;
+}
+
+.persona-side-last-analysis {
+  pointer-events: none;
+  /* Match the "SOCIAL USER" pill font-size */
+  font-size: clamp(20px, 2.8vw, 34px);
+}
+
+.persona-side-substack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Ensure both pills inherit the same font-size as the USER pill */
+  font-size: clamp(20px, 2.8vw, 34px);
+}
+
+/* All-caps \"CREATE NEW CONTENT\" in home panel */
+.persona-side-create .profile-last-analysis-pill {
+  text-transform: uppercase;
 }
 
 .persona-side-type {
@@ -168,15 +195,16 @@ body {
   cursor: pointer;
   border: 4px solid var(--persona-accent, #000);
   border-radius: 12px;
-  background: var(--persona-accent, #000);
-  color: #000;
-  padding: 18px 22px 20px;
+  background: transparent;
+  color: var(--persona-accent, #000);
+  /* Match the profile-side persona pill styling */
+  padding: 6px 12px 7px;
   font-family: var(--font-avant);
-  font-size: 44px;
-  font-weight: 800;
-  line-height: 1.0;
-  letter-spacing: -0.02em;
-  text-align: left;
+  font-size: clamp(20px, 2.8vw, 34px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  text-align: center;
   width: max-content;
   max-width: 100%;
   transition: none;
@@ -187,18 +215,49 @@ body {
 
 .persona-side-type-label {
   display: block;
-  text-transform: capitalize;
+  text-transform: none;
   white-space: nowrap;
 }
 
 .persona-side-others {
-  display: flex;
+  /* Dock bottom group inside the panel cleanly */
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr 140px 1fr;
   gap: 16px;
   width: 100%;
+  align-items: end;
+  justify-items: center;
+}
+
+.persona-side-score {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 4px solid var(--persona-other-accent, var(--persona-accent, #000));
+  background: #000;
+  color: var(--persona-other-accent, var(--persona-accent, #000));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  pointer-events: none;
+  /* Ensure no internal clipping */
+  overflow: visible;
+}
+
+.persona-side-score-num {
+  font-family: var(--font-avant);
+  font-weight: 900;
+  font-size: 76px;
+  /* Use normal line-height to avoid clipping the font's bounding box */
+  line-height: normal;
+  letter-spacing: -0.05em;
+  text-align: center;
 }
 
 .persona-side-other {
-  flex: 1 1 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -691,8 +750,9 @@ body {
   font-family: var(--font-avant);
   white-space: pre-line;
   margin: 0;
-  /* Shorter measure → lines break sooner; still full width on narrow cards */
-  max-width: min(100%, 36ch);
+  /* Wider measure so post text block is larger */
+  max-width: min(100%, 50ch);
+  line-height: 1.15;
   overflow-wrap: break-word;
 }
 

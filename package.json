@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server.js",
+    "server:generate": "node server-generate.js",
     "dedupe:uploads": "node scripts/dedupe-uploads.js"
   },
   "dependencies": {
