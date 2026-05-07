@@ -1,42 +1,29 @@
-/* Landing page — fully self-contained.
-   Renders OUTSIDE the regular .page / .main-col / Sidebar shell.
-   Palette: all three persona colors + white. Each section uses a different
-   persona accent so no single color dominates the page. */
+/* Landing page — fully self-contained. Dark theme.
+   Renders OUTSIDE the regular .page / .main-col / Sidebar shell. */
 
 .lp-root {
-  --lp-max-width: 1560px;
-  --lp-edge-pad: clamp(20px, 4vw, 56px);
-  --lp-section-gap: clamp(48px, 8vw, 96px);
+  --lp-max-width: 1200px;
+  --lp-edge-pad: clamp(20px, 5vw, 64px);
+  --lp-section-gap: clamp(80px, 12vw, 140px);
+  --lp-pill-radius: 28px;
+  --lp-title-to-text-gap: 24px;
+  --lp-text-to-content-gap: 40px;
 
-  /* Persona palette (matches main app) */
-  --lp-prod: #2323FF;
-  --lp-prod-fill: #D9D9FD;
-  --lp-sec: #FF4E00;
-  --lp-sec-fill: #FFE3D7;
-  --lp-pop: #0FA020;
-  --lp-pop-fill: #E1FFE4;
-
-  /* --lp-brand is set per-section; fall back to prod so shared utilities still work */
-  --lp-brand: var(--lp-prod);
-  --lp-brand-fill: var(--lp-prod-fill);
+  --lp-prod: #D8D8D8;
+  --lp-sec:  #759AEF;
+  --lp-pop:  #CCF847;
 
   width: 100%;
   min-height: 100vh;
-  /* Mesh gradient: the 3 persona fill colors bloom from different corners on white */
-  background:
-    radial-gradient(ellipse 70% 55% at 2% 8%,    var(--lp-prod-fill) 0%, transparent 58%),
-    radial-gradient(ellipse 55% 60% at 98% 35%,   var(--lp-sec-fill)  0%, transparent 55%),
-    radial-gradient(ellipse 65% 50% at 40% 100%,  var(--lp-pop-fill)  0%, transparent 58%),
-    radial-gradient(ellipse 45% 40% at 80% 90%,   var(--lp-prod-fill) 0%, transparent 50%),
-    #fff;
-  /* Fixed so it doesn't tile when the page scrolls */
-  background-attachment: fixed;
+  background: #000;
+  color: #fff;
   font-family: var(--font-avant);
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
-/* ── animations ─────────────────────────────────────────────── */
+/* ── animations ─────────────────────────────────────────────────────────── */
 
 @keyframes lp-fade-up {
   from { opacity: 0; transform: translateY(28px); }
@@ -53,14 +40,6 @@
   50%      { transform: rotateX(8deg) rotateY(-7deg) translateY(-12px); }
 }
 
-@keyframes lp-border-shift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Lid open — uses two-stage easing keyframes for a hinge that swings up,
-   over-rotates slightly past vertical, then gently rocks back to rest. */
 @keyframes lp-macbook-open {
   0% {
     transform: rotateX(86deg);
@@ -74,25 +53,13 @@
     transform: rotateX(2deg);
     animation-timing-function: ease-out;
   }
-  92% {
-    transform: rotateX(-0.6deg);
-  }
-  100% {
-    transform: rotateX(0deg);
-  }
+  92% { transform: rotateX(-0.6deg); }
+  100% { transform: rotateX(0deg); }
 }
 
-/* Base "settles" first — slight scale pulse to suggest the laptop being
-   placed on the surface */
 @keyframes lp-macbook-base-settle {
-  0% {
-    transform: translateY(8px) scale(0.98);
-    opacity: 0.6;
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
+  0% { transform: translateY(8px) scale(0.98); opacity: 0.6; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 @keyframes lp-scan {
@@ -106,26 +73,12 @@
 }
 
 @keyframes lp-mini-post-in {
-  0% {
-    opacity: 0;
-    transform: translateY(-110%) scale(0.92);
-  }
-  60% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  0% { opacity: 0; transform: translateY(-110%) scale(0.92); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes lp-ticker-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-.lp-section,
-.lp-footer {
+.lp-section {
   opacity: 0;
   animation: lp-fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   animation-delay: calc(var(--stagger-i, 0) * 0.09s);
@@ -135,397 +88,714 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #FF4E00;
+  background: var(--lp-pop);
   display: inline-block;
   flex-shrink: 0;
   animation: lp-pulse 1.6s ease-in-out infinite;
 }
 
-/* ── TOP BAR ────────────────────────────────────────────────── */
+/* ── TOP BAR ─────────────────────────────────────────────────────────────── */
 
 .lp-topbar {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 18px var(--lp-edge-pad);
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  justify-content: flex-end;
+  padding: 12px var(--lp-edge-pad);
+  background: transparent;
   position: sticky;
   top: 0;
   z-index: 50;
 }
 
-/* Tricolor bottom border spanning all three persona colors */
-.lp-topbar::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--lp-prod) 0%, var(--lp-sec) 50%, var(--lp-pop) 100%);
-}
-
-.lp-topbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-avant);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  /* Brand name cycles through all three colors as a gradient text */
-  color: var(--lp-prod);
-}
-
-/* Single element showing three colored dots via ::before + box-shadow trick */
-.lp-topbar-mark {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--lp-prod);
-  /* middle dot via box-shadow offset */
-  box-shadow:
-    13px  0 0 var(--lp-sec),
-    26px  0 0 var(--lp-pop);
-  margin-right: 26px; /* make room for the two extra dots */
-  flex-shrink: 0;
-}
-
-.lp-topbar-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 auto;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  color: #888;
-}
-
 .lp-topbar-debug {
   appearance: none;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 13px 8px;
-  border-radius: 9999px;
-  border: 1.5px dashed var(--lp-prod);
   background: transparent;
-  color: var(--lp-prod);
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
   font-family: var(--font-avant);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: lowercase;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  padding: 0;
 }
 
 .lp-topbar-debug:hover {
-  background: var(--lp-prod);
-  color: #fff;
-  border-style: solid;
-}
-
-.lp-topbar-debug:focus-visible {
-  outline: 2px solid var(--lp-prod);
-  outline-offset: 3px;
-}
-
-.lp-topbar-debug-tag {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 2px 6px 3px;
-  border-radius: 4px;
-  background: var(--lp-sec);
   color: #fff;
 }
 
-/* ── MAIN ───────────────────────────────────────────────────── */
+/* ── MAIN ─────────────────────────────────────────────────────────────────── */
 
 .lp-main {
   width: 100%;
-  max-width: var(--lp-max-width);
-  margin: 0 auto;
-  padding: clamp(36px, 6vw, 72px) var(--lp-edge-pad) clamp(48px, 6vw, 80px);
+  max-width: none;
+  margin: 0;
+  padding: 0 0 clamp(64px, 8vw, 120px);
   display: flex;
   flex-direction: column;
-  gap: var(--lp-section-gap);
+  gap: 0;
 }
 
-/* ── SECTION HEADS ──────────────────────────────────────────── */
-
-.lp-section-head {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 36px;
-  text-align: center;
-  align-items: center;
+/* Gap between content sections (not the full-screen hero/mockup panels) */
+.lp-main > *:not(.lp-hero):not(.lp-mockup-section) {
+  margin-top: var(--lp-section-gap);
 }
 
-/* Tricolor gradient capsule for section headers */
-.lp-section-head--capsule {
-  background: linear-gradient(135deg, var(--lp-prod) 0%, var(--lp-sec) 45%, var(--lp-pop) 100%);
-  padding: 48px 40px 52px;
-  border-radius: 56px;
-  color: #fff;
-  margin-bottom: 48px;
+/* Keep consistent left/right alignment for normal sections */
+.lp-main > *:not(.lp-hero):not(.lp-mockup-section):not(.lp-workflow-section):not(.lp-axes-section) {
+  padding-left: var(--lp-edge-pad);
+  padding-right: var(--lp-edge-pad);
+  box-sizing: border-box;
 }
 
-.lp-section-head--capsule .lp-section-kicker,
-.lp-section-head--capsule .lp-section-title,
-.lp-section-head--capsule .lp-section-lede {
-  color: #fff;
-  opacity: 1;
-}
-
-.lp-section-head--capsule .lp-section-kicker {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.lp-section-kicker {
-  font-family: var(--font-avant);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #fff;
-  background: var(--lp-brand);
-  padding: 6px 12px 7px;
-  border-radius: 999px;
-}
-
-.lp-section-kicker--inverse {
-  color: var(--lp-brand);
-  background: #fff;
-}
-
-.lp-section-kicker--plain {
-  background: transparent;
-  padding: 0;
-  color: #fff;
-}
-
-.lp-section-title {
-  font-family: var(--font-avant);
-  font-size: clamp(36px, 5vw, 60px);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.025em;
-  color: var(--lp-brand);
-  max-width: 22ch;
-}
-
-.lp-section-lede {
-  font-size: clamp(16px, 1.4vw, 20px);
-  font-weight: 500;
-  line-height: 1.45;
-  color: var(--lp-brand);
-  max-width: 60ch;
-  opacity: 0.82;
-}
-
-/* ── HERO ───────────────────────────────────────────────────── */
+/* ── HERO ─────────────────────────────────────────────────────────────────── */
 
 .lp-hero {
-  display: grid;
-  /* Right column slightly bigger so the larger laptop has room to breathe */
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  gap: clamp(28px, 4vw, 56px);
-  align-items: center;
-  padding: clamp(36px, 4.5vw, 64px) clamp(32px, 4vw, 56px);
-  border-radius: 56px;
-  background: #fff;
-  border: 3px solid transparent;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 0 0 clamp(28px, 5vh, 64px);
+  box-sizing: border-box;
+}
+
+.lp-hero-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: 100%;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.lp-hero-header-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  gap: clamp(24px, 4vh, 56px);
+}
+
+.lp-hero-title {
   position: relative;
-  overflow: hidden;
+  font-family: var(--font-avant);
+  /* 18vw is a safer bet for 9 letters to hit edges without overflow */
+  font-size: clamp(96px, 18vw, 560px);
+  font-weight: 800;
+  line-height: 0.8;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+  padding: 0;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
 }
 
-/* Tricolor gradient stroke for the hero capsule */
-.lp-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 3px;
-  background: linear-gradient(135deg, var(--lp-prod) 0%, var(--lp-sec) 45%, var(--lp-pop) 100%);
-  background-size: 300% 300%;
-  animation: lp-border-shift 6.5s ease-in-out infinite;
-  pointer-events: none;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-}
-
-/* subtle grid texture in the background */
-.lp-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--lp-brand) 10%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--lp-brand) 10%, transparent) 1px, transparent 1px);
-  background-size: 36px 36px;
-  pointer-events: none;
-  mask-image: radial-gradient(circle at 80% 50%, #000 0%, transparent 70%);
-  -webkit-mask-image: radial-gradient(circle at 80% 50%, #000 0%, transparent 70%);
+.lp-hero-title--top {
+  margin: 0;
+  padding: 0;
+  display: block;
 }
 
 .lp-hero-text {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  min-width: 0;
+  gap: 24px;
+  width: 100%;
+  max-width: none;
+  padding: 0 var(--lp-edge-pad);
+  box-sizing: border-box;
 }
 
-.lp-eyebrow {
+.lp-hero-sub {
   font-family: var(--font-avant);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--lp-brand);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  font-size: clamp(84px, 10vw, 144px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  margin: 0;
+  color: #CCF847;
+}
+
+.lp-hero-sub-capsule {
+  display: inline-block;
   width: fit-content;
+  max-width: 100%;
+  border: 3px solid #CCF847;
+  border-radius: var(--lp-pill-radius);
+  background: transparent;
+  padding: 28px 30px 20px;
+  color: #CCF847;
+  box-sizing: border-box;
 }
 
-.lp-eyebrow::before {
-  content: '';
-  display: inline-block;
-  width: 22px;
-  height: 1.5px;
-  background: var(--lp-brand);
-}
-
-.lp-headline {
-  font-family: var(--font-avant);
-  font-size: clamp(56px, 8vw, 116px);
-  font-weight: 700;
-  line-height: 0.94;
-  letter-spacing: -0.04em;
-  color: var(--lp-brand);
-}
-
-.lp-headline-accent {
-  display: inline-block;
-  position: relative;
+.lp-hero-sub em {
   font-style: italic;
-  color: var(--lp-brand);
-  padding: 0 4px;
+  color: inherit;
 }
 
-.lp-headline-accent::after {
-  content: '';
-  position: absolute;
-  left: 2px;
-  right: 2px;
-  bottom: 8px;
-  height: 18px;
-  background: var(--lp-brand-fill);
-  z-index: -1;
-  border-radius: 2px;
-}
-
-/* Pull-quote tagline directly below the headline */
-.lp-hero-hook {
-  font-family: var(--font-avant);
-  font-size: clamp(18px, 1.7vw, 26px);
-  font-weight: 700;
-  font-style: italic;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-  color: var(--lp-brand);
-  max-width: 32ch;
-  position: relative;
-  padding-left: 18px;
-  margin-top: 4px;
-}
-
-.lp-hero-hook::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 5px;
-  bottom: 5px;
-  width: 3px;
-  background: var(--lp-brand);
-  border-radius: 2px;
-}
-
-.lp-sub {
-  font-size: clamp(17px, 1.6vw, 22px);
+.lp-hero-body {
+  font-size: clamp(28px, 2.6vw, 42px);
   font-weight: 500;
-  line-height: 1.45;
-  color: var(--lp-brand);
-  max-width: 56ch;
+  line-height: 1.55;
+  color: #759AEF;
+  /* width:100% + horizontal margin overflows; stretch respects margins in flex */
+  align-self: stretch;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 var(--lp-edge-pad);
+  padding: 16px 22px 18px;
+  box-sizing: border-box;
+  border: 3px solid #759AEF;
+  border-radius: var(--lp-pill-radius);
+  background: transparent;
+  overflow-wrap: break-word;
 }
 
-.lp-sub-em {
-  display: inline-block;
-  margin-top: 6px;
-  font-style: italic;
-  color: #fff;
-  font-weight: 700;
-  background: var(--lp-brand);
-  padding: 1px 7px 2px;
-  border-radius: 999px;
-}
+/* ── MOCKUP SECTION ───────────────────────────────────────────────────────── */
 
-.lp-hero-meta {
+.lp-mockup-section {
+  height: 100vh;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(28px, 5vh, 64px) 0 0;
+  box-sizing: border-box;
 }
 
-.lp-meta-pill {
+/* Pills on top — no shrink, always visible */
+.lp-mockup-section .lp-persona-pills-row--hero {
+  flex-shrink: 0;
+  order: -1;
+}
+
+/* MacBook fills the remaining space below the pills */
+.lp-mockup-section .lp-macbook-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+}
+
+/* ── WORKFLOW + AXES: 100vh, text top / cards bottom ─────────────────────── */
+
+.lp-workflow-section,
+.lp-axes-section {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(28px, 5vh, 56px) var(--lp-edge-pad) 0;
+  box-sizing: border-box;
+}
+
+.lp-section-header-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* The .lp-steps-row is the last flex child — space-between pushes it to
+   the bottom of the 100vh. */
+.lp-workflow-section > .lp-steps-row,
+.lp-axes-section > .lp-steps-row {
+  align-self: stretch;
+}
+
+/* Slightly smaller workflow cards to free space above */
+.lp-workflow-section .lp-step-card {
+  padding: 34px 28px;
+  min-height: 290px;
+}
+
+/* Make ONLY the Three Axes cards taller */
+.lp-axes-section .lp-step-card {
+  padding: 46px 34px;
+  min-height: 380px;
+}
+
+.lp-profile-section .lp-section-lede-wrap {
+  margin-bottom: clamp(80px, 12vh, 180px);
+}
+
+.lp-profile-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.lp-profile-section .lp-section-lede {
+  text-align: left;
+  max-width: none;
+  width: 100%;
+}
+
+.lp-persona-pills-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.lp-persona-pills-row--hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  justify-items: start;
+  align-self: stretch;
+  width: 100%;
+  margin-top: 0;
+  column-gap: clamp(18px, 4vw, 64px);
+  flex-wrap: nowrap;
+  padding: 0 var(--lp-edge-pad);
+  box-sizing: border-box;
+}
+
+.lp-persona-pills-row--hero .lp-persona-pill {
+  font-size: clamp(52px, 4vw, 96px);
+  padding: 22px 40px 24px;
+  width: fit-content;
+  text-transform: uppercase;
+  background: transparent;
+  border: 3px solid var(--pill-accent, #fff);
+  color: var(--pill-accent, #fff);
+  box-sizing: border-box;
+}
+
+.lp-persona-pills-row--hero .lp-persona-pill:nth-child(2) {
+  justify-self: center;
+}
+
+.lp-persona-pills-row--hero .lp-persona-pill:nth-child(3) {
+  justify-self: end;
+}
+
+.lp-persona-pill {
   display: inline-flex;
   align-items: center;
-  padding: 8px 14px 9px;
-  border-radius: 9999px;
-  border: 1.5px solid var(--lp-brand);
+  padding: 12px 28px 13px;
+  border-radius: var(--lp-pill-radius);
   font-family: var(--font-avant);
-  font-size: 13px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: #000;
+}
+
+/* ── SHARED SECTION STYLES ────────────────────────────────────────────────── */
+
+.lp-capsule-header {
+  display: inline-block;
+  background: var(--header-bg, #CCF847);
+  color: #000;
+  padding: 30px 64px 34px;
+  border-radius: var(--lp-pill-radius);
+  font-family: var(--font-avant);
+  font-size: clamp(84px, 12vw, 144px);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1;
+  margin-bottom: var(--lp-title-to-text-gap);
+}
+
+.lp-capsule-section .lp-section-lede,
+.lp-capsule-section .lp-section-sublede {
+  color: var(--header-bg, #fff);
+  border: 3px solid color-mix(in srgb, var(--header-bg, #fff) 75%, transparent);
+  border-radius: var(--lp-pill-radius);
+  padding: 16px 22px 18px;
+  background: transparent;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 0;
+}
+
+.lp-capsule-section .lp-section-lede {
+  margin-bottom: 0;
+}
+
+.lp-capsule-section .lp-section-sublede {
+  margin-bottom: var(--lp-text-to-content-gap);
+}
+
+.lp-capsule-section .lp-section-sublede--below {
+  border: none;
+  padding: 0;
+  background: transparent;
+  width: 100%;
+  max-width: none;
+  color: var(--header-bg, #fff);
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.lp-capsule-section .lp-section-lede-wrap {
+  color: var(--header-bg, #fff);
+  border: 3px solid color-mix(in srgb, var(--header-bg, #fff) 75%, transparent);
+  border-radius: var(--lp-pill-radius);
+  padding: 16px 22px 18px;
+  background: transparent;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 0;
+  margin-bottom: var(--lp-text-to-content-gap);
+}
+
+.lp-capsule-section .lp-section-lede-wrap .lp-section-lede,
+.lp-capsule-section .lp-section-lede-wrap .lp-section-sublede {
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: auto;
+  max-width: none;
+}
+
+.lp-capsule-section .lp-section-lede-wrap .lp-section-sublede {
+  margin-top: 10px;
+}
+
+.lp-section-lede {
+  font-size: clamp(21px, 2vw, 25px);
+  font-weight: 500;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.65);
+  width: 100%;
+  max-width: none;
+  margin-bottom: 12px;
+}
+
+.lp-section-sublede {
+  font-size: clamp(84px, 8vw, 100px);
+  font-weight: 700;
+  line-height: 1.05;
+  color: rgba(255, 255, 255, 0.9);
+  width: 100%;
+  max-width: none;
+  margin-bottom: 40px;
+}
+
+/* ── WORKFLOW STEPS ───────────────────────────────────────────────────────── */
+
+.lp-steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.lp-step-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 40px 32px;
+  border-radius: 24px;
+  background: var(--step-color, #D8D8D8);
+  color: #000;
+  min-height: 320px;
+}
+
+.lp-step-num {
+  font-family: var(--font-avant);
+  font-size: 72px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.lp-step-title {
+  font-family: var(--font-avant);
+  font-size: clamp(24px, 2.5vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: #000;
+}
+
+.lp-step-body {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: #000;
+  flex: 1 1 auto;
+}
+
+.lp-step-foot {
+  font-family: var(--font-avant);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #000;
+  margin-top: auto;
+}
+
+/* Three axes section reuses .lp-steps-row + .lp-step-card (same as workflow). */
+
+/* ── PROFILE PREVIEW ──────────────────────────────────────────────────────── */
+
+.lp-preview-demo {
+  position: relative;
+  padding-top: 0;
+  width: 100%;
+  max-width: var(--lp-max-width);
+  margin: 0 auto;
+  margin-top: clamp(18px, 3vh, 42px);
+}
+
+.lp-preview-shell {
+  width: 86%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px;
+}
+
+/* Keep post sizing stable while the outer capsule gets wider */
+.lp-preview-posts-inner {
+  width: 72%;
+  margin: 0 auto;
+}
+
+/* Scale ONLY text/icons on the left side (not the score) */
+.lp-preview-scale {
+  transform: translate(-35px, -28px) scale(1.18);
+  transform-origin: left top;
+}
+
+.lp-preview-scale .profile-bio {
+  max-width: min(100%, 44ch);
+  width: 100%;
+}
+
+.lp-preview-shell .post-composite {
+  border-radius: 40px;
+}
+
+.lp-preview-shell .post-attachment-block {
+  border-radius: 0 0 40px 40px;
+}
+
+.lp-preview-shell .post-attachment-img {
+  height: auto;
+  object-fit: initial;
+  border-top-left-radius: 40px;
+  border-top-right-radius: 40px;
+}
+
+.lp-preview-shell .post-image-fx::before,
+.lp-preview-shell .post-image-fx::after {
+  border-top-left-radius: 40px;
+  border-top-right-radius: 40px;
+}
+
+/* Badge capsule in landing page preview — smaller than the real profile page version */
+.lp-preview-demo .profile-badge-capsule {
+  padding: 8px 14px;
+  gap: 10px;
+  margin-top: -28px;
+}
+
+.lp-preview-demo .profile-badge-circle {
+  width: 44px;
+  height: 44px;
+}
+
+/* All 3 badges use the main persona color (overrides any inline style differences) */
+.lp-preview-demo .profile-badge-circle {
+  background: var(--persona-accent) !important;
+}
+
+/* ── DOWNLOAD CTA ─────────────────────────────────────────────────────────── */
+
+.lp-cta-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.lp-cta-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 28px;
+  padding: clamp(36px, 5vw, 64px) clamp(28px, 4vw, 56px);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: 8px;
+}
+
+.lp-cta-card-title {
+  font-family: var(--font-avant);
+  font-size: clamp(45px, 7vw, 90px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: #000;
+}
+
+.lp-cta-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.lp-cta-download-btn {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  border-radius: var(--lp-pill-radius);
+  background: var(--lp-sec);
+  color: #000;
+  font-family: var(--font-avant);
+  text-align: left;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--lp-sec) 40%, transparent);
+}
+
+.lp-cta-download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 48px color-mix(in srgb, var(--lp-sec) 50%, transparent);
+}
+
+.lp-cta-btn-icon {
+  width: 68px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--lp-sec) 70%, #000);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.lp-cta-btn-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14px 22px 16px;
+  gap: 3px;
+}
+
+.lp-cta-btn-top {
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  color: #000;
+}
+
+.lp-cta-btn-sub {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: #000;
+}
+
+.lp-cta-secondary-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #000;
+  cursor: pointer;
+  font-family: var(--font-avant);
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: lowercase;
-  background: #fff;
-  color: var(--lp-brand);
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.15s ease;
 }
 
-.lp-meta-pill--solid {
-  background: var(--lp-brand);
-  color: #fff;
+.lp-cta-secondary-btn:hover {
+  color: #000;
 }
 
-/* ── MACBOOK MOCKUP ─────────────────────────────────────────── */
+/* ── FOOTER ───────────────────────────────────────────────────────────────── */
+
+.lp-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px var(--lp-edge-pad) 24px;
+  position: relative;
+  font-family: var(--font-avant);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.35);
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+  opacity: 0;
+  animation: lp-fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: calc(var(--stagger-i, 14) * 0.09s);
+}
+
+.lp-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--lp-edge-pad);
+  right: var(--lp-edge-pad);
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.lp-footer-brand {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.lp-footer-sep {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.lp-footer-spacer {
+  flex: 1 1 auto;
+}
+
+.lp-footer-meta {
+  font-size: 17px;
+  letter-spacing: 0.06em;
+}
+
+/* ── MACBOOK MOCKUP ───────────────────────────────────────────────────────── */
 
 .lp-macbook-wrap {
   position: relative;
   width: 100%;
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  perspective: 1800px;
-  padding: 24px 0 36px;
+  perspective: 2200px;
+  padding: 0 0 12px;
 }
 
-/* Soft ambient ground shadow under the laptop */
 .lp-macbook-wrap::after {
   content: '';
   position: absolute;
@@ -544,29 +814,22 @@
 
 .lp-macbook {
   position: relative;
-  width: clamp(320px, 40vw, 600px);
+  width: clamp(520px, 64vw, 960px);
   flex-shrink: 0;
   transform-style: preserve-3d;
-  /* Initial tilt held during the lid-open animation; float kicks in afterwards */
   transform: rotateX(8deg) rotateY(-7deg);
-  animation: lp-macbook-float 7s ease-in-out 3.2s infinite;
+}
+
+.lp-macbook--active {
+  animation: lp-macbook-float 7s ease-in-out 0.4s infinite;
 }
 
 .lp-macbook-display {
   position: relative;
-  /* Aluminum frame: subtle vertical gradient with darker top + bottom rim */
-  background:
-    linear-gradient(180deg, #131313 0%, #0a0a0a 50%, #050505 100%);
+  background: linear-gradient(180deg, #131313 0%, #0a0a0a 50%, #050505 100%);
   border-radius: 14px 14px 4px 4px;
-  /* Thinner bezels — closer to modern MacBook Pro proportions */
   padding: 12px 10px 16px;
   border: 1px solid #2c2c2c;
-  /* Multi-layer shadow stack:
-       1) inset top edge highlight (light catching aluminum top edge)
-       2) inset bottom edge shadow
-       3) inset side edges
-       4) ambient drop shadow (large + soft)
-       5) tighter contact shadow */
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.10),
     inset 0 -1px 0 rgba(0, 0, 0, 0.55),
@@ -576,13 +839,11 @@
     0 14px 28px rgba(0, 0, 0, 0.28);
   transform-origin: bottom;
   transform-style: preserve-3d;
-  /* Start closed (rotated flat against base) and open after a small delay */
   transform: rotateX(86deg);
   animation: lp-macbook-open 1.8s 1.0s forwards;
 }
 
 .lp-macbook-display::before {
-  /* MacBook notch — small black pill hanging just into the top of the screen */
   content: '';
   position: absolute;
   top: 12px;
@@ -598,7 +859,6 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-/* Subtle highlight along the very top edge of the display (light catching aluminum) */
 .lp-macbook-display::after {
   content: '';
   position: absolute;
@@ -620,16 +880,13 @@
   overflow: hidden;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  /* Subtle inner shadow simulates the screen "sunk" inside the bezel */
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     inset 0 1px 4px rgba(0, 0, 0, 0.5);
-  /* Hide content while lid is closed; fade in as it opens */
   opacity: 0;
   animation: lp-screen-glow 1.8s ease-out 1.0s forwards;
 }
 
-/* Glass reflection / glare + corner vignette */
 .lp-macbook-screen::before {
   content: '';
   position: absolute;
@@ -638,40 +895,20 @@
   z-index: 10;
   border-radius: inherit;
   background:
-    /* Top-left diagonal sheen — simulates ambient light hitting glass */
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.16) 0%,
-      rgba(255, 255, 255, 0.06) 18%,
-      rgba(255, 255, 255, 0.0) 38%,
-      transparent 100%
-    ),
-    /* Faint wide reflection band lower */
-    linear-gradient(
-      155deg,
-      transparent 0%,
-      transparent 60%,
-      rgba(255, 255, 255, 0.05) 70%,
-      transparent 80%
-    ),
-    /* Vignette — corners slightly darker for that curved-glass feel */
-    radial-gradient(
-      ellipse 110% 110% at 50% 50%,
-      transparent 55%,
-      rgba(0, 0, 0, 0.18) 100%
-    );
+    linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 18%, rgba(255,255,255,0.0) 38%, transparent 100%),
+    linear-gradient(155deg, transparent 0%, transparent 60%, rgba(255,255,255,0.05) 70%, transparent 80%),
+    radial-gradient(ellipse 110% 110% at 50% 50%, transparent 55%, rgba(0,0,0,0.18) 100%);
   mix-blend-mode: overlay;
 }
 
 .lp-macbook-screen::after {
-  /* moving scan band */
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
   height: 30%;
-  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
   mix-blend-mode: overlay;
   pointer-events: none;
   animation: lp-scan 8s ease-in-out 3.6s infinite;
@@ -683,36 +920,21 @@
   width: 118%;
   margin-left: -9%;
   height: 18px;
-  /* Brushed aluminum: lighter highlight on top, deeper grey at the front edge */
-  background:
-    linear-gradient(
-      180deg,
-      #f0eeec 0%,
-      #d4d2cf 16%,
-      #b6b4b1 60%,
-      #8e8c89 100%
-    );
+  background: linear-gradient(180deg, #f0eeec 0%, #d4d2cf 16%, #b6b4b1 60%, #8e8c89 100%);
   border-radius: 0 0 14px 14px;
   border: 1px solid #989897;
   border-top: none;
-  /* Multi-layer shadow:
-       1) inset top-edge bright highlight
-       2) inset front-edge dark line
-       3) ambient drop shadow (large, soft)
-       4) tighter contact shadow against the surface */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
-    inset 1px 0 0 rgba(255, 255, 255, 0.25),
-    inset -1px 0 0 rgba(0, 0, 0, 0.08),
-    0 24px 38px rgba(0, 0, 0, 0.2),
-    0 6px 14px rgba(0, 0, 0, 0.14);
-  /* Subtle settle as the laptop lands on its surface */
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    inset 1px 0 0 rgba(255,255,255,0.25),
+    inset -1px 0 0 rgba(0,0,0,0.08),
+    0 24px 38px rgba(0,0,0,0.2),
+    0 6px 14px rgba(0,0,0,0.14);
   animation: lp-macbook-base-settle 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s backwards;
 }
 
 .lp-macbook-base::before {
-  /* Trackpad cutout — small darker pill at the top-front of the base */
   content: '';
   position: absolute;
   top: 0;
@@ -723,1348 +945,224 @@
   background: linear-gradient(180deg, #6b6b6a 0%, #8e8c89 100%);
   border-radius: 0 0 8px 8px;
   box-shadow:
-    inset 0 1px 1px rgba(0, 0, 0, 0.3),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 1px 1px rgba(0,0,0,0.3),
+    inset 0 -1px 0 rgba(255,255,255,0.1);
 }
 
-/* ── MINI APP (inside the macbook screen) ──────────────────────
-   Mini-version of the actual profile-feed page: sidebar rail, profile
-   capsule with cap-avatar + score + badges, tabs row, posts capsule. */
+/* ── MACBOOK APP (scaled-down replica of the real app inside the macbook screen)
+   Renders the SAME JSX/CSS as the "A profile in production." preview, plus a
+   sidebar (project name + icon rail). The whole thing is rendered at a fixed
+   natural size (NAT_WIDTH x NAT_HEIGHT in JSX) and CSS-transform scaled to
+   fit the macbook screen. This guarantees identical proportions to the real
+   app without any pixel-fiddling.                                            */
 
-.lp-mini-app {
-  width: 100%;
-  height: 100%;
+.lp-macbook-app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
   display: flex;
-  gap: 4px;
-  padding: 6px 6px 6px 5px;
-  background: #D9D9FD;
+  flex-direction: row;
+  align-items: stretch;
+  background: #000;
   font-family: var(--font-avant);
-  overflow: hidden;
-}
-
-.lp-mini-rail {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 1.5px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--lp-prod) 15%, transparent);
-  background: var(--lp-prod-fill);
-  flex-shrink: 0;
-  align-self: center;
-}
-
-.lp-mini-rail-btn {
-  width: 13px;
-  height: 13px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: 7px;
-  color: var(--lp-prod);
-  opacity: 0.45;
-}
-
-.lp-mini-rail-btn--active {
-  background: #2323FF;
-  color: #fff;
-  opacity: 1;
-}
-
-.lp-mini-col {
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-/* ── mini profile capsule (mirrors profile-header-stack) ────── */
-
-.lp-mini-profile-stack {
-  position: relative;
-  margin-top: 14px;
-  padding-bottom: 4px;
-}
-
-.lp-mini-cap-avatar {
-  position: absolute;
-  left: 50%;
-  top: -8px;
-  transform: translateX(-50%);
-  z-index: 4;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1px solid #2323FF;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
-}
-
-.lp-mini-cap-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.lp-mini-profile {
-  position: relative;
-  background: #2323FF;
-  border: 1.2px solid #2323FF;
-  border-radius: 9999px;
-  padding: 5px 9px 5px 10px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 30px;
-  width: 92%;
-  margin: 0 auto;
-}
-
-.lp-mini-profile-text {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.lp-mini-profile-name {
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #fff;
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lp-mini-profile-handle {
-  font-size: 5.5px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-  font-style: oblique;
-  line-height: 1.3;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.lp-mini-profile-connect {
-  font-style: normal;
-  background: #fff;
-  color: #2323FF;
-  padding: 1px 3px 1px;
-  border-radius: 999px;
-  font-size: 5px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.lp-mini-profile-bio {
-  margin-top: 0;
-  font-size: 5.5px;
-  font-weight: 500;
-  color: #fff;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lp-mini-profile-score {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  color: #2323FF;
-  display: grid;
-  place-items: center;
-  font-size: 8px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-/* ── mini tabs row ──────────────────────────────────────────── */
-
-.lp-mini-tabs {
-  display: flex;
-  gap: 1px;
-  padding: 1.5px;
-  border-radius: 9999px;
-  border: 1px solid #2323FF;
-  background: #2323FF;
-  width: 68%;
-  margin: 0 auto;
-}
-
-.lp-mini-tab {
-  flex: 1;
-  text-align: center;
-  font-size: 6px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 2px 3px 3px;
-  border-radius: 9999px;
-  color: #fff;
-}
-
-.lp-mini-tab--active {
-  background: #fff;
-  color: #2323FF;
-  font-weight: 700;
-}
-
-/* ── mini posts shell (mirrors posts-capsule) ───────────────── */
-
-.lp-mini-posts-shell {
-  flex: 1 1 0;
-  /* Narrower capsule — sits centered inside the mini col */
-  width: 68%;
-  margin: 0 auto;
-  background: #fff;
-  border: 1px solid #2323FF;
-  border-radius: 12px;
-  padding: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  overflow: hidden;
-  min-height: 0;
-}
-
-.lp-mini-posts-stream {
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  overflow: hidden;
-  padding-top: 2px;
-}
-
-.lp-mini-post-block {
-  flex-shrink: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  animation: lp-mini-post-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-}
-
-/* Post block that has a media strip below — treated as one visual unit */
-.lp-mini-post-block--has-media {
-  border: 1px solid var(--p-accent);
-  /* Media posts are taller; avoid "over-pill" corners vs text-only posts */
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.lp-mini-post-block--has-media .lp-mini-post {
-  border: none;
-  border-radius: 12px 12px 0 0;
-}
-
-/* Media block below mini posts */
-.lp-mini-media-strip {
-  /* ~30% taller than before */
-  /* Another +30% (net ~69% taller vs original 54px) */
-  height: calc(54px * 1.69);
-  width: 100%;
-  border-radius: 0;
-  overflow: hidden;
-  position: relative;
-  flex-shrink: 0;
-}
-
-/* Image post: real photo + color wash */
-.lp-mini-media-strip--image {
-  isolation: isolate;
-}
-
-.lp-mini-media-img {
-  width: 100%;
-  height: 100%;
-  /* Fill the whole strip (proportional; may crop a bit) */
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  filter: saturate(0.65) contrast(1.08) brightness(0.9);
-}
-
-.lp-mini-media-wash {
-  position: absolute;
-  inset: 0;
-  mix-blend-mode: color;
-  opacity: 0.52;
-  pointer-events: none;
-}
-
-/* Chart post: deep persona-blue "data terminal" */
-.lp-mini-media-strip--chart {
-  background: #08083d;
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  padding: 5px 5px 3px;
+  padding: 20px 24px 20px 20px;
+  gap: 24px;
   box-sizing: border-box;
 }
 
-.lp-mini-media-bar {
-  flex: 1;
-  border-radius: 1px 1px 0 0;
-  opacity: 0.88;
-  min-width: 0;
+/* ── Inside-macbook overrides: compress content to fit the scaled screen ──── */
+
+/* The global .posts-capsule has overflow:hidden — override so our capsule scrolls */
+.lp-macbook-app .posts-capsule {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
-.lp-mini-post {
-  background: color-mix(in srgb, var(--p-accent) 14%, #fff);
-  border: 1px solid var(--p-accent);
-  border-radius: 9999px;
-  padding: 2px 5px 2px 2px;
-  display: flex;
-  align-items: stretch;
-  gap: 3px;
-  min-height: 18px;
-  flex-shrink: 0;
+/* Shrink the profile hero capsule so posts are visible below it.
+   --profile-hero-scale controls bubble height, vertical padding, avatar size, etc. */
+.lp-macbook-app .profile-hero-capsule {
+  --profile-hero-scale: 0.82;
+  margin-top: 32px;
 }
 
-.lp-mini-post-avatar {
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1px solid var(--p-accent);
-  overflow: hidden;
-  background: #fff;
-  align-self: center;
+/* Shrink post bubbles so multiple posts fit in the remaining height */
+.lp-macbook-app .post-card-bubble {
+  min-height: 9rem;
 }
 
-.lp-mini-post-avatar img {
+/* lp-preview-posts-inner clamps to 72% in the landing page preview;
+   inside the macbook capsule the capsule max-width already narrows things */
+.lp-macbook-app .lp-preview-posts-inner {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
 }
 
-.lp-mini-post-text {
+/* Remove the lp-preview-shell padding override — capsule padding handles it */
+.lp-macbook-app.lp-macbook-app .lp-macbook-app-capsule {
+  width: 100%;
+}
+
+/* Left sidebar: COMPLIANT project name on top, icon rail below.
+   Both filled with persona-accent + black icons, mirrors real .project-name + .icon-rail. */
+.lp-macbook-app-sidebar {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0;
-  min-width: 0;
-  flex: 1 1 0;
-  padding-right: 2px;
+  align-items: flex-start;
+  gap: 16px;
 }
 
-.lp-mini-post-lead {
-  font-size: 6px;
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.01em;
-  color: var(--p-accent);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lp-mini-post-byline {
-  font-size: 4.5px;
-  font-weight: 600;
-  color: var(--p-accent);
-  font-style: oblique;
-}
-
-/* Mini metadata row — sits cleanly below its post, no overlap */
-.lp-mini-post-meta {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  column-gap: 2px;
-  align-items: center;
-  padding: 0 2px;
-  margin-top: 1px;
-  min-height: 7px;
-  pointer-events: none;
-}
-
-.lp-mini-meta-left,
-.lp-mini-meta-center,
-.lp-mini-meta-right {
-  display: flex;
-  align-items: center;
-  gap: 1px;
-  min-width: 0;
-}
-
-.lp-mini-meta-left {
-  justify-content: flex-end;
-}
-
-.lp-mini-meta-center {
-  justify-content: center;
-}
-
-.lp-mini-meta-right {
-  justify-content: flex-start;
-}
-
-.lp-mini-meta-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5px 2px 1px;
-  border-radius: 999px;
-  background: var(--p-accent);
-  color: #fff;
-  font-size: 3.2px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lp-mini-meta-pill--system {
-  font-size: 2.8px;
-  max-width: 52px;
-  white-space: normal;
-  text-align: center;
-  line-height: 1.05;
-  hyphens: auto;
-}
-
-.lp-mini-meta-pill--icon {
-  min-width: 8px;
-  padding: 0.5px 3px 1px;
-}
-
-.lp-mini-meta-pill--icon svg {
-  display: block;
-  width: 5px;
-  height: 5px;
-}
-
-/* Ticker uses the same tricolor gradient as other capsules */
-.lp-ticker-section { --lp-brand: var(--lp-prod); --lp-brand-fill: var(--lp-prod-fill); }
-
-/* ── SURVEILLANCE TICKER ────────────────────────────────────── */
-
-.lp-ticker {
-  width: 100%;
-  background: linear-gradient(135deg, var(--lp-prod) 0%, var(--lp-sec) 45%, var(--lp-pop) 100%);
-  color: #fff;
-  border-radius: 9999px;
-  padding: 14px 0;
-  overflow: hidden;
-  position: relative;
-  border: 2px solid rgba(255, 255, 255, 0.28);
-}
-
-.lp-ticker::before,
-.lp-ticker::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 80px;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.lp-ticker::before {
-  left: 0;
-  background: linear-gradient(90deg, rgba(0,0,0,0.22) 0%, transparent 70%);
-}
-
-.lp-ticker::after {
-  right: 0;
-  background: linear-gradient(-90deg, rgba(0,0,0,0.22) 0%, transparent 70%);
-}
-
-.lp-ticker-track {
-  display: flex;
-  gap: 36px;
-  white-space: nowrap;
-  width: max-content;
-  animation: lp-ticker-scroll 90s linear infinite;
-}
-
-.lp-ticker-item {
-  font-family: var(--font-avant);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  text-transform: lowercase;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.lp-ticker-arrow {
-  font-weight: 700;
-  font-size: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-/* Keep arrows readable on the tricolor gradient */
-.lp-ticker-arrow--down { color: rgba(255, 255, 255, 0.72); }
-.lp-ticker-arrow--up   { color: rgba(255, 255, 255, 0.92); }
-
-.lp-ticker-tag {
-  font-family: var(--font-avant);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  padding: 2px 7px 3px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
-}
-
-.lp-ticker-sep {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  flex-shrink: 0;
-}
-
-/* ── STEPS ──────────────────────────────────────────────────── */
-
-.lp-steps-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
-}
-
-/* Each step card gets its own persona accent so they're visually distinct */
-.lp-step-card:nth-child(1) { --lp-card-color: var(--lp-prod); --lp-card-fill: var(--lp-prod-fill); }
-.lp-step-card:nth-child(2) { --lp-card-color: var(--lp-sec);  --lp-card-fill: var(--lp-sec-fill); }
-.lp-step-card:nth-child(3) { --lp-card-color: var(--lp-pop);  --lp-card-fill: var(--lp-pop-fill); }
-
-.lp-step-card {
-  --lp-card-color: var(--lp-prod);
-  --lp-card-fill: var(--lp-prod-fill);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 36px 32px 28px;
-  border-radius: 40px;
-  border: 2px solid var(--lp-card-color);
-  background: #fff;
-  position: relative;
-  opacity: 0;
-  animation: lp-fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  animation-delay: calc(var(--stagger-i, 0) * 0.09s);
-  min-height: 320px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.lp-step-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 24px 48px color-mix(in srgb, var(--lp-card-color) 22%, transparent);
-}
-
-.lp-step-num {
-  font-family: var(--font-avant);
-  font-size: 88px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.05em;
-  color: var(--lp-card-color);
-}
-
-.lp-step-title {
-  font-family: var(--font-avant);
+/* COMPLIANT label — Real: .project-name */
+.lp-macbook-app-project {
   font-size: 26px;
   font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--lp-card-color);
-}
-
-.lp-step-body {
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--lp-card-color);
-  opacity: 0.88;
-  flex: 1 1 auto;
-}
-
-.lp-step-divider {
-  height: 1px;
-  background: color-mix(in srgb, var(--lp-card-color) 25%, #fff);
-  margin: 8px 0 0;
-}
-
-.lp-step-foot {
-  font-family: var(--font-avant);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--lp-card-color) 60%, #fff);
-}
-
-/* ── PERSONAS ───────────────────────────────────────────────── */
-
-.lp-persona-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
-}
-
-.lp-persona-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 32px 30px 28px;
-  border-radius: 40px;
-  border: 3px solid var(--card-accent);
-  background: color-mix(in srgb, var(--card-accent) 10%, #fff);
-  color: var(--card-accent);
-  opacity: 0;
-  animation: lp-fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  animation-delay: calc(var(--stagger-i, 0) * 0.09s);
-  transition: box-shadow 0.32s ease, transform 0.32s ease;
-  min-height: 340px;
-}
-
-.lp-persona-card:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 0 0 1px var(--card-accent),
-    0 28px 72px color-mix(in srgb, var(--card-accent) 42%, transparent);
-}
-
-.lp-persona-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-avant);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.lp-persona-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--card-accent);
-  display: inline-block;
-}
-
-.lp-persona-id {
-  color: var(--card-accent);
-  opacity: 0.8;
-}
-
-.lp-persona-title {
-  font-family: var(--font-avant);
-  font-size: 40px;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1;
-  color: var(--card-accent);
-}
-
-.lp-persona-line {
-  font-family: var(--font-avant);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  color: var(--card-accent);
-}
-
-.lp-persona-body {
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--card-accent);
-  opacity: 0.92;
-  flex: 1 1 auto;
-}
-
-.lp-persona-foot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 14px;
-  border-top: 1px dashed color-mix(in srgb, var(--card-accent) 35%, transparent);
-}
-
-.lp-persona-metric {
-  font-family: var(--font-avant);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--card-accent);
-  text-transform: lowercase;
-}
-
-/* social card text contrast — popularity green is bright, so use a darker variant */
-.lp-persona-card--popularity .lp-persona-title,
-.lp-persona-card--popularity .lp-persona-line,
-.lp-persona-card--popularity .lp-persona-body,
-.lp-persona-card--popularity .lp-persona-id,
-.lp-persona-card--popularity .lp-persona-metric {
-  color: #04660f;
-}
-.lp-persona-card--popularity .lp-persona-dot {
-  background: #04660f;
-}
-
-/* ── PREVIEW ────────────────────────────────────────────────── */
-
-.lp-preview-demo {
-  position: relative;
-  padding-top: 28px;
-}
-
-.lp-preview-watermark {
-  position: absolute;
-  top: 0;
-  right: 0;
-  font-family: var(--font-avant);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--lp-brand);
-  opacity: 0.55;
-}
-
-.lp-preview-posts-capsule {
-  margin-top: 32px;
-  width: 72%;
-  margin-left: auto;
-  margin-right: auto;
-  box-sizing: border-box;
-}
-
-/* Reduce the 120px composite radius — looks too extreme at landing-page scale */
-.lp-preview-posts-capsule .post-composite {
-  border-radius: 40px;
-}
-
-.lp-preview-posts-capsule .post-attachment-block {
-  border-radius: 0 0 40px 40px;
-}
-
-.lp-preview-posts-capsule .post-attachment-img {
-  /* Match real profile behavior: image keeps its intrinsic aspect ratio */
-  height: auto;
-  object-fit: initial;
-  border-top-left-radius: 40px;
-  border-top-right-radius: 40px;
-}
-
-/* Keep FX overlay pseudo-elements matching the reduced image radius */
-.lp-preview-posts-capsule .post-image-fx::before,
-.lp-preview-posts-capsule .post-image-fx::after {
-  border-top-left-radius: 40px;
-  border-top-right-radius: 40px;
-}
-
-/* ── Data viz / chart attachment for demo posts ── */
-.lp-demo-chart {
-  position: relative;
-  height: 200px;
-  /* Deep persona-blue "data terminal" — no pure black */
-  background: #08083d;
-  overflow: hidden;
-  border-radius: 0; /* composite handles clipping */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 14px 20px 16px;
-  box-sizing: border-box;
-}
-
-.lp-demo-chart-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-  background-size: 28px 28px;
-  pointer-events: none;
-}
-
-.lp-demo-chart-scanlines {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px);
-  pointer-events: none;
-}
-
-.lp-demo-chart-header {
-  position: absolute;
-  top: 14px;
-  left: 20px;
-  right: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.lp-demo-chart-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  font-family: monospace;
-  color: rgba(255,255,255,0.45);
-}
-
-.lp-demo-chart-num {
-  font-size: 32px;
-  font-weight: 900;
-  font-family: monospace;
-  line-height: 1;
-  color: var(--chart-accent, #2323FF);
-  opacity: 0.92;
-}
-
-.lp-demo-chart-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 5px;
-  height: 90px;
-  margin-bottom: 6px;
-}
-
-.lp-demo-chart-bar {
-  flex: 1;
-  border-radius: 3px 3px 0 0;
-  opacity: 0.88;
-  transition: height 0.3s ease;
-}
-
-.lp-demo-chart-xlabels {
-  display: flex;
-  gap: 5px;
-}
-
-.lp-demo-chart-xlabels span {
-  flex: 1;
-  font-size: 7px;
-  color: rgba(255,255,255,0.3);
-  text-align: center;
-  font-family: monospace;
-}
-
-/* Corner brackets on chart (reuse approach from mockup) */
-.lp-demo-chart::before,
-.lp-demo-chart::after {
-  content: '';
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-style: solid;
-  border-color: rgba(255,255,255,0.3);
-}
-
-.lp-demo-chart::before {
-  top: 10px;
-  left: 14px;
-  border-width: 2px 0 0 2px;
-}
-
-.lp-demo-chart::after {
-  bottom: 10px;
-  right: 14px;
-  border-width: 0 2px 2px 0;
-}
-
-
-/* CTA: Vibrant tricolor gradient using the saturated persona colors. 
-   Distinct from the light background mesh; white type for punchy contrast. */
-.lp-cta {
-  --lp-brand: #fff;
-  --lp-brand-fill: rgba(255, 255, 255, 0.2);
-  border-radius: 56px;
-  background: linear-gradient(135deg, var(--lp-prod) 0%, var(--lp-sec) 45%, var(--lp-pop) 100%);
-  color: #fff;
-  padding: clamp(48px, 5vw, 80px) clamp(32px, 4vw, 64px);
-  position: relative;
-  overflow: hidden;
-  border: none;
-}
-
-/* dotted texture */
-.lp-cta::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
-  background-size: 24px 24px;
-  pointer-events: none;
-}
-
-.lp-cta-grid {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: clamp(28px, 4vw, 56px);
-  align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.lp-cta-pitch {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  align-items: flex-start;
-}
-
-.lp-cta-title {
-  font-family: var(--font-avant);
-  font-size: clamp(48px, 6.5vw, 88px);
-  font-weight: 700;
-  line-height: 0.95;
-  letter-spacing: -0.035em;
-  color: #fff;
-}
-
-.lp-cta-sub {
-  font-size: clamp(16px, 1.4vw, 19px);
-  font-weight: 500;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
-  max-width: 52ch;
-}
-
-.lp-cta-button {
-  appearance: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  padding: 0;
-  border-radius: 999px;
-  background: #fff;
-  color: var(--lp-prod);
-  font-family: var(--font-avant);
-  text-align: left;
-  margin-top: 8px;
-  width: 100%;
-  max-width: 460px;
-  overflow: hidden;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-  box-shadow:
-    0 28px 60px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
-}
-
-.lp-cta-button:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 36px 70px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.2);
-}
-
-.lp-cta-button:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 4px;
-}
-
-.lp-cta-button-icon {
-  width: 88px;
-  flex-shrink: 0;
-  background: var(--lp-prod);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-size: 36px;
-  font-weight: 800;
-}
-
-.lp-cta-button-body {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 16px 24px 18px 22px;
-  gap: 4px;
-}
-
-.lp-cta-button-top {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.015em;
-  line-height: 1.05;
-}
-
-.lp-cta-button-bottom {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  color: color-mix(in srgb, var(--lp-prod) 65%, #888);
-}
-
-.lp-cta-secondary {
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: #fff;
-  opacity: 0.8;
-  cursor: pointer;
-  font-family: var(--font-avant);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 5px;
-  transition: opacity 0.15s ease;
-}
-
-.lp-cta-secondary:hover {
-  opacity: 1;
-}
-
-.lp-cta-secondary:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-/* ── FAKE PERMISSION DIALOG (right column of CTA) ── */
-
-.lp-perms {
-  --lp-brand: var(--lp-prod);
-  --lp-brand-fill: var(--lp-prod-fill);
-  background: #fff;
-  border: 2px solid var(--lp-prod);
-  border-radius: 22px;
-  overflow: hidden;
-  font-family: var(--font-avant);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
-  transform: rotate(0.5deg);
-}
-
-.lp-perms-titlebar {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 11px 14px;
-  background: var(--lp-brand-fill);
-  border-bottom: 1.5px solid var(--lp-brand);
-  position: relative;
-}
-
-.lp-perms-tl-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-}
-/* Window control dots use the three persona accents */
-.lp-perms-tl-dot--r { background: var(--lp-sec); }
-.lp-perms-tl-dot--y { background: #ffbd2e; }
-.lp-perms-tl-dot--g { background: var(--lp-pop); }
-
-.lp-perms-tl-title {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--lp-brand);
-  text-transform: lowercase;
-}
-
-.lp-perms-body {
-  padding: 22px 24px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.lp-perms-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid color-mix(in srgb, var(--lp-brand) 22%, #fff);
-}
-
-.lp-perms-head-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 9px;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  color: #000;
   background: var(--lp-sec);
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 800;
-  flex-shrink: 0;
+  border: 3px solid var(--lp-sec);
+  border-radius: 12px;
+  padding: 5px 14px 6px;
+  white-space: nowrap;
 }
 
-.lp-perms-head-text {
+/* Icon rail — Real: .icon-rail */
+.lp-macbook-app-rail {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 3px solid var(--lp-sec);
+  background: var(--lp-sec);
 }
 
-.lp-perms-head-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--lp-brand);
-  letter-spacing: -0.005em;
-}
-
-.lp-perms-head-sub {
-  font-size: 11px;
-  font-weight: 500;
-  color: color-mix(in srgb, var(--lp-brand) 65%, #fff);
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-}
-
-.lp-perms-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.lp-perms-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 999px;
-  background: var(--lp-brand-fill);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--lp-brand);
-  letter-spacing: 0.01em;
-}
-
-.lp-perms-check {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--lp-pop);
-  color: #fff;
+/* Buttons — Real: .rail-btn */
+.lp-macbook-app-rail-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-family: var(--font-avant);
+  font-size: 32px;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.45);
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
-  font-size: 12px;
-  font-weight: 800;
-  flex-shrink: 0;
-}
-
-.lp-perms-item-state {
-  margin-left: auto;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--lp-pop);
-}
-
-.lp-perms-actions {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.lp-perms-btn {
-  appearance: none;
   cursor: pointer;
-  font-family: var(--font-avant);
-  border: none;
-  padding: 11px 14px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  transition: filter 0.15s ease, transform 0.1s ease;
 }
 
-.lp-perms-btn--deny {
-  background: transparent;
-  border: 1.5px dashed color-mix(in srgb, var(--lp-brand) 30%, #fff);
-  color: color-mix(in srgb, var(--lp-brand) 45%, #fff);
-  cursor: not-allowed;
-  text-decoration: line-through;
+/* Active button — Real: .rail-btn.is-active */
+.lp-macbook-app-rail-btn--active {
+  background: #000;
+  color: var(--lp-sec);
 }
 
-.lp-perms-btn--allow {
-  background: var(--lp-pop);
-  color: #fff;
-}
-
-.lp-perms-btn--allow:hover  { filter: brightness(1.08); }
-.lp-perms-btn--allow:active { transform: translateY(1px); }
-
-/* fine print row at the bottom of the CTA */
-.lp-cta-foot {
-  position: relative;
-  margin: clamp(28px, 3vw, 48px) auto 0;
-  padding-top: 22px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+/* Main column: holds the posts capsule. Centered horizontally, fills height. */
+.lp-macbook-app-main {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.7);
-  max-width: 1200px;
-  letter-spacing: 0.01em;
-}
-
-.lp-cta-foot-tag {
-  flex-shrink: 0;
-  font-family: var(--font-avant);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  padding: 3px 9px 4px;
-  border-radius: 999px;
-  background: var(--lp-sec);
-  color: #fff;
-}
-
-/* ── FOOTER ─────────────────────────────────────────────────── */
-
-.lp-footer {
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 22px var(--lp-edge-pad) 24px;
-  position: relative;
-  font-family: var(--font-avant);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-  color: var(--lp-prod);
-  flex-wrap: wrap;
+}
+
+/* Narrowed posts capsule:
+   - Forces a smaller max-width than the preview's 86% so posts feel less wide
+   - Enables vertical scroll so multiple posts can flow inside the screen height
+   - Overrides .lp-preview-shell defaults to fit the macbook                  */
+.lp-macbook-app-capsule {
   width: 100%;
-  max-width: var(--lp-max-width);
-  margin: 16px auto 0;
-  box-sizing: border-box;
+  max-width: 680px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* Disable user scrolling/interaction inside the mockup (auto-scroll still works). */
+  pointer-events: none;
+  touch-action: none;
 }
 
-/* Tricolor top line bookending the footer, mirrors topbar */
-.lp-footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: var(--lp-edge-pad);
-  right: var(--lp-edge-pad);
-  height: 2px;
-  background: linear-gradient(90deg, var(--lp-prod) 0%, var(--lp-sec) 50%, var(--lp-pop) 100%);
+.lp-macbook-app-capsule::-webkit-scrollbar {
+  display: none;
 }
 
-.lp-footer-brand {
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  color: var(--lp-prod);
+/* Animate posts appearing at the top of the feed. */
+.lp-macbook-app .posts-tab .post-card {
+  animation: lp-macbook-app-post-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
 
-.lp-footer-sep {
-  color: color-mix(in srgb, var(--lp-prod) 40%, #ccc);
+@keyframes lp-macbook-app-post-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.lp-footer-spacer {
-  flex: 1 1 auto;
-}
+/* The .lp-preview-scale class isn't applied inside the macbook (we rely on the
+   uniform CSS transform scale instead) so no override needed there.          */
 
-.lp-footer-meta {
-  color: color-mix(in srgb, var(--lp-prod) 55%, #aaa);
-  font-size: 12px;
-  letter-spacing: 0.06em;
-}
+/* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 
-/* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .lp-topbar-status { display: none; }
 
-@media (max-width: 980px) {
-  .lp-topbar-status {
-    display: none;
+  .lp-hero-title {
+    font-size: clamp(56px, 18vw, 120px);
+    white-space: normal;
   }
 
-  .lp-hero {
-    grid-template-columns: 1fr;
-    text-align: left;
-  }
-
-  .lp-macbook-wrap {
-    margin-top: 12px;
-  }
-
-  .lp-macbook {
-    width: clamp(260px, 80vw, 460px);
-  }
-
-  .lp-steps-row,
-  .lp-persona-row {
+  .lp-steps-row {
     grid-template-columns: 1fr;
   }
 
-  .lp-cta-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .lp-perms {
-    transform: none;
-    max-width: 460px;
+  .lp-preview-posts-capsule {
     width: 100%;
   }
 
-  .lp-preview-demo {
-    padding-top: 20px;
+  .lp-preview-shell {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .lp-preview-posts-inner {
+    width: 100%;
+  }
+
+  .lp-preview-scale {
+    transform: translate(-8px, -6px) scale(1.08);
+  }
+
+  .lp-cta-download-btn {
+    width: 100%;
+    max-width: 400px;
   }
 }
 
 @media (max-width: 540px) {
-  .lp-ticker-track {
-    animation-duration: 60s;
+  .lp-macbook {
+    width: clamp(300px, 92vw, 560px);
   }
 
-  .lp-cta-button-icon {
-    width: 64px;
-    font-size: 28px;
+  .lp-cta-btn-icon {
+    width: 52px;
+    font-size: 22px;
   }
 
-  .lp-cta-button-top {
-    font-size: 18px;
-  }
-
-  .lp-perms-actions {
-    grid-template-columns: 1fr;
+  .lp-cta-btn-top {
+    font-size: 15px;
   }
 }
