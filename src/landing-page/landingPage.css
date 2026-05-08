@@ -174,7 +174,8 @@
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
-  gap: clamp(24px, 4vh, 56px);
+  /* Extra space below COMPLIANT before “Your digital life quantified.” */
+  gap: clamp(36px, 5.5vh, 72px);
 }
 
 .lp-hero-title {
@@ -183,10 +184,23 @@
   /* 18vw is a safer bet for 9 letters to hit edges without overflow */
   font-size: clamp(96px, 18vw, 560px);
   font-weight: 800;
-  line-height: 0.8;
+  /* Slightly taller line-box to avoid top glyph clipping */
+  line-height: 0.88;
   letter-spacing: -0.02em;
   text-transform: uppercase;
-  color: #fff;
+  /* Animated persona gradient fill */
+  background: linear-gradient(
+    90deg,
+    var(--prod),
+    var(--sec),
+    var(--pop),
+    var(--prod)
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lp-hero-persona-gradient 8s ease-in-out infinite;
   white-space: nowrap;
   padding: 0;
   width: 100%;
@@ -194,6 +208,12 @@
   box-sizing: border-box;
   display: block;
   margin: 0;
+}
+
+@keyframes lp-hero-persona-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .lp-hero-title--top {
@@ -265,18 +285,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: clamp(28px, 5vh, 64px) 0 0;
   box-sizing: border-box;
 }
 
-/* Pills on top — no shrink, always visible */
-.lp-mockup-section .lp-persona-pills-row--hero {
-  flex-shrink: 0;
-  order: -1;
-}
-
-/* MacBook fills the remaining space below the pills */
+/* MacBook fills the mockup viewport */
 .lp-mockup-section .lp-macbook-wrap {
   flex: 1 1 0;
   min-height: 0;
@@ -290,9 +304,18 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   padding: clamp(28px, 5vh, 56px) var(--lp-edge-pad) 0;
   box-sizing: border-box;
+}
+
+.lp-workflow-section {
+  justify-content: space-between;
+}
+
+.lp-axes-section {
+  justify-content: flex-start;
+  gap: clamp(8px, 1.4vh, 20px);
+  padding-bottom: clamp(16px, 2.5vh, 36px);
 }
 
 .lp-section-header-group {
@@ -300,13 +323,20 @@
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
+  flex-shrink: 0;
 }
 
-/* The .lp-steps-row is the last flex child — space-between pushes it to
-   the bottom of the 100vh. */
+/* Workflow: cards at bottom of 100vh. Axes: cards grow below header + “Three Algorithms” */
 .lp-workflow-section > .lp-steps-row,
 .lp-axes-section > .lp-steps-row {
   align-self: stretch;
+}
+
+.lp-axes-section > .lp-steps-row {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: stretch;
+  grid-template-rows: minmax(0, 1fr);
 }
 
 /* Slightly smaller workflow cards to free space above */
@@ -315,10 +345,12 @@
   min-height: 290px;
 }
 
-/* Make ONLY the Three Axes cards taller */
+/* Make ONLY the Three Axes cards taller and stretch to fill space under “Three Algorithms” */
 .lp-axes-section .lp-step-card {
   padding: 46px 34px;
-  min-height: 380px;
+  min-height: clamp(320px, 42vh, 560px);
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .lp-profile-section .lp-section-lede-wrap {
@@ -336,59 +368,6 @@
   text-align: left;
   max-width: none;
   width: 100%;
-}
-
-.lp-persona-pills-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.lp-persona-pills-row--hero {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  align-items: center;
-  justify-items: start;
-  align-self: stretch;
-  width: 100%;
-  margin-top: 0;
-  column-gap: clamp(18px, 4vw, 64px);
-  flex-wrap: nowrap;
-  padding: 0 var(--lp-edge-pad);
-  box-sizing: border-box;
-}
-
-.lp-persona-pills-row--hero .lp-persona-pill {
-  font-size: clamp(52px, 4vw, 96px);
-  padding: 22px 40px 24px;
-  width: fit-content;
-  text-transform: uppercase;
-  background: transparent;
-  border: 3px solid var(--pill-accent, #fff);
-  color: var(--pill-accent, #fff);
-  box-sizing: border-box;
-}
-
-.lp-persona-pills-row--hero .lp-persona-pill:nth-child(2) {
-  justify-self: center;
-}
-
-.lp-persona-pills-row--hero .lp-persona-pill:nth-child(3) {
-  justify-self: end;
-}
-
-.lp-persona-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 12px 28px 13px;
-  border-radius: var(--lp-pill-radius);
-  font-family: var(--font-avant);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-  color: #000;
 }
 
 /* ── SHARED SECTION STYLES ────────────────────────────────────────────────── */
@@ -544,6 +523,9 @@
 .lp-preview-demo {
   position: relative;
   padding-top: 0;
+  /* Keep the preview away from viewport edges (landing page only) */
+  padding-left: clamp(28px, 6vw, 0px);
+  padding-right: clamp(0px, 1vw, 0px);
   width: 100%;
   max-width: var(--lp-max-width);
   margin: 0 auto;
@@ -568,12 +550,13 @@
 
 /* Scale ONLY text/icons on the left side (not the score) */
 .lp-preview-scale {
-  transform: translate(-35px, -28px) scale(1.18);
+  /* Nudged right so copy sits off the left edge of the preview capsule */
+  transform: translate(14px, -8px) scale(1.1);
   transform-origin: left top;
 }
 
 .lp-preview-scale .profile-bio {
-  max-width: min(100%, 44ch);
+  max-width: min(100%, 36ch);
   width: 100%;
 }
 
@@ -620,63 +603,105 @@
 .lp-cta-section {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+}
+
+/* One viewport: title matches other sections (left); square card below. */
+.lp-cta-hero {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  padding: clamp(16px, 3vh, 40px) 0;
+  gap: clamp(20px, 3.5vh, 44px);
+}
+
+.lp-cta-hero .lp-section-header-group {
+  flex-shrink: 0;
   align-items: flex-start;
 }
 
 .lp-cta-card {
-  width: 100%;
-  background: #fff;
-  border-radius: 28px;
-  padding: clamp(36px, 5vw, 64px) clamp(28px, 4vw, 56px);
+  --lp-download-accent: #cefe46;
+  --lp-cta-square: min(
+    92vmin,
+    calc(100svh - clamp(200px, 34vmin, 400px)),
+    1040px
+  );
+  width: var(--lp-cta-square);
+  height: var(--lp-cta-square);
+  max-width: 100%;
+  flex-shrink: 0;
+  align-self: center;
+  margin-inline: auto;
+  margin-top: 0;
+  background: transparent;
+  border: 3px solid var(--lp-download-accent);
+  border-radius: var(--lp-pill-radius, 28px);
+  padding: clamp(32px, 4.5vmin, 64px) clamp(28px, 3.5vmin, 52px);
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  margin-top: 8px;
+  justify-content: center;
+  gap: clamp(24px, 3.5vmin, 40px);
+  box-sizing: border-box;
 }
 
 .lp-cta-card-title {
   font-family: var(--font-avant);
-  font-size: clamp(45px, 7vw, 90px);
+  font-size: clamp(40px, 5.5vmin, 96px);
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: 1.05;
   color: #000;
+  text-align: left;
+  background: var(--lp-download-accent);
+  border-radius: var(--lp-pill-radius);
+  padding: clamp(12px, 1.6vmin, 18px) clamp(18px, 2.4vmin, 28px) clamp(14px, 1.9vmin, 20px);
+  width: fit-content;
 }
 
 .lp-cta-card-actions {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  align-items: flex-start;
+  align-items: stretch;
+  width: 100%;
 }
 
 .lp-cta-download-btn {
   appearance: none;
-  border: none;
+  border: 3px solid var(--lp-download-accent);
   cursor: pointer;
   display: inline-flex;
   align-items: stretch;
   gap: 0;
   border-radius: var(--lp-pill-radius);
-  background: var(--lp-sec);
-  color: #000;
+  background: transparent;
+  color: var(--lp-download-accent);
   font-family: var(--font-avant);
   text-align: left;
   overflow: hidden;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--lp-sec) 40%, transparent);
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  box-shadow: none;
+  width: 100%;
 }
 
 .lp-cta-download-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 20px 48px color-mix(in srgb, var(--lp-sec) 50%, transparent);
+  opacity: 0.92;
+  box-shadow: none;
 }
 
 .lp-cta-btn-icon {
-  width: 68px;
+  width: clamp(64px, 8.5vmin, 96px);
   flex-shrink: 0;
-  background: color-mix(in srgb, var(--lp-sec) 70%, #000);
-  color: #fff;
+  background: transparent;
+  border-right: 3px solid var(--lp-download-accent);
+  color: var(--lp-download-accent);
   display: grid;
   place-items: center;
   font-size: 28px;
@@ -687,99 +712,48 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 14px 22px 16px;
+  padding: 14px 18px 16px;
   gap: 3px;
+  flex: 1;
+  min-width: 0;
 }
 
 .lp-cta-btn-top {
-  font-size: 25px;
+  font-size: clamp(20px, 2.8vmin, 34px);
   font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1.05;
-  color: #000;
+  color: var(--lp-download-accent);
 }
 
 .lp-cta-btn-sub {
-  font-size: 14px;
+  font-size: clamp(12px, 1.6vmin, 16px);
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: lowercase;
-  color: #000;
+  color: var(--lp-download-accent);
 }
 
 .lp-cta-secondary-btn {
   appearance: none;
   border: none;
   background: transparent;
-  color: #000;
+  color: var(--lp-download-accent);
   cursor: pointer;
   font-family: var(--font-avant);
-  font-size: 18px;
+  font-size: clamp(16px, 2vmin, 22px);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: lowercase;
   padding: 0;
   text-decoration: underline;
   text-underline-offset: 4px;
-  transition: color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .lp-cta-secondary-btn:hover {
-  color: #000;
-}
-
-/* ── FOOTER ───────────────────────────────────────────────────────────────── */
-
-.lp-footer {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 22px var(--lp-edge-pad) 24px;
-  position: relative;
-  font-family: var(--font-avant);
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-  color: rgba(255, 255, 255, 0.35);
-  flex-wrap: wrap;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  box-sizing: border-box;
-  opacity: 0;
-  animation: lp-fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  animation-delay: calc(var(--stagger-i, 14) * 0.09s);
-}
-
-.lp-footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: var(--lp-edge-pad);
-  right: var(--lp-edge-pad);
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.lp-footer-brand {
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.lp-footer-sep {
-  color: rgba(255, 255, 255, 0.2);
-}
-
-.lp-footer-spacer {
-  flex: 1 1 auto;
-}
-
-.lp-footer-meta {
-  font-size: 17px;
-  letter-spacing: 0.06em;
+  opacity: 0.85;
+  color: var(--lp-download-accent);
 }
 
 /* ── MACBOOK MOCKUP ───────────────────────────────────────────────────────── */
@@ -1143,12 +1117,12 @@
   }
 
   .lp-preview-scale {
-    transform: translate(-8px, -6px) scale(1.08);
+    transform: translate(10px, 6px) scale(1.08);
   }
 
   .lp-cta-download-btn {
     width: 100%;
-    max-width: 400px;
+    max-width: none;
   }
 }
 

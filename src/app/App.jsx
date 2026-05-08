@@ -239,7 +239,7 @@ export default function App() {
         '--persona-secondary': personaTabFill,
       }}
     >
-      {mainView !== 'home' && (
+      {mainView !== 'home' && mainView !== 'profile' && (
         <button
           type="button"
           className="persona-toggle-btn persona-toggle-btn--compact"
@@ -262,6 +262,7 @@ export default function App() {
             {mainView === 'home' && <HomeTab profile={profile} />}
             {mainView === 'profile' && (
               <div className="profile-capsule-wrap">
+                <p className="home-top-label">for you</p>
                 <div
                   className="posts-capsule"
                   style={{ '--persona-accent': personaColor }}
@@ -289,160 +290,106 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-
-                <div className="profile-side-rings" aria-label="Persona progress">
-                  {PERSONA_KEYS.filter((k) => k !== personaKey).map((k) => {
-                    const otherColor = PERSONA_COLORS[k];
-                    const offset = k === 'productivity' ? 8 : k === 'security' ? 14 : 11;
-                    const value = Math.max(0, Math.min(100, globalScore - offset));
-                    const R = 32;
-                    const CIRC = 2 * Math.PI * R;
-                    const dash = CIRC * (value / 100);
-                    const gap = CIRC - dash;
-                    return (
-                      <div key={k} className="persona-side-other" style={{ '--persona-other-accent': otherColor }}>
-                        <svg className="persona-side-other-ring" viewBox="0 0 80 80" aria-label={`${PERSONA_LABELS[k]} ${value}%`}>
-                          <circle cx="40" cy="40" r={R} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="8" />
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r={R}
-                            fill="none"
-                            stroke="#000"
-                            strokeWidth="8"
-                            strokeDasharray={`${dash} ${gap}`}
-                            strokeLinecap="round"
-                            style={{ transform: 'rotate(-90deg)', transformOrigin: '40px 40px' }}
-                          />
-                        </svg>
-                        <span className="persona-side-other-label">{PERSONA_LABELS[k].toLowerCase()}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="profile-persona-side-stack" aria-label="Persona + analysis">
-                  <div className="profile-persona-side" aria-label="Persona">
-                    <span
-                      className="profile-persona-side-pill"
-                      style={{ background: 'transparent', border: `4px solid ${personaColor}`, color: personaColor }}
-                    >
-                      {`${String(PERSONA_LABELS[personaKey] ?? '').toUpperCase()} USER`}
-                    </span>
-                  </div>
-                  {lastAnalysisText ? (
-                    <div className="profile-last-analysis" aria-label="Last analysis">
-                      <span
-                        className="profile-last-analysis-pill"
-                        style={{ background: personaColor, color: '#000' }}
-                      >
-                        Last analysis :<br />
-                        <strong>{lastAnalysisText}</strong>
-                      </span>
-                    </div>
-                  ) : null}
-                  <div className="profile-create-content" aria-label="Create new content">
-                    <button
-                      type="button"
-                      className="profile-last-analysis-pill"
-                      style={{ background: personaColor, color: '#000' }}
-                      disabled={postGen.loading || !profile}
-                      onClick={handleGeneratePersonaPosts}
-                    >
-                      {postGen.loading ? 'Generating…' : 'Create new content'}
-                    </button>
-                    {postGen.error ? (
-                      <span className="generate-posts-error" role="alert">
-                        {postGen.error}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
               </div>
             )}
           </ScrollArea>
         </div>
 
-        {mainView === 'home' && (
-          <aside className="persona-side-panel" aria-label="Persona summary">
-            <div className="persona-side-top-group">
+        {(mainView === 'home' || mainView === 'profile') && (
+          <aside className="persona-side-panel" aria-label="Persona dashboard">
+            <p className="dashboard-top-label">dashboard</p>
+            <div
+              className="dashboard-capsule"
+              style={{ '--persona-accent': personaColor }}
+            >
               <button
                 type="button"
-                className="persona-side-type"
+                className="dashboard-persona-pill"
                 onClick={cyclePersona}
-                style={{ backgroundColor: 'transparent', borderColor: personaColor, color: personaColor }}
               >
-                <span className="persona-side-type-label">
-                  {`${String(PERSONA_LABELS[personaKey] ?? '').toUpperCase()} USER`}
-                </span>
+                {`${PERSONA_LABELS[personaKey] ?? ''} user`}
               </button>
-              <div className="persona-side-substack">
-                {lastAnalysisText ? (
-                  <div className="persona-side-last-analysis" aria-label="Last analysis">
-                    <span
-                      className="profile-last-analysis-pill"
-                      style={{ background: personaColor, color: '#000' }}
-                    >
-                      Last analysis :<br />
-                      <strong>{lastAnalysisText}</strong>
-                    </span>
-                  </div>
-                ) : null}
-                <div className="persona-side-create" aria-label="Create new content">
-                  <button
-                    type="button"
-                    className="profile-last-analysis-pill"
-                    style={{ background: personaColor, color: '#000' }}
-                    disabled={postGen.loading || !profile}
-                    onClick={handleGeneratePersonaPosts}
-                  >
-                    {postGen.loading ? 'Generating…' : 'Create new content'}
-                  </button>
+
+              <div className="dashboard-grid">
+                <div className="dashboard-card dashboard-card--analysis">
+                  <span className="dashboard-card-label">last analysis</span>
+                  <strong className="dashboard-card-value">
+                    {lastAnalysisText ?? '—'}
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  className="dashboard-card dashboard-card--generate"
+                  disabled={postGen.loading || !profile}
+                  onClick={handleGeneratePersonaPosts}
+                >
+                  {postGen.loading
+                    ? 'GENERATING…'
+                    : 'GENERATE NEW CONTENT / DO ANOTHER ANALYSIS'}
                   {postGen.error ? (
                     <span className="generate-posts-error" role="alert">
                       {postGen.error}
                     </span>
                   ) : null}
+                </button>
+                <div className="dashboard-card dashboard-card--analyze">
+                  ANALYZE UR LAST POST
+                </div>
+                <div className="dashboard-card dashboard-card--leaderboards">
+                  SOMETHING ABOUT THE LEADERBOARDS OR RANKINGS
                 </div>
               </div>
-            </div>
 
-            <div className="persona-side-others">
-              <div
-                className="persona-side-score"
-                aria-label={`Score ${globalScore}`}
-                style={{ '--persona-other-accent': personaColor }}
-              >
-                <span className="persona-side-score-num">{globalScore}</span>
+              <div className="dashboard-rings">
+                {PERSONA_KEYS.map((k) => {
+                  const ringColor = PERSONA_COLORS[k];
+                  const offset =
+                    k === personaKey
+                      ? 0
+                      : k === 'productivity'
+                      ? 8
+                      : k === 'security'
+                      ? 14
+                      : 11;
+                  const value = Math.max(0, Math.min(100, globalScore - offset));
+                  const R = 32;
+                  const CIRC = 2 * Math.PI * R;
+                  const dash = CIRC * (value / 100);
+                  const gap = CIRC - dash;
+                  return (
+                    <div
+                      key={k}
+                      className="dashboard-ring-card"
+                      style={{ '--ring-accent': ringColor }}
+                    >
+                      <svg
+                        className="dashboard-ring-svg"
+                        viewBox="0 0 80 80"
+                        aria-label={`${PERSONA_LABELS[k]} ${value}%`}
+                      >
+                        <circle cx="40" cy="40" r={R} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="8" />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r={R}
+                          fill="none"
+                          stroke="#000"
+                          strokeWidth="8"
+                          strokeDasharray={`${dash} ${gap}`}
+                          strokeLinecap="round"
+                          style={{ transform: 'rotate(-90deg)', transformOrigin: '40px 40px' }}
+                        />
+                      </svg>
+                      <span className="dashboard-ring-label">
+                        {PERSONA_LABELS[k].toLowerCase()}
+                      </span>
+                      <span className="dashboard-ring-score">
+                        {Number.isFinite(value) ? value : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              {PERSONA_KEYS.filter((k) => k !== personaKey).map((k) => {
-                const otherColor = PERSONA_COLORS[k];
-                const offset = k === 'productivity' ? 8 : k === 'security' ? 14 : 11;
-                const value = Math.max(0, Math.min(100, globalScore - offset));
-                const R = 32;
-                const CIRC = 2 * Math.PI * R;
-                const dash = CIRC * (value / 100);
-                const gap = CIRC - dash;
-                return (
-                  <div key={k} className="persona-side-other" style={{ '--persona-other-accent': otherColor }}>
-                    <svg className="persona-side-other-ring" viewBox="0 0 80 80" aria-label={`${PERSONA_LABELS[k]} ${value}%`}>
-                      <circle cx="40" cy="40" r={R} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="8" />
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r={R}
-                        fill="none"
-                        stroke="#000"
-                        strokeWidth="8"
-                        strokeDasharray={`${dash} ${gap}`}
-                        strokeLinecap="round"
-                        style={{ transform: 'rotate(-90deg)', transformOrigin: '40px 40px' }}
-                      />
-                    </svg>
-                    <span className="persona-side-other-label">{PERSONA_LABELS[k].toLowerCase()}</span>
-                  </div>
-                );
-              })}
             </div>
           </aside>
         )}

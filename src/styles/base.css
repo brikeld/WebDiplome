@@ -144,134 +144,202 @@ body {
   outline-offset: 3px;
 }
 
-/* ── RIGHT-SIDE PERSONA PANEL (home view only) ── */
+/* ── RIGHT-SIDE DASHBOARD PANEL (home + profile views) ── */
 .persona-side-panel {
-  /* Natural flex sibling of .main-col — no fixed positioning needed */
   position: static;
   flex: 0 0 auto;
-  width: 440px;
+  width: 540px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  /* Align to the posts capsule top (home has "for you" above the capsule) */
-  margin-top: 64px;
-  height: calc(100% - 64px);
+  align-items: stretch;
+  height: 100%;
+  padding-top: 10px;
   padding-bottom: 12px;
   box-sizing: border-box;
   font-family: var(--font-avant);
 }
 
-.persona-side-top-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  /* Keep equal spacing between USER / Last analysis / Create new content */
-  gap: 12px;
+/* "dashboard" pill above the capsule (mirrors .home-top-label) */
+.dashboard-top-label {
+  flex: 0 0 auto;
+  align-self: center;
+  width: fit-content;
+  max-width: 100%;
+  font-family: var(--font-avant);
+  font-size: clamp(12px, 1.8vw, 17px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  color: #000;
+  text-align: center;
+  margin: 8px auto 16px;
+  padding: 5px 18px 6px;
+  border: 2px solid var(--persona-accent, var(--ink));
+  border-radius: 12px;
+  background: var(--persona-accent, var(--ink));
+}
+
+/* The persona-color-filled dashboard capsule */
+.dashboard-capsule {
+  flex: 1 1 0;
+  min-height: 0;
   width: 100%;
-}
-
-.persona-side-last-analysis {
-  pointer-events: none;
-  /* Match the "SOCIAL USER" pill font-size */
-  font-size: clamp(20px, 2.8vw, 34px);
-}
-
-.persona-side-substack {
+  box-sizing: border-box;
+  background: var(--persona-accent, #2323ff);
+  border: 3px solid var(--persona-accent, #2323ff);
+  border-radius: var(--capsule-radius, 16px);
+  padding: 26px 26px 28px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  /* Ensure both pills inherit the same font-size as the USER pill */
-  font-size: clamp(20px, 2.8vw, 34px);
+  gap: 22px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
 }
 
-/* All-caps \"CREATE NEW CONTENT\" in home panel */
-.persona-side-create .profile-last-analysis-pill {
-  text-transform: uppercase;
-}
+.dashboard-capsule::-webkit-scrollbar { display: none; }
 
-.persona-side-type {
+/* Persona pill (top of dashboard, clickable to cycle persona) */
+.dashboard-persona-pill {
   appearance: none;
   cursor: pointer;
-  border: 4px solid var(--persona-accent, #000);
-  border-radius: 12px;
-  background: transparent;
-  color: var(--persona-accent, #000);
-  /* Match the profile-side persona pill styling */
-  padding: 6px 12px 7px;
-  font-family: var(--font-avant);
-  font-size: clamp(20px, 2.8vw, 34px);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: 0.01em;
-  text-align: center;
+  align-self: center;
   width: max-content;
   max-width: 100%;
-  transition: none;
-}
-
-.persona-side-type:hover { filter: none; }
-.persona-side-type:active { transform: none; }
-
-.persona-side-type-label {
-  display: block;
-  text-transform: none;
-  white-space: nowrap;
-}
-
-.persona-side-others {
-  /* Dock bottom group inside the panel cleanly */
-  margin-top: auto;
-  display: grid;
-  grid-template-columns: 1fr 140px 1fr;
-  gap: 16px;
-  width: 100%;
-  align-items: end;
-  justify-items: center;
-}
-
-.persona-side-score {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  border: 4px solid var(--persona-other-accent, var(--persona-accent, #000));
-  background: #000;
-  color: var(--persona-other-accent, var(--persona-accent, #000));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  pointer-events: none;
-  /* Ensure no internal clipping */
-  overflow: visible;
-}
-
-.persona-side-score-num {
+  border: 4px solid #000;
+  border-radius: 12px;
+  background: transparent;
+  color: #000;
+  padding: 8px 18px 10px;
   font-family: var(--font-avant);
-  font-weight: 900;
-  font-size: 76px;
-  /* Use normal line-height to avoid clipping the font's bounding box */
-  line-height: normal;
-  letter-spacing: -0.05em;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
   text-align: center;
+  text-transform: capitalize;
 }
 
-.persona-side-other {
+.dashboard-persona-pill:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 3px;
+}
+
+/* 2x2 dashboard grid (asymmetric: small/wide on top, wide/small on bottom) */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-areas:
+    "analysis generate generate"
+    "analyze analyze leaderboards";
+  gap: 12px;
   width: 100%;
+}
+
+.dashboard-card {
+  appearance: none;
+  border: none;
+  background: #000;
+  color: var(--persona-accent, #fff);
+  border-radius: 16px;
+  padding: 18px 18px;
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: clamp(13px, 1.3vw, 18px);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  box-sizing: border-box;
+  min-height: 110px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 24px 14px 26px;
-  border: 4px solid var(--persona-other-accent, #000);
-  border-radius: 12px;
-  background: var(--persona-other-accent, #000);
-  color: #000;
-  font-family: var(--font-avant);
+  justify-content: center;
+  text-align: center;
 }
 
-.persona-side-other-label {
-  font-size: 18px;
+.dashboard-card--analysis {
+  grid-area: analysis;
+  align-items: flex-start;
+  text-align: left;
+  text-transform: lowercase;
+  font-size: clamp(14px, 1.4vw, 20px);
+  font-weight: 700;
+  gap: 4px;
+  justify-content: flex-start;
+  padding: 16px 16px;
+}
+
+.dashboard-card-label {
+  display: block;
+  font-weight: 700;
+}
+
+.dashboard-card-value {
+  display: block;
+  font-weight: 800;
+  font-size: 0.92em;
+  line-height: 1.1;
+}
+
+.dashboard-card--generate {
+  grid-area: generate;
+  cursor: pointer;
+  font-size: clamp(14px, 1.6vw, 22px);
+}
+
+.dashboard-card--generate:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.dashboard-card--generate:focus-visible {
+  outline: 2px solid var(--persona-accent, #fff);
+  outline-offset: 3px;
+}
+
+.dashboard-card--analyze {
+  grid-area: analyze;
+  font-size: clamp(15px, 1.8vw, 24px);
+}
+
+.dashboard-card--leaderboards {
+  grid-area: leaderboards;
+  font-size: clamp(13px, 1.2vw, 17px);
+  line-height: 1.18;
+}
+
+/* 3 persona ring cards at bottom of dashboard */
+.dashboard-rings {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.dashboard-ring-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 10px 16px;
+  border: 3px solid var(--ring-accent, #000);
+  border-radius: 12px;
+  background: var(--ring-accent, #000);
+  color: #000;
+  font-family: var(--font-avant);
+  box-sizing: border-box;
+}
+
+.dashboard-ring-svg {
+  display: block;
+  width: 110px;
+  height: 110px;
+}
+
+.dashboard-ring-label {
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.005em;
   line-height: 1.1;
@@ -279,30 +347,30 @@ body {
   text-align: center;
 }
 
-/* SVG progress ring inside each other-persona capsule */
-.persona-side-other-ring {
-  display: block;
-  width: 100px;
-  height: 100px;
+.dashboard-ring-score {
+  font-family: var(--font-avant);
+  font-weight: 900;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 
 .project-name {
   position: fixed;
-  left: 16px;
-  top: 20px;
+  left: 18px;
+  bottom: 18px;
   z-index: 70;
   width: auto;
   margin: 0;
-  padding: 5px 14px 6px;
+  padding: 0;
   font-family: var(--font-avant);
   font-size: clamp(20px, 2.8vw, 34px);
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.15;
-  color: #000;
-  border: 3px solid var(--persona-accent, var(--ink));
-  border-radius: 12px;
-  background: var(--persona-accent, var(--ink));
+  color: var(--persona-accent, var(--ink));
+  background: transparent;
+  border: none;
 }
 
 .icon-rail {
@@ -388,15 +456,6 @@ body {
   gap: 24px;
 }
 
-.view-profile .page {
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: none;
-  padding-left: 96px;
-  padding-right: 16px;
-}
-
 .view-home .main-col,
 .view-profile .main-col {
   flex: 1 1 0;
@@ -410,10 +469,6 @@ body {
   flex-direction: column;
 }
 
-.view-profile .main-col {
-  width: 100%;
-  max-width: 1180px;
-}
 
 /* Profile needs the same flex funnel as home so the capsule can scroll */
 .view-profile .scroll-area,

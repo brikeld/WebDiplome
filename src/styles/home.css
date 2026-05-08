@@ -35,7 +35,8 @@
 }
 
 /* for-you label doesn't grow; capsule takes the rest */
-.view-home .home-top-label {
+.view-home .home-top-label,
+.view-profile .home-top-label {
   flex: 0 0 auto;
   align-self: center;
 }

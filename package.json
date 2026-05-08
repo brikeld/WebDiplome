@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:web": "VITE_API_ORIGIN=\"http://localhost:3001\" VITE_GENERATE_API_ORIGIN=\"http://localhost:3010\" vite",
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server.js",
     "server:generate": "node server-generate.js",
+    "servers": "concurrently -n data,gen -c cyan,magenta \"node server.js\" \"node server-generate.js\"",
     "dedupe:uploads": "node scripts/dedupe-uploads.js"
   },
   "dependencies": {
@@ -21,6 +23,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^9.2.1",
     "vite": "^5.4.10"
   }
 }

@@ -27,12 +27,6 @@ const PERSONAS = [
   },
 ];
 
-const HERO_PILLS = [
-  { key: 'data', color: '#D8D8D8', label: 'YOUR DATA' },
-  { key: 'habits', color: '#759AEF', label: 'YOUR HABITS' },
-  { key: 'score', color: '#CCF847', label: 'YOUR SCORE' },
-];
-
 const STEPS = [
   {
     n: '01',
@@ -180,17 +174,6 @@ export default function LandingPage({ onEnterDemo }) {
 
         {/* ── MOCKUP ── second screen */}
         <section className="lp-mockup-section lp-section" style={{ '--stagger-i': 1 }}>
-          <div className="lp-persona-pills-row lp-persona-pills-row--hero">
-            {HERO_PILLS.map((p) => (
-              <span
-                key={p.key}
-                className="lp-persona-pill"
-                style={{ '--pill-accent': p.color }}
-              >
-                {p.label}
-              </span>
-            ))}
-          </div>
           <LandingMacbookMockup />
         </section>
 
@@ -237,7 +220,7 @@ export default function LandingPage({ onEnterDemo }) {
           <div className="lp-section-header-group">
             <div className="lp-capsule-header">
               Three axes.
-              <br />
+  
               One verdict.
             </div>
             <div className="lp-section-lede-wrap">
@@ -247,7 +230,7 @@ export default function LandingPage({ onEnterDemo }) {
               </p>
             </div>
             <p className="lp-section-sublede lp-section-sublede--below">
-              Three<br />Algorithms
+              The three{'\u00A0'}algorithms:
             </p>
           </div>
           <div className="lp-steps-row">
@@ -391,43 +374,33 @@ export default function LandingPage({ onEnterDemo }) {
           className="lp-section lp-cta-section lp-capsule-section"
           style={{ '--stagger-i': 13, '--header-bg': '#759AEF' }}
         >
-          <div className="lp-capsule-header">
-            download Compliant.
-          </div>
-          <div className="lp-section-lede-wrap">
-            <p className="lp-section-lede">
-              What other subjects will see when the script finishes its first sweep of your machine.
-              Yours will be similar. Probably worse.
-            </p>
-          </div>
-          <div className="lp-cta-card">
-            <p className="lp-cta-card-title">Let the process begin</p>
-            <div className="lp-cta-card-actions">
-              <button type="button" className="lp-cta-download-btn">
-                <span className="lp-cta-btn-icon" aria-hidden>↓</span>
-                <span className="lp-cta-btn-label">
-                  <span className="lp-cta-btn-top">download Compliant</span>
-                  <span className="lp-cta-btn-sub">Compliant.dmg · macOS · 18.4 MB · zero refunds</span>
-                </span>
-              </button>
-              <button
-                type="button"
-                className="lp-cta-secondary-btn"
-                onClick={() => onEnterDemo?.()}
-              >
-                or observe an existing subject →
-              </button>
+          <div className="lp-cta-hero">
+            <div className="lp-section-header-group">
+              <div className="lp-capsule-header">
+                Download Compliant.
+              </div>
+            </div>
+            <div className="lp-cta-card">
+              <p className="lp-cta-card-title">Let the process begin</p>
+              <div className="lp-cta-card-actions">
+                <button type="button" className="lp-cta-download-btn">
+                  <span className="lp-cta-btn-icon" aria-hidden>↓</span>
+                  <span className="lp-cta-btn-label">
+                    <span className="lp-cta-btn-top">Download Compliant</span>
+                    <span className="lp-cta-btn-sub">Compliant.dmg · macOS · 18.4 MB · zero refunds</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="lp-cta-secondary-btn"
+                  onClick={() => onEnterDemo?.()}
+                >
+                  or observe an existing subject →
+                </button>
+              </div>
             </div>
           </div>
         </section>
-
-        <footer className="lp-footer" style={{ '--stagger-i': 14 }}>
-          <span className="lp-footer-brand">COMPLIANT</span>
-          <span className="lp-footer-sep" aria-hidden>·</span>
-          <span className="lp-footer-tag">every click leaves a trace. every silence does too.</span>
-          <span className="lp-footer-spacer" aria-hidden />
-          <span className="lp-footer-meta">build 1.0.0 · {new Date().getFullYear()} · the score is final</span>
-        </footer>
 
       </main>
     </div>
