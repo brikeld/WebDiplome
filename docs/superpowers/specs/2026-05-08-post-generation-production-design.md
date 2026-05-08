@@ -470,6 +470,10 @@ npm run dev
 - "Delete all existing profiles before saving a new one" branch in `server.js`.
 - Direct `fetch` to LM Studio inside `personaPostGenerator.js` (replaced by provider call).
 - The old `server/lib/personaPostGenerator.js` location (moved to `server-generate/lib/`; 3001 no longer imports it).
+- The `post_generator/` folder at the repo root. Copied from the Electron repo as reference; not imported by the active code path. Its `generate_posts.py` hardcodes a stale default model (`google/gemma-4-26b-a4b`) that contradicts the canonical default used everywhere else (`google/gemma-4-e4b`). Delete after implementation lifts the prompts and asset-image patterns into `server-generate/lib/prompts/` and `server-generate/lib/personaPostGenerator.js`.
+
+### Canonical model default
+`LM_STUDIO_MODEL=google/gemma-4-e4b` is the single source of truth. The Electron-side default agrees; the Python reference file in `post_generator/` is wrong and is being deleted.
 
 ## Acceptance criteria
 
