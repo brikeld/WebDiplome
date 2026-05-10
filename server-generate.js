@@ -13,6 +13,31 @@ const PROFILES_DIR = path.join(__dirname, 'profiles');
 const POSTS_DIR = path.join(__dirname, 'posts');
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 
+// Read LM Studio config + raw collected data from the Electron app's data dir
+// — same source of truth as the Electron app, so generated posts use the exact same input.
+const ELECTRON_DATA_DIR = '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data';
+const ELECTRON_LM_STUDIO_CONFIG = path.join(ELECTRON_DATA_DIR, 'lm_studio.json');
+const ELECTRON_DATA_JSON = path.join(ELECTRON_DATA_DIR, 'data.json');
+const ELECTRON_USER_JSON = path.join(ELECTRON_DATA_DIR, 'user.json');
+
+async function readJsonOrNull(filepath) {
+  try {
+    return JSON.parse(await fs.readFile(filepath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+async function readLmStudioConfig() {
+  const cfg = (await readJsonOrNull(ELECTRON_LM_STUDIO_CONFIG)) || {};
+  return {
+    baseUrl: cfg.baseUrl || process.env.LM_STUDIO_BASE_URL || 'http://192.168.1.109:1234',
+    model: cfg.model || process.env.LM_STUDIO_MODEL || 'google/gemma-4-e2b',
+  };
+}
+const LM_STUDIO_TIMEOUT_MS = parseInt(process.env.LM_STUDIO_TIMEOUT_MS || '180000', 10);
+const LM_STUDIO_RETRIES = parseInt(process.env.LM_STUDIO_RETRIES || '1', 10);
+
 const EXTRA_ASSET_DIRS = [
   '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/assets/recent_images',
   '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/assets/screenshots',
@@ -65,50 +90,51 @@ function mostRecentPersonaWithImage(existingPosts) {
   return null;
 }
 
-async function importRandomAssetToUploads() {
-  // Pick a random image from the external asset folders, copy into /public/uploads
-  // using a stable hash filename, and return the attachedImage shape expected by the UI.
-  const lists = await Promise.all(EXTRA_ASSET_DIRS.map(listImagesInDir));
-  const all = lists.flat();
-  return importRandomAssetToUploadsFromList(all, new Set());
+function getMimeFromExt(ext) {
+  if (ext === '.png') return 'image/png';
+  if (ext === '.webp') return 'image/webp';
+  if (ext === '.gif') return 'image/gif';
+  return 'image/jpeg';
 }
 
-async function importRandomAssetToUploadsFromList(candidates, usedUploadFilenames) {
+/**
+ * Picks a random unused image from candidates, copies it to /public/uploads (hash-based filename),
+ * reads it as base64 for the vision API, and returns everything needed for both the AI call and UI.
+ * Returns null if no unused candidates remain.
+ */
+async function pickAndImportAsset(candidates, usedUploadFilenames) {
   if (!Array.isArray(candidates) || candidates.length === 0) return null;
   const used = usedUploadFilenames instanceof Set ? usedUploadFilenames : new Set();
 
-  // Random sampling without replacement.
   const pool = candidates.slice();
   while (pool.length > 0) {
     const chosen = pickRandom(pool);
-    // remove chosen from pool
     pool.splice(pool.indexOf(chosen), 1);
 
     const buf = await fs.readFile(chosen);
     const hash = crypto.createHash('sha256').update(buf).digest('hex');
     const ext = path.extname(chosen).toLowerCase() || '.png';
     const safeExt = ALLOWED_EXT.has(ext) ? ext : '.png';
-    const filename = `${hash}${safeExt}`;
+    const uploadFilename = `${hash}${safeExt}`;
 
-    if (used.has(filename)) {
-      continue; // already used in previous generations
-    }
+    if (used.has(uploadFilename)) continue;
 
-    const dest = path.join(UPLOADS_DIR, filename);
+    const dest = path.join(UPLOADS_DIR, uploadFilename);
     await fs.mkdir(UPLOADS_DIR, { recursive: true });
     if (!(await fileExists(dest))) {
       await fs.writeFile(dest, buf);
     }
 
     return {
-      filename,
-      relativePath: `public/uploads/${filename}`,
-      url: `/uploads/${filename}`,
-      visionAnalysed: true,
+      sourceFilename: path.basename(chosen),
+      base64: buf.toString('base64'),
+      mime: getMimeFromExt(safeExt),
+      uploadFilename,
+      uploadRelativePath: `public/uploads/${uploadFilename}`,
+      uploadUrl: `/uploads/${uploadFilename}`,
     };
   }
 
-  // No unused images left.
   return null;
 }
 
@@ -147,12 +173,26 @@ app.post('/api/posts/generate', async (_req, res) => {
       return res.status(500).json({ success: false, error: 'Failed to read profile' });
     }
 
-    const posts = await generatePersonaPosts(profile);
-
     const existing = (await readPostsForId(newest.id)) ?? [];
 
-    // Attach exactly 1 random image to exactly 1 of the 3 persona posts.
-    // The persona cycles per generation: popularite → securite → productivite → ...
+    // Build the AI payload exactly like the Electron app does:
+    // JSON.stringify({ user: user.json, profile: data.json })
+    // Falls back to the WebDiplome profile if those files aren't readable.
+    const electronUser = await readJsonOrNull(ELECTRON_USER_JSON);
+    const electronData = await readJsonOrNull(ELECTRON_DATA_JSON);
+
+    let userPayloadObject;
+    if (electronData) {
+      userPayloadObject = { user: electronUser ?? {}, profile: electronData };
+    } else {
+      // Fallback: strip wallpaperBase64 (123k chars ≈ 30k tokens — would blow the context)
+      // and personaPosts (previous output, not useful as input) from the WebDiplome profile.
+      const { wallpaperBase64, personaPosts, ...profileForAI } = profile;
+      userPayloadObject = profileForAI;
+    }
+    const userPayload = JSON.stringify(userPayloadObject);
+
+    // Build candidate image list and track already-used upload filenames.
     const usedUploadFilenames = new Set(
       existing
         .map((p) => (p?.attachedImage && typeof p.attachedImage === 'object' ? p.attachedImage.filename : null))
@@ -162,18 +202,54 @@ app.post('/api/posts/generate', async (_req, res) => {
     const lists = await Promise.all(EXTRA_ASSET_DIRS.map(listImagesInDir));
     const allCandidates = lists.flat();
 
-    const attachedImage = await importRandomAssetToUploadsFromList(allCandidates, usedUploadFilenames).catch((e) => {
+    // Pick a random image, copy to uploads, and read as base64 for the vision API.
+    const asset = await pickAndImportAsset(allCandidates, usedUploadFilenames).catch((e) => {
       console.error('[posts/generate] asset import failed:', e?.message || e);
       return null;
     });
-    if (attachedImage) {
+
+    // Cycle through personas to decide which post gets the image.
+    let imageAssignment = null;
+    if (asset) {
       const prevPersona = mostRecentPersonaWithImage(existing);
       const targetPersona = nextPersonaInCycle(prevPersona);
-      const idx = Math.max(
-        0,
-        posts.findIndex((p) => String(p?.persona || '').toLowerCase() === targetPersona),
-      );
-      posts[idx] = { ...posts[idx], attachedImage };
+      imageAssignment = {
+        persona: targetPersona,
+        imageData: {
+          base64: asset.base64,
+          mime: asset.mime,
+          filename: asset.sourceFilename,
+        },
+      };
+    }
+
+    const lmCfg = await readLmStudioConfig();
+    const rawBase = String(lmCfg.baseUrl).replace(/\/$/, '');
+    const baseUrl = rawBase.endsWith('/v1') ? rawBase.slice(0, -3) : rawBase;
+    const model = lmCfg.model;
+
+    const posts = await generatePersonaPosts({
+      baseUrl,
+      model,
+      userPayload,
+      timeoutMs: LM_STUDIO_TIMEOUT_MS,
+      retries: LM_STUDIO_RETRIES,
+      imageAssignment,
+    });
+
+    // Replace the generator's placeholder attachedImage with upload-ready data for the UI.
+    if (asset) {
+      for (const post of posts) {
+        if (post.attachedImage) {
+          post.attachedImage = {
+            filename: asset.uploadFilename,
+            relativePath: asset.uploadRelativePath,
+            url: asset.uploadUrl,
+            visionAnalysed: post.attachedImage.visionAnalysed,
+          };
+          break;
+        }
+      }
     }
 
     await writePostsForId(newest.id, [...posts, ...existing]);
@@ -192,4 +268,3 @@ const PORT = Number(process.env.GENERATE_PORT) || 3010;
 app.listen(PORT, () => {
   console.log(`Generator server running on http://localhost:${PORT}`);
 });
-

@@ -82,7 +82,7 @@ function normalizeProfilePayload(body) {
 
 const app = express();
 app.use(cors());
-// Allow larger payloads (wallpaperBase64 + personaPosts).
+// Allow larger payloads for personaPosts and uploaded images.
 app.use(express.json({ limit: '10mb' }));
 
 // Ensure profiles/ directory exists on startup

@@ -1,145 +1,252 @@
 /**
  * LM Studio–compatible persona post generation (OpenAI-style /v1/chat/completions).
- * Produces exactly 3 posts: productivite, securite, popularite.
+ * Produces exactly 3 posts: productivite, popularite, securite.
+ * Logic is identical to the Electron app's PostGenerator.js.
  */
 
-const PERSONAS = ['productivite', 'securite', 'popularite'];
+// First-person, casual, social-media voice — sounds like the user wrote it, not a coach.
+const SYSTEM_PROMPTS = {
+  productivite:
+    'You write social media posts AS the person described in the profile JSON — first-person, casual, like a real tweet or short post. ONE post (max 200 characters) about something from their workflow or productivity. Sound like a human: a bit self-aware, natural rhythm, maybe slightly ironic or proud. No hashtags. No motivational-speaker tone.\nReturn ONLY valid JSON: {"content":"...","sentiment":"positive"|"negative"}. /no_think',
+  popularite:
+    'You write social media posts AS the person described in the profile JSON — first-person, casual, like a real tweet or short post. ONE post (max 200 characters) about their online presence or social life. Sound like a human: genuine, maybe a little playful or self-deprecating. No hashtags. No hype-machine tone.\nReturn ONLY valid JSON: {"content":"...","sentiment":"positive"|"negative"}. /no_think',
+  securite:
+    'You write social media posts AS the person described in the profile JSON — first-person, casual, like a real tweet or short post. ONE post (max 200 characters) touching on their digital life or data habits. Sound like a human: honest, maybe a touch anxious or relieved. No hashtags. No security-textbook tone.\nReturn ONLY valid JSON: {"content":"...","sentiment":"positive"|"negative"}. /no_think',
+};
 
-function truncate(str, max) {
-  if (str == null) return '';
-  const s = String(str);
-  if (s.length <= max) return s;
-  return `${s.slice(0, max - 1)}…`;
+const IMAGE_POST_PROMPT_EXTENSION =
+  '\n\nAn image from the user\'s files is attached. Write the post as if the user is sharing or reacting to this image — describe what you see in a natural way, integrate it into the post voice. The post should feel like a genuine image caption or reaction.';
+
+function imageTextFallbackNote(filename) {
+  return `\n\nFor context, the user recently had a file named "${filename}" in their recent images — you may reference it naturally in the post.`;
 }
 
-function buildPrompt(profile) {
-  const first = profile?.firstname ?? profile?.firstName ?? '';
-  const last = profile?.lastname ?? profile?.lastName ?? '';
-  const machine = profile?.machineName ?? profile?.machine_name ?? '';
-  const dominant = profile?.dominantPersona ?? profile?.dominant_persona ?? '';
-  const bio = truncate(profile?.userDescription ?? profile?.user_description ?? '', 600);
-  const summary = truncate(profile?.profileSummary ?? profile?.profile_summary ?? '', 900);
-
-  return `Tu génères 3 courts messages de réseau social en première personne pour un sujet fictif « compliant ».
-
-Contexte du profil (ne pas inventer de faits précis non listés ; rester plausible et générique) :
-- Prénom / nom : ${first} ${last}
-- Machine : ${machine}
-- Persona dominant : ${dominant}
-- Bio : ${bio || '—'}
-- Synthèse activité : ${summary || '—'}
-
-Contraintes pour CHAQUE message :
-- persona EXACTEMENT l'une de : productivite | securite | popularite (une seule fois chacune)
-- productivite : travail, organisation, concentration, dette technique légère
-- securite : données, vie privée, surface d'exposition numérique, hygiène numérique
-- popularite : social, réseaux, FOMO, notifications, relations en ligne
-- content : français ou anglais mélangé OK ; ton conversationnel ; première personne ; sans hashtags ; 1–3 phrases ; maximum ~380 caractères
-- sentiment : "positive" | "negative" ou null
-
-Réponds UNIQUEMENT avec un JSON valide (aucun markdown, aucun texte avant/après) de cette forme exacte :
-{"posts":[
-  {"persona":"productivite","content":"...","sentiment":null},
-  {"persona":"securite","content":"...","sentiment":null},
-  {"persona":"popularite","content":"...","sentiment":null}
-]}`;
-}
-
-function stripJsonFence(text) {
-  const t = String(text).trim();
-  const fence = /^```(?:json)?\s*([\s\S]*?)```\s*$/im.exec(t);
-  if (fence) return fence[1].trim();
-  return t;
-}
-
-function extractJsonObject(text) {
-  const s = stripJsonFence(text);
-  const start = s.indexOf('{');
-  const end = s.lastIndexOf('}');
-  if (start === -1 || end === -1 || end <= start) return null;
+async function fetchJsonWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(new Error('timeout')), timeoutMs);
   try {
-    return JSON.parse(s.slice(start, end + 1));
-  } catch {
-    return null;
+    const resp = await fetch(url, { ...options, signal: controller.signal });
+    const text = await resp.text();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = null;
+    }
+    if (!resp.ok) {
+      const msg = json?.error?.message || json?.error || text || `HTTP ${resp.status}`;
+      throw new Error(msg);
+    }
+    return json ?? {};
+  } finally {
+    clearTimeout(id);
   }
 }
 
-function normalizeSentiment(v) {
-  if (v == null || v === '') return null;
-  const x = String(v).toLowerCase();
-  if (x === 'positive' || x === 'negative') return x;
-  return null;
-}
+function buildChatBody({ model, systemPrompt, userPayload, imageData, maxTokens = 900, temperature = 0.7 }) {
+  const userContent = imageData
+    ? [
+        { type: 'text', text: userPayload },
+        {
+          type: 'image_url',
+          image_url: { url: `data:${imageData.mime};base64,${imageData.base64}` },
+        },
+      ]
+    : userPayload;
 
-function validateAndStampPosts(rawPosts) {
-  const list = rawPosts?.posts ?? rawPosts;
-  if (!Array.isArray(list)) throw new Error('Model output: expected posts array');
-
-  const byKey = new Map();
-  for (const item of list) {
-    if (!item || typeof item !== 'object') continue;
-    const persona = String(item.persona ?? '').toLowerCase();
-    if (!PERSONAS.includes(persona)) continue;
-    if (!byKey.has(persona)) byKey.set(persona, item);
-  }
-  if (byKey.size !== 3) throw new Error('Model output: need one post per persona');
-
-  const base = Date.now();
-  return PERSONAS.map((persona, i) => {
-    const p = byKey.get(persona);
-    const content = String(p.content ?? '').trim();
-    if (!content) throw new Error(`Empty content for ${persona}`);
-    return {
-      persona,
-      content,
-      sentiment: normalizeSentiment(p.sentiment),
-      createdAt: new Date(base + (3 - i)).toISOString(),
-    };
-  });
-}
-
-export async function generatePersonaPosts(profile) {
-  const DEFAULT_LM_STUDIO_BASE_URL = 'http://127.0.0.1:1234';
-  const DEFAULT_LM_STUDIO_MODEL = 'google/gemma-4-e4b';
-
-  const rawBase = String(process.env.LM_STUDIO_BASE_URL || DEFAULT_LM_STUDIO_BASE_URL).replace(/\/$/, '');
-  const baseUrl = rawBase.endsWith('/v1') ? rawBase : `${rawBase}/v1`;
-  const model = String(process.env.LM_STUDIO_MODEL || DEFAULT_LM_STUDIO_MODEL);
-  const timeoutMs = Number(process.env.LM_STUDIO_TIMEOUT_MS) || 180_000;
-
-  const url = `${baseUrl}/chat/completions`;
-  const body = {
+  return {
     model,
-    messages: [{ role: 'user', content: buildPrompt(profile) }],
-    temperature: 0.75,
-    stream: false,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userContent },
+    ],
+    temperature,
+    max_tokens: maxTokens,
+    enable_thinking: false,
+    response_format: { type: 'json_object' },
+  };
+}
+
+async function lmChatCompletion({ baseUrl, timeoutMs, retries, body }) {
+  const url = `${String(baseUrl).replace(/\/$/, '')}/v1/chat/completions`;
+  let lastErr = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetchJsonWithTimeout(
+        url,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+        timeoutMs,
+      );
+    } catch (e) {
+      const msg = String(e && e.message ? e.message : e);
+      if (body && body.response_format && /response_format|json_object|not supported|unsupported/i.test(msg)) {
+        try {
+          const { response_format, ...rest } = body;
+          return await fetchJsonWithTimeout(
+            url,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(rest),
+            },
+            timeoutMs,
+          );
+        } catch (e2) {
+          lastErr = e2;
+          continue;
+        }
+      }
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('LM Studio request failed');
+}
+
+function extractChoiceText(resp) {
+  const msg = resp?.choices?.[0]?.message || {};
+  return (
+    (msg.content && msg.content.trim()) ||
+    (msg.reasoning_content && msg.reasoning_content.trim()) ||
+    ''
+  );
+}
+
+function normalizeSentiment(s) {
+  const v = String(s || '').trim().toLowerCase();
+  return v === 'positive' || v === 'negative' ? v : null;
+}
+
+function parsePostWithSentiment(raw, fallbackPersona) {
+  const text = (raw || '').trim();
+  if (!text) return { content: '', sentiment: null };
+
+  try {
+    const obj = JSON.parse(text);
+    if (obj && typeof obj === 'object') {
+      const content = typeof obj.content === 'string' ? obj.content.trim() : '';
+      const sentiment = normalizeSentiment(obj.sentiment);
+      if (content) return { content, sentiment };
+    }
+  } catch {
+    // fall through
+  }
+
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    const slice = text.slice(start, end + 1);
+    try {
+      const obj = JSON.parse(slice);
+      if (obj && typeof obj === 'object') {
+        const content = typeof obj.content === 'string' ? obj.content.trim() : '';
+        const sentiment = normalizeSentiment(obj.sentiment);
+        if (content) return { content, sentiment };
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  const inferred =
+    fallbackPersona === 'securite' ? 'negative' :
+    fallbackPersona === 'productivite' ? 'positive' :
+    fallbackPersona === 'popularite' ? 'positive' :
+    null;
+  return { content: text, sentiment: inferred };
+}
+
+/**
+ * Generates 3 persona posts using the same logic as the Electron app's PostGenerator.js.
+ *
+ * @param {object} opts
+ * @param {string} opts.baseUrl       - LM Studio base URL (e.g. http://192.168.1.109:1234)
+ * @param {string} opts.model         - model name
+ * @param {string} opts.userPayload   - JSON.stringify(profile) — full profile data sent as the user message
+ * @param {number} opts.timeoutMs     - per-request timeout in ms
+ * @param {number} opts.retries       - number of retries on failure
+ * @param {object|null} opts.imageAssignment
+ *   - { persona: 'productivite'|'popularite'|'securite', imageData: { base64, mime, filename } }
+ *   - null if no image for this generation
+ */
+export async function generatePersonaPosts({ baseUrl, model, userPayload, timeoutMs, retries, imageAssignment }) {
+  const prompts = Object.entries(SYSTEM_PROMPTS);
+  // Map persona name → index in prompts array
+  const personaIndex = imageAssignment
+    ? prompts.findIndex(([key]) => key === imageAssignment.persona)
+    : -1;
+
+  const runPersonaPost = async ([key, basePrompt], index) => {
+    const wantsImage = personaIndex >= 0 && index === personaIndex;
+    const assetImage = wantsImage ? imageAssignment.imageData : null;
+
+    const runOnce = async (temperature, withVision) => {
+      let systemPrompt = basePrompt;
+      let imageData = null;
+
+      if (wantsImage && assetImage) {
+        if (withVision) {
+          systemPrompt = basePrompt + IMAGE_POST_PROMPT_EXTENSION;
+          imageData = assetImage;
+        } else {
+          systemPrompt = basePrompt + imageTextFallbackNote(assetImage.filename);
+        }
+      }
+
+      const body = buildChatBody({
+        model,
+        systemPrompt,
+        userPayload,
+        imageData,
+        temperature,
+        maxTokens: 900,
+      });
+      const r = await lmChatCompletion({ baseUrl, timeoutMs, retries, body });
+      const raw = extractChoiceText(r);
+      return parsePostWithSentiment(raw, key);
+    };
+
+    let parsed = { content: '', sentiment: null };
+    let visionSucceeded = false;
+
+    if (wantsImage && assetImage) {
+      // Try vision first; fall back to text if model doesn't support it.
+      try {
+        parsed = await runOnce(1, true);
+        if (parsed.content) visionSucceeded = true;
+      } catch {
+        // Vision not supported by this model — will fall through to text fallback below.
+      }
+    }
+
+    if (!parsed.content) {
+      parsed = await runOnce(1, false);
+    }
+    if (!parsed.content) {
+      parsed = await runOnce(0.35, false);
+    }
+
+    const post = {
+      persona: key,
+      content: parsed.content,
+      sentiment: parsed.sentiment,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Always mark the image as attached when this post was paired with an asset,
+    // regardless of whether vision was used (asset is still conceptually linked).
+    if (wantsImage && assetImage) {
+      post.attachedImage = {
+        filename: assetImage.filename,
+        visionAnalysed: visionSucceeded,
+      };
+    }
+
+    return post;
   };
 
-  let res;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-  } catch (e) {
-    const code = e?.cause?.code || e?.code || null;
-    const extra = code ? ` (${code})` : '';
-    throw new Error(`Cannot reach LM Studio at ${baseUrl}${extra}`);
-  }
-
-  if (!res.ok) {
-    const errText = truncate(await res.text().catch(() => ''), 200);
-    throw new Error(`LM Studio HTTP ${res.status}${errText ? `: ${errText}` : ''}`);
-  }
-
-  const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? '';
-  if (!text) throw new Error('LM Studio returned empty content');
-
-  const parsed = extractJsonObject(text);
-  if (!parsed) throw new Error('Failed to parse JSON from model response');
-  return validateAndStampPosts(parsed);
+  return await Promise.all(prompts.map((entry, i) => runPersonaPost(entry, i)));
 }
-

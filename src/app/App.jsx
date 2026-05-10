@@ -17,7 +17,7 @@ const API_ORIGIN =
 
 const GENERATE_API_ORIGIN =
   (import.meta?.env?.VITE_GENERATE_API_ORIGIN && String(import.meta.env.VITE_GENERATE_API_ORIGIN)) ||
-  API_ORIGIN;
+  'http://localhost:3010';
 
 const PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 const PERSONA_ALIASES = {
