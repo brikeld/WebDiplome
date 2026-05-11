@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { getNewestProfileIdAndPath, readProfileJson } from './server/lib/currentProfile.js';
 import { generatePersonaPosts } from './server/lib/personaPostGenerator.js';
 import { loadPrompts } from './server/lib/prompts.js';
+import { extractDocText } from './server/lib/docText.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
@@ -39,12 +40,26 @@ async function readLmStudioConfig() {
 const LM_STUDIO_TIMEOUT_MS = parseInt(process.env.LM_STUDIO_TIMEOUT_MS || '180000', 10);
 const LM_STUDIO_RETRIES = parseInt(process.env.LM_STUDIO_RETRIES || '1', 10);
 
-const EXTRA_ASSET_DIRS = [
-  '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/assets/recent_images',
-  '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/assets/screenshots',
+const ASSET_DIRS = [
+  {
+    path: '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/assets/recent_images',
+    kind: 'image',
+    allowedExts: new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif']),
+    excludeBasenames: new Set(['profile.jpg']),
+  },
+  {
+    path: '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/assets/screenshots',
+    kind: 'image',
+    allowedExts: new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif']),
+    excludeBasenames: new Set(),
+  },
+  {
+    path: '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/assets/docs',
+    kind: 'document',
+    allowedExts: new Set(['.pdf', '.txt', '.md', '.py', '.js', '.ts', '.css']),
+    excludeBasenames: new Set(),
+  },
 ];
-
-const ALLOWED_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif']);
 const ASSET_PERSONA_CYCLE = ['popularite', 'securite', 'productivite'];
 
 async function fileExists(p) {
@@ -56,21 +71,24 @@ async function fileExists(p) {
   }
 }
 
-async function listImagesInDir(dir) {
+async function listAssetsInDir(spec) {
   try {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
+    const entries = await fs.readdir(spec.path, { withFileTypes: true });
     return entries
       .filter((e) => e.isFile())
-      .map((e) => path.join(dir, e.name))
-      .filter((p) => ALLOWED_EXT.has(path.extname(p).toLowerCase()));
+      .map((e) => ({
+        fullPath: path.join(spec.path, e.name),
+        basename: e.name,
+        kind: spec.kind,
+      }))
+      .filter(
+        (a) =>
+          spec.allowedExts.has(path.extname(a.basename).toLowerCase()) &&
+          !spec.excludeBasenames.has(a.basename),
+      );
   } catch {
     return [];
   }
-}
-
-function pickRandom(arr) {
-  if (!arr || arr.length === 0) return null;
-  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function nextPersonaInCycle(prevPersona) {
@@ -95,12 +113,22 @@ function getMimeFromExt(ext) {
   if (ext === '.png') return 'image/png';
   if (ext === '.webp') return 'image/webp';
   if (ext === '.gif') return 'image/gif';
+  if (ext === '.avif') return 'image/avif';
+  if (ext === '.pdf') return 'application/pdf';
+  if (ext === '.md') return 'text/markdown';
+  if (ext === '.txt') return 'text/plain';
+  if (ext === '.py') return 'text/x-python';
+  if (ext === '.js') return 'application/javascript';
+  if (ext === '.ts') return 'application/typescript';
+  if (ext === '.css') return 'text/css';
   return 'image/jpeg';
 }
 
 /**
- * Picks a random unused image from candidates, copies it to /public/uploads (hash-based filename),
- * reads it as base64 for the vision API, and returns everything needed for both the AI call and UI.
+ * Picks a random unused asset from candidates, copies it to /public/uploads (hash-based filename),
+ * and returns everything needed for both the AI call and UI.
+ * For images: reads base64 for the vision API.
+ * For documents: extracts text via extractDocText.
  * Returns null if no unused candidates remain.
  */
 async function pickAndImportAsset(candidates, usedUploadFilenames) {
@@ -108,16 +136,19 @@ async function pickAndImportAsset(candidates, usedUploadFilenames) {
   const used = usedUploadFilenames instanceof Set ? usedUploadFilenames : new Set();
 
   const pool = candidates.slice();
+  // shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
   while (pool.length > 0) {
-    const chosen = pickRandom(pool);
-    pool.splice(pool.indexOf(chosen), 1);
-
-    const buf = await fs.readFile(chosen);
+    const chosen = pool.pop();
+    const buf = await fs.readFile(chosen.fullPath);
+    if (!buf.length) continue;
     const hash = crypto.createHash('sha256').update(buf).digest('hex');
-    const ext = path.extname(chosen).toLowerCase() || '.png';
-    const safeExt = ALLOWED_EXT.has(ext) ? ext : '.png';
-    const uploadFilename = `${hash}${safeExt}`;
-
+    const ext = path.extname(chosen.basename).toLowerCase();
+    const uploadFilename = `${hash}${ext}`;
     if (used.has(uploadFilename)) continue;
 
     const dest = path.join(UPLOADS_DIR, uploadFilename);
@@ -126,10 +157,25 @@ async function pickAndImportAsset(candidates, usedUploadFilenames) {
       await fs.writeFile(dest, buf);
     }
 
+    if (chosen.kind === 'image') {
+      return {
+        kind: 'image',
+        sourceFilename: chosen.basename,
+        base64: buf.toString('base64'),
+        mime: getMimeFromExt(ext),
+        uploadFilename,
+        uploadRelativePath: `public/uploads/${uploadFilename}`,
+        uploadUrl: `/uploads/${uploadFilename}`,
+      };
+    }
+    // kind === 'document'
+    const text = await extractDocText(buf, ext);
+    if (!text) continue; // try next candidate if extraction fails
     return {
-      sourceFilename: path.basename(chosen),
-      base64: buf.toString('base64'),
-      mime: getMimeFromExt(safeExt),
+      kind: 'document',
+      sourceFilename: chosen.basename,
+      text,
+      mime: getMimeFromExt(ext),
       uploadFilename,
       uploadRelativePath: `public/uploads/${uploadFilename}`,
       uploadUrl: `/uploads/${uploadFilename}`,
@@ -196,15 +242,15 @@ app.post('/api/posts/generate', async (_req, res) => {
     // Build candidate image list and track already-used upload filenames.
     const usedUploadFilenames = new Set(
       existing
-        .map((p) =>
-          p?.attachedAsset && typeof p.attachedAsset === 'object'
-            ? p.attachedAsset.filename
-            : null,
-        )
+        .map((p) => {
+          if (p?.attachedAsset && typeof p.attachedAsset === 'object') return p.attachedAsset.filename;
+          if (p?.attachedImage && typeof p.attachedImage === 'object') return p.attachedImage.filename;
+          return null;
+        })
         .filter(Boolean),
     );
 
-    const lists = await Promise.all(EXTRA_ASSET_DIRS.map(listImagesInDir));
+    const lists = await Promise.all(ASSET_DIRS.map(listAssetsInDir));
     const allCandidates = lists.flat();
 
     // Pick a random image, copy to uploads, and read as base64 for the vision API.
@@ -218,15 +264,27 @@ app.post('/api/posts/generate', async (_req, res) => {
     if (asset) {
       const prevPersona = mostRecentPersonaWithAsset(existing);
       const targetPersona = nextPersonaInCycle(prevPersona);
-      assetAssignment = {
-        persona: targetPersona,
-        asset: {
-          kind: 'image',
-          base64: asset.base64,
-          mime: asset.mime,
-          filename: asset.sourceFilename,
-        },
-      };
+      if (asset.kind === 'image') {
+        assetAssignment = {
+          persona: targetPersona,
+          asset: {
+            kind: 'image',
+            base64: asset.base64,
+            mime: asset.mime,
+            filename: asset.sourceFilename,
+          },
+        };
+      } else {
+        assetAssignment = {
+          persona: targetPersona,
+          asset: {
+            kind: 'document',
+            text: asset.text,
+            mime: asset.mime,
+            filename: asset.sourceFilename,
+          },
+        };
+      }
     }
 
     const lmCfg = await readLmStudioConfig();
