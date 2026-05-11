@@ -11,3 +11,45 @@
 .post-image-halftone .post-attachment-img {
   filter: none;
 }
+
+.post-document {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--post-accent, currentColor);
+  border-radius: 8px;
+  color: var(--post-accent, currentColor);
+  text-decoration: none;
+  font-family: var(--font-sans, inherit);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: lowercase;
+  background: transparent;
+}
+
+.post-document__ext {
+  font-size: 12px;
+  padding: 2px 6px;
+  border: 1px solid var(--post-accent, currentColor);
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.post-document__name {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-document__open {
+  opacity: 0.6;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.post-document:hover .post-document__open {
+  opacity: 1;
+}

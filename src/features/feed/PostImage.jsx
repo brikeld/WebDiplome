@@ -182,7 +182,9 @@ async function ditherMonochrome({
   return outUrl;
 }
 
-export default function PostImage({ src, alt, accentColor }) {
+export default function PostImage({ asset, src: rawSrc, alt: rawAlt, accentColor }) {
+  const src = asset?.url ?? rawSrc ?? '';
+  const alt = rawAlt ?? asset?.filename ?? '';
   const [processedSrc, setProcessedSrc] = useState(null);
 
   useEffect(() => {

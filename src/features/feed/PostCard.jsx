@@ -1,4 +1,5 @@
 import PostImage from './PostImage.jsx';
+import PostDocument from './PostDocument.jsx';
 import PostActions from './PostActions.jsx';
 
 export default function PostCard({ post }) {
@@ -12,7 +13,7 @@ export default function PostCard({ post }) {
     createdAt,
     systemDeltaPct = 1,
     persona,
-    attachment,
+    attachedAsset,
   } = post;
 
   const personaLabel = (() => {
@@ -48,13 +49,13 @@ export default function PostCard({ post }) {
 
   return (
     <article
-      className={`post-card${attachment ? ' post-card--has-attachment' : ''}`}
+      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}`}
       data-persona={post.persona}
       style={{
         '--post-accent': noteColor,
       }}
     >
-      <div className={attachment ? 'post-composite' : undefined}>
+      <div className={attachedAsset ? 'post-composite' : undefined}>
         <div className="post-card-bubble">
           <div className="post-card-head">
             <div className="post-avatar" aria-hidden>
@@ -72,12 +73,11 @@ export default function PostCard({ post }) {
           </div>
         </div>
 
-        {attachment ? (
-          <PostImage
-            src={attachment.url}
-            alt={attachment.filename || ''}
-            accentColor={noteColor}
-          />
+        {attachedAsset?.kind === 'image' ? (
+          <PostImage asset={attachedAsset} accentColor={noteColor} />
+        ) : null}
+        {attachedAsset?.kind === 'document' ? (
+          <PostDocument asset={attachedAsset} />
         ) : null}
       </div>
 
