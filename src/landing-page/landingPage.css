@@ -8,6 +8,10 @@
   --lp-pill-radius: 28px;
   --lp-title-to-text-gap: 24px;
   --lp-text-to-content-gap: 40px;
+  /* Hero line + pill section headers (tighter than former 84…144 / 84…100 scale) */
+  --lp-mega-title: clamp(62px, 7.5vw, 112px);
+  --lp-mega-title-capsule: clamp(62px, 9vw, 112px);
+  --lp-mega-display: clamp(50px, 6vw, 78px);
 
   --lp-prod: #D8D8D8;
   --lp-sec:  #759AEF;
@@ -33,49 +37,6 @@
 @keyframes lp-pulse {
   0%, 100% { opacity: 1;    transform: scale(1); }
   50%      { opacity: 0.45; transform: scale(0.85); }
-}
-
-@keyframes lp-macbook-float {
-  0%, 100% { transform: rotateX(8deg) rotateY(-7deg) translateY(0); }
-  50%      { transform: rotateX(8deg) rotateY(-7deg) translateY(-12px); }
-}
-
-@keyframes lp-macbook-open {
-  0% {
-    transform: rotateX(86deg);
-    animation-timing-function: cubic-bezier(0.55, 0, 0.45, 1);
-  }
-  62% {
-    transform: rotateX(-6deg);
-    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
-  }
-  82% {
-    transform: rotateX(2deg);
-    animation-timing-function: ease-out;
-  }
-  92% { transform: rotateX(-0.6deg); }
-  100% { transform: rotateX(0deg); }
-}
-
-@keyframes lp-macbook-base-settle {
-  0% { transform: translateY(8px) scale(0.98); opacity: 0.6; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-@keyframes lp-scan {
-  0%   { transform: translateY(-110%); }
-  100% { transform: translateY(420%); }
-}
-
-@keyframes lp-screen-glow {
-  0%, 30%  { opacity: 0; }
-  70%, 100% { opacity: 1; }
-}
-
-@keyframes lp-mini-post-in {
-  0% { opacity: 0; transform: translateY(-110%) scale(0.92); }
-  60% { opacity: 1; }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .lp-section {
@@ -137,13 +98,13 @@
   gap: 0;
 }
 
-/* Gap between content sections (not the full-screen hero/mockup panels) */
-.lp-main > *:not(.lp-hero):not(.lp-mockup-section) {
+/* Gap between content sections (not the full-screen hero panel) */
+.lp-main > *:not(.lp-hero) {
   margin-top: var(--lp-section-gap);
 }
 
 /* Keep consistent left/right alignment for normal sections */
-.lp-main > *:not(.lp-hero):not(.lp-mockup-section):not(.lp-workflow-section):not(.lp-axes-section) {
+.lp-main > *:not(.lp-hero):not(.lp-workflow-section):not(.lp-axes-section) {
   padding-left: var(--lp-edge-pad);
   padding-right: var(--lp-edge-pad);
   box-sizing: border-box;
@@ -174,8 +135,6 @@
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
-  /* Extra space below COMPLIANT before “Your digital life quantified.” */
-  gap: clamp(36px, 5.5vh, 72px);
 }
 
 .lp-hero-title {
@@ -232,9 +191,10 @@
   box-sizing: border-box;
 }
 
+/* Same treatment as former “Your digital life / quantified.” hero line */
 .lp-hero-sub {
   font-family: var(--font-avant);
-  font-size: clamp(84px, 10vw, 144px);
+  font-size: var(--lp-mega-title);
   font-weight: 700;
   line-height: 0.95;
   letter-spacing: -0.025em;
@@ -257,44 +217,6 @@
 .lp-hero-sub em {
   font-style: italic;
   color: inherit;
-}
-
-.lp-hero-body {
-  font-size: clamp(28px, 2.6vw, 42px);
-  font-weight: 500;
-  line-height: 1.55;
-  color: #759AEF;
-  /* width:100% + horizontal margin overflows; stretch respects margins in flex */
-  align-self: stretch;
-  width: auto;
-  max-width: 100%;
-  min-width: 0;
-  margin: 0 var(--lp-edge-pad);
-  padding: 16px 22px 18px;
-  box-sizing: border-box;
-  border: 3px solid #759AEF;
-  border-radius: var(--lp-pill-radius);
-  background: transparent;
-  overflow-wrap: break-word;
-}
-
-/* ── MOCKUP SECTION ───────────────────────────────────────────────────────── */
-
-.lp-mockup-section {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: clamp(28px, 5vh, 64px) 0 0;
-  box-sizing: border-box;
-}
-
-/* MacBook fills the mockup viewport */
-.lp-mockup-section .lp-macbook-wrap {
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
 }
 
 /* ── WORKFLOW + AXES: 100vh, text top / cards bottom ─────────────────────── */
@@ -379,7 +301,7 @@
   padding: 30px 64px 34px;
   border-radius: var(--lp-pill-radius);
   font-family: var(--font-avant);
-  font-size: clamp(84px, 12vw, 144px);
+  font-size: var(--lp-mega-title-capsule);
   font-weight: 800;
   letter-spacing: -0.015em;
   line-height: 1;
@@ -453,7 +375,7 @@
 }
 
 .lp-section-sublede {
-  font-size: clamp(84px, 8vw, 100px);
+  font-size: var(--lp-mega-display);
   font-weight: 700;
   line-height: 1.05;
   color: rgba(255, 255, 255, 0.9);
@@ -756,339 +678,6 @@
   color: var(--lp-download-accent);
 }
 
-/* ── MACBOOK MOCKUP ───────────────────────────────────────────────────────── */
-
-.lp-macbook-wrap {
-  position: relative;
-  width: 100%;
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  perspective: 2200px;
-  padding: 0 0 12px;
-}
-
-.lp-macbook-wrap::after {
-  content: '';
-  position: absolute;
-  bottom: 12px;
-  left: 12%;
-  right: 12%;
-  height: 26px;
-  background:
-    radial-gradient(ellipse at center, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0.18) 35%, transparent 70%);
-  filter: blur(14px);
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0;
-  animation: lp-screen-glow 1.4s ease-out 1.8s forwards;
-}
-
-.lp-macbook {
-  position: relative;
-  width: clamp(520px, 64vw, 960px);
-  flex-shrink: 0;
-  transform-style: preserve-3d;
-  transform: rotateX(8deg) rotateY(-7deg);
-}
-
-.lp-macbook--active {
-  animation: lp-macbook-float 7s ease-in-out 0.4s infinite;
-}
-
-.lp-macbook-display {
-  position: relative;
-  background: linear-gradient(180deg, #131313 0%, #0a0a0a 50%, #050505 100%);
-  border-radius: 14px 14px 4px 4px;
-  padding: 12px 10px 16px;
-  border: 1px solid #2c2c2c;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
-    inset 1px 0 0 rgba(255, 255, 255, 0.04),
-    inset -1px 0 0 rgba(0, 0, 0, 0.4),
-    0 38px 80px rgba(0, 0, 0, 0.42),
-    0 14px 28px rgba(0, 0, 0, 0.28);
-  transform-origin: bottom;
-  transform-style: preserve-3d;
-  transform: rotateX(86deg);
-  animation: lp-macbook-open 1.8s 1.0s forwards;
-}
-
-.lp-macbook-display::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 16%;
-  height: 8px;
-  background: #050505;
-  border-radius: 0 0 7px 7px;
-  border: 1px solid #1a1a1a;
-  border-top: none;
-  z-index: 8;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-}
-
-.lp-macbook-display::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 6%;
-  right: 6%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.22) 50%, transparent 100%);
-  pointer-events: none;
-  z-index: 7;
-}
-
-.lp-macbook-screen {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16/10;
-  background: #F2F0EF;
-  border-radius: 4px;
-  overflow: hidden;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 4px rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  animation: lp-screen-glow 1.8s ease-out 1.0s forwards;
-}
-
-.lp-macbook-screen::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
-  border-radius: inherit;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 18%, rgba(255,255,255,0.0) 38%, transparent 100%),
-    linear-gradient(155deg, transparent 0%, transparent 60%, rgba(255,255,255,0.05) 70%, transparent 80%),
-    radial-gradient(ellipse 110% 110% at 50% 50%, transparent 55%, rgba(0,0,0,0.18) 100%);
-  mix-blend-mode: overlay;
-}
-
-.lp-macbook-screen::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 30%;
-  background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
-  mix-blend-mode: overlay;
-  pointer-events: none;
-  animation: lp-scan 8s ease-in-out 3.6s infinite;
-  z-index: 5;
-}
-
-.lp-macbook-base {
-  position: relative;
-  width: 118%;
-  margin-left: -9%;
-  height: 18px;
-  background: linear-gradient(180deg, #f0eeec 0%, #d4d2cf 16%, #b6b4b1 60%, #8e8c89 100%);
-  border-radius: 0 0 14px 14px;
-  border: 1px solid #989897;
-  border-top: none;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.7),
-    inset 0 -1px 0 rgba(0,0,0,0.18),
-    inset 1px 0 0 rgba(255,255,255,0.25),
-    inset -1px 0 0 rgba(0,0,0,0.08),
-    0 24px 38px rgba(0,0,0,0.2),
-    0 6px 14px rgba(0,0,0,0.14);
-  animation: lp-macbook-base-settle 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s backwards;
-}
-
-.lp-macbook-base::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24%;
-  height: 7px;
-  background: linear-gradient(180deg, #6b6b6a 0%, #8e8c89 100%);
-  border-radius: 0 0 8px 8px;
-  box-shadow:
-    inset 0 1px 1px rgba(0,0,0,0.3),
-    inset 0 -1px 0 rgba(255,255,255,0.1);
-}
-
-/* ── MACBOOK APP (scaled-down replica of the real app inside the macbook screen)
-   Renders the SAME JSX/CSS as the "A profile in production." preview, plus a
-   sidebar (project name + icon rail). The whole thing is rendered at a fixed
-   natural size (NAT_WIDTH x NAT_HEIGHT in JSX) and CSS-transform scaled to
-   fit the macbook screen. This guarantees identical proportions to the real
-   app without any pixel-fiddling.                                            */
-
-.lp-macbook-app {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: top left;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  background: #000;
-  font-family: var(--font-avant);
-  padding: 20px 24px 20px 20px;
-  gap: 24px;
-  box-sizing: border-box;
-}
-
-/* ── Inside-macbook overrides: compress content to fit the scaled screen ──── */
-
-/* The global .posts-capsule has overflow:hidden — override so our capsule scrolls */
-.lp-macbook-app .posts-capsule {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
-
-/* Shrink the profile hero capsule so posts are visible below it.
-   --profile-hero-scale controls bubble height, vertical padding, avatar size, etc. */
-.lp-macbook-app .profile-hero-capsule {
-  --profile-hero-scale: 0.82;
-  margin-top: 32px;
-}
-
-/* Shrink post bubbles so multiple posts fit in the remaining height */
-.lp-macbook-app .post-card-bubble {
-  min-height: 9rem;
-}
-
-/* lp-preview-posts-inner clamps to 72% in the landing page preview;
-   inside the macbook capsule the capsule max-width already narrows things */
-.lp-macbook-app .lp-preview-posts-inner {
-  width: 100%;
-}
-
-/* Remove the lp-preview-shell padding override — capsule padding handles it */
-.lp-macbook-app.lp-macbook-app .lp-macbook-app-capsule {
-  width: 100%;
-}
-
-/* Left sidebar: COMPLIANT project name on top, icon rail below.
-   Both filled with persona-accent + black icons, mirrors real .project-name + .icon-rail. */
-.lp-macbook-app-sidebar {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-/* COMPLIANT label — Real: .project-name */
-.lp-macbook-app-project {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  line-height: 1.15;
-  color: #000;
-  background: var(--lp-sec);
-  border: 3px solid var(--lp-sec);
-  border-radius: 12px;
-  padding: 5px 14px 6px;
-  white-space: nowrap;
-}
-
-/* Icon rail — Real: .icon-rail */
-.lp-macbook-app-rail {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px;
-  border-radius: 12px;
-  border: 3px solid var(--lp-sec);
-  background: var(--lp-sec);
-}
-
-/* Buttons — Real: .rail-btn */
-.lp-macbook-app-rail-btn {
-  appearance: none;
-  border: none;
-  background: transparent;
-  font-family: var(--font-avant);
-  font-size: 32px;
-  line-height: 1;
-  color: rgba(0, 0, 0, 0.45);
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-/* Active button — Real: .rail-btn.is-active */
-.lp-macbook-app-rail-btn--active {
-  background: #000;
-  color: var(--lp-sec);
-}
-
-/* Main column: holds the posts capsule. Centered horizontally, fills height. */
-.lp-macbook-app-main {
-  flex: 1 1 0;
-  min-width: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Narrowed posts capsule:
-   - Forces a smaller max-width than the preview's 86% so posts feel less wide
-   - Enables vertical scroll so multiple posts can flow inside the screen height
-   - Overrides .lp-preview-shell defaults to fit the macbook                  */
-.lp-macbook-app-capsule {
-  width: 100%;
-  max-width: 680px;
-  height: 100%;
-  margin: 0 auto;
-  padding: 16px 20px 20px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  scroll-behavior: smooth;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  /* Disable user scrolling/interaction inside the mockup (auto-scroll still works). */
-  pointer-events: none;
-  touch-action: none;
-}
-
-.lp-macbook-app-capsule::-webkit-scrollbar {
-  display: none;
-}
-
-/* Animate posts appearing at the top of the feed. */
-.lp-macbook-app .posts-tab .post-card {
-  animation: lp-macbook-app-post-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-}
-
-@keyframes lp-macbook-app-post-in {
-  0% {
-    opacity: 0;
-    transform: translateY(-14px) scale(0.97);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* The .lp-preview-scale class isn't applied inside the macbook (we rely on the
-   uniform CSS transform scale instead) so no override needed there.          */
-
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
@@ -1101,10 +690,6 @@
 
   .lp-steps-row {
     grid-template-columns: 1fr;
-  }
-
-  .lp-preview-posts-capsule {
-    width: 100%;
   }
 
   .lp-preview-shell {
@@ -1127,10 +712,6 @@
 }
 
 @media (max-width: 540px) {
-  .lp-macbook {
-    width: clamp(300px, 92vw, 560px);
-  }
-
   .lp-cta-btn-icon {
     width: 52px;
     font-size: 22px;

@@ -9,7 +9,7 @@ import HomeTab from '@/features/home/HomeTab.jsx';
 import LandingPage from '@/landing-page/LandingPage.jsx';
 import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
-import { getGlobalScore } from '@/lib/profileUtils.js';
+import { getGlobalScore, machineHandleFromProfile } from '@/lib/profileUtils.js';
 
 const API_ORIGIN =
   (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
@@ -193,6 +193,13 @@ export default function App() {
   const personaToggleLabel =
     personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
 
+  /** Main persona ring always centered; side order follows PERSONA_KEYS for the other two. */
+  const dashboardRingOrder = useMemo(() => {
+    const others = PERSONA_KEYS.filter((k) => k !== personaKey);
+    if (others.length !== 2) return [...PERSONA_KEYS];
+    return [others[0], personaKey, others[1]];
+  }, [personaKey]);
+
   const cyclePersona = () => {
     // productivity → social(popularity) → security → productivity
     const order = ['productivity', 'popularity', 'security'];
@@ -262,7 +269,7 @@ export default function App() {
             {mainView === 'home' && <HomeTab profile={profile} />}
             {mainView === 'profile' && (
               <div className="profile-capsule-wrap">
-                <p className="home-top-label">for you</p>
+                <p className="home-top-label">{machineHandleFromProfile(profile)}</p>
                 <div
                   className="posts-capsule"
                   style={{ '--persona-accent': personaColor }}
@@ -341,7 +348,7 @@ export default function App() {
               </div>
 
               <div className="dashboard-rings">
-                {PERSONA_KEYS.map((k) => {
+                {dashboardRingOrder.map((k) => {
                   const ringColor = PERSONA_COLORS[k];
                   const offset =
                     k === personaKey
@@ -356,10 +363,11 @@ export default function App() {
                   const CIRC = 2 * Math.PI * R;
                   const dash = CIRC * (value / 100);
                   const gap = CIRC - dash;
+                  const isDominantRing = k === personaKey;
                   return (
                     <div
                       key={k}
-                      className="dashboard-ring-card"
+                      className={`dashboard-ring-card${isDominantRing ? ' dashboard-ring-card--dominant' : ''}`}
                       style={{ '--ring-accent': ringColor }}
                     >
                       <svg
@@ -367,13 +375,21 @@ export default function App() {
                         viewBox="0 0 80 80"
                         aria-label={`${PERSONA_LABELS[k]} ${value}%`}
                       >
-                        <circle cx="40" cy="40" r={R} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="8" />
                         <circle
                           cx="40"
                           cy="40"
                           r={R}
                           fill="none"
-                          stroke="#000"
+                          stroke={isDominantRing ? 'rgba(255,255,255,0.22)' : '#000'}
+                          strokeOpacity={isDominantRing ? 1 : 0.22}
+                          strokeWidth="8"
+                        />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r={R}
+                          fill="none"
+                          stroke={isDominantRing ? personaColor : '#000'}
                           strokeWidth="8"
                           strokeDasharray={`${dash} ${gap}`}
                           strokeLinecap="round"

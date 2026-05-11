@@ -47,6 +47,14 @@ export function displayNameFromProfile(p) {
   return 'User';
 }
 
+/** Handle shown in UI, e.g. `@machine-id` (matches server camelCase + snake_case). */
+export function machineHandleFromProfile(p) {
+  const raw = p?.machineName ?? p?.machine_name;
+  const name = raw != null ? String(raw).trim() : '';
+  if (name) return `@${name}`;
+  return '@—';
+}
+
 /**
  * Profile bio / summary for the hero: prefers profileSummary, then userDescription.
  * Accepts camelCase or snake_case (as returned from GET or sent on POST).

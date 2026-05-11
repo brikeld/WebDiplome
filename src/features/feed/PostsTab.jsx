@@ -1,7 +1,11 @@
 import { useMemo } from 'react';
 import PostCard from './PostCard.jsx';
 import { sanitizePostContent } from '@/lib/postContent.js';
-import { displayNameFromProfile, initialsFromProfile } from '@/lib/profileUtils.js';
+import {
+  displayNameFromProfile,
+  initialsFromProfile,
+  machineHandleFromProfile,
+} from '@/lib/profileUtils.js';
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -25,7 +29,7 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
     const raw = profile.personaPosts ?? [];
     const displayName = displayNameFromProfile(profile);
     const avatarInitials = initialsFromProfile(profile);
-    const handle = profile?.machineName ? `@${profile.machineName}` : '@—';
+    const handle = machineHandleFromProfile(profile);
     const avatarSrc =
       profile?.wallpaperBase64 ??
       profile?.wallpaper_base64 ??

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import LandingMacbookMockup from './LandingMacbookMockup.jsx';
 import PostCard from '../features/feed/PostCard.jsx';
 import './landingPage.css';
 
@@ -151,36 +150,24 @@ export default function LandingPage({ onEnterDemo }) {
           <div className="lp-hero-inner">
             <div className="lp-hero-header-group">
               <h1 className="lp-hero-title lp-hero-title--top">COMPLIANT</h1>
-
-              <div className="lp-hero-text">
-                <h2 className="lp-hero-sub">
-                  <span className="lp-hero-sub-capsule">
-                    Your digital life<br />
-                    <em>quantified.</em>
-                  </span>
-                </h2>
-              </div>
             </div>
 
-            <p className="lp-hero-body">
-              A friendly script harvests your machine. A reasonable
-              algorithm decides who you are. Your profile becomes public —
-              because what you do in private should also be a number.
-              opt-in is automatic, opt-out is theoretical.{' '}
-              Who are you really? Let our algorithm answer that for you!
-            </p>
+            <div className="lp-hero-text">
+              <h2 className="lp-hero-sub">
+                <span className="lp-hero-sub-capsule">
+                  Who are you really?
+                  <br />
+                  <em>Let our algorithm answer that for you.</em>
+                </span>
+              </h2>
+            </div>
           </div>
-        </section>
-
-        {/* ── MOCKUP ── second screen */}
-        <section className="lp-mockup-section lp-section" style={{ '--stagger-i': 1 }}>
-          <LandingMacbookMockup />
         </section>
 
         {/* ── THE WORKFLOW ── */}
         <section
           className="lp-section lp-workflow-section lp-capsule-section"
-          style={{ '--stagger-i': 2, '--header-bg': '#CCF847' }}
+          style={{ '--stagger-i': 1, '--header-bg': '#CCF847' }}
         >
           <div className="lp-section-header-group">
             <div className="lp-capsule-header">
@@ -201,7 +188,7 @@ export default function LandingPage({ onEnterDemo }) {
               <article
                 key={s.n}
                 className="lp-step-card lp-section"
-                style={{ '--step-color': s.color, '--stagger-i': 3 + i }}
+                style={{ '--step-color': s.color, '--stagger-i': 2 + i }}
               >
                 <span className="lp-step-num">{s.n}</span>
                 <h3 className="lp-step-title">{s.title}</h3>
@@ -215,7 +202,7 @@ export default function LandingPage({ onEnterDemo }) {
         {/* ── THREE AXES. ONE VERDICT. ── */}
         <section
           className="lp-section lp-axes-section lp-capsule-section"
-          style={{ '--stagger-i': 6, '--header-bg': '#759AEF' }}
+          style={{ '--stagger-i': 5, '--header-bg': '#759AEF' }}
         >
           <div className="lp-section-header-group">
             <div className="lp-capsule-header">
@@ -240,7 +227,7 @@ export default function LandingPage({ onEnterDemo }) {
                 <article
                   key={p.key}
                   className="lp-step-card lp-section"
-                  style={{ '--step-color': p.color, '--stagger-i': 7 + i }}
+                  style={{ '--step-color': p.color, '--stagger-i': 6 + i }}
                 >
                   <span className="lp-step-num">{n}</span>
                   <h3 className="lp-step-title">{p.title}</h3>
@@ -255,7 +242,7 @@ export default function LandingPage({ onEnterDemo }) {
         {/* ── A PROFILE IN PRODUCTION ── */}
         <section
           className="lp-section lp-profile-section lp-capsule-section"
-          style={{ '--stagger-i': 10, '--header-bg': '#CCF847' }}
+          style={{ '--stagger-i': 9, '--header-bg': '#CCF847' }}
         >
           <div className="lp-capsule-header">
             A profile in production.
@@ -372,7 +359,7 @@ export default function LandingPage({ onEnterDemo }) {
         {/* ── DOWNLOAD CTA ── */}
         <section
           className="lp-section lp-cta-section lp-capsule-section"
-          style={{ '--stagger-i': 13, '--header-bg': '#759AEF' }}
+          style={{ '--stagger-i': 12, '--header-bg': '#759AEF' }}
         >
           <div className="lp-cta-hero">
             <div className="lp-section-header-group">

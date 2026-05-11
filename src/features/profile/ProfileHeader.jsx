@@ -2,6 +2,7 @@ import {
   displayNameFromProfile,
   getGlobalScore,
   initialsFromProfile,
+  machineHandleFromProfile,
   profileBioText,
 } from '@/lib/profileUtils.js';
 
@@ -19,7 +20,7 @@ export default function ProfileHeader({
     profile?.wallpaper_url ??
     profile?.wallpaper ??
     null;
-  const handle = profile?.machineName ? `@${profile.machineName}` : '@—';
+  const handle = machineHandleFromProfile(profile ?? {});
   const score = getGlobalScore(profile ?? {}) ?? 76;
   const followers = profile?.followers ?? profile?.followerCount ?? 0;
   const following = profile?.following ?? profile?.followingCount ?? 0;

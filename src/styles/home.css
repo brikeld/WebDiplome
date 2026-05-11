@@ -16,13 +16,13 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   line-height: 1.15;
-  color: #000;
+  color: var(--persona-accent, var(--ink));
   text-align: center;
   margin: 8px auto 16px;
   padding: 5px 18px 6px;
   border: 2px solid var(--persona-accent, var(--ink));
   border-radius: 12px;
-  background: var(--persona-accent, var(--ink));
+  background: transparent;
 }
 
 /* Home mode: home-tab passes flex height down to posts-capsule */

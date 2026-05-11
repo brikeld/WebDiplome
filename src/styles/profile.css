@@ -481,6 +481,8 @@ button.profile-last-analysis-pill:disabled {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* Match .home-tab padding-top (home.css) so “for you” + .posts-capsule align with home */
+  padding-top: 10px;
 }
 
 @media (max-width: 420px) {

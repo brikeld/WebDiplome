@@ -44,6 +44,15 @@ html, body {
   scrollbar-width: none;
 }
 
+/* Widened main column pulls left via negative margin; allow that bleed past the
+   global horizontal clip only while home/profile are mounted (landing unchanged). */
+html:has(.page-outer.view-home),
+html:has(.page-outer.view-profile),
+body:has(.page-outer.view-home),
+body:has(.page-outer.view-profile) {
+  overflow-x: visible;
+}
+
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
   display: none;
@@ -153,8 +162,10 @@ body {
   flex-direction: column;
   align-items: stretch;
   height: 100%;
+  /* Match left column: .home-tab / .profile-capsule-wrap use padding-top: 10px only;
+     no outer bottom padding — extra padding-bottom here made .dashboard-capsule end high. */
   padding-top: 10px;
-  padding-bottom: 12px;
+  padding-bottom: 0;
   box-sizing: border-box;
   font-family: var(--font-avant);
 }
@@ -324,12 +335,19 @@ body {
   align-items: center;
   gap: 8px;
   padding: 18px 10px 16px;
-  border: 3px solid var(--ring-accent, #000);
+  border: 3px solid #000;
   border-radius: 12px;
   background: var(--ring-accent, #000);
   color: #000;
   font-family: var(--font-avant);
   box-sizing: border-box;
+}
+
+/* Active / themed persona: inverted — black card, progress arc in active persona color
+   (App.jsx), label/score in --persona-accent. Other rings: persona card + black progress arc. */
+.dashboard-ring-card--dominant {
+  background: #000;
+  color: var(--persona-accent, #fff);
 }
 
 .dashboard-ring-svg {
@@ -440,13 +458,16 @@ body {
 .page-outer.view-home,
 .page-outer.view-profile {
   height: 100vh;
-  overflow: hidden;
+  /* Avoid overflow-x: visible + overflow-y: hidden (x resolves to auto and can
+     still clip). Full visible lets the widened capsule paint; height + inner
+     flex chains keep layout bounded. */
+  overflow: visible;
 }
 
 .view-home .page,
 .view-profile .page {
   height: 100vh;
-  overflow: hidden;
+  overflow: visible;
   max-width: 1680px;
   /* Row so the feed column and side panel sit naturally next to each other */
   flex-direction: row;
@@ -454,6 +475,9 @@ body {
   padding-left: 104px;
   padding-right: 24px;
   gap: 24px;
+  /* Extra capsule width to the left only: width += X and margin-left -= X keeps the
+     flex margin box width the same, so the junction with the dashboard does not move. */
+  --left-capsule-extra-width: 140px;
 }
 
 .view-home .main-col,
@@ -464,7 +488,8 @@ body {
   --content-scale: 1;
   height: 100%;
   min-height: 0;
-  width: clamp(640px, 64vw, 980px);
+  width: calc(clamp(640px, 64vw, 980px) + var(--left-capsule-extra-width));
+  margin-left: calc(-1 * var(--left-capsule-extra-width));
   display: flex;
   flex-direction: column;
 }

@@ -1,21 +1,9 @@
 [
   {
     "persona": "productivite",
-    "content": "Just spent time tweaking the local LLM setup to see if I can squeeze more productivity out of the MacBook Pro. The tinkering pays off.",
+    "content": "Sometimes you just need a moment to appreciate the flow while wrestling with the code and layers. It's always beautiful around.",
     "sentiment": "positive",
-    "createdAt": "2026-05-10T16:25:25.519Z"
-  },
-  {
-    "persona": "popularite",
-    "content": "Trying to juggle all the design work and code lately. Sometimes I just need to switch off and watch something mindless instead.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:25:24.850Z"
-  },
-  {
-    "persona": "securite",
-    "content": "It's funny how much code and assets are floating around on my hard drive. Just trying to keep it all in order lately.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:25:24.025Z",
+    "createdAt": "2026-05-11T16:38:54.673Z",
     "attachedImage": {
       "filename": "c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
       "relativePath": "public/uploads/c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
@@ -24,124 +12,16 @@
     }
   },
   {
-    "persona": "productivite",
-    "content": "Struggling a bit today trying to sync the visual design with the actual code output from the project. The friction is real, but the result is worth it.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:24:43.691Z"
-  },
-  {
     "persona": "popularite",
-    "content": "Just deep in the flow trying to make the digital stuff come together. It's a lot sometimes, but I like where it's going.",
+    "content": "Trying to balance all the design work and coding lately. My brain is officially full of files and algorithms.",
     "sentiment": "positive",
-    "createdAt": "2026-05-10T16:24:42.615Z",
-    "attachedImage": {
-      "filename": "cb51fab9f13c97a6ca59ae93aa7230d1c60685e8b4bd6fffba62568cc5aa2d4b.jpg",
-      "relativePath": "public/uploads/cb51fab9f13c97a6ca59ae93aa7230d1c60685e8b4bd6fffba62568cc5aa2d4b.jpg",
-      "url": "/uploads/cb51fab9f13c97a6ca59ae93aa7230d1c60685e8b4bd6fffba62568cc5aa2d4b.jpg",
-      "visionAnalysed": true
-    }
+    "createdAt": "2026-05-11T16:38:54.742Z"
   },
   {
     "persona": "securite",
-    "content": "Trying to wrangle all these project files is exhausting. I just need a moment where the data stops feeling like chaos and starts feeling like actual progress.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:24:43.231Z"
-  },
-  {
-    "persona": "productivite",
-    "content": "Sometimes you just need a moment of visual intensity to reset before diving back into the code and design work.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:24:14.497Z",
-    "attachedImage": {
-      "filename": "94111b02c51dcab21e3216168f59cf3b5086141cee0f59e070c15f80200158cc.jpg",
-      "relativePath": "public/uploads/94111b02c51dcab21e3216168f59cf3b5086141cee0f59e070c15f80200158cc.jpg",
-      "url": "/uploads/94111b02c51dcab21e3216168f59cf3b5086141cee0f59e070c15f80200158cc.jpg",
-      "visionAnalysed": true
-    }
-  },
-  {
-    "persona": "popularite",
-    "content": "Trying to balance deep work with some chill stuff. My local AI models are running fine today, which is a nice feeling.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:24:15.071Z"
-  },
-  {
-    "persona": "securite",
-    "content": "Juggling all these creative files and running my local server is intense. I'm just hoping the data doesn't cause any more headaches today.",
+    "content": "Trying to keep all these creative files organized feels like a full-time job. I just need a bit more free space!",
     "sentiment": "negative",
-    "createdAt": "2026-05-10T16:24:13.843Z"
-  },
-  {
-    "persona": "productivite",
-    "content": "Trying to juggle After Effects and prompting Claude for assets feels like a surprisingly efficient way to manage the creative flow.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:23:52.850Z"
-  },
-  {
-    "persona": "popularite",
-    "content": "Just trying to keep up with all the coding and design stuff. My brain is full of polygons and AI prompts right now.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:23:52.443Z"
-  },
-  {
-    "persona": "securite",
-    "content": "Trying to wrangle all these files and projects feels like a full-time job lately. Just trying to keep the creative flow going. Feeling a bit drained but okay.",
-    "sentiment": "negative",
-    "createdAt": "2026-05-10T16:23:52.550Z",
-    "attachedImage": {
-      "filename": "2a71ff6e07d289460f9bfbaab267411434ac59619589d17fa03a399208649fe9.png",
-      "relativePath": "public/uploads/2a71ff6e07d289460f9bfbaab267411434ac59619589d17fa03a399208649fe9.png",
-      "url": "/uploads/2a71ff6e07d289460f9bfbaab267411434ac59619589d17fa03a399208649fe9.png",
-      "visionAnalysed": true
-    }
-  },
-  {
-    "persona": "productivite",
-    "content": "Still figuring out the best way to blend AI generation with deep design work in Photoshop and Blender. The process itself is kinda addictive.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:23:22.949Z"
-  },
-  {
-    "persona": "popularite",
-    "content": "Just taking a moment to breathe and appreciate the view. Sometimes the chaos of the projects settles down into something nice.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:23:23.464Z",
-    "attachedImage": {
-      "filename": "e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "relativePath": "public/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "url": "/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "visionAnalysed": true
-    }
-  },
-  {
-    "persona": "securite",
-    "content": "Juggling all these creative projects and AI models is exhausting. I just hope I can keep the data flow organized without burning out.",
-    "sentiment": "negative",
-    "createdAt": "2026-05-10T16:23:23.466Z"
-  },
-  {
-    "persona": "productivite",
-    "content": "Trying to quantify my digital life feels weirdly satisfying. It’s like building a system just to organize the chaos.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:17:36.670Z",
-    "attachedImage": {
-      "filename": "67ac51d711d8d2146ac952de4d7441e2eaf3f3c1b19ee900c5e282538fe1c0eb.png",
-      "relativePath": "public/uploads/67ac51d711d8d2146ac952de4d7441e2eaf3f3c1b19ee900c5e282538fe1c0eb.png",
-      "url": "/uploads/67ac51d711d8d2146ac952de4d7441e2eaf3f3c1b19ee900c5e282538fe1c0eb.png",
-      "visionAnalysed": true
-    }
-  },
-  {
-    "persona": "popularite",
-    "content": "Another Sunday spent wrestling with After Effects and trying to get the AI models to cooperate. Send coffee.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-10T16:17:38.378Z"
-  },
-  {
-    "persona": "securite",
-    "content": "Trying to keep all these creative files and project data organized on my MacBook Pro is exhausting. Hope I don't lose track of where everything is.",
-    "sentiment": "negative",
-    "createdAt": "2026-05-10T16:17:39.417Z"
+    "createdAt": "2026-05-11T16:38:55.898Z"
   },
   {
     "persona": "productivite",
