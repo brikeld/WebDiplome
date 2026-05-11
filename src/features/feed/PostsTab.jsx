@@ -15,12 +15,13 @@ const PERSONA_COLORS = {
 
 const API_ORIGIN = 'http://localhost:3001';
 
-function resolveAttachment(img) {
-  if (!img || typeof img !== 'object') return null;
-  const url = img.url ?? img.imageUrl ?? img.image_url ?? null;
+function resolveAttachment(asset) {
+  if (!asset || typeof asset !== 'object') return null;
+  if (asset.kind !== 'image') return null;
+  const url = asset.url ?? null;
   if (!url) return null;
   const absolute = /^https?:\/\//i.test(url) ? url : `${API_ORIGIN}${url}`;
-  return { url: absolute, filename: img.filename ?? '' };
+  return { url: absolute, filename: asset.filename ?? '' };
 }
 
 export default function PostsTab({ profile, feedContext = 'home' }) {
@@ -67,7 +68,7 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
         p?.time ??
         createdAtFallback(i),
       systemDeltaPct: stablePct(`${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
-      attachment: resolveAttachment(p.attachedImage ?? p.attached_image),
+      attachment: resolveAttachment(p.attachedAsset ?? p.attached_asset),
     }));
 
     // Newest first (like an actual social feed).
