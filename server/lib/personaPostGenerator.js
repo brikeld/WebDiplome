@@ -41,16 +41,30 @@ async function fetchJsonWithTimeout(url, options, timeoutMs) {
   }
 }
 
-function buildChatBody({ model, systemPrompt, userPayload, imageData, maxTokens = 900, temperature = 0.7 }) {
-  const userContent = imageData
-    ? [
-        { type: 'text', text: userPayload },
-        {
-          type: 'image_url',
-          image_url: { url: `data:${imageData.mime};base64,${imageData.base64}` },
-        },
-      ]
-    : userPayload;
+function buildChatBody({
+  model,
+  systemPrompt,
+  userPayload,
+  imageData,
+  docText,
+  docFilename,
+  maxTokens = 900,
+  temperature = 0.7,
+}) {
+  let userContent;
+  if (imageData) {
+    userContent = [
+      { type: 'text', text: userPayload },
+      {
+        type: 'image_url',
+        image_url: { url: `data:${imageData.mime};base64,${imageData.base64}` },
+      },
+    ];
+  } else if (docText) {
+    userContent = `${userPayload}\n\n--- Attached document (${docFilename}) ---\n${docText}`;
+  } else {
+    userContent = userPayload;
+  }
 
   return {
     model,
@@ -181,19 +195,27 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
 
   const runPersonaPost = async ([key, personaCfg], index) => {
     const basePrompt = personaCfg.system;
-    const wantsImage = personaIndex >= 0 && index === personaIndex;
-    const assetImage = wantsImage ? assetAssignment.asset : null;
+    const wantsAsset = personaIndex >= 0 && index === personaIndex;
+    const asset = wantsAsset && assetAssignment ? assetAssignment.asset : null;
 
     const runOnce = async (temperature, withVision) => {
       let systemPrompt = basePrompt;
       let imageData = null;
+      let docText = null;
+      let docFilename = null;
 
-      if (wantsImage && assetImage) {
-        if (withVision) {
-          systemPrompt = basePrompt + prompts.imageExtension;
-          imageData = assetImage;
-        } else {
-          systemPrompt = basePrompt + imageTextFallbackNote(assetImage.filename);
+      if (asset) {
+        if (asset.kind === 'image') {
+          if (withVision) {
+            systemPrompt = basePrompt + (prompts.imageExtension ?? '');
+            imageData = { base64: asset.base64, mime: asset.mime };
+          } else {
+            systemPrompt = basePrompt + imageTextFallbackNote(asset.filename);
+          }
+        } else if (asset.kind === 'document') {
+          systemPrompt = basePrompt + (prompts.documentExtension ?? '');
+          docText = asset.text;
+          docFilename = asset.filename;
         }
       }
 
@@ -202,6 +224,8 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
         systemPrompt,
         userPayload,
         imageData,
+        docText,
+        docFilename,
         temperature,
         maxTokens: personaCfg.maxTokens,
       });
@@ -213,7 +237,7 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
     let parsed = { content: '', sentiment: null };
     let visionSucceeded = false;
 
-    if (wantsImage && assetImage) {
+    if (asset && asset.kind === 'image') {
       // Try vision first; fall back to text if model doesn't support it.
       try {
         parsed = await runOnce(personaCfg.temperature, true);
@@ -239,15 +263,17 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
 
     // Always mark the asset as attached when this post was paired with an asset,
     // regardless of whether vision was used (asset is still conceptually linked).
-    if (wantsImage && assetImage) {
+    if (asset) {
       post.attachedAsset = {
-        kind: 'image',
-        filename: assetImage.filename,
+        kind: asset.kind,
+        filename: asset.filename,
         relativePath: null,
         url: null,
-        mime: assetImage.mime ?? 'image/jpeg',
-        visionAnalysed: visionSucceeded,
+        mime: asset.mime ?? 'application/octet-stream',
       };
+      if (asset.kind === 'image') {
+        post.attachedAsset.visionAnalysed = visionSucceeded;
+      }
     }
 
     return post;
