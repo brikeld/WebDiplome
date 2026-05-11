@@ -45,7 +45,7 @@ const EXTRA_ASSET_DIRS = [
 ];
 
 const ALLOWED_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif']);
-const IMAGE_PERSONA_CYCLE = ['popularite', 'securite', 'productivite'];
+const ASSET_PERSONA_CYCLE = ['popularite', 'securite', 'productivite'];
 
 async function fileExists(p) {
   try {
@@ -75,18 +75,18 @@ function pickRandom(arr) {
 
 function nextPersonaInCycle(prevPersona) {
   const prev = String(prevPersona || '').toLowerCase();
-  const idx = IMAGE_PERSONA_CYCLE.indexOf(prev);
-  return IMAGE_PERSONA_CYCLE[(idx + 1) % IMAGE_PERSONA_CYCLE.length];
+  const idx = ASSET_PERSONA_CYCLE.indexOf(prev);
+  return ASSET_PERSONA_CYCLE[(idx + 1) % ASSET_PERSONA_CYCLE.length];
 }
 
-function mostRecentPersonaWithImage(existingPosts) {
+function mostRecentPersonaWithAsset(existingPosts) {
   if (!Array.isArray(existingPosts)) return null;
   for (const p of existingPosts) {
     if (!p || typeof p !== 'object') continue;
-    const hasImg = !!(p.attachedImage || p.attached_image);
-    if (!hasImg) continue;
+    const hasAsset = !!p.attachedAsset;
+    if (!hasAsset) continue;
     const persona = String(p.persona || '').toLowerCase();
-    if (IMAGE_PERSONA_CYCLE.includes(persona)) return persona;
+    if (ASSET_PERSONA_CYCLE.includes(persona)) return persona;
   }
   return null;
 }
@@ -196,7 +196,11 @@ app.post('/api/posts/generate', async (_req, res) => {
     // Build candidate image list and track already-used upload filenames.
     const usedUploadFilenames = new Set(
       existing
-        .map((p) => (p?.attachedImage && typeof p.attachedImage === 'object' ? p.attachedImage.filename : null))
+        .map((p) =>
+          p?.attachedAsset && typeof p.attachedAsset === 'object'
+            ? p.attachedAsset.filename
+            : null,
+        )
         .filter(Boolean),
     );
 
@@ -209,14 +213,15 @@ app.post('/api/posts/generate', async (_req, res) => {
       return null;
     });
 
-    // Cycle through personas to decide which post gets the image.
-    let imageAssignment = null;
+    // Cycle through personas to decide which post gets the asset.
+    let assetAssignment = null;
     if (asset) {
-      const prevPersona = mostRecentPersonaWithImage(existing);
+      const prevPersona = mostRecentPersonaWithAsset(existing);
       const targetPersona = nextPersonaInCycle(prevPersona);
-      imageAssignment = {
+      assetAssignment = {
         persona: targetPersona,
-        imageData: {
+        asset: {
+          kind: 'image',
           base64: asset.base64,
           mime: asset.mime,
           filename: asset.sourceFilename,
@@ -237,19 +242,19 @@ app.post('/api/posts/generate', async (_req, res) => {
       userPayload,
       timeoutMs: LM_STUDIO_TIMEOUT_MS,
       retries: LM_STUDIO_RETRIES,
-      imageAssignment,
+      assetAssignment,
       prompts,
     });
 
-    // Replace the generator's placeholder attachedImage with upload-ready data for the UI.
+    // Replace the generator's placeholder attachedAsset with upload-ready data for the UI.
     if (asset) {
       for (const post of posts) {
-        if (post.attachedImage) {
-          post.attachedImage = {
+        if (post.attachedAsset) {
+          post.attachedAsset = {
+            ...post.attachedAsset,
             filename: asset.uploadFilename,
             relativePath: asset.uploadRelativePath,
             url: asset.uploadUrl,
-            visionAnalysed: post.attachedImage.visionAnalysed,
           };
           break;
         }

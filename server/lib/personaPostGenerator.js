@@ -166,23 +166,23 @@ function parsePostWithSentiment(raw, fallbackPersona) {
  * @param {string} opts.userPayload   - JSON.stringify(profile) — full profile data sent as the user message
  * @param {number} opts.timeoutMs     - per-request timeout in ms
  * @param {number} opts.retries       - number of retries on failure
- * @param {object|null} opts.imageAssignment
- *   - { persona: 'productivite'|'popularite'|'securite', imageData: { base64, mime, filename } }
- *   - null if no image for this generation
+ * @param {object|null} opts.assetAssignment
+ *   - { persona: 'productivite'|'popularite'|'securite', asset: { base64, mime, filename } }
+ *   - null if no asset for this generation
  * @param {object|null} opts.prompts  - loaded prompts object (from loadPrompts); falls back to FALLBACK_PROMPTS
  */
-export async function generatePersonaPosts({ baseUrl, model, userPayload, timeoutMs, retries, imageAssignment, prompts: promptsParam }) {
+export async function generatePersonaPosts({ baseUrl, model, userPayload, timeoutMs, retries, assetAssignment, prompts: promptsParam }) {
   const prompts = promptsParam ?? FALLBACK_PROMPTS;
   const personaEntries = Object.entries(prompts.personaPosts);
   // Map persona name → index in personaEntries array
-  const personaIndex = imageAssignment
-    ? personaEntries.findIndex(([key]) => key === imageAssignment.persona)
+  const personaIndex = assetAssignment
+    ? personaEntries.findIndex(([key]) => key === assetAssignment.persona)
     : -1;
 
   const runPersonaPost = async ([key, personaCfg], index) => {
     const basePrompt = personaCfg.system;
     const wantsImage = personaIndex >= 0 && index === personaIndex;
-    const assetImage = wantsImage ? imageAssignment.imageData : null;
+    const assetImage = wantsImage ? assetAssignment.asset : null;
 
     const runOnce = async (temperature, withVision) => {
       let systemPrompt = basePrompt;
@@ -237,11 +237,15 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
       createdAt: new Date().toISOString(),
     };
 
-    // Always mark the image as attached when this post was paired with an asset,
+    // Always mark the asset as attached when this post was paired with an asset,
     // regardless of whether vision was used (asset is still conceptually linked).
     if (wantsImage && assetImage) {
-      post.attachedImage = {
+      post.attachedAsset = {
+        kind: 'image',
         filename: assetImage.filename,
+        relativePath: null,
+        url: null,
+        mime: assetImage.mime ?? 'image/jpeg',
         visionAnalysed: visionSucceeded,
       };
     }
