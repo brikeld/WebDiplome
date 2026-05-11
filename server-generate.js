@@ -7,6 +7,7 @@ import crypto from 'crypto';
 
 import { getNewestProfileIdAndPath, readProfileJson } from './server/lib/currentProfile.js';
 import { generatePersonaPosts } from './server/lib/personaPostGenerator.js';
+import { loadPrompts } from './server/lib/prompts.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
@@ -228,6 +229,8 @@ app.post('/api/posts/generate', async (_req, res) => {
     const baseUrl = rawBase.endsWith('/v1') ? rawBase.slice(0, -3) : rawBase;
     const model = lmCfg.model;
 
+    const prompts = await loadPrompts(ELECTRON_DATA_DIR);
+
     const posts = await generatePersonaPosts({
       baseUrl,
       model,
@@ -235,6 +238,7 @@ app.post('/api/posts/generate', async (_req, res) => {
       timeoutMs: LM_STUDIO_TIMEOUT_MS,
       retries: LM_STUDIO_RETRIES,
       imageAssignment,
+      prompts,
     });
 
     // Replace the generator's placeholder attachedImage with upload-ready data for the UI.

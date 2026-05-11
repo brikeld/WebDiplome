@@ -4,18 +4,16 @@
  * Logic is identical to the Electron app's PostGenerator.js.
  */
 
-// First-person, casual, social-media voice — sounds like the user wrote it, not a coach.
-const SYSTEM_PROMPTS = {
-  productivite:
-    'You write social media posts AS the person described in the profile JSON — first-person, casual, like a real tweet or short post. ONE post (max 200 characters) about something from their workflow or productivity. Sound like a human: a bit self-aware, natural rhythm, maybe slightly ironic or proud. No hashtags. No motivational-speaker tone.\nReturn ONLY valid JSON: {"content":"...","sentiment":"positive"|"negative"}. /no_think',
-  popularite:
-    'You write social media posts AS the person described in the profile JSON — first-person, casual, like a real tweet or short post. ONE post (max 200 characters) about their online presence or social life. Sound like a human: genuine, maybe a little playful or self-deprecating. No hashtags. No hype-machine tone.\nReturn ONLY valid JSON: {"content":"...","sentiment":"positive"|"negative"}. /no_think',
-  securite:
-    'You write social media posts AS the person described in the profile JSON — first-person, casual, like a real tweet or short post. ONE post (max 200 characters) touching on their digital life or data habits. Sound like a human: honest, maybe a touch anxious or relieved. No hashtags. No security-textbook tone.\nReturn ONLY valid JSON: {"content":"...","sentiment":"positive"|"negative"}. /no_think',
+// Minimal fallback used only when no prompts object is supplied (defensive).
+const FALLBACK_PROMPTS = {
+  personaPosts: {
+    productivite: { system: '', temperature: 0.7, maxTokens: 900 },
+    popularite: { system: '', temperature: 0.7, maxTokens: 900 },
+    securite: { system: '', temperature: 0.7, maxTokens: 900 },
+  },
+  imageExtension: '',
+  documentExtension: '',
 };
-
-const IMAGE_POST_PROMPT_EXTENSION =
-  '\n\nAn image from the user\'s files is attached. Write the post as if the user is sharing or reacting to this image — describe what you see in a natural way, integrate it into the post voice. The post should feel like a genuine image caption or reaction.';
 
 function imageTextFallbackNote(filename) {
   return `\n\nFor context, the user recently had a file named "${filename}" in their recent images — you may reference it naturally in the post.`;
@@ -171,15 +169,18 @@ function parsePostWithSentiment(raw, fallbackPersona) {
  * @param {object|null} opts.imageAssignment
  *   - { persona: 'productivite'|'popularite'|'securite', imageData: { base64, mime, filename } }
  *   - null if no image for this generation
+ * @param {object|null} opts.prompts  - loaded prompts object (from loadPrompts); falls back to FALLBACK_PROMPTS
  */
-export async function generatePersonaPosts({ baseUrl, model, userPayload, timeoutMs, retries, imageAssignment }) {
-  const prompts = Object.entries(SYSTEM_PROMPTS);
-  // Map persona name → index in prompts array
+export async function generatePersonaPosts({ baseUrl, model, userPayload, timeoutMs, retries, imageAssignment, prompts: promptsParam }) {
+  const prompts = promptsParam ?? FALLBACK_PROMPTS;
+  const personaEntries = Object.entries(prompts.personaPosts);
+  // Map persona name → index in personaEntries array
   const personaIndex = imageAssignment
-    ? prompts.findIndex(([key]) => key === imageAssignment.persona)
+    ? personaEntries.findIndex(([key]) => key === imageAssignment.persona)
     : -1;
 
-  const runPersonaPost = async ([key, basePrompt], index) => {
+  const runPersonaPost = async ([key, personaCfg], index) => {
+    const basePrompt = personaCfg.system;
     const wantsImage = personaIndex >= 0 && index === personaIndex;
     const assetImage = wantsImage ? imageAssignment.imageData : null;
 
@@ -189,7 +190,7 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
 
       if (wantsImage && assetImage) {
         if (withVision) {
-          systemPrompt = basePrompt + IMAGE_POST_PROMPT_EXTENSION;
+          systemPrompt = basePrompt + prompts.imageExtension;
           imageData = assetImage;
         } else {
           systemPrompt = basePrompt + imageTextFallbackNote(assetImage.filename);
@@ -202,7 +203,7 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
         userPayload,
         imageData,
         temperature,
-        maxTokens: 900,
+        maxTokens: personaCfg.maxTokens,
       });
       const r = await lmChatCompletion({ baseUrl, timeoutMs, retries, body });
       const raw = extractChoiceText(r);
@@ -215,7 +216,7 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
     if (wantsImage && assetImage) {
       // Try vision first; fall back to text if model doesn't support it.
       try {
-        parsed = await runOnce(1, true);
+        parsed = await runOnce(personaCfg.temperature, true);
         if (parsed.content) visionSucceeded = true;
       } catch {
         // Vision not supported by this model — will fall through to text fallback below.
@@ -223,7 +224,7 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
     }
 
     if (!parsed.content) {
-      parsed = await runOnce(1, false);
+      parsed = await runOnce(personaCfg.temperature, false);
     }
     if (!parsed.content) {
       parsed = await runOnce(0.35, false);
@@ -248,5 +249,5 @@ export async function generatePersonaPosts({ baseUrl, model, userPayload, timeou
     return post;
   };
 
-  return await Promise.all(prompts.map((entry, i) => runPersonaPost(entry, i)));
+  return await Promise.all(personaEntries.map((entry, i) => runPersonaPost(entry, i)));
 }
