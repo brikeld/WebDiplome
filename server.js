@@ -5,17 +5,37 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import crypto from 'crypto';
+import { normalizeAttachedAsset, translateLegacyImage } from './server/lib/attachedAsset.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
 const POSTS_DIR = path.join(__dirname, 'posts');
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 
+const normalizePost = (p) => {
+  if (!p || typeof p !== 'object') return p;
+  const out = { ...p };
+
+  // Prefer explicit attachedAsset; otherwise translate legacy attachedImage.
+  if (out.attachedAsset || out.attached_asset) {
+    out.attachedAsset = normalizeAttachedAsset(out.attachedAsset ?? out.attached_asset);
+    if (!out.attachedAsset) delete out.attachedAsset;
+  } else if (out.attachedImage || out.attached_image) {
+    out.attachedAsset = translateLegacyImage(out.attachedImage ?? out.attached_image);
+    if (!out.attachedAsset) delete out.attachedAsset;
+  }
+
+  delete out.attached_image;
+  delete out.attachedImage;
+  delete out.attached_asset;
+  return out;
+};
+
 async function readPostsForId(id) {
   try {
     const raw = await fs.readFile(path.join(POSTS_DIR, `${id}.json`), 'utf8');
     const data = JSON.parse(raw);
-    return Array.isArray(data) ? data : [];
+    return Array.isArray(data) ? data.map(normalizePost) : [];
   } catch (err) {
     if (err.code === 'ENOENT') return null;
     throw err;
@@ -24,31 +44,6 @@ async function readPostsForId(id) {
 
 async function writePostsForId(id, personaPosts) {
   await fs.mkdir(POSTS_DIR, { recursive: true });
-  const normalizeAttachedImage = (img) => {
-    if (!img || typeof img !== 'object') return null;
-    const filename = img.filename ?? img.fileName ?? img.file_name ?? null;
-    const relativePath = img.relativePath ?? img.relative_path ?? null;
-    const url = img.url ?? img.imageUrl ?? img.image_url ?? null;
-    const visionAnalysed =
-      img.visionAnalysed ?? img.vision_analysed ?? img.visionAnalyzed ?? img.vision_analyzed ?? null;
-    return { filename, relativePath, url, visionAnalysed };
-  };
-
-  const normalizePost = (p) => {
-    if (!p || typeof p !== 'object') return p;
-    const attachedImage =
-      p.attachedImage !== undefined
-        ? normalizeAttachedImage(p.attachedImage)
-        : p.attached_image !== undefined
-          ? normalizeAttachedImage(p.attached_image)
-          : null;
-
-    const out = { ...p };
-    if (attachedImage) out.attachedImage = attachedImage;
-    delete out.attached_image;
-    return out;
-  };
-
   const posts = Array.isArray(personaPosts) ? personaPosts.map(normalizePost) : [];
   await fs.writeFile(path.join(POSTS_DIR, `${id}.json`), JSON.stringify(posts, null, 2), 'utf8');
 }
