@@ -567,6 +567,23 @@ body {
   color: var(--ink);
 }
 
+.post-card--feed-enter {
+  animation: post-feed-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes post-feed-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 /* Parent shell for posts with attachment — holds the two rects with a gap */
 .post-composite {
   box-sizing: border-box;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Sidebar from '@/layout/Sidebar.jsx';
 import ScrollArea from '@/layout/ScrollArea.jsx';
 import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
@@ -135,6 +135,7 @@ export default function App() {
   const [personaOverride, setPersonaOverride] = useState(null); // 'productivity' | 'popularity' | 'security' | null
   const [nowTick, setNowTick] = useState(0);
   const [postGen, setPostGen] = useState({ loading: false, error: null });
+  const streamPostsBaselineRef = useRef([]);
 
   // Lock body scroll in home mode; release it for profile (full-page scroll).
   useEffect(() => {
@@ -209,23 +210,96 @@ export default function App() {
 
   const handleGeneratePersonaPosts = async () => {
     if (postGen.loading || !profile) return;
+    streamPostsBaselineRef.current = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
     setPostGen({ loading: true, error: null });
     try {
-      const res = await fetch(`${GENERATE_API_ORIGIN}/api/posts/generate`, {
+      const res = await fetch(`${GENERATE_API_ORIGIN}/api/posts/generate-stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          Accept: 'application/x-ndjson',
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({}),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.success !== true) {
-        throw new Error(data.error || `Request failed (${res.status})`);
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        let msg = `Request failed (${res.status})`;
+        try {
+          const j = JSON.parse(errText);
+          if (j?.error) msg = j.error;
+        } catch {
+          if (errText) msg = errText.slice(0, 200);
+        }
+        throw new Error(msg);
       }
-      const newPosts = Array.isArray(data.posts) ? data.posts : [];
-      setProfile((prev) => {
-        if (!prev) return prev;
-        const existing = Array.isArray(prev.personaPosts) ? prev.personaPosts : [];
-        return { ...prev, personaPosts: [...newPosts, ...existing] };
-      });
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('No response body');
+
+      const dec = new TextDecoder();
+      let buf = '';
+      const batch = [];
+      const baseline = streamPostsBaselineRef.current;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl;
+        while ((nl = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line) continue;
+          let row;
+          try {
+            row = JSON.parse(line);
+          } catch {
+            continue;
+          }
+          if (row.success === false && row.error) throw new Error(row.error);
+          if (row.done) continue;
+          if (row.error && !row.post) throw new Error(row.error);
+          if (row.post) {
+            const key =
+              typeof crypto !== 'undefined' && crypto.randomUUID
+                ? crypto.randomUUID()
+                : `feed-${Date.now()}-${batch.length}`;
+            batch.push({ ...row.post, _feedEnter: true, _feedKey: key });
+            setProfile((prev) => {
+              if (!prev) return prev;
+              return { ...prev, personaPosts: [...batch, ...baseline] };
+            });
+          }
+        }
+      }
+
+      const tail = buf.trim();
+      if (tail) {
+        try {
+          const row = JSON.parse(tail);
+          if (row.success === false && row.error) throw new Error(row.error);
+          if (!row.done) {
+            if (row.error && !row.post) throw new Error(row.error);
+            if (row.post) {
+              const key =
+                typeof crypto !== 'undefined' && crypto.randomUUID
+                  ? crypto.randomUUID()
+                  : `feed-${Date.now()}-${batch.length}`;
+              batch.push({ ...row.post, _feedEnter: true, _feedKey: key });
+              setProfile((prev) => {
+                if (!prev) return prev;
+                return { ...prev, personaPosts: [...batch, ...baseline] };
+              });
+            }
+          }
+        } catch (e) {
+          if (e instanceof SyntaxError) {
+            /* ignore trailing garbage */
+          } else {
+            throw e;
+          }
+        }
+      }
+
       setPostGen({ loading: false, error: null });
     } catch (e) {
       setPostGen({ loading: false, error: e?.message || 'Generation failed' });

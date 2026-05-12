@@ -1,6 +1,39 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
+export const DEFAULT_SLOT_PROMPTS = {
+  browser: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. The user's browser history data is listed above. Pick ONE specific site or browsing pattern, make a witty self-aware observation about it (max 200 chars). Touch of humor. No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    temperature: 0.85,
+    maxTokens: 900,
+  },
+  chart: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. The user's app category breakdown is listed above. React to what it reveals — pick ONE category, be honest and a little self-deprecating (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    temperature: 0.85,
+    maxTokens: 900,
+  },
+  image: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. A photo from your own files is attached. Describe or react to what you see — specific detail, natural voice, touch of humor (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    temperature: 0.82,
+    maxTokens: 900,
+  },
+  wifi: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Your WiFi network history is listed above. Make a wry, location-aware comment — maybe about the number of cafés, a trip pattern, or a funny network name (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    temperature: 0.85,
+    maxTokens: 900,
+  },
+  downloads: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Your recent downloads are listed above. Pick ONE download that reveals something about you — funny, honest, maybe slightly embarrassing (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    temperature: 0.85,
+    maxTokens: 900,
+  },
+  document: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. A document from your files is attached below. Reference something concrete from it — a phrase, a topic, a vibe — without quoting verbatim. Sound like you're casually mentioning something you were working on, with humor (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    temperature: 0.80,
+    maxTokens: 900,
+  },
+};
+
 export const DEFAULT_PROMPTS = {
   personaPosts: {
     productivite: {
@@ -56,12 +89,26 @@ function mergeUserSummary(defaults, override) {
   };
 }
 
+function mergeSlotPrompts(defaults, override) {
+  const out = {};
+  for (const key of Object.keys(defaults)) {
+    const o = override?.[key];
+    out[key] = {
+      system: typeof o?.system === 'string' && o.system ? o.system : defaults[key].system,
+      temperature: typeof o?.temperature === 'number' ? o.temperature : defaults[key].temperature,
+      maxTokens: typeof o?.maxTokens === 'number' ? o.maxTokens : defaults[key].maxTokens,
+    };
+  }
+  return out;
+}
+
 export async function loadPrompts(dataDir) {
   try {
     const raw = await fs.readFile(path.join(dataDir, 'prompts.json'), 'utf8');
     const parsed = JSON.parse(raw);
     return {
       personaPosts: mergePersonaPosts(DEFAULT_PROMPTS.personaPosts, parsed?.personaPosts),
+      slotPrompts: mergeSlotPrompts(DEFAULT_SLOT_PROMPTS, parsed?.slotPrompts),
       imageExtension:
         typeof parsed?.imageExtension === 'string' && parsed.imageExtension
           ? parsed.imageExtension
@@ -73,6 +120,6 @@ export async function loadPrompts(dataDir) {
       userSummary: mergeUserSummary(DEFAULT_PROMPTS.userSummary, parsed?.userSummary),
     };
   } catch {
-    return DEFAULT_PROMPTS;
+    return { ...DEFAULT_PROMPTS, slotPrompts: DEFAULT_SLOT_PROMPTS };
   }
 }

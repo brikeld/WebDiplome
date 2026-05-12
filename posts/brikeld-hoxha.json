@@ -1,58 +1,208 @@
 [
   {
-    "persona": "productivite",
-    "content": "Trying to balance heavy Adobe work with Claude for the initial structure of the project files. It's a strange but productive combo.",
+    "persona": "popularite",
+    "content": "Currently balancing rendering complex 3D models with watching people argue about soccer highlights. The digital life is a beautiful, chaotic mess.",
     "sentiment": "positive",
-    "createdAt": "2026-05-11T22:24:31.890Z",
-    "attachedAsset": null
+    "createdAt": "2026-05-12T20:12:54.451Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to keep up with Photoshop, Blender, and endless coding projects all at once is exhausting. Send coffee and patience.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-12T20:12:43.552Z"
   },
   {
     "persona": "popularite",
-    "content": "Trying to keep the design and code flowing together today. It's a marathon, but the visuals are starting to come into focus.",
+    "content": "My desktop is a mess of files and screenshots. Trying to wrangle all this digital chaos! 😅",
     "sentiment": "positive",
-    "createdAt": "2026-05-11T22:24:30.664Z",
-    "attachedAsset": null
+    "createdAt": "2026-05-12T20:12:50.313Z"
   },
   {
     "persona": "securite",
-    "content": "Trying to keep all these design files and project data organized feels like a constant battle. I just hope this workflow pays off eventually.",
+    "content": "Just spent the evening hopping between 'Ginevra Cafe'', 'COFFEE PAGE', and 'Brew-morges'. My WiFi history is basically a travelogue through the best local espresso spots. ☕",
     "sentiment": "positive",
-    "createdAt": "2026-05-11T22:24:31.483Z",
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "d7c3c72316d16878354a718252967ab7e38b91c4e1b75bedb2eca7569959bc9d.png",
-      "relativePath": "assets/recent_images/d7c3c72316d16878354a718252967ab7e38b91c4e1b75bedb2eca7569959bc9d.png",
-      "url": "/uploads/d7c3c72316d16878354a718252967ab7e38b91c4e1b75bedb2eca7569959bc9d.png",
-      "mime": "image/png",
-      "visionAnalysed": true
-    }
+    "createdAt": "2026-05-12T20:12:50.620Z"
   },
   {
     "persona": "productivite",
-    "content": "Trying to keep the creative flow going while wrestling with all the code. It’s a constant balancing act between vision and execution.",
+    "content": "Trying to map how old power structures used visual branding to today's endless digital scroll. It’s wild how rituals get reconfigured into quiet flows.",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T18:13:07.375Z",
+    "createdAt": "2026-05-12T20:12:48.871Z",
+    "attachedAsset": {
+      "kind": "document",
+      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "relativePath": "public/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "mime": "application/pdf"
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "I spend half my time optimizing vectors in Figma and the other half trying to figure out why the football gods hate me. A true creative struggle.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T20:06:11.992Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "I swear my computer is just a giant mess of Adobe files, code modules, and AI prompts. Send help or at least more coffee.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-12T20:06:19.463Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to look professional while my system is running complex algorithms in the background. Send coffee.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T20:06:27.553Z",
     "attachedAsset": {
       "kind": "image",
       "filename": "e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "relativePath": "assets/recent_images/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
+      "relativePath": "public/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
       "url": "/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
       "mime": "image/jpeg",
       "visionAnalysed": true
     }
   },
   {
-    "persona": "popularite",
-    "content": "Trying to keep the design pipeline running while also wrestling with all these AI models is a full-time job. Send coffee. 😅",
+    "persona": "securite",
+    "content": "Just downloaded a 31GB movie file called \"Marty Supreme (2025)\". My storage is currently filing a complaint.",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T18:13:06.750Z",
-    "attachedAsset": null
+    "createdAt": "2026-05-12T20:06:35.102Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to keep all these design assets organized for WebDiplome feels like a full-time job. Send help and more coffee.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T20:06:43.436Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "Currently mastering the art of asking an AI for LoL counterpicks while simultaneously trying to render a 3D model in Blender. Peak productivity achieved.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T20:01:40.702Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "I spend most of my time wrestling with Photoshop and Blender files. My creative output is great, but my file organization is a total mess.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-12T20:01:46.553Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "Just staring at this map. Planning my next adventure one ticket at a time. 🗺️",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T20:01:48.874Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ac41cff758359d3a8155f9c7d03319cae048b642f44828a1b28b55b92bf4336c.png",
+      "relativePath": "public/uploads/ac41cff758359d3a8155f9c7d03319cae048b642f44828a1b28b55b92bf4336c.png",
+      "url": "/uploads/ac41cff758359d3a8155f9c7d03319cae048b642f44828a1b28b55b92bf4336c.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
   },
   {
     "persona": "securite",
-    "content": "Trying to keep all these project files organized feels like a constant battle. I swear I just download more stuff than I can handle.",
+    "content": "Just downloaded a 30GB movie. My storage is officially in crisis. Send help and more free space.",
     "sentiment": "negative",
-    "createdAt": "2026-05-12T18:13:09.016Z",
+    "createdAt": "2026-05-12T20:01:40.214Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to keep up with Adobe suite work while also diving into those intense probuilds is a wild combo. Send coffee. 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T20:01:40.627Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to balance creating masterpiece designs with watching endless YouTube clips about impossible gaming strategies. Send snacks.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T19:42:16.732Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "I spend most of my time wrestling with code and AI models. My creative ambitions are massive, but my current workflow feels like a chaotic mix of brilliant ideas and endless debugging. 😅",
+    "sentiment": "negative",
+    "createdAt": "2026-05-12T19:42:25.402Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "Just soaking in this vibe. It's always beautiful to have you around. 🥰",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T19:42:27.851Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
+      "relativePath": "public/uploads/c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
+      "url": "/uploads/c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
+      "mime": "image/jpeg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "My WiFi history is basically a live map of every questionable café name I've tried to connect to. The search for 'COFFEE PAGE' and 'Ginevra Cafe'' is intense.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T19:42:25.977Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to wrangle all those assets for the test creation is an adventure. Send coffee and more Photoshop plugins.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T19:42:23.472Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to balance designing a digital world with watching videos about the worst clash teams. It's a delicate art.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T19:01:56.332Z",
     "attachedAsset": null
+  },
+  {
+    "persona": "productivite",
+    "content": "It seems my life is mostly spent wrestling with code and design software. Trying to balance creative projects with endless development tasks is a full-time job, honestly.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T19:02:19.319Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "dcb78098e3058b7e6bc04c9716a807af7756be6c45d0594d67d4623895043a5b.png",
+      "relativePath": "assets/charts/dcb78098e3058b7e6bc04c9716a807af7756be6c45d0594d67d4623895043a5b.png",
+      "url": "/uploads/dcb78098e3058b7e6bc04c9716a807af7756be6c45d0594d67d4623895043a5b.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Juggling Photoshop, Blender, and Claude on this beast of a MacBook Pro. It's a creative marathon today!",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T19:02:24.127Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "1b5b5e5cf87796838d89fd5eb3c7a1d2cb9a72b6c38ca150194d361dfc8a45fc.png",
+      "relativePath": "assets/screenshots/Screenshot 2026-05-12 at 10.21.57.png",
+      "url": "/uploads/1b5b5e5cf87796838d89fd5eb3c7a1d2cb9a72b6c38ca150194d361dfc8a45fc.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "Is my Wi-Fi history just a log of every café I've ever visited? The network names are starting to look like a travel itinerary. 🇨🇭",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T19:02:18.088Z",
+    "attachedAsset": null
+  },
+  {
+    "persona": "productivite",
+    "content": "Finally figuring out the 'Calcul des honoraires' model! It's all about nailing those project phases and managing the time. 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-12T19:02:16.597Z",
+    "attachedAsset": {
+      "kind": "document",
+      "filename": "a39f4512f3fe3a9c623557bf4e082d7ee40805a00418b22a4eba1da7fac9a9af.pdf",
+      "relativePath": "assets/docs/004-02+_Systeme-de-calcul-des-honoraires-SGD.pdf",
+      "url": "/uploads/a39f4512f3fe3a9c623557bf4e082d7ee40805a00418b22a4eba1da7fac9a9af.pdf",
+      "mime": "application/pdf"
+    }
   }
 ]

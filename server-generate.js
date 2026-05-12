@@ -202,97 +202,122 @@ async function writePostsForId(id, personaPosts) {
   await fs.writeFile(path.join(POSTS_DIR, `${id}.json`), JSON.stringify(posts, null, 2), 'utf8');
 }
 
+function patchPostAttachedAssetFromUpload(post, asset) {
+  if (!asset || !post?.attachedAsset) return;
+  post.attachedAsset = {
+    ...post.attachedAsset,
+    filename: asset.uploadFilename,
+    relativePath: asset.uploadRelativePath,
+    url: asset.uploadUrl,
+  };
+}
+
+/**
+ * @returns {Promise<{ newest: object, existing: array, userPayload: string, asset: object|null, assetAssignment: object|null, baseUrl: string, model: string, prompts: object, electronData: object|null } | { error: string, status: number }>}
+ */
+async function prepareGenerationContext() {
+  const newest = await getNewestProfileIdAndPath(PROFILES_DIR);
+  if (!newest) return { error: 'No profile found', status: 400 };
+
+  let profile;
+  try {
+    profile = await readProfileJson(newest.filepath);
+  } catch (e) {
+    console.error('[posts/generate] profile read failed:', e?.message || e);
+    return { error: 'Failed to read profile', status: 500 };
+  }
+
+  const existing = (await readPostsForId(newest.id)) ?? [];
+
+  const electronUser = await readJsonOrNull(ELECTRON_USER_JSON);
+  const electronData = await readJsonOrNull(ELECTRON_DATA_JSON);
+
+  let userPayloadObject;
+  if (electronData) {
+    userPayloadObject = { user: electronUser ?? {}, profile: electronData };
+  } else {
+    const { wallpaperBase64, personaPosts, ...profileForAI } = profile;
+    userPayloadObject = profileForAI;
+  }
+  const userPayload = JSON.stringify(userPayloadObject);
+
+  const usedUploadFilenames = new Set(
+    existing
+      .map((p) => {
+        if (p?.attachedAsset && typeof p.attachedAsset === 'object') return p.attachedAsset.filename;
+        if (p?.attachedImage && typeof p.attachedImage === 'object') return p.attachedImage.filename;
+        return null;
+      })
+      .filter(Boolean),
+  );
+
+  const lists = await Promise.all(ASSET_DIRS.map(listAssetsInDir));
+  const allCandidates = lists.flat();
+
+  const asset = await pickAndImportAsset(allCandidates, usedUploadFilenames).catch((e) => {
+    console.error('[posts/generate] asset import failed:', e?.message || e);
+    return null;
+  });
+
+  let assetAssignment = null;
+  if (asset) {
+    const prevPersona = mostRecentPersonaWithAsset(existing);
+    const targetPersona = nextPersonaInCycle(prevPersona);
+    if (asset.kind === 'image') {
+      assetAssignment = {
+        persona: targetPersona,
+        asset: {
+          kind: 'image',
+          base64: asset.base64,
+          mime: asset.mime,
+          filename: asset.sourceFilename,
+        },
+      };
+    } else {
+      assetAssignment = {
+        persona: targetPersona,
+        asset: {
+          kind: 'document',
+          text: asset.text,
+          mime: asset.mime,
+          filename: asset.sourceFilename,
+        },
+      };
+    }
+  }
+
+  const lmCfg = await readLmStudioConfig();
+  const rawBase = String(lmCfg.baseUrl).replace(/\/$/, '');
+  const baseUrl = rawBase.endsWith('/v1') ? rawBase.slice(0, -3) : rawBase;
+  const model = lmCfg.model;
+
+  const prompts = await loadPrompts(ELECTRON_DATA_DIR);
+
+  return {
+    newest,
+    existing,
+    userPayload,
+    asset,
+    assetAssignment,
+    baseUrl,
+    model,
+    prompts,
+    electronData,
+  };
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
-// POST /api/posts/generate — dedicated generator server (to avoid port collisions)
+// POST /api/posts/generate — batch JSON (waits for all posts)
 app.post('/api/posts/generate', async (_req, res) => {
   try {
-    const newest = await getNewestProfileIdAndPath(PROFILES_DIR);
-    if (!newest) return res.status(400).json({ success: false, error: 'No profile found' });
-
-    let profile;
-    try {
-      profile = await readProfileJson(newest.filepath);
-    } catch (e) {
-      console.error('[posts/generate] profile read failed:', e?.message || e);
-      return res.status(500).json({ success: false, error: 'Failed to read profile' });
+    const ctx = await prepareGenerationContext();
+    if (ctx.error) {
+      return res.status(ctx.status || 500).json({ success: false, error: ctx.error });
     }
-
-    const existing = (await readPostsForId(newest.id)) ?? [];
-
-    // Build the AI payload exactly like the Electron app does:
-    // JSON.stringify({ user: user.json, profile: data.json })
-    // Falls back to the WebDiplome profile if those files aren't readable.
-    const electronUser = await readJsonOrNull(ELECTRON_USER_JSON);
-    const electronData = await readJsonOrNull(ELECTRON_DATA_JSON);
-
-    let userPayloadObject;
-    if (electronData) {
-      userPayloadObject = { user: electronUser ?? {}, profile: electronData };
-    } else {
-      // Fallback: strip wallpaperBase64 (123k chars ≈ 30k tokens — would blow the context)
-      // and personaPosts (previous output, not useful as input) from the WebDiplome profile.
-      const { wallpaperBase64, personaPosts, ...profileForAI } = profile;
-      userPayloadObject = profileForAI;
-    }
-    const userPayload = JSON.stringify(userPayloadObject);
-
-    // Build candidate image list and track already-used upload filenames.
-    const usedUploadFilenames = new Set(
-      existing
-        .map((p) => {
-          if (p?.attachedAsset && typeof p.attachedAsset === 'object') return p.attachedAsset.filename;
-          if (p?.attachedImage && typeof p.attachedImage === 'object') return p.attachedImage.filename;
-          return null;
-        })
-        .filter(Boolean),
-    );
-
-    const lists = await Promise.all(ASSET_DIRS.map(listAssetsInDir));
-    const allCandidates = lists.flat();
-
-    // Pick a random image, copy to uploads, and read as base64 for the vision API.
-    const asset = await pickAndImportAsset(allCandidates, usedUploadFilenames).catch((e) => {
-      console.error('[posts/generate] asset import failed:', e?.message || e);
-      return null;
-    });
-
-    // Cycle through personas to decide which post gets the asset.
-    let assetAssignment = null;
-    if (asset) {
-      const prevPersona = mostRecentPersonaWithAsset(existing);
-      const targetPersona = nextPersonaInCycle(prevPersona);
-      if (asset.kind === 'image') {
-        assetAssignment = {
-          persona: targetPersona,
-          asset: {
-            kind: 'image',
-            base64: asset.base64,
-            mime: asset.mime,
-            filename: asset.sourceFilename,
-          },
-        };
-      } else {
-        assetAssignment = {
-          persona: targetPersona,
-          asset: {
-            kind: 'document',
-            text: asset.text,
-            mime: asset.mime,
-            filename: asset.sourceFilename,
-          },
-        };
-      }
-    }
-
-    const lmCfg = await readLmStudioConfig();
-    const rawBase = String(lmCfg.baseUrl).replace(/\/$/, '');
-    const baseUrl = rawBase.endsWith('/v1') ? rawBase.slice(0, -3) : rawBase;
-    const model = lmCfg.model;
-
-    const prompts = await loadPrompts(ELECTRON_DATA_DIR);
+    const { newest, existing, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
 
     const posts = await generatePersonaPosts({
       baseUrl,
@@ -302,18 +327,13 @@ app.post('/api/posts/generate', async (_req, res) => {
       retries: LM_STUDIO_RETRIES,
       assetAssignment,
       prompts,
+      dataJson: electronData,
     });
 
-    // Replace the generator's placeholder attachedAsset with upload-ready data for the UI.
     if (asset) {
       for (const post of posts) {
         if (post.attachedAsset) {
-          post.attachedAsset = {
-            ...post.attachedAsset,
-            filename: asset.uploadFilename,
-            relativePath: asset.uploadRelativePath,
-            url: asset.uploadUrl,
-          };
+          patchPostAttachedAssetFromUpload(post, asset);
           break;
         }
       }
@@ -328,6 +348,56 @@ app.post('/api/posts/generate', async (_req, res) => {
       success: false,
       error: err?.message ? String(err.message) : 'Generation failed',
     });
+  }
+});
+
+// POST /api/posts/generate-stream — NDJSON: one `{ "post": {...} }` per line as each post is ready; ends with `{ "done": true }`
+app.post('/api/posts/generate-stream', async (_req, res) => {
+  res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('X-Accel-Buffering', 'no');
+  try {
+    const ctx = await prepareGenerationContext();
+    if (ctx.error) {
+      res.write(`${JSON.stringify({ success: false, error: ctx.error })}\n`);
+      res.end();
+      return;
+    }
+    const { newest, existing, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
+
+    const bySlot = new Array(5).fill(null);
+    const posts = await generatePersonaPosts({
+      baseUrl,
+      model,
+      userPayload,
+      timeoutMs: LM_STUDIO_TIMEOUT_MS,
+      retries: LM_STUDIO_RETRIES,
+      assetAssignment,
+      prompts,
+      dataJson: electronData,
+      onEachPost: async (post, meta) => {
+        if (asset && post.attachedAsset) {
+          patchPostAttachedAssetFromUpload(post, asset);
+        }
+        const idx = meta && typeof meta.slotIndex === 'number' ? meta.slotIndex : 0;
+        bySlot[idx] = post;
+        const orderedSoFar = bySlot.flatMap((p) => (p ? [p] : []));
+        await writePostsForId(newest.id, [...orderedSoFar, ...existing]);
+        res.write(`${JSON.stringify({ post })}\n`);
+        if (typeof res.flush === 'function') res.flush();
+      },
+    });
+
+    res.write(`${JSON.stringify({ done: true, success: true, posts })}\n`);
+    res.end();
+  } catch (err) {
+    console.error('[posts/generate-stream] failed:', err?.message || err);
+    try {
+      res.write(`${JSON.stringify({ success: false, error: err?.message ? String(err.message) : 'Generation failed' })}\n`);
+    } catch {
+      /* ignore */
+    }
+    res.end();
   }
 });
 

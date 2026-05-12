@@ -6,7 +6,7 @@ import PostActions from './PostActions.jsx';
 
 const PostPdfCarousel = lazy(() => import('./PostPdfCarousel.jsx'));
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, animateEnter = false }) {
   const {
     content,
     noteColor,
@@ -53,7 +53,7 @@ export default function PostCard({ post }) {
 
   return (
     <article
-      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}`}
+      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}`}
       data-persona={post.persona}
       style={{
         '--post-accent': noteColor,

@@ -75,6 +75,8 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
         createdAtFallback(i),
       systemDeltaPct: stablePct(`${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
       attachedAsset: resolveAttachedAsset(p.attachedAsset ?? p.attached_asset),
+      _feedEnter: !!p._feedEnter,
+      _feedKey: p._feedKey ?? null,
     }));
 
     // Newest first (like an actual social feed).
@@ -88,7 +90,11 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
   const list = (
     <div className={`posts-tab${feedContext === 'profile' ? ' posts-tab--profile-inline' : ''}`}>
       {posts.map((p) => (
-        <PostCard key={p.id} post={p} />
+        <PostCard
+          key={p._feedKey ?? String(p.id)}
+          post={p}
+          animateEnter={!!p._feedEnter}
+        />
       ))}
     </div>
   );

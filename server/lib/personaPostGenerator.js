@@ -1,22 +1,31 @@
 /**
- * LM Studio–compatible persona post generation (OpenAI-style /v1/chat/completions).
- * Produces exactly 3 posts: productivite, popularite, securite.
- * Logic is identical to the Electron app's PostGenerator.js.
+ * Slot-based persona post generation for the WebDiplome server.
+ * Produces 5 posts (no chart rendering — falls back to text context).
+ * Logic mirrors Diplome_/testCreationAcc/python/post_generator/PostGenerator.js.
  */
 
-// Minimal fallback used only when no prompts object is supplied (defensive).
-const FALLBACK_PROMPTS = {
-  personaPosts: {
-    productivite: { system: '', temperature: 0.7, maxTokens: 900 },
-    popularite: { system: '', temperature: 0.7, maxTokens: 900 },
-    securite: { system: '', temperature: 0.7, maxTokens: 900 },
-  },
-  imageExtension: '',
-  documentExtension: '',
-};
+import {
+  extractBrowserSlice,
+  extractAppCategorySlice,
+  extractWifiSlice,
+  extractDownloadsSlice,
+  formatBrowserSliceAsText,
+  formatWifiSliceAsText,
+  formatDownloadsAsText,
+  formatAppCategoryAsText,
+} from './dataSlices.js';
+import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
+
+const SLOT_DEFS = [
+  { id: 'text_browser',  persona: 'popularite',   promptKey: 'browser'  },
+  { id: 'chart_apps',    persona: 'productivite', promptKey: 'chart'    },
+  { id: 'image_photo',   persona: 'popularite',   promptKey: 'image'    },
+  { id: 'text_security', persona: 'securite',     promptKey: null       },
+  { id: 'doc_file',      persona: 'productivite', promptKey: 'document' },
+];
 
 function imageTextFallbackNote(filename) {
-  return `\n\nFor context, the user recently had a file named "${filename}" in their recent images — you may reference it naturally in the post.`;
+  return `\n\nFor context, the user recently had a file named "${filename}" — you may reference it naturally in the post.`;
 }
 
 async function fetchJsonWithTimeout(url, options, timeoutMs) {
@@ -26,11 +35,7 @@ async function fetchJsonWithTimeout(url, options, timeoutMs) {
     const resp = await fetch(url, { ...options, signal: controller.signal });
     const text = await resp.text();
     let json;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      json = null;
-    }
+    try { json = JSON.parse(text); } catch { json = null; }
     if (!resp.ok) {
       const msg = json?.error?.message || json?.error || text || `HTTP ${resp.status}`;
       throw new Error(msg);
@@ -41,31 +46,18 @@ async function fetchJsonWithTimeout(url, options, timeoutMs) {
   }
 }
 
-function buildChatBody({
-  model,
-  systemPrompt,
-  userPayload,
-  imageData,
-  docText,
-  docFilename,
-  maxTokens = 900,
-  temperature = 0.7,
-}) {
+function buildChatBody({ model, systemPrompt, userPayload, imageData, docText, docFilename, maxTokens = 900, temperature = 0.7 }) {
   let userContent;
   if (imageData) {
     userContent = [
       { type: 'text', text: userPayload },
-      {
-        type: 'image_url',
-        image_url: { url: `data:${imageData.mime};base64,${imageData.base64}` },
-      },
+      { type: 'image_url', image_url: { url: `data:${imageData.mime};base64,${imageData.base64}` } },
     ];
   } else if (docText) {
     userContent = `${userPayload}\n\n--- Attached document (${docFilename}) ---\n${docText}`;
   } else {
     userContent = userPayload;
   }
-
   return {
     model,
     messages: [
@@ -84,33 +76,14 @@ async function lmChatCompletion({ baseUrl, timeoutMs, retries, body }) {
   let lastErr = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      return await fetchJsonWithTimeout(
-        url,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        },
-        timeoutMs,
-      );
+      return await fetchJsonWithTimeout(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, timeoutMs);
     } catch (e) {
-      const msg = String(e && e.message ? e.message : e);
-      if (body && body.response_format && /response_format|json_object|not supported|unsupported/i.test(msg)) {
+      const msg = String(e?.message ?? e);
+      if (body?.response_format && /response_format|json_object|not supported|unsupported/i.test(msg)) {
         try {
           const { response_format, ...rest } = body;
-          return await fetchJsonWithTimeout(
-            url,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(rest),
-            },
-            timeoutMs,
-          );
-        } catch (e2) {
-          lastErr = e2;
-          continue;
-        }
+          return await fetchJsonWithTimeout(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rest) }, timeoutMs);
+        } catch (e2) { lastErr = e2; continue; }
       }
       lastErr = e;
     }
@@ -120,11 +93,7 @@ async function lmChatCompletion({ baseUrl, timeoutMs, retries, body }) {
 
 function extractChoiceText(resp) {
   const msg = resp?.choices?.[0]?.message || {};
-  return (
-    (msg.content && msg.content.trim()) ||
-    (msg.reasoning_content && msg.reasoning_content.trim()) ||
-    ''
-  );
+  return (msg.content && msg.content.trim()) || (msg.reasoning_content && msg.reasoning_content.trim()) || '';
 }
 
 function normalizeSentiment(s) {
@@ -135,7 +104,6 @@ function normalizeSentiment(s) {
 function parsePostWithSentiment(raw, fallbackPersona) {
   const text = (raw || '').trim();
   if (!text) return { content: '', sentiment: null };
-
   try {
     const obj = JSON.parse(text);
     if (obj && typeof obj === 'object') {
@@ -143,141 +111,177 @@ function parsePostWithSentiment(raw, fallbackPersona) {
       const sentiment = normalizeSentiment(obj.sentiment);
       if (content) return { content, sentiment };
     }
-  } catch {
-    // fall through
-  }
-
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start !== -1 && end !== -1 && end > start) {
-    const slice = text.slice(start, end + 1);
+  } catch { /* fall through */ }
+  const start = text.indexOf('{'); const end = text.lastIndexOf('}');
+  if (start !== -1 && end > start) {
     try {
-      const obj = JSON.parse(slice);
+      const obj = JSON.parse(text.slice(start, end + 1));
       if (obj && typeof obj === 'object') {
         const content = typeof obj.content === 'string' ? obj.content.trim() : '';
         const sentiment = normalizeSentiment(obj.sentiment);
         if (content) return { content, sentiment };
       }
-    } catch {
-      // fall through
-    }
+    } catch { /* fall through */ }
   }
-
-  const inferred =
-    fallbackPersona === 'securite' ? 'negative' :
-    fallbackPersona === 'productivite' ? 'positive' :
-    fallbackPersona === 'popularite' ? 'positive' :
-    null;
+  const inferred = fallbackPersona === 'securite' ? 'negative' : 'positive';
   return { content: text, sentiment: inferred };
 }
 
+// Build a prepared slot from data (no chart rendering, no local asset loading — caller passes asset via assetAssignment).
+function buildTextSlot(def, dataJson, baseUserPayload) {
+  switch (def.id) {
+    case 'text_browser': {
+      const slice = extractBrowserSlice(dataJson || {});
+      const ctx = formatBrowserSliceAsText(slice);
+      return { ...def, promptKey: 'browser', userPayload: ctx ? `${ctx}\n\n---\n${baseUserPayload}` : baseUserPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
+    }
+    case 'chart_apps': {
+      // No chart rendering on server — send text breakdown instead
+      const appSlice = extractAppCategorySlice(dataJson || {});
+      const ctx = formatAppCategoryAsText(appSlice);
+      return { ...def, promptKey: 'chart', userPayload: ctx ? `${ctx}\n\n---\n${baseUserPayload}` : baseUserPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
+    }
+    case 'text_security': {
+      const wifiSlice = extractWifiSlice(dataJson || {});
+      const dlSlice = extractDownloadsSlice(dataJson || {});
+      const useWifi = wifiSlice.count >= 3 && (dlSlice.items.length < 2 || Math.random() > 0.4);
+      const promptKey = useWifi ? 'wifi' : 'downloads';
+      const ctx = useWifi ? formatWifiSliceAsText(wifiSlice) : formatDownloadsAsText(dlSlice);
+      return { ...def, promptKey, userPayload: ctx ? `${ctx}\n\n---\n${baseUserPayload}` : baseUserPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
+    }
+    default:
+      return { ...def, promptKey: def.promptKey || 'browser', userPayload: baseUserPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
+  }
+}
+
 /**
- * Generates 3 persona posts using the same logic as the Electron app's PostGenerator.js.
- *
  * @param {object} opts
- * @param {string} opts.baseUrl       - LM Studio base URL (e.g. http://192.168.1.109:1234)
- * @param {string} opts.model         - model name
- * @param {string} opts.userPayload   - JSON.stringify(profile) — full profile data sent as the user message
- * @param {number} opts.timeoutMs     - per-request timeout in ms
- * @param {number} opts.retries       - number of retries on failure
- * @param {object|null} opts.assetAssignment
- *   - { persona: 'productivite'|'popularite'|'securite', asset: { base64, mime, filename } }
- *   - null if no asset for this generation
- * @param {object|null} opts.prompts  - loaded prompts object (from loadPrompts); falls back to FALLBACK_PROMPTS
+ * @param {string}      opts.baseUrl
+ * @param {string}      opts.model
+ * @param {string}      opts.userPayload       - JSON.stringify({user, profile})
+ * @param {number}      opts.timeoutMs
+ * @param {number}      opts.retries
+ * @param {object|null} opts.assetAssignment   - { persona, asset: {kind, base64?, mime, text?, filename} }
+ * @param {object|null} opts.prompts
+ * @param {object|null} opts.dataJson          - parsed data.json for slice injection
+ * @param {function(object, { slotIndex: number }): void} [opts.onEachPost]
  */
-export async function generatePersonaPosts({ baseUrl, model, userPayload, timeoutMs, retries, assetAssignment, prompts: promptsParam }) {
-  const prompts = promptsParam ?? FALLBACK_PROMPTS;
-  const personaEntries = Object.entries(prompts.personaPosts);
-  // Map persona name → index in personaEntries array
-  const personaIndex = assetAssignment
-    ? personaEntries.findIndex(([key]) => key === assetAssignment.persona)
-    : -1;
+export async function generatePersonaPosts({
+  baseUrl,
+  model,
+  userPayload,
+  timeoutMs,
+  retries,
+  assetAssignment,
+  prompts: promptsParam,
+  dataJson,
+  onEachPost,
+}) {
+  const SP = promptsParam?.slotPrompts ?? DEFAULT_SLOT_PROMPTS;
 
-  const runPersonaPost = async ([key, personaCfg], index) => {
-    const basePrompt = personaCfg.system;
-    const wantsAsset = personaIndex >= 0 && index === personaIndex;
-    const asset = wantsAsset && assetAssignment ? assetAssignment.asset : null;
+  // Build text-only slots first (image/doc will be overridden by assetAssignment)
+  const slots = SLOT_DEFS.map(def => {
+    if (def.id === 'image_photo' || def.id === 'doc_file') {
+      return { ...def, promptKey: def.promptKey, userPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
+    }
+    return buildTextSlot(def, dataJson, userPayload);
+  });
 
-    const runOnce = async (temperature, withVision) => {
-      let systemPrompt = basePrompt;
-      let imageData = null;
-      let docText = null;
-      let docFilename = null;
-
-      if (asset) {
-        if (asset.kind === 'image') {
-          if (withVision) {
-            systemPrompt = basePrompt + (prompts.imageExtension ?? '');
-            imageData = { base64: asset.base64, mime: asset.mime };
-          } else {
-            systemPrompt = basePrompt + imageTextFallbackNote(asset.filename);
-          }
-        } else if (asset.kind === 'document') {
-          systemPrompt = basePrompt + (prompts.documentExtension ?? '');
-          docText = asset.text;
-          docFilename = asset.filename;
-        }
+  // Apply assetAssignment to the matching slot
+  if (assetAssignment) {
+    const targetSlot = assetAssignment.asset?.kind === 'document' ? 'doc_file' : 'image_photo';
+    const idx = slots.findIndex(s => s.id === targetSlot);
+    if (idx !== -1) {
+      const asset = assetAssignment.asset;
+      if (asset.kind === 'image') {
+        slots[idx].imageData = { base64: asset.base64, mime: asset.mime };
+      } else {
+        slots[idx].docText = asset.text;
+        slots[idx].docFilename = asset.filename;
       }
-
-      const body = buildChatBody({
-        model,
-        systemPrompt,
-        userPayload,
-        imageData,
-        docText,
-        docFilename,
-        temperature,
-        maxTokens: personaCfg.maxTokens,
-      });
-      const r = await lmChatCompletion({ baseUrl, timeoutMs, retries, body });
-      const raw = extractChoiceText(r);
-      return parsePostWithSentiment(raw, key);
-    };
-
-    let parsed = { content: '', sentiment: null };
-    let visionSucceeded = false;
-
-    if (asset && asset.kind === 'image') {
-      // Try vision first; fall back to text if model doesn't support it.
-      try {
-        parsed = await runOnce(personaCfg.temperature, true);
-        if (parsed.content) visionSucceeded = true;
-      } catch {
-        // Vision not supported by this model — will fall through to text fallback below.
-      }
-    }
-
-    if (!parsed.content) {
-      parsed = await runOnce(personaCfg.temperature, false);
-    }
-    if (!parsed.content) {
-      parsed = await runOnce(0.35, false);
-    }
-
-    const post = {
-      persona: key,
-      content: parsed.content,
-      sentiment: parsed.sentiment,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Always mark the asset as attached when this post was paired with an asset,
-    // regardless of whether vision was used (asset is still conceptually linked).
-    if (asset) {
-      post.attachedAsset = {
+      slots[idx].attachedAsset = {
         kind: asset.kind,
         filename: asset.filename,
         relativePath: null,
         url: null,
         mime: asset.mime ?? 'application/octet-stream',
       };
-      if (asset.kind === 'image') {
-        post.attachedAsset.visionAnalysed = visionSucceeded;
-      }
+    }
+  }
+
+  const runSlotPost = async (slot) => {
+    const promptCfg = SP[slot.promptKey] ?? DEFAULT_SLOT_PROMPTS.browser;
+
+    const runOnce = async (temperature, withVision) => {
+      const body = buildChatBody({
+        model,
+        systemPrompt: promptCfg.system,
+        userPayload: slot.userPayload,
+        imageData: withVision && slot.imageData ? slot.imageData : null,
+        docText: slot.docText || null,
+        docFilename: slot.docFilename || null,
+        temperature,
+        maxTokens: promptCfg.maxTokens,
+      });
+      const r = await lmChatCompletion({ baseUrl, timeoutMs, retries, body });
+      return parsePostWithSentiment(extractChoiceText(r), slot.persona);
+    };
+
+    let parsed = { content: '', sentiment: null };
+    let visionSucceeded = false;
+
+    if (slot.imageData) {
+      try {
+        parsed = await runOnce(promptCfg.temperature, true);
+        if (parsed.content) visionSucceeded = true;
+      } catch { /* vision not supported */ }
     }
 
+    if (!parsed.content) {
+      const fallbackPayload = slot.imageData && slot.attachedAsset
+        ? slot.userPayload + imageTextFallbackNote(slot.attachedAsset.filename || '')
+        : slot.userPayload;
+      const body = buildChatBody({ model, systemPrompt: promptCfg.system, userPayload: fallbackPayload, imageData: null, docText: slot.docText || null, docFilename: slot.docFilename || null, temperature: promptCfg.temperature, maxTokens: promptCfg.maxTokens });
+      parsed = parsePostWithSentiment(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
+    }
+
+    if (!parsed.content) {
+      const body = buildChatBody({ model, systemPrompt: promptCfg.system, userPayload: slot.userPayload, imageData: null, docText: null, docFilename: null, temperature: 0.35, maxTokens: promptCfg.maxTokens });
+      parsed = parsePostWithSentiment(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
+    }
+
+    const post = { persona: slot.persona, content: parsed.content, sentiment: parsed.sentiment, createdAt: new Date().toISOString() };
+    if (slot.attachedAsset) {
+      post.attachedAsset = { ...slot.attachedAsset };
+      if (slot.attachedAsset.kind === 'image') post.attachedAsset.visionAnalysed = visionSucceeded;
+    }
     return post;
   };
 
-  return await Promise.all(personaEntries.map((entry, i) => runPersonaPost(entry, i)));
+  const n = slots.length;
+  const slotResults = new Array(n).fill(null);
+
+  await Promise.all(
+    slots.map((slot, index) =>
+      runSlotPost(slot)
+        .catch((err) => {
+          console.error(`[personaPostGenerator] slot ${slot.id} failed:`, err?.message || err);
+          return null;
+        })
+        .then(async (post) => {
+          if (!post || !post.content) return null;
+          slotResults[index] = post;
+          if (typeof onEachPost === 'function') {
+            try {
+              await Promise.resolve(onEachPost(post, { slotIndex: index }));
+            } catch (e) {
+              console.error('[personaPostGenerator] onEachPost failed:', e?.message || e);
+            }
+          }
+          return post;
+        })
+    )
+  );
+
+  return slotResults.filter(Boolean);
 }
