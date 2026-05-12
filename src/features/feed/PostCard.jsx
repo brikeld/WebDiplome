@@ -1,6 +1,10 @@
+import { lazy, Suspense } from 'react';
 import PostImage from './PostImage.jsx';
 import PostDocument from './PostDocument.jsx';
+import { isPdfDocumentAsset } from '@/lib/attachmentKind.js';
 import PostActions from './PostActions.jsx';
+
+const PostPdfCarousel = lazy(() => import('./PostPdfCarousel.jsx'));
 
 export default function PostCard({ post }) {
   const {
@@ -77,7 +81,23 @@ export default function PostCard({ post }) {
           <PostImage asset={attachedAsset} accentColor={noteColor} />
         ) : null}
         {attachedAsset?.kind === 'document' ? (
-          <PostDocument asset={attachedAsset} />
+          isPdfDocumentAsset(attachedAsset) ? (
+            <Suspense
+              fallback={
+                <div className="post-attachment-block post-image-halftone post-pdf-carousel">
+                  <div className="post-pdf-carousel__frame">
+                    <div className="post-pdf-carousel__placeholder" aria-hidden>
+                      <span className="post-pdf-carousel__placeholder-label">pdf</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            >
+              <PostPdfCarousel asset={attachedAsset} accentColor={noteColor} />
+            </Suspense>
+          ) : (
+            <PostDocument asset={attachedAsset} />
+          )
         ) : null}
       </div>
 

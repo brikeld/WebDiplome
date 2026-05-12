@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import MainScoreStyle from '../features/profile/MainScoreStyle.jsx';
+import { getCenterDisplayScore } from '@/lib/profileUtils.js';
 import PostCard from '../features/feed/PostCard.jsx';
 import './landingPage.css';
 
@@ -130,6 +132,18 @@ function useCountUp(target, durationMs = 1400) {
 
 export default function LandingPage({ onEnterDemo }) {
   const [score, scoreRef] = useCountUp(74);
+  const lpDemoProfile = useMemo(
+    () => ({
+      globalScore: score,
+      personaScores: {
+        productivity: score,
+        security: score,
+        social: score,
+      },
+    }),
+    [score],
+  );
+  const lpCenterScore = getCenterDisplayScore(lpDemoProfile);
 
   return (
     <div className="lp-root">
@@ -307,10 +321,10 @@ export default function LandingPage({ onEnterDemo }) {
                       <div
                         ref={scoreRef}
                         className="profile-score-avatar"
-                        aria-label={`Score ${score}`}
+                        aria-label={`Score ${lpCenterScore}`}
                         style={{ '--score-fill': '#759AEF' }}
                       >
-                        <span className="profile-score-avatar-num">{score}</span>
+                        <MainScoreStyle profile={lpDemoProfile} />
                       </div>
                     </div>
                   </div>

@@ -72,6 +72,11 @@ function normalizeProfilePayload(body) {
   }
   delete out.persona_posts;
 
+  if (body.personaScores !== undefined || body.persona_scores !== undefined) {
+    out.personaScores = body.personaScores ?? body.persona_scores;
+  }
+  delete out.persona_scores;
+
   return out;
 }
 

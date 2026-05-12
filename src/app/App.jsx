@@ -9,7 +9,7 @@ import HomeTab from '@/features/home/HomeTab.jsx';
 import LandingPage from '@/landing-page/LandingPage.jsx';
 import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
-import { getGlobalScore, machineHandleFromProfile } from '@/lib/profileUtils.js';
+import { getPersonaScoreForAxis, machineHandleFromProfile } from '@/lib/profileUtils.js';
 
 const API_ORIGIN =
   (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
@@ -189,7 +189,6 @@ export default function App() {
   const personaTabFill =
     PERSONA_TAB_FILLS[personaKey] ?? PERSONA_TAB_FILLS.productivity;
   const lastAnalysisText = useMemo(() => formatLastAnalysis(profile), [profile, nowTick]);
-  const globalScore = getGlobalScore(profile ?? {}) ?? 76;
   const personaToggleLabel =
     personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
 
@@ -275,11 +274,7 @@ export default function App() {
                   style={{ '--persona-accent': personaColor }}
                 >
                   <div className="posts-capsule-inner">
-                    <ProfileHeader
-                      profile={profile}
-                      personaKey={personaKey}
-                      personaColor={personaColor}
-                    />
+                    <ProfileHeader profile={profile} personaColor={personaColor} />
 
                     <TabBar
                       activeTab={activeTab}
@@ -350,15 +345,10 @@ export default function App() {
               <div className="dashboard-rings">
                 {dashboardRingOrder.map((k) => {
                   const ringColor = PERSONA_COLORS[k];
-                  const offset =
-                    k === personaKey
-                      ? 0
-                      : k === 'productivity'
-                      ? 8
-                      : k === 'security'
-                      ? 14
-                      : 11;
-                  const value = Math.max(0, Math.min(100, globalScore - offset));
+                  const value = Math.max(
+                    0,
+                    Math.min(100, getPersonaScoreForAxis(profile ?? {}, k)),
+                  );
                   const R = 32;
                   const CIRC = 2 * Math.PI * R;
                   const dash = CIRC * (value / 100);

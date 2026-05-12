@@ -77,6 +77,74 @@ export function getGlobalScore(p) {
   return null;
 }
 
+/** 0–100 or null if missing / NaN */
+export function clampPercentScore(v) {
+  if (v == null || !Number.isFinite(Number(v))) return null;
+  return Math.max(0, Math.min(100, Number(v)));
+}
+
+/**
+ * Server shape: `personaScores`: { productivity, security, social }.
+ * Accepts French aliases; missing axes fall back to globalScore, then 0.
+ */
+export function getPersonaScoresNormalized(profile) {
+  const raw = profile?.personaScores ?? profile?.persona_scores;
+  const globalFallback = clampPercentScore(getGlobalScore(profile)) ?? 0;
+
+  const pick = (obj, ...keys) => {
+    if (!obj || typeof obj !== 'object') return null;
+    for (const key of keys) {
+      const c = clampPercentScore(obj[key]);
+      if (c != null) return c;
+    }
+    return null;
+  };
+
+  if (raw && typeof raw === 'object') {
+    return {
+      productivity: pick(raw, 'productivity', 'productivite') ?? globalFallback,
+      security: pick(raw, 'security', 'securite') ?? globalFallback,
+      social: pick(raw, 'social', 'popularity', 'popularite') ?? globalFallback,
+    };
+  }
+
+  return {
+    productivity: globalFallback,
+    security: globalFallback,
+    social: globalFallback,
+  };
+}
+
+/** UI axis `productivity` | `security` | `popularity` → numeric (API uses `social` for social axis). */
+export function getPersonaScoreForAxis(profile, axisKey) {
+  const s = getPersonaScoresNormalized(profile ?? {});
+  const k = String(axisKey || '').toLowerCase();
+  if (k === 'productivity') return s.productivity;
+  if (k === 'security') return s.security;
+  if (k === 'popularity' || k === 'social') return s.social;
+  return 0;
+}
+
+/** Main score canvas rings: prod / social / sec */
+export function getMainScoreRingValues(profile) {
+  const s = getPersonaScoresNormalized(profile ?? {});
+  return {
+    prod: s.productivity,
+    social: s.social,
+    sec: s.security,
+  };
+}
+
+/** Center number: prefer `globalScore`; else mean of the three persona scores. */
+export function getCenterDisplayScore(profile) {
+  const g = getGlobalScore(profile ?? {});
+  if (g != null && Number.isFinite(Number(g))) {
+    return Math.round(Math.max(0, Math.min(100, Number(g))));
+  }
+  const s = getPersonaScoresNormalized(profile ?? {});
+  return Math.round((s.productivity + s.security + s.social) / 3);
+}
+
 export function formatPostDate(isoOrStr) {
   const d = new Date(isoOrStr);
   if (Number.isNaN(d.getTime())) return '';

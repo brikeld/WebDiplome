@@ -229,19 +229,26 @@
   width: var(--profile-score-size);
   height: var(--profile-score-size);
   border-radius: 50%;
-  /* Solid persona fill (set inline via `--score-fill`); no ring/stroke (capsule provides outer border) */
+  /* Black canvas background for MainScoreStyle arcs */
   background: #000 !important;
   border: none;
   color: var(--score-fill, var(--persona-accent, var(--prod)));
   box-sizing: border-box;
   overflow: hidden;
-  /* Grid centers glyph metrics more reliably than flex for single-line digits */
-  display: grid;
-  place-items: center;
-  /* Digits track with the circle (fixed proportion) */
-  font-size: calc(var(--profile-score-size) * 0.54);
-  font-weight: 800;
-  font-family: var(--font-sans);
+}
+
+/* Triple-arc score (canvas) — fills `.profile-score-avatar` */
+.main-score-style {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.main-score-style__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .profile-score-avatar-num {

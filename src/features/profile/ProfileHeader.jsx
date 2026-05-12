@@ -1,6 +1,7 @@
+import MainScoreStyle from '@/features/profile/MainScoreStyle.jsx';
 import {
   displayNameFromProfile,
-  getGlobalScore,
+  getCenterDisplayScore,
   initialsFromProfile,
   machineHandleFromProfile,
   profileBioText,
@@ -8,7 +9,6 @@ import {
 
 export default function ProfileHeader({
   profile,
-  personaKey = 'productivity',
   personaColor = 'var(--prod)',
 }) {
   const name = displayNameFromProfile(profile ?? {});
@@ -21,7 +21,7 @@ export default function ProfileHeader({
     profile?.wallpaper ??
     null;
   const handle = machineHandleFromProfile(profile ?? {});
-  const score = getGlobalScore(profile ?? {}) ?? 76;
+  const centerScore = getCenterDisplayScore(profile ?? {});
   const followers = profile?.followers ?? profile?.followerCount ?? 0;
   const following = profile?.following ?? profile?.followingCount ?? 0;
 
@@ -81,10 +81,10 @@ export default function ProfileHeader({
 
             <div
               className="profile-score-avatar"
-              aria-label={`Score ${score}`}
+              aria-label={`Score ${centerScore}`}
               style={{ '--score-fill': personaColor }}
             >
-              <span className="profile-score-avatar-num">{score}</span>
+              <MainScoreStyle profile={profile ?? {}} />
             </div>
           </div>
         </div>
