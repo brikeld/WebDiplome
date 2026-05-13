@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import Sidebar from '@/layout/Sidebar.jsx';
 import ScrollArea from '@/layout/ScrollArea.jsx';
 import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
@@ -127,6 +128,11 @@ function topPersonaFromProfile(profile) {
   return 'productivity';
 }
 
+const POST_REVEAL_GAP_MS = 2000;
+/** Must match `.post-card--feed-enter` duration in `src/styles/base.css`. */
+const POST_FEED_ENTER_ANIM_MS = 1000;
+const INTER_REVEAL_PAUSE_MS = Math.max(POST_REVEAL_GAP_MS, POST_FEED_ENTER_ANIM_MS + 150);
+
 export default function App() {
   /** 'landing' = onboarding/intro; 'home' = feed only; 'profile' = profile capsule + tab bar + sections */
   const [mainView, setMainView] = useState('landing');
@@ -212,6 +218,60 @@ export default function App() {
     if (postGen.loading || !profile) return;
     streamPostsBaselineRef.current = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
     setPostGen({ loading: true, error: null });
+
+    const baseline = streamPostsBaselineRef.current;
+    const slotsBuffer = Array(5).fill(null);
+    let streamDone = false;
+
+    const revealPromise = (async () => {
+      const batch = [];
+      let revealedCount = 0;
+
+      for (let slot = 0; slot < 5; slot += 1) {
+        while (!slotsBuffer[slot] && !streamDone) {
+          await new Promise((r) => setTimeout(r, 40));
+        }
+        if (!slotsBuffer[slot]) continue;
+
+        // Wait long enough that only one new card is "entering" at a time (gap + enter animation).
+        if (revealedCount > 0) {
+          await new Promise((r) => setTimeout(r, INTER_REVEAL_PAUSE_MS));
+        }
+
+        const key =
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `feed-${Date.now()}-${slot}`;
+        const raw = slotsBuffer[slot];
+        const { createdAt: _c1, created_at: _c2, _feedEnter: _fe, _feedKey: _fk, ...slotRest } = raw;
+        revealedCount += 1;
+        const post = {
+          ...slotRest,
+          createdAt: new Date().toISOString(),
+          _feedKey: key,
+          _feedRevealSeq: revealedCount,
+        };
+        batch.push(post);
+
+        const batchForProfile = batch.map((p, i) => ({
+          ...p,
+          _feedEnter: i === batch.length - 1,
+        }));
+
+        flushSync(() => {
+          setProfile((prev) => {
+            if (!prev) return prev;
+            return { ...prev, personaPosts: [...batchForProfile, ...baseline] };
+          });
+        });
+      }
+    })();
+
+    const assignPostToSlot = (post, slotIndex) => {
+      if (typeof slotIndex !== 'number' || slotIndex < 0 || slotIndex > 4) return;
+      slotsBuffer[slotIndex] = post;
+    };
+
     try {
       const res = await fetch(`${GENERATE_API_ORIGIN}/api/posts/generate-stream`, {
         method: 'POST',
@@ -237,8 +297,22 @@ export default function App() {
 
       const dec = new TextDecoder();
       let buf = '';
-      const batch = [];
-      const baseline = streamPostsBaselineRef.current;
+
+      const processLine = (line) => {
+        if (!line) return;
+        let row;
+        try {
+          row = JSON.parse(line);
+        } catch {
+          return;
+        }
+        if (row.success === false && row.error) throw new Error(row.error);
+        if (row.done) return;
+        if (row.error && !row.post) throw new Error(row.error);
+        if (row.post) {
+          assignPostToSlot(row.post, row.slotIndex);
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -248,27 +322,7 @@ export default function App() {
         while ((nl = buf.indexOf('\n')) >= 0) {
           const line = buf.slice(0, nl).trim();
           buf = buf.slice(nl + 1);
-          if (!line) continue;
-          let row;
-          try {
-            row = JSON.parse(line);
-          } catch {
-            continue;
-          }
-          if (row.success === false && row.error) throw new Error(row.error);
-          if (row.done) continue;
-          if (row.error && !row.post) throw new Error(row.error);
-          if (row.post) {
-            const key =
-              typeof crypto !== 'undefined' && crypto.randomUUID
-                ? crypto.randomUUID()
-                : `feed-${Date.now()}-${batch.length}`;
-            batch.push({ ...row.post, _feedEnter: true, _feedKey: key });
-            setProfile((prev) => {
-              if (!prev) return prev;
-              return { ...prev, personaPosts: [...batch, ...baseline] };
-            });
-          }
+          processLine(line);
         }
       }
 
@@ -279,17 +333,7 @@ export default function App() {
           if (row.success === false && row.error) throw new Error(row.error);
           if (!row.done) {
             if (row.error && !row.post) throw new Error(row.error);
-            if (row.post) {
-              const key =
-                typeof crypto !== 'undefined' && crypto.randomUUID
-                  ? crypto.randomUUID()
-                  : `feed-${Date.now()}-${batch.length}`;
-              batch.push({ ...row.post, _feedEnter: true, _feedKey: key });
-              setProfile((prev) => {
-                if (!prev) return prev;
-                return { ...prev, personaPosts: [...batch, ...baseline] };
-              });
-            }
+            if (row.post) assignPostToSlot(row.post, row.slotIndex);
           }
         } catch (e) {
           if (e instanceof SyntaxError) {
@@ -300,8 +344,12 @@ export default function App() {
         }
       }
 
+      streamDone = true;
+      await revealPromise;
       setPostGen({ loading: false, error: null });
     } catch (e) {
+      streamDone = true;
+      await revealPromise.catch(() => {});
       setPostGen({ loading: false, error: e?.message || 'Generation failed' });
     }
   };
@@ -339,7 +387,7 @@ export default function App() {
       <div className="page">
         <div className="main-col">
           <ScrollArea key={mainView} mode={mainView}>
-            {mainView === 'home' && <HomeTab profile={profile} />}
+            {mainView === 'home' && <HomeTab profile={profile} isGeneratingPosts={postGen.loading} />}
             {mainView === 'profile' && (
               <div className="profile-capsule-wrap">
                 <p className="home-top-label">{machineHandleFromProfile(profile)}</p>
@@ -360,7 +408,9 @@ export default function App() {
 
                     <div className="tab-content">
                       {activeTab === 'profile' && <ProfileTab />}
-                      {activeTab === 'posts' && <PostsTab profile={profile} feedContext="profile" />}
+                      {activeTab === 'posts' && (
+                        <PostsTab profile={profile} feedContext="profile" isGeneratingPosts={postGen.loading} />
+                      )}
                       {activeTab === 'badges' && <BadgesTab />}
                       {activeTab === 'leaderboards' && <LeaderboardsTab />}
                     </div>

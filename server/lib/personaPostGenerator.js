@@ -1,9 +1,11 @@
 /**
  * Slot-based persona post generation for the WebDiplome server.
- * Produces 5 posts (no chart rendering — falls back to text context).
- * Logic mirrors Diplome_/testCreationAcc/python/post_generator/PostGenerator.js.
+ * Renders deterministic chart PNGs (sharp) for the chart_apps slot — mirrors testCreationAcc slotScheduler.
  */
 
+import crypto from 'crypto';
+import path from 'path';
+import { promises as fs } from 'fs';
 import {
   extractBrowserSlice,
   extractAppCategorySlice,
@@ -14,7 +16,14 @@ import {
   formatDownloadsAsText,
   formatAppCategoryAsText,
 } from './dataSlices.js';
+import { resolveChartRasterSpec } from './chartGenerator.js';
+import { renderSvgToPng } from './chartRenderer.js';
 import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
+
+/** Slot index for pool image imported from disk (SLOT_DEFS order). */
+export const IMPORT_POOL_IMAGE_SLOT_INDEX = 2;
+/** Slot index for pool document imported from disk. */
+export const IMPORT_POOL_DOC_SLOT_INDEX = 4;
 
 const SLOT_DEFS = [
   { id: 'text_browser',  persona: 'popularite',   promptKey: 'browser'  },
@@ -127,19 +136,13 @@ function parsePostWithSentiment(raw, fallbackPersona) {
   return { content: text, sentiment: inferred };
 }
 
-// Build a prepared slot from data (no chart rendering, no local asset loading — caller passes asset via assetAssignment).
+// Build a prepared slot from data (chart_apps filled later by hydrateChartAppsSlot).
 function buildTextSlot(def, dataJson, baseUserPayload) {
   switch (def.id) {
     case 'text_browser': {
       const slice = extractBrowserSlice(dataJson || {});
       const ctx = formatBrowserSliceAsText(slice);
       return { ...def, promptKey: 'browser', userPayload: ctx ? `${ctx}\n\n---\n${baseUserPayload}` : baseUserPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
-    }
-    case 'chart_apps': {
-      // No chart rendering on server — send text breakdown instead
-      const appSlice = extractAppCategorySlice(dataJson || {});
-      const ctx = formatAppCategoryAsText(appSlice);
-      return { ...def, promptKey: 'chart', userPayload: ctx ? `${ctx}\n\n---\n${baseUserPayload}` : baseUserPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
     }
     case 'text_security': {
       const wifiSlice = extractWifiSlice(dataJson || {});
@@ -154,6 +157,58 @@ function buildTextSlot(def, dataJson, baseUserPayload) {
   }
 }
 
+async function hydrateChartAppsSlot(slots, dataJson, baseUserPayload, chartUploadDir) {
+  const idx = slots.findIndex((s) => s.id === 'chart_apps');
+  if (idx === -1) return;
+
+  const { svg, w, h } = resolveChartRasterSpec(dataJson || {});
+  const pngBase64 = await renderSvgToPng(svg, w, h);
+  if (!pngBase64) {
+    const appSlice = extractAppCategorySlice(dataJson || {});
+    const textCtx = formatAppCategoryAsText(appSlice);
+    slots[idx] = {
+      ...slots[idx],
+      promptKey: 'chart',
+      userPayload: textCtx ? `${textCtx}\n\n---\n${baseUserPayload}` : baseUserPayload,
+      imageData: null,
+      docText: null,
+      docFilename: null,
+      attachedAsset: null,
+    };
+    return;
+  }
+
+  let filename = 'chart.png';
+  let relativePath = null;
+  let url = null;
+  if (chartUploadDir) {
+    const buf = Buffer.from(pngBase64, 'base64');
+    const hash = crypto.createHash('sha256').update(buf).digest('hex');
+    filename = `${hash}.png`;
+    await fs.mkdir(chartUploadDir, { recursive: true });
+    await fs.writeFile(path.join(chartUploadDir, filename), buf);
+    url = `/uploads/${filename}`;
+    relativePath = `public/uploads/${filename}`;
+  }
+
+  slots[idx] = {
+    ...slots[idx],
+    promptKey: 'chart',
+    userPayload: baseUserPayload,
+    imageData: { base64: pngBase64, mime: 'image/png' },
+    docText: null,
+    docFilename: null,
+    attachedAsset: {
+      kind: 'image',
+      filename,
+      relativePath,
+      url,
+      mime: 'image/png',
+      visionAnalysed: true,
+    },
+  };
+}
+
 /**
  * @param {object} opts
  * @param {string}      opts.baseUrl
@@ -164,7 +219,9 @@ function buildTextSlot(def, dataJson, baseUserPayload) {
  * @param {object|null} opts.assetAssignment   - { persona, asset: {kind, base64?, mime, text?, filename} }
  * @param {object|null} opts.prompts
  * @param {object|null} opts.dataJson          - parsed data.json for slice injection
+ * @param {string|null} [opts.chartUploadDir]  - absolute dir to write chart PNG (e.g. public/uploads)
  * @param {function(object, { slotIndex: number }): void} [opts.onEachPost]
+ * @returns {Promise<(object|null)[]>} five entries in slot order; null = slot failed
  */
 export async function generatePersonaPosts({
   baseUrl,
@@ -175,17 +232,22 @@ export async function generatePersonaPosts({
   assetAssignment,
   prompts: promptsParam,
   dataJson,
+  chartUploadDir,
   onEachPost,
 }) {
   const SP = promptsParam?.slotPrompts ?? DEFAULT_SLOT_PROMPTS;
 
-  // Build text-only slots first (image/doc will be overridden by assetAssignment)
-  const slots = SLOT_DEFS.map(def => {
+  const slots = SLOT_DEFS.map((def) => {
     if (def.id === 'image_photo' || def.id === 'doc_file') {
       return { ...def, promptKey: def.promptKey, userPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
     }
+    if (def.id === 'chart_apps') {
+      return { ...def, promptKey: 'chart', userPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
+    }
     return buildTextSlot(def, dataJson, userPayload);
   });
+
+  await hydrateChartAppsSlot(slots, dataJson, userPayload, chartUploadDir);
 
   // Apply assetAssignment to the matching slot
   if (assetAssignment) {
@@ -283,5 +345,5 @@ export async function generatePersonaPosts({
     )
   );
 
-  return slotResults.filter(Boolean);
+  return slotResults;
 }

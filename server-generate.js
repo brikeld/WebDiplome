@@ -6,7 +6,11 @@ import { promises as fs } from 'fs';
 import crypto from 'crypto';
 
 import { getNewestProfileIdAndPath, readProfileJson } from './server/lib/currentProfile.js';
-import { generatePersonaPosts } from './server/lib/personaPostGenerator.js';
+import {
+  generatePersonaPosts,
+  IMPORT_POOL_DOC_SLOT_INDEX,
+  IMPORT_POOL_IMAGE_SLOT_INDEX,
+} from './server/lib/personaPostGenerator.js';
 import { loadPrompts } from './server/lib/prompts.js';
 import { extractDocText } from './server/lib/docText.js';
 
@@ -319,7 +323,7 @@ app.post('/api/posts/generate', async (_req, res) => {
     }
     const { newest, existing, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
 
-    const posts = await generatePersonaPosts({
+    const slotResults = await generatePersonaPosts({
       baseUrl,
       model,
       userPayload,
@@ -328,17 +332,16 @@ app.post('/api/posts/generate', async (_req, res) => {
       assetAssignment,
       prompts,
       dataJson: electronData,
+      chartUploadDir: UPLOADS_DIR,
     });
 
     if (asset) {
-      for (const post of posts) {
-        if (post.attachedAsset) {
-          patchPostAttachedAssetFromUpload(post, asset);
-          break;
-        }
-      }
+      const si = asset.kind === 'document' ? IMPORT_POOL_DOC_SLOT_INDEX : IMPORT_POOL_IMAGE_SLOT_INDEX;
+      const p = slotResults[si];
+      if (p?.attachedAsset) patchPostAttachedAssetFromUpload(p, asset);
     }
 
+    const posts = slotResults.filter(Boolean);
     await writePostsForId(newest.id, [...posts, ...existing]);
 
     return res.json({ success: true, posts });
@@ -366,7 +369,7 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
     const { newest, existing, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
 
     const bySlot = new Array(5).fill(null);
-    const posts = await generatePersonaPosts({
+    const slotResults = await generatePersonaPosts({
       baseUrl,
       model,
       userPayload,
@@ -375,19 +378,22 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
       assetAssignment,
       prompts,
       dataJson: electronData,
+      chartUploadDir: UPLOADS_DIR,
       onEachPost: async (post, meta) => {
-        if (asset && post.attachedAsset) {
+        const poolIdx = asset?.kind === 'document' ? IMPORT_POOL_DOC_SLOT_INDEX : IMPORT_POOL_IMAGE_SLOT_INDEX;
+        if (asset && post.attachedAsset && meta?.slotIndex === poolIdx) {
           patchPostAttachedAssetFromUpload(post, asset);
         }
         const idx = meta && typeof meta.slotIndex === 'number' ? meta.slotIndex : 0;
         bySlot[idx] = post;
         const orderedSoFar = bySlot.flatMap((p) => (p ? [p] : []));
         await writePostsForId(newest.id, [...orderedSoFar, ...existing]);
-        res.write(`${JSON.stringify({ post })}\n`);
+        res.write(`${JSON.stringify({ post, slotIndex: idx })}\n`);
         if (typeof res.flush === 'function') res.flush();
       },
     });
 
+    const posts = slotResults.filter(Boolean);
     res.write(`${JSON.stringify({ done: true, success: true, posts })}\n`);
     res.end();
   } catch (err) {

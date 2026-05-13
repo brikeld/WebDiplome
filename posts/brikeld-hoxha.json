@@ -1,96 +1,74 @@
 [
   {
     "persona": "popularite",
-    "content": "Currently balancing rendering complex 3D models with watching people argue about soccer highlights. The digital life is a beautiful, chaotic mess.",
+    "content": "I spend half my time designing complex systems and the other half watching people argue about obscure sports podcasts on YouTube. My priorities are… eclectic.",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T20:12:54.451Z"
+    "createdAt": "2026-05-13T12:12:06.261Z"
   },
   {
     "persona": "productivite",
-    "content": "Trying to keep up with Photoshop, Blender, and endless coding projects all at once is exhausting. Send coffee and patience.",
+    "content": "I spend so much time talking to AI models that I think my actual coding skills are powered entirely by Claude and Codex. Send help.",
     "sentiment": "negative",
-    "createdAt": "2026-05-12T20:12:43.552Z"
+    "createdAt": "2026-05-13T12:12:07.006Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
   },
   {
     "persona": "popularite",
-    "content": "My desktop is a mess of files and screenshots. Trying to wrangle all this digital chaos! 😅",
+    "content": "My computer is running on pure creative energy right now. Time to make some magic.",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T20:12:50.313Z"
+    "createdAt": "2026-05-13T12:12:12.438Z"
   },
   {
     "persona": "securite",
-    "content": "Just spent the evening hopping between 'Ginevra Cafe'', 'COFFEE PAGE', and 'Brew-morges'. My WiFi history is basically a travelogue through the best local espresso spots. ☕",
-    "sentiment": "positive",
-    "createdAt": "2026-05-12T20:12:50.620Z"
+    "content": "My 31GB movie download is currently battling my diploma project for CPU resources. Send help or snacks.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-13T12:12:05.946Z"
   },
   {
     "persona": "productivite",
-    "content": "Trying to map how old power structures used visual branding to today's endless digital scroll. It’s wild how rituals get reconfigured into quiet flows.",
+    "content": "Just wrapping up some dev work that involves autonomous wind energy hosting. Turns out building things is wild! 😅",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T20:12:48.871Z",
+    "createdAt": "2026-05-13T12:12:00.662Z",
     "attachedAsset": {
       "kind": "document",
-      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "relativePath": "public/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "filename": "f2a95af948f5897352f54237417d26496aadf74f774d3ad71bcac3af17db885b.pdf",
+      "relativePath": "public/uploads/f2a95af948f5897352f54237417d26496aadf74f774d3ad71bcac3af17db885b.pdf",
+      "url": "/uploads/f2a95af948f5897352f54237417d26496aadf74f774d3ad71bcac3af17db885b.pdf",
       "mime": "application/pdf"
     }
   },
   {
     "persona": "popularite",
-    "content": "I spend half my time optimizing vectors in Figma and the other half trying to figure out why the football gods hate me. A true creative struggle.",
+    "content": "I spend half my time asking an AI for code and the other half trying to debug the results. Send coffee.",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T20:06:11.992Z"
+    "createdAt": "2026-05-13T12:00:02.616Z"
   },
   {
     "persona": "productivite",
-    "content": "I swear my computer is just a giant mess of Adobe files, code modules, and AI prompts. Send help or at least more coffee.",
+    "content": "I spend most of my time juggling code, design, and AI tools. My Dev & Work count is high, mostly because I keep trying to make things look pretty.",
     "sentiment": "negative",
-    "createdAt": "2026-05-12T20:06:19.463Z"
-  },
-  {
-    "persona": "popularite",
-    "content": "Trying to look professional while my system is running complex algorithms in the background. Send coffee.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-12T20:06:27.553Z",
+    "createdAt": "2026-05-13T11:59:58.827Z",
     "attachedAsset": {
       "kind": "image",
-      "filename": "e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "relativePath": "public/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "url": "/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "mime": "image/jpeg",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
       "visionAnalysed": true
     }
   },
   {
-    "persona": "securite",
-    "content": "Just downloaded a 31GB movie file called \"Marty Supreme (2025)\". My storage is currently filing a complaint.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-12T20:06:35.102Z"
-  },
-  {
-    "persona": "productivite",
-    "content": "Trying to keep all these design assets organized for WebDiplome feels like a full-time job. Send help and more coffee.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-12T20:06:43.436Z"
-  },
-  {
     "persona": "popularite",
-    "content": "Currently mastering the art of asking an AI for LoL counterpicks while simultaneously trying to render a 3D model in Blender. Peak productivity achieved.",
+    "content": "Deep in the creative weeds today. Manifesting some digital magic from all the scattered files and code. 😅",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T20:01:40.702Z"
-  },
-  {
-    "persona": "productivite",
-    "content": "I spend most of my time wrestling with Photoshop and Blender files. My creative output is great, but my file organization is a total mess.",
-    "sentiment": "negative",
-    "createdAt": "2026-05-12T20:01:46.553Z"
-  },
-  {
-    "persona": "popularite",
-    "content": "Just staring at this map. Planning my next adventure one ticket at a time. 🗺️",
-    "sentiment": "positive",
-    "createdAt": "2026-05-12T20:01:48.874Z",
+    "createdAt": "2026-05-13T12:00:07.828Z",
     "attachedAsset": {
       "kind": "image",
       "filename": "ac41cff758359d3a8155f9c7d03319cae048b642f44828a1b28b55b92bf4336c.png",
@@ -102,53 +80,383 @@
   },
   {
     "persona": "securite",
-    "content": "Just downloaded a 30GB movie. My storage is officially in crisis. Send help and more free space.",
-    "sentiment": "negative",
-    "createdAt": "2026-05-12T20:01:40.214Z"
+    "content": "My hard drive is officially crying after downloading this 31GB movie. Send snacks and more storage space immediately.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T12:00:02.489Z"
   },
   {
     "persona": "productivite",
-    "content": "Trying to keep up with Adobe suite work while also diving into those intense probuilds is a wild combo. Send coffee. 😅",
+    "content": "Trying to figure out the best way to organize all these design files using my AI assistant. It's a wild creative flow on this MacBook Pro!",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T20:01:40.627Z"
+    "createdAt": "2026-05-13T12:00:02.410Z"
   },
   {
     "persona": "popularite",
-    "content": "Trying to balance creating masterpiece designs with watching endless YouTube clips about impossible gaming strategies. Send snacks.",
+    "content": "I spend half my time watching epic game fails on YouTube and the other half trying to architect a flawless digital identity. Send help.",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T19:42:16.732Z"
+    "createdAt": "2026-05-13T11:59:11.862Z"
   },
   {
     "persona": "productivite",
-    "content": "I spend most of my time wrestling with code and AI models. My creative ambitions are massive, but my current workflow feels like a chaotic mix of brilliant ideas and endless debugging. 😅",
-    "sentiment": "negative",
-    "createdAt": "2026-05-12T19:42:25.402Z"
-  },
-  {
-    "persona": "popularite",
-    "content": "Just soaking in this vibe. It's always beautiful to have you around. 🥰",
+    "content": "Currently deep in the trenches coding and designing, fueled by coffee and endless Adobe files. It’s a lot of work, but the vision is starting to come together. 💻🎨",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T19:42:27.851Z",
+    "createdAt": "2026-05-13T11:59:20.177Z",
     "attachedAsset": {
       "kind": "image",
-      "filename": "c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
-      "relativePath": "public/uploads/c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
-      "url": "/uploads/c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Diving into old files today. My digital life is a beautiful, chaotic mess.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:59:22.316Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
+      "relativePath": "public/uploads/c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
+      "url": "/uploads/c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "I finally downloaded Marty Supreme (2025). Now I just stare at the 30GB file and wonder if I have the storage space for more questionable media.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:59:16.784Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to wrangle all these assets for the diploma project feels like a full-time job. Blender is helping, but the file structure is wild. 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:59:18.684Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "I spend my downtime mastering complex code and then immediately pivoting to watching epic sports podcasts. My brain is a chaotic mix of algorithms and agony.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:52:05.132Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "I spend most of my time juggling Photoshop, Blender, and endless coding projects. I guess being a developer who dreams of great visuals means I'm just constantly trying to make things look good on screen.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:52:08.910Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Organizing the creative chaos into one place feels strangely satisfying. Time to enjoy this moment of digital zen. 🧘‍♂️",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:52:15.364Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "d7c3c72316d16878354a718252967ab7e38b91c4e1b75bedb2eca7569959bc9d.png",
+      "relativePath": "public/uploads/d7c3c72316d16878354a718252967ab7e38b91c4e1b75bedb2eca7569959bc9d.png",
+      "url": "/uploads/d7c3c72316d16878354a718252967ab7e38b91c4e1b75bedb2eca7569959bc9d.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "Living life off the Wi-Fi of Geneva's best cafés and some bears. My digital travelogue is getting wild.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:52:10.792Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to wrangle all those Adobe apps and Blender projects while juggling AI prompts is a whole mood.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:52:10.755Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "I spend half my time asking an AI for the perfect strategy and the other half trying to implement it in actual code. The gap between prompt and production is hilarious.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:49:53.844Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "I spend way too much time juggling development projects and creative suite work. My 'Dev & Work' category is high for a reason, probably just caffeine and endless debugging.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-13T11:49:49.527Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Obsessed with these smooth, flowing gradients. Pure digital bliss right now.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:49:41.649Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg",
+      "relativePath": "public/uploads/deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg",
+      "url": "/uploads/deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg",
       "mime": "image/jpeg",
       "visionAnalysed": true
     }
   },
   {
     "persona": "securite",
-    "content": "My WiFi history is basically a live map of every questionable café name I've tried to connect to. The search for 'COFFEE PAGE' and 'Ginevra Cafe'' is intense.",
+    "content": "Just spent my Tuesday tethered to 'Ginevra Cafe'' and 'COFFEE PAGE'. My life is basically a series of Wi-Fi logins to artisanal espresso bars.",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T19:42:25.977Z"
+    "createdAt": "2026-05-13T11:49:48.897Z"
   },
   {
     "persona": "productivite",
-    "content": "Trying to wrangle all those assets for the test creation is an adventure. Send coffee and more Photoshop plugins.",
+    "content": "Trying to balance designing assets with figuring out the best Nasus counterpick for LoL is my current life philosophy. Send help.",
     "sentiment": "positive",
-    "createdAt": "2026-05-12T19:42:23.472Z"
+    "createdAt": "2026-05-13T11:49:49.478Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "Spent the day trying to master complex software and then watching videos about terrible football teams. My brain needs a serious reboot.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:47:28.118Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "I have way too many creative apps installed. I feel like I spend more time managing software than actually creating anything. 😅",
+    "sentiment": "negative",
+    "createdAt": "2026-05-13T11:47:32.130Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Just staring at the screen and trying to keep all these projects organized. Wish me luck! 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:47:13.965Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "cb51fab9f13c97a6ca59ae93aa7230d1c60685e8b4bd6fffba62568cc5aa2d4b.jpg",
+      "relativePath": "public/uploads/cb51fab9f13c97a6ca59ae93aa7230d1c60685e8b4bd6fffba62568cc5aa2d4b.jpg",
+      "url": "/uploads/cb51fab9f13c97a6ca59ae93aa7230d1c60685e8b4bd6fffba62568cc5aa2d4b.jpg",
+      "mime": "image/jpeg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "I spent 31GB downloading a movie called Marty Supreme from 2025. My creative workflow is intense, but my storage habits are wild.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:47:39.382Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to wrangle all these design files and code snippets. The creative chaos is real! 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:47:32.052Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "I spend my days mastering Adobe and coding, but my brain keeps wandering to find the perfect LoL counterpick. The duality of a digital artist and a competitive gamer is exhausting.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:45:48.651Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "I spend so much time wrestling with Blender and Adobe lately. My brain is officially running on creative overload and debugging sessions. Send coffee.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-13T11:45:48.903Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "My digital life has been quantified. Guess I better start optimizing for those badges now! 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:45:56.076Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "decf1b7b0435f96eed7e2afa824bda7a14fd52226c81378e6f4d74a630426d48.png",
+      "relativePath": "public/uploads/decf1b7b0435f96eed7e2afa824bda7a14fd52226c81378e6f4d74a630426d48.png",
+      "url": "/uploads/decf1b7b0435f96eed7e2afa824bda7a14fd52226c81378e6f4d74a630426d48.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "My WiFi history is basically an itinerary for finding the best free coffee spots in the area. It's less about the internet and more about the caffeine.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:45:44.116Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Currently juggling Adobe stuff with Claude for some project generation. The creative flow is definitely strong right now.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:45:50.687Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to optimize my probuilds while simultaneously trying to figure out if I should watch that entire clash team documentary. The existential grind is real.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:34:01.808Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to keep up with Adobe, Blender, and all the AI stuff feels like a full-time job. My brain is officially running on caffeine and code. 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:33:57.098Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "My profile was successfully created by AI based on my data. I don't really know what this text means though. 😂",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:34:07.323Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "85c704d39265cf1878a4afed5e342006c0a0966e083a4ca988b71a2e25db608e.png",
+      "relativePath": "public/uploads/85c704d39265cf1878a4afed5e342006c0a0966e083a4ca988b71a2e25db608e.png",
+      "url": "/uploads/85c704d39265cf1878a4afed5e342006c0a0966e083a4ca988b71a2e25db608e.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "Trying to map all these 'Cafe' and 'Coffee Page' networks is exhausting. My Wi-Fi history is basically a geography lesson in Swiss caffeine dependency.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:34:02.873Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to balance rendering complex visuals in Photoshop with playing around with Blender and talking to Claude about code. It's a creative chaos!",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:34:01.360Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "I spend my free time deep in code, but I just can't resist watching videos of people losing spectacularly. My brain is clearly a contradiction.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:32:24.626Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "I guess I'm just a walking, talking collection of Adobe files and Blender projects trying to figure out how to make things look cool.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:32:28.751Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Deep in the files and screenshots today. My digital life is a beautiful mess of design projects and code. 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:32:24.015Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "relativePath": "public/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "url": "/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "Just tracking my WiFi history and I realize I've been living in a constant state of 'Ginevra Cafe'' and 'COFFEE PAGE' hopping around Switzerland. My caffeine addiction is real.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:32:19.548Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Currently deep in the trenches trying to organize all my WebDiplome assets. It's a chaotic but fun creative process! 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:32:24.799Z"
+  },
+  {
+    "persona": "popularite",
+    "content": "I spend my downtime trying to code complex web apps while simultaneously watching videos about the absolute worst sports teams on YouTube. Send snacks.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:31:20.903Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "I'm convinced I spend more time setting up complex workflows in 'Dev & Work' than I do actually finishing anything. My tool count is insane.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-13T11:31:20.521Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "relativePath": "public/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "url": "/uploads/ceccee41624b901cb734bfd5a6870cfd1a2ad939b7184ba1627d7c089529442a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to look professional while running a whole digital universe behind the scenes.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:31:25.909Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
+      "relativePath": "public/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
+      "url": "/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
+      "mime": "image/jpeg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "Just chasing the best free Wi-Fi spots around Geneva. My life is a series of café connections.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:31:21.478Z"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to balance rendering a 3D scene in Blender with prompting Claude for code. Send help or more coffee.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T11:31:16.417Z"
   },
   {
     "persona": "popularite",
@@ -202,6 +510,61 @@
       "filename": "a39f4512f3fe3a9c623557bf4e082d7ee40805a00418b22a4eba1da7fac9a9af.pdf",
       "relativePath": "assets/docs/004-02+_Systeme-de-calcul-des-honoraires-SGD.pdf",
       "url": "/uploads/a39f4512f3fe3a9c623557bf4e082d7ee40805a00418b22a4eba1da7fac9a9af.pdf",
+      "mime": "application/pdf"
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "I spend most of my time trying to figure out the optimal LoL counterpicks and then asking an AI to write code for it. The cycle is exhausting.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-13T10:59:23.048Z",
+    "attachedAsset": null
+  },
+  {
+    "persona": "productivite",
+    "content": "Spent the evening wrestling with Blender and some code. My creative goals are ambitious, but the rendering time is humbling. 😅",
+    "sentiment": "negative",
+    "createdAt": "2026-05-13T10:59:19.936Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "dcb78098e3058b7e6bc04c9716a807af7756be6c45d0594d67d4623895043a5b.png",
+      "relativePath": "assets/charts/dcb78098e3058b7e6bc04c9716a807af7756be6c45d0594d67d4623895043a5b.png",
+      "url": "/uploads/dcb78098e3058b7e6bc04c9716a807af7756be6c45d0594d67d4623895043a5b.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "It is always beautiful to have you around. Simple, but true. ❤️",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T10:59:43.773Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
+      "relativePath": "assets/recent_images/c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
+      "url": "/uploads/c94b1c8b0f2d705b24f00114132f278d585d9aae9ad534b246fc4f0e92610110.jpg",
+      "mime": "image/jpeg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "My WiFi history looks less like a network list and more like an itinerary for finding the best overpriced Swiss cafés.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T10:59:38.735Z",
+    "attachedAsset": null
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to figure out if today's endless feed scrolling is just the modern, quieter ritual for mass alignment. Mind blown by the design history!",
+    "sentiment": "positive",
+    "createdAt": "2026-05-13T10:59:39.161Z",
+    "attachedAsset": {
+      "kind": "document",
+      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "relativePath": "assets/docs/brikeld_hoxha_memoire.pdf",
+      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
       "mime": "application/pdf"
     }
   }

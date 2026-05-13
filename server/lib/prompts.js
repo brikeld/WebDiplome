@@ -8,7 +8,7 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 900,
   },
   chart: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. The user's app category breakdown is listed above. React to what it reveals — pick ONE category, be honest and a little self-deprecating (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. A chart of your installed app categories (or related usage data) is attached. React to what it reveals about you — pick ONE category or bar, be honest and a little self-deprecating (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
     temperature: 0.85,
     maxTokens: 900,
   },

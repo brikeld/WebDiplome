@@ -559,6 +559,40 @@ body {
   gap: 8px;
 }
 
+.posts-tab--generating {
+  gap: 12px;
+}
+
+.posts-generating-placeholder {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  padding: 20px 16px;
+  border-radius: 16px;
+  border: 2px solid color-mix(in srgb, var(--persona-accent, #ccf847) 55%, transparent);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.posts-generating-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 3px solid color-mix(in srgb, var(--persona-accent, #ccf847) 22%, transparent);
+  border-top-color: var(--persona-accent, #ccf847);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--persona-accent, #ccf847) 45%, transparent);
+  animation: posts-generating-spin 0.75s linear infinite;
+}
+
+@keyframes posts-generating-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .post-card {
   box-sizing: border-box;
   position: relative;
@@ -568,7 +602,7 @@ body {
 }
 
 .post-card--feed-enter {
-  animation: post-feed-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: post-feed-enter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes post-feed-enter {

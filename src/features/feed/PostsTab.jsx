@@ -30,7 +30,7 @@ function resolveAttachedAsset(asset) {
   };
 }
 
-export default function PostsTab({ profile, feedContext = 'home' }) {
+export default function PostsTab({ profile, feedContext = 'home', isGeneratingPosts = false }) {
   const posts = useMemo(() => {
     if (!profile) return [];
     const raw = profile.personaPosts ?? [];
@@ -77,18 +77,34 @@ export default function PostsTab({ profile, feedContext = 'home' }) {
       attachedAsset: resolveAttachedAsset(p.attachedAsset ?? p.attached_asset),
       _feedEnter: !!p._feedEnter,
       _feedKey: p._feedKey ?? null,
+      _feedRevealSeq: typeof p._feedRevealSeq === 'number' ? p._feedRevealSeq : 0,
     }));
 
-    // Newest first (like an actual social feed).
+    // Newest first; tie-break so staggered client posts keep order even if timestamps collide.
     return mapped.sort((a, b) => {
       const at = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
       const bt = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
-      return (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
+      const cmp = (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
+      if (cmp !== 0) return cmp;
+      return (b._feedRevealSeq ?? 0) - (a._feedRevealSeq ?? 0);
     });
   }, [profile]);
 
   const list = (
-    <div className={`posts-tab${feedContext === 'profile' ? ' posts-tab--profile-inline' : ''}`}>
+    <div
+      className={`posts-tab${feedContext === 'profile' ? ' posts-tab--profile-inline' : ''}${
+        isGeneratingPosts ? ' posts-tab--generating' : ''
+      }`}
+    >
+      {isGeneratingPosts ? (
+        <div
+          className="posts-generating-placeholder"
+          aria-busy="true"
+          aria-label="Generating posts"
+        >
+          <div className="posts-generating-spinner" aria-hidden />
+        </div>
+      ) : null}
       {posts.map((p) => (
         <PostCard
           key={p._feedKey ?? String(p.id)}
