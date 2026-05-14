@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useLayoutEffect, useRef } from 'react';
 import PostImage from './PostImage.jsx';
 import PostDocument from './PostDocument.jsx';
 import { isPdfDocumentAsset } from '@/lib/attachmentKind.js';
@@ -25,6 +25,34 @@ export default function PostCard({
     persona,
     attachedAsset,
   } = post;
+
+  const toggleRef = useRef(null);
+  const articleRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const btn = toggleRef.current;
+    const article = articleRef.current;
+    if (!btn || !article) return;
+
+    if (!isCommentsOpen) {
+      btn.style.transform = '';
+      return;
+    }
+
+    const btnRect = btn.getBoundingClientRect();
+    const articleRect = article.getBoundingClientRect();
+
+    const targetX = articleRect.left + articleRect.width / 2;
+    const targetY = articleRect.bottom + 4; // 4px below the article's bottom edge
+
+    const currentX = btnRect.left + btnRect.width / 2;
+    const currentY = btnRect.top + btnRect.height / 2;
+
+    const dx = targetX - currentX;
+    const dy = targetY - currentY;
+
+    btn.style.transform = `translate(${dx}px, ${dy}px)`;
+  }, [isCommentsOpen]);
 
   const personaLabel = (() => {
     const key = String(persona ?? '').toLowerCase();
@@ -60,6 +88,7 @@ export default function PostCard({
   return (
     <>
       <article
+        ref={articleRef}
         className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}`}
         data-persona={post.persona}
         style={{
@@ -121,6 +150,7 @@ export default function PostCard({
 
           <div className="post-meta-right">
             <CommentsToggle
+              ref={toggleRef}
               isOpen={isCommentsOpen}
               onToggle={onToggleComments}
               controlsId={`commenting-${post.id}`}

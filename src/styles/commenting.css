@@ -282,8 +282,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Hosts the post-action-btn so we can apply transforms to a single element */
   pointer-events: auto;
+  transition: transform var(--commenting-duration) var(--commenting-ease);
+  will-change: transform;
 }
 
 .commenting-toggle-host--open {
