@@ -16,7 +16,9 @@
 .commenting-capsule {
   box-sizing: border-box;
   width: 92%;
-  margin: 0 auto;
+  /* Negative margin-top cancels the .posts-tab flex gap (28px) when the
+     capsule is collapsed, so posts remain visually 28px apart instead of 56px. */
+  margin: -28px auto 0;
   border: 1.5px solid var(--ink, #fff);
   border-radius: var(--radius-post-surface, 22px);
   background: transparent;
@@ -32,7 +34,8 @@
     max-height var(--commenting-duration) var(--commenting-ease),
     opacity var(--commenting-duration) var(--commenting-ease),
     transform var(--commenting-duration) var(--commenting-ease),
-    padding var(--commenting-duration) var(--commenting-ease);
+    padding var(--commenting-duration) var(--commenting-ease),
+    margin var(--commenting-duration) var(--commenting-ease);
   padding-top: 0;
   padding-bottom: 0;
 }
@@ -40,6 +43,7 @@
 .commenting-capsule--open {
   opacity: 1;
   transform: translateY(0);
+  margin-top: 0;
   padding-top: 16px;
   padding-bottom: 12px;
   /* max-height set inline at runtime to measured scrollHeight */
