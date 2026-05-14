@@ -188,6 +188,8 @@
 .commenting-capsule--open .commenting-suggestion-row {
   opacity: 1;
   transform: translateY(0);
+  /* Reveal after the three staggered comments (3 * --commenting-stagger). */
+  transition-delay: calc(var(--commenting-stagger) * 3);
 }
 
 .commenting-suggestion-row--collapsed {

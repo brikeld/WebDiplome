@@ -95,6 +95,7 @@ export default function CommentsCapsule({
       className={`commenting-capsule${isOpen ? ' commenting-capsule--open' : ''}`}
       data-post-id={post.id}
       aria-hidden={!isOpen}
+      inert={!isOpen ? '' : undefined}
     >
       {comments.map((c, i) => (
         <Comment
