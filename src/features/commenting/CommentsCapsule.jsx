@@ -67,6 +67,7 @@ export default function CommentsCapsule({
 
     const cleanup = () => {
       node.style.willChange = '';
+      node.style.transition = '';
     };
     node.addEventListener('transitionend', cleanup, { once: true });
     return () => node.removeEventListener('transitionend', cleanup);
@@ -110,7 +111,7 @@ export default function CommentsCapsule({
       ))}
 
       {picked ? (
-        <div ref={userCommentRef}>
+        <div ref={userCommentRef} data-flip-root>
           <UserComment
             persona={picked.persona}
             content={picked.content}

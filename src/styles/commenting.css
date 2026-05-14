@@ -67,6 +67,14 @@
   transform: translateY(0);
 }
 
+/* Inside a FLIP-animated wrapper, the wrapper owns the transform.
+   Disable inner transforms/transitions so they can't fight the FLIP. */
+[data-flip-root] .commenting-comment {
+  transform: none;
+  transition: none;
+  opacity: 1;
+}
+
 .commenting-comment[data-persona='productivite'] {
   --comment-accent: var(--commenting-persona-productivite);
 }
