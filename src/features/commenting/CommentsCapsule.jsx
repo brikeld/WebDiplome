@@ -26,7 +26,11 @@ export default function CommentsCapsule({
     const el = rootRef.current;
     if (!el) return;
     if (isOpen) {
-      el.style.maxHeight = `${el.scrollHeight}px`;
+      // Release the clamp before measuring; otherwise scrollHeight reports
+      // the already-clamped height when content grows (e.g. adding UserComment).
+      el.style.maxHeight = 'none';
+      const natural = el.scrollHeight;
+      el.style.maxHeight = `${natural}px`;
     } else {
       el.style.maxHeight = '0px';
     }
@@ -73,7 +77,7 @@ export default function CommentsCapsule({
         avatarInitials={avatarInitials}
         pickedPersona={picked?.persona ?? null}
         collapsed={picked !== null}
-        onPick={(s) => setPicked(s)}
+        onPick={setPicked}
       />
 
       <div className="commenting-footer">
