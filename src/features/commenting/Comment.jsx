@@ -1,9 +1,3 @@
-const PERSONA_COLORS = {
-  productivite: '#D8D8D8',
-  securite: '#759AEF',
-  popularite: '#CCF847',
-};
-
 export default function Comment({
   persona,
   content,
@@ -14,15 +8,11 @@ export default function Comment({
   avatarInitials,
   staggerIndex = 0,
 }) {
-  const accent = PERSONA_COLORS[persona] ?? '#fff';
   return (
     <div
       className="commenting-comment"
       data-persona={persona}
-      style={{
-        '--comment-accent': accent,
-        transitionDelay: `${staggerIndex * 60}ms`,
-      }}
+      style={{ transitionDelay: `${staggerIndex * 60}ms` }}
     >
       <div className="commenting-comment-avatar" aria-hidden>
         {avatarSrc ? <img src={avatarSrc} alt="" /> : <span>{avatarInitials}</span>}

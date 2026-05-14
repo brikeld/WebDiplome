@@ -12,7 +12,7 @@ export default function UserComment({
     <Comment
       persona={persona}
       content={content}
-      pills={['text', 'text', 'text']}
+      pills={['text', 'text', 'text']} // per spec: placeholder labels for the mockup phase
       displayName={displayName}
       handle={handle}
       avatarSrc={avatarSrc}

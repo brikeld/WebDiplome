@@ -63,6 +63,18 @@
   transform: translateY(0);
 }
 
+.commenting-comment[data-persona='productivite'] {
+  --comment-accent: var(--commenting-persona-productivite);
+}
+
+.commenting-comment[data-persona='securite'] {
+  --comment-accent: var(--commenting-persona-securite);
+}
+
+.commenting-comment[data-persona='popularite'] {
+  --comment-accent: var(--commenting-persona-popularite);
+}
+
 .commenting-comment-avatar {
   width: 56px;
   height: 56px;
@@ -71,7 +83,6 @@
   background: var(--post-accent, #444);
   display: grid;
   place-items: center;
-  flex-shrink: 0;
 }
 
 .commenting-comment-avatar img {
