@@ -283,8 +283,13 @@
   align-items: center;
   justify-content: center;
   pointer-events: auto;
+}
+
+/* Bumped selector specificity so this transition wins over
+   .post-action-btn { transition: transform 0.15s ease } regardless of
+   stylesheet load order. */
+.post-action-btn.commenting-toggle-host {
   transition: transform var(--commenting-duration) var(--commenting-ease);
-  will-change: transform;
 }
 
 .commenting-toggle-host--open {

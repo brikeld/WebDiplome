@@ -36,6 +36,7 @@ export default function PostCard({
 
     if (!isCommentsOpen) {
       btn.style.transform = '';
+      btn.style.willChange = '';
       return;
     }
 
@@ -43,7 +44,7 @@ export default function PostCard({
     const articleRect = article.getBoundingClientRect();
 
     const targetX = articleRect.left + articleRect.width / 2;
-    const targetY = articleRect.bottom + 4; // 4px below the article's bottom edge
+    const targetY = articleRect.bottom + 4;
 
     const currentX = btnRect.left + btnRect.width / 2;
     const currentY = btnRect.top + btnRect.height / 2;
@@ -51,6 +52,7 @@ export default function PostCard({
     const dx = targetX - currentX;
     const dy = targetY - currentY;
 
+    btn.style.willChange = 'transform';
     btn.style.transform = `translate(${dx}px, ${dy}px)`;
   }, [isCommentsOpen]);
 
