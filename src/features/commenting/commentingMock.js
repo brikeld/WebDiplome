@@ -24,6 +24,8 @@ const COMMENT_BANK = {
   ],
 };
 
+// Intentional per spec: all sub-pills render the literal label "text"
+// (matches the design screenshot). Swap for real labels when the data is real.
 const PILL_BANK = ['text', 'text', 'text', 'text', 'text', 'text'];
 
 const SUGGESTION_BANK = {
