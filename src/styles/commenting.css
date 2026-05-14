@@ -1,0 +1,276 @@
+/* ── Commenting capsule ────────────────────────────────────────────────────
+   Per-post commenting UI. Lives below each PostCard as a layout sibling
+   so the toggle icon can animate between the meta row and the capsule.
+   ─────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --commenting-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --commenting-duration: 280ms;
+  --commenting-stagger: 60ms;
+  --commenting-persona-productivite: #D8D8D8;
+  --commenting-persona-securite: #759AEF;
+  --commenting-persona-popularite: #CCF847;
+}
+
+/* Capsule shell (collapsed by default; open class on parent or self) */
+.commenting-capsule {
+  box-sizing: border-box;
+  width: 92%;
+  margin: 0 auto;
+  border: 1.5px solid var(--ink, #fff);
+  border-radius: var(--radius-post-surface, 22px);
+  background: transparent;
+  padding: 16px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-4px);
+  transition:
+    max-height var(--commenting-duration) var(--commenting-ease),
+    opacity var(--commenting-duration) var(--commenting-ease),
+    transform var(--commenting-duration) var(--commenting-ease),
+    padding var(--commenting-duration) var(--commenting-ease);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.commenting-capsule--open {
+  opacity: 1;
+  transform: translateY(0);
+  padding-top: 16px;
+  padding-bottom: 12px;
+  /* max-height set inline at runtime to measured scrollHeight */
+}
+
+/* Single comment row */
+.commenting-comment {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  align-items: start;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--commenting-duration) var(--commenting-ease),
+    transform var(--commenting-duration) var(--commenting-ease);
+}
+
+.commenting-capsule--open .commenting-comment {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.commenting-comment-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--post-accent, #444);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.commenting-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.commenting-comment-bubble {
+  border: 1.5px solid var(--comment-accent, var(--ink, #fff));
+  border-radius: var(--radius-post-surface, 22px);
+  padding: 12px 16px 10px;
+  background: transparent;
+  color: var(--comment-accent, var(--ink, #fff));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.commenting-comment-content {
+  font-family: var(--font-sans, inherit);
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 700;
+  margin: 0;
+}
+
+.commenting-comment-byline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.commenting-comment-name {
+  font-family: 'AvantGarde ITC BT', var(--font-sans, inherit);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--comment-accent, var(--ink, #fff));
+}
+
+.commenting-comment-handle {
+  font-family: var(--font-sans, inherit);
+  font-size: 12px;
+  font-style: italic;
+  margin: 0;
+  color: var(--comment-accent, var(--ink, #fff));
+  opacity: 0.85;
+}
+
+/* Sub-pills under each comment bubble */
+.commenting-comment-pills {
+  grid-column: 2;
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.commenting-comment-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px 4px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--comment-accent, var(--ink, #fff));
+  background: transparent;
+  color: var(--comment-accent, var(--ink, #fff));
+  font-family: var(--font-sans, inherit);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Suggestion row */
+.commenting-suggestion-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  align-items: stretch;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--commenting-duration) var(--commenting-ease),
+    transform var(--commenting-duration) var(--commenting-ease),
+    max-height var(--commenting-duration) var(--commenting-ease);
+  max-height: 180px;
+  overflow: hidden;
+}
+
+.commenting-capsule--open .commenting-suggestion-row {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.commenting-suggestion-row--collapsed {
+  opacity: 0;
+  max-height: 0;
+  pointer-events: none;
+}
+
+.commenting-suggestion-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.commenting-suggestion-card {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  border-radius: 14px;
+  padding: 10px 38px 12px 12px;
+  text-align: left;
+  background: var(--suggestion-bg, #D8D8D8);
+  color: var(--suggestion-fg, #000);
+  font-family: var(--font-sans, inherit);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  min-height: 88px;
+  display: flex;
+  align-items: flex-start;
+  transition:
+    opacity var(--commenting-duration) var(--commenting-ease),
+    transform var(--commenting-duration) var(--commenting-ease);
+}
+
+.commenting-suggestion-card[data-persona='productivite'] {
+  --suggestion-bg: var(--commenting-persona-productivite);
+  --suggestion-fg: #000;
+}
+
+.commenting-suggestion-card[data-persona='securite'] {
+  --suggestion-bg: var(--commenting-persona-securite);
+  --suggestion-fg: #fff;
+}
+
+.commenting-suggestion-card[data-persona='popularite'] {
+  --suggestion-bg: var(--commenting-persona-popularite);
+  --suggestion-fg: #000;
+}
+
+.commenting-suggestion-card--faded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.commenting-suggestion-card__plus {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #0c0c0c;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  transition: opacity var(--commenting-duration) var(--commenting-ease);
+}
+
+.commenting-suggestion-card__plus--hidden {
+  opacity: 0;
+}
+
+/* Footer "comment here" pill */
+.commenting-footer {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 0;
+}
+
+.commenting-footer-pill {
+  width: 100%;
+  text-align: center;
+  border: 1.5px solid var(--ink, #fff);
+  border-radius: 9999px;
+  padding: 10px 16px;
+  font-family: 'AvantGarde ITC BT', var(--font-sans, inherit);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink, #fff);
+  background: transparent;
+}
+
+/* Comment toggle icon — animated wrapper holds the original icon button */
+.commenting-toggle-host {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Hosts the post-action-btn so we can apply transforms to a single element */
+  pointer-events: auto;
+}
+
+.commenting-toggle-host--open {
+  /* Transform applied at runtime via inline style for FLIP */
+}
