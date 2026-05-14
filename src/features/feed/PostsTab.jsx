@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import PostCard from './PostCard.jsx';
 import { sanitizePostContent } from '@/lib/postContent.js';
 import {
@@ -31,6 +31,8 @@ function resolveAttachedAsset(asset) {
 }
 
 export default function PostsTab({ profile, feedContext = 'home', isGeneratingPosts = false }) {
+  const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
+
   const posts = useMemo(() => {
     if (!profile) return [];
     const raw = profile.personaPosts ?? [];
@@ -110,6 +112,10 @@ export default function PostsTab({ profile, feedContext = 'home', isGeneratingPo
           key={p._feedKey ?? String(p.id)}
           post={p}
           animateEnter={!!p._feedEnter}
+          isCommentsOpen={openCommentsPostId === p.id}
+          onToggleComments={() =>
+            setOpenCommentsPostId((prev) => (prev === p.id ? null : p.id))
+          }
         />
       ))}
     </div>

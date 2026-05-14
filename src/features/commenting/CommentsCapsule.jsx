@@ -1,3 +1,4 @@
+import '@/styles/commenting.css';
 import { useEffect, useRef, useState } from 'react';
 import Comment from './Comment.jsx';
 import UserComment from './UserComment.jsx';

@@ -2,11 +2,17 @@ import { lazy, Suspense } from 'react';
 import PostImage from './PostImage.jsx';
 import PostDocument from './PostDocument.jsx';
 import { isPdfDocumentAsset } from '@/lib/attachmentKind.js';
-import PostActions from './PostActions.jsx';
+import CommentsToggle from '@/features/commenting/CommentsToggle.jsx';
+import CommentsCapsule from '@/features/commenting/CommentsCapsule.jsx';
 
 const PostPdfCarousel = lazy(() => import('./PostPdfCarousel.jsx'));
 
-export default function PostCard({ post, animateEnter = false }) {
+export default function PostCard({
+  post,
+  animateEnter = false,
+  isCommentsOpen = false,
+  onToggleComments,
+}) {
   const {
     content,
     noteColor,
@@ -52,70 +58,85 @@ export default function PostCard({ post, animateEnter = false }) {
   })();
 
   return (
-    <article
-      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}`}
-      data-persona={post.persona}
-      style={{
-        '--post-accent': noteColor,
-      }}
-    >
-      <div className={attachedAsset ? 'post-composite' : undefined}>
-        <div className="post-card-bubble">
-          <div className="post-card-head">
-            <div className="post-avatar" aria-hidden>
-              {avatarSrc ? <img className="post-avatar-img" src={avatarSrc} alt="" /> : avatarInitials}
-            </div>
-            <div className="post-card-text">
-              <div className="post-card-lead">
-                <p className="post-lead">{content}</p>
+    <>
+      <article
+        className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}`}
+        data-persona={post.persona}
+        style={{
+          '--post-accent': noteColor,
+        }}
+      >
+        <div className={attachedAsset ? 'post-composite' : undefined}>
+          <div className="post-card-bubble">
+            <div className="post-card-head">
+              <div className="post-avatar" aria-hidden>
+                {avatarSrc ? <img className="post-avatar-img" src={avatarSrc} alt="" /> : avatarInitials}
               </div>
-              <div className="post-card-byline">
-                <p className="post-card-name">{displayName}</p>
-                {handle ? <p className="post-card-handle">{handle}</p> : null}
+              <div className="post-card-text">
+                <div className="post-card-lead">
+                  <p className="post-lead">{content}</p>
+                </div>
+                <div className="post-card-byline">
+                  <p className="post-card-name">{displayName}</p>
+                  {handle ? <p className="post-card-handle">{handle}</p> : null}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {attachedAsset?.kind === 'image' ? (
-          <PostImage asset={attachedAsset} accentColor={noteColor} />
-        ) : null}
-        {attachedAsset?.kind === 'document' ? (
-          isPdfDocumentAsset(attachedAsset) ? (
-            <Suspense
-              fallback={
-                <div className="post-attachment-block post-image-halftone post-pdf-carousel">
-                  <div className="post-pdf-carousel__frame">
-                    <div className="post-pdf-carousel__placeholder" aria-hidden>
-                      <span className="post-pdf-carousel__placeholder-label">pdf</span>
+          {attachedAsset?.kind === 'image' ? (
+            <PostImage asset={attachedAsset} accentColor={noteColor} />
+          ) : null}
+          {attachedAsset?.kind === 'document' ? (
+            isPdfDocumentAsset(attachedAsset) ? (
+              <Suspense
+                fallback={
+                  <div className="post-attachment-block post-image-halftone post-pdf-carousel">
+                    <div className="post-pdf-carousel__frame">
+                      <div className="post-pdf-carousel__placeholder" aria-hidden>
+                        <span className="post-pdf-carousel__placeholder-label">pdf</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              }
-            >
-              <PostPdfCarousel asset={attachedAsset} accentColor={noteColor} />
-            </Suspense>
-          ) : (
-            <PostDocument asset={attachedAsset} />
-          )
-        ) : null}
-      </div>
-
-      <div className="post-meta-row" aria-label="Post metadata">
-        <div className="post-meta-left">
-          <span className="post-meta-pill">{timeAgo} ago</span>
+                }
+              >
+                <PostPdfCarousel asset={attachedAsset} accentColor={noteColor} />
+              </Suspense>
+            ) : (
+              <PostDocument asset={attachedAsset} />
+            )
+          ) : null}
         </div>
 
-        <div className="post-meta-center">
-          <span className="post-meta-pill">
-            System note [{personaLabel}] [+{systemDeltaPct}%]
-          </span>
-        </div>
+        <div className="post-meta-row" aria-label="Post metadata">
+          <div className="post-meta-left">
+            <span className="post-meta-pill">{timeAgo} ago</span>
+          </div>
 
-        <div className="post-meta-right">
-          <PostActions />
+          <div className="post-meta-center">
+            <span className="post-meta-pill">
+              System note [{personaLabel}] [+{systemDeltaPct}%]
+            </span>
+          </div>
+
+          <div className="post-meta-right">
+            <CommentsToggle
+              isOpen={isCommentsOpen}
+              onToggle={onToggleComments}
+              controlsId={`commenting-${post.id}`}
+            />
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+      <CommentsCapsule
+        post={post}
+        isOpen={isCommentsOpen}
+        capsuleId={`commenting-${post.id}`}
+        displayName={displayName}
+        handle={handle}
+        avatarSrc={avatarSrc}
+        avatarInitials={avatarInitials}
+      />
+    </>
   );
 }
