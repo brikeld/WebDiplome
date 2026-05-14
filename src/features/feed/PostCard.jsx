@@ -53,7 +53,7 @@ export default function PostCard({
     const dy = targetY - currentY;
 
     btn.style.willChange = 'transform';
-    btn.style.transform = `translate(${dx}px, ${dy}px)`;
+    btn.style.transform = `translate(${dx}px, ${dy}px) scale(1.35)`;
   }, [isCommentsOpen]);
 
   const personaLabel = (() => {
@@ -91,7 +91,7 @@ export default function PostCard({
     <>
       <article
         ref={articleRef}
-        className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}`}
+        className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}`}
         data-persona={post.persona}
         style={{
           '--post-accent': noteColor,

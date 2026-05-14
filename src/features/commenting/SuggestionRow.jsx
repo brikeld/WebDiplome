@@ -27,7 +27,7 @@ export default function SuggestionRow({
               onClick={() => onPick?.(s)}
               disabled={pickedPersona !== null}
             >
-              <span>{s.content}</span>
+              <span className="commenting-suggestion-card__text">{s.content}</span>
               <span
                 className={`commenting-suggestion-card__plus${isPicked ? ' commenting-suggestion-card__plus--hidden' : ''}`}
                 aria-hidden
