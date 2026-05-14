@@ -37,10 +37,25 @@ export default function CommentsCapsule({
       el.style.maxHeight = 'none';
       const natural = el.scrollHeight;
       el.style.maxHeight = `${natural}px`;
+      // After the open transition completes, release the clamp entirely so
+      // subsequent content shifts (picking a suggestion, etc.) reflow naturally
+      // and the footer pill stays visible.
+      const releaseHandle = setTimeout(() => {
+        if (rootRef.current && isOpen) rootRef.current.style.maxHeight = 'none';
+      }, 320);
+      return () => clearTimeout(releaseHandle);
+    }
+    // Closing: set explicit max-height first if currently unclamped, then
+    // transition to 0 on the next frame.
+    if (el.style.maxHeight === 'none' || el.style.maxHeight === '') {
+      el.style.maxHeight = `${el.scrollHeight}px`;
+      requestAnimationFrame(() => {
+        if (rootRef.current && !isOpen) rootRef.current.style.maxHeight = '0px';
+      });
     } else {
       el.style.maxHeight = '0px';
     }
-  }, [isOpen, picked]);
+  }, [isOpen]);
 
   // FLIP: when picked is set with an originRect, translate the new UserComment
   // node so it starts where the suggestion card was, then animate back to identity.
@@ -112,7 +127,7 @@ export default function CommentsCapsule({
       ))}
 
       {picked ? (
-        <div ref={userCommentRef} data-flip-root>
+        <div ref={userCommentRef} data-flip-root data-user-comment>
           <UserComment
             persona={picked.persona}
             content={picked.content}

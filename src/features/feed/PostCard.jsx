@@ -44,7 +44,9 @@ export default function PostCard({
     const articleRect = article.getBoundingClientRect();
 
     const targetX = articleRect.left + articleRect.width / 2;
-    const targetY = articleRect.bottom + 4;
+    // .posts-tab gap is 28px; place icon centered in that gap so it has equal
+    // breathing room above (post) and below (capsule).
+    const targetY = articleRect.bottom + 14;
 
     const currentX = btnRect.left + btnRect.width / 2;
     const currentY = btnRect.top + btnRect.height / 2;
