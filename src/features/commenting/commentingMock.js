@@ -1,3 +1,5 @@
+import { hash } from '@/lib/commentMetaStrip.js';
+
 const PERSONA_ORDER = ['productivite', 'securite', 'popularite'];
 
 const COMMENT_BANK = {
@@ -24,10 +26,6 @@ const COMMENT_BANK = {
   ],
 };
 
-// Intentional per spec: all sub-pills render the literal label "text"
-// (matches the design screenshot). Swap for real labels when the data is real.
-const PILL_BANK = ['text', 'text', 'text', 'text', 'text', 'text'];
-
 const SUGGESTION_BANK = {
   productivite: [
     'Strong cadence — keep the queue moving and protect the focus blocks.',
@@ -49,15 +47,6 @@ const SUGGESTION_BANK = {
   ],
 };
 
-function hash(str) {
-  const s = String(str);
-  let h = 0;
-  for (let i = 0; i < s.length; i += 1) {
-    h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  }
-  return h;
-}
-
 function pick(bank, seed) {
   return bank[seed % bank.length];
 }
@@ -70,11 +59,6 @@ export function getMockCommentsFor(postId) {
     return {
       persona,
       content: pick(COMMENT_BANK[persona], seed),
-      pills: [
-        pick(PILL_BANK, seed + 1),
-        pick(PILL_BANK, seed + 2),
-        pick(PILL_BANK, seed + 3),
-      ],
     };
   });
 

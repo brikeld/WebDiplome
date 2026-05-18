@@ -22,16 +22,11 @@ describe('getMockCommentsFor', () => {
     ]);
   });
 
-  it('every comment has a non-empty content string and three pill labels', () => {
+  it('every comment has a non-empty content string', () => {
     const { comments } = getMockCommentsFor('post-abc');
     for (const c of comments) {
       expect(typeof c.content).toBe('string');
       expect(c.content.length).toBeGreaterThan(0);
-      expect(c.pills).toHaveLength(3);
-      for (const p of c.pills) {
-        expect(typeof p).toBe('string');
-        expect(p.length).toBeGreaterThan(0);
-      }
     }
   });
 

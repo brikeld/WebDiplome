@@ -10,6 +10,7 @@ import {
 export default function ProfileHeader({
   profile,
   personaColor = 'var(--prod)',
+  mainScoreEntryReplayKey = 0,
 }) {
   const name = displayNameFromProfile(profile ?? {});
   const initials = initialsFromProfile(profile ?? {});
@@ -84,7 +85,11 @@ export default function ProfileHeader({
               aria-label={`Score ${centerScore}`}
               style={{ '--score-fill': personaColor }}
             >
-              <MainScoreStyle profile={profile ?? {}} />
+              <MainScoreStyle
+                profile={profile ?? {}}
+                entryReplayKey={mainScoreEntryReplayKey}
+                hideCenterScore
+              />
             </div>
           </div>
         </div>

@@ -10,6 +10,10 @@
   --commenting-persona-productivite: #D8D8D8;
   --commenting-persona-securite: #759AEF;
   --commenting-persona-popularite: #CCF847;
+  /* Proposition shell inner lane = picked reply bubble (border-box) */
+  --commenting-shell-lane-height: 10rem;
+  --suggestion-copy: 23px;
+  --suggestion-plus-size: 42px;
 }
 
 /* Fade out the time + system pills when the capsule is open, so they
@@ -39,7 +43,7 @@
   padding: 22px 24px 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 4px;
   overflow: hidden;
   opacity: 0;
   max-height: 0;
@@ -57,18 +61,20 @@
 .commenting-capsule--open {
   opacity: 1;
   transform: translateY(0);
-  margin-top: 0;
-  padding-top: 22px;
-  padding-bottom: 18px;
+  margin-top: -18px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  position: relative;
+  z-index: 1;
   /* max-height set inline at runtime to measured scrollHeight */
 }
 
-/* Single comment row — avatar | bubble, pills span the bubble column below */
+/* Comment block: bubble (avatar + text inside border) + meta strip below */
 .commenting-comment {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 14px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -79,6 +85,7 @@
 .commenting-capsule--open .commenting-comment {
   opacity: 1;
   transform: translateY(0);
+  gap: 2px;
 }
 
 [data-flip-root] .commenting-comment {
@@ -90,26 +97,82 @@
 .commenting-comment[data-persona='productivite'] {
   --comment-accent: var(--commenting-persona-productivite);
   --pill-fg: #000;
+  --comment-ink: var(--comment-accent);
 }
 
 .commenting-comment[data-persona='securite'] {
   --comment-accent: var(--commenting-persona-securite);
-  --pill-fg: #fff;
+  --pill-fg: #000;
+  --comment-ink: var(--comment-accent);
 }
 
 .commenting-comment[data-persona='popularite'] {
   --comment-accent: var(--commenting-persona-popularite);
   --pill-fg: #000;
+  --comment-ink: var(--comment-accent);
+}
+
+/* Meta strip may sit outside `.commenting-comment` (detached after pick) — set accent from its own data-persona. */
+.commenting-comment-meta[data-persona='productivite'] {
+  --comment-accent: var(--commenting-persona-productivite);
+}
+
+.commenting-comment-meta[data-persona='securite'] {
+  --comment-accent: var(--commenting-persona-securite);
+}
+
+.commenting-comment-meta[data-persona='popularite'] {
+  --comment-accent: var(--commenting-persona-popularite);
 }
 
 .commenting-comment-avatar {
-  width: 68px;
-  height: 68px;
-  border-radius: 14px;
+  border-radius: var(--radius-post-avatar, 35px);
   overflow: hidden;
   background: var(--post-accent, #444);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Match feed `.post-avatar`: tall lane inside the bubble, square crop */
+.commenting-comment-head .commenting-comment-avatar {
+  position: relative;
+  align-self: stretch;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: min(12.5rem, 46%, 100%);
+  max-height: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  background: color-mix(in srgb, var(--comment-accent, var(--post-accent, #888)) 20%, #fff);
+  color: var(--comment-accent, var(--post-accent, #888));
+  border: none;
+  box-sizing: border-box;
+  font-size: clamp(1.05rem, 3vw, 1.5rem);
+  font-weight: 500;
+  font-family: var(--font-sans, inherit);
+}
+
+.commenting-comment-head {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(12px, 2vw, 18px);
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+}
+
+.commenting-comment-text {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: 8px 10px 0 10px;
 }
 
 .commenting-comment-avatar img {
@@ -117,218 +180,496 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: inherit;
 }
 
 .commenting-comment-bubble {
   border: 1.5px solid var(--comment-accent, var(--ink, #fff));
   border-radius: 18px;
-  padding: 14px 18px 12px;
+  padding: 10px 14px 10px 10px;
   background: transparent;
-  color: var(--comment-accent, var(--ink, #fff));
+  color: var(--comment-ink, var(--comment-accent, var(--ink, #fff)));
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  min-height: 9rem;
+  height: 9rem;
+  min-width: 0;
+}
+
+.commenting-capsule .commenting-comment-bubble {
+  min-height: var(--commenting-shell-lane-height);
+  height: var(--commenting-shell-lane-height);
 }
 
 .commenting-comment-content {
-  font-family: var(--font-sans, inherit);
-  font-size: 20px;
-  line-height: 1.3;
-  font-weight: 700;
+  font-family: var(--font-avant, var(--font-sans, inherit));
+  font-size: calc(var(--post-body-size, 28px) * 1.1);
+  font-weight: 400;
+  line-height: var(--post-body-line, 0.95);
+  letter-spacing: -0.01em;
   margin: 0;
+  padding: 0;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow-wrap: break-word;
 }
 
 .commenting-comment-byline {
   display: flex;
   flex-direction: column;
-  margin-top: 6px;
+  gap: 1px;
+  margin-top: auto;
+  flex: 0 0 auto;
+  padding-top: 10px;
   line-height: 1.05;
 }
 
 .commenting-comment-name {
-  font-family: 'AvantGarde ITC BT', var(--font-sans, inherit);
-  font-size: 17px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--comment-accent, var(--ink, #fff));
-  line-height: 1.05;
-}
-
-.commenting-comment-handle {
   font-family: var(--font-sans, inherit);
-  font-size: 14px;
-  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
   margin: 0;
-  color: var(--comment-accent, var(--ink, #fff));
-  opacity: 0.85;
-  line-height: 1.05;
-}
-
-/* Sub-pills — same look as .post-meta-pill (filled with persona accent),
-   distributed left / center / right across the bubble width. */
-.commenting-comment-pills {
-  grid-column: 2;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-  padding: 0 14px;
-}
-
-.commenting-comment-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 14px 5px;
-  border-radius: 9999px;
-  background: var(--comment-accent, var(--ink, #fff));
-  color: var(--pill-fg, #000);
-  font-family: 'AvantGarde ITC BT', var(--font-sans, inherit);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1;
+  color: var(--comment-ink, var(--comment-accent, var(--ink, #fff)));
+  line-height: 1.1;
   letter-spacing: -0.01em;
 }
 
-/* ── User comment (after picking a suggestion) ────────────────────────────
-   Styled like the main post bubble: filled persona accent, contrasting text. */
-[data-user-comment] .commenting-comment-bubble {
-  background: var(--comment-accent);
-  border: none;
+.commenting-comment-handle {
+  font-family: var(--font-avant-book-oblique, var(--font-sans, inherit));
+  font-size: 11px;
+  font-weight: 400;
+  font-style: normal;
+  margin: 0;
+  color: var(--comment-ink, var(--comment-accent, var(--ink, #fff)));
+  opacity: 0.88;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-[data-user-comment] .commenting-comment-content,
-[data-user-comment] .commenting-comment-name,
-[data-user-comment] .commenting-comment-handle {
-  color: var(--pill-fg, #000);
-}
-
-[data-user-comment] .commenting-comment-pill {
-  background: #000;
-  color: var(--comment-accent);
-}
-
-/* Suggestion row */
-.commenting-suggestion-row {
+/* Three equal columns so pills line up row-to-row (variable center text no longer shifts the icon). */
+.commenting-comment-meta {
   display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 14px;
-  align-items: stretch;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 10px;
+  align-items: center;
+  min-height: 0;
+  padding: 0 4px;
+  pointer-events: none;
+}
+
+.commenting-capsule--open .commenting-comment-meta {
+  padding: 3px 4px 3px 4px;
+  margin-top: -3px;
+  margin-bottom: 1px;
+}
+
+.commenting-meta-left,
+.commenting-meta-center,
+.commenting-meta-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.commenting-comment-meta .post-meta-pill:not(.commenting-meta-icon-chip) {
+  background: transparent;
+  border: 1.5px solid var(--comment-accent, var(--persona-accent, #fff));
+  color: var(--comment-accent, var(--persona-accent, #fff));
+  font-size: 12.5px;
+  padding: 4px 9px 5px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Must beat `base.css` `.post-meta-pill` — hollow pills use each comment row’s persona */
+.commenting-comment-meta .post-meta-pill.commenting-meta-icon-chip {
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border-radius: 9999px;
+  background: transparent;
+  border: 1.5px solid var(--comment-accent, var(--persona-accent, #fff));
+  color: var(--comment-accent, var(--persona-accent, #fff));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+}
+
+.commenting-comment-meta .post-meta-pill.commenting-meta-icon-chip svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+.commenting-comment-meta--detached {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Meta under chosen reply: solid persona fill + black labels (matches shell tint). */
+.commenting-suggestion-picked-stack > .commenting-comment-meta.commenting-comment-meta--detached .post-meta-pill:not(.commenting-meta-icon-chip) {
+  background: var(--comment-accent, var(--persona-accent, #fff));
+  border: 1.5px solid #000;
+  color: #000;
+}
+
+.commenting-suggestion-picked-stack > .commenting-comment-meta.commenting-comment-meta--detached .post-meta-pill.commenting-meta-icon-chip {
+  background: var(--comment-accent, var(--persona-accent, #fff));
+  border: 1.5px solid #000;
+  color: #000;
+}
+
+.commenting-suggestion-picked-stack > .commenting-comment-meta.commenting-comment-meta--detached .post-meta-pill.commenting-meta-icon-chip svg {
+  color: inherit;
+}
+
+/* Propositions: single shell; inner lane height is identical unpicked vs picked. */
+.commenting-suggestion-shell {
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  border-radius: 20px;
+  padding: 10px 14px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   opacity: 0;
   transform: translateY(8px);
   transition:
     opacity var(--commenting-duration) var(--commenting-ease),
     transform var(--commenting-duration) var(--commenting-ease),
-    max-height var(--commenting-duration) var(--commenting-ease);
-  max-height: 260px;
+    max-height var(--commenting-duration) var(--commenting-ease),
+    padding var(--commenting-duration) var(--commenting-ease),
+    border-width var(--commenting-duration) var(--commenting-ease),
+    background-color var(--commenting-duration) var(--commenting-ease),
+    border-color var(--commenting-duration) var(--commenting-ease);
+  max-height: none;
   overflow: hidden;
 }
 
-.commenting-capsule--open .commenting-suggestion-row {
+.commenting-suggestion-shell:not(.commenting-suggestion-shell--picked) .commenting-suggestion-row {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  height: var(--commenting-shell-lane-height);
+  min-height: var(--commenting-shell-lane-height);
+  max-height: var(--commenting-shell-lane-height);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.commenting-suggestion-shell--picked {
+  padding: 10px 14px 10px 10px;
+}
+
+.commenting-suggestion-picked-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.commenting-suggestion-picked-inner {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  height: var(--commenting-shell-lane-height);
+  min-height: var(--commenting-shell-lane-height);
+  max-height: var(--commenting-shell-lane-height);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Chosen reply: persona fills the shell; copy is black on the tint. */
+.commenting-suggestion-shell--persona-fill[data-persona='productivite'] {
+  --comment-accent: var(--commenting-persona-productivite);
+  background: var(--comment-accent);
+  border-color: color-mix(in srgb, var(--comment-accent) 58%, #000);
+}
+
+.commenting-suggestion-shell--persona-fill[data-persona='securite'] {
+  --comment-accent: var(--commenting-persona-securite);
+  background: var(--comment-accent);
+  border-color: color-mix(in srgb, var(--comment-accent) 58%, #000);
+}
+
+.commenting-suggestion-shell--persona-fill[data-persona='popularite'] {
+  --comment-accent: var(--commenting-persona-popularite);
+  background: var(--comment-accent);
+  border-color: color-mix(in srgb, var(--comment-accent) 58%, #000);
+}
+
+.commenting-suggestion-shell--persona-fill .commenting-comment {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.commenting-suggestion-shell--persona-fill .commenting-comment-bubble {
+  border: none;
+  background: transparent;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  /* Tight bottom — large padding was leaving empty tint below the name row */
+  padding: 6px 14px 4px 10px;
+}
+
+.commenting-suggestion-shell--persona-fill .commenting-comment-head {
+  flex: 1 1 0;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.commenting-suggestion-shell--persona-fill .commenting-comment-text {
+  box-sizing: border-box;
+  padding: 2px 10px 2px 10px;
+  align-self: stretch;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  /* Pin byline to bottom of the stretched column (1fr row eats leftover height). */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.commenting-suggestion-shell--persona-fill .commenting-comment-content {
+  grid-row: 1;
+  grid-column: 1;
+  align-self: start;
+  justify-self: stretch;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.commenting-suggestion-shell--persona-fill .commenting-comment-byline {
+  grid-row: 2;
+  grid-column: 1;
+  align-self: end;
+  margin-top: 0;
+  padding-top: 0.5rem;
+  padding-bottom: 0;
+}
+
+.commenting-suggestion-shell--persona-fill .commenting-comment-content,
+.commenting-suggestion-shell--persona-fill .commenting-comment-name,
+.commenting-suggestion-shell--persona-fill .commenting-comment-handle {
+  color: #000;
+  --comment-ink: #000;
+}
+
+.commenting-capsule--open .commenting-suggestion-shell {
   opacity: 1;
   transform: translateY(0);
   transition-delay: calc(var(--commenting-stagger) * 3);
 }
 
-.commenting-suggestion-row--collapsed {
-  opacity: 0;
-  max-height: 0;
-  pointer-events: none;
+.commenting-suggestion-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: clamp(12px, 2vw, 18px);
+  min-width: 0;
 }
 
-.commenting-suggestion-cards {
+/*
+  Proposition avatar: do NOT reuse `.commenting-comment-head` on this rail — that class
+  sets `flex: 1 1 0` and turns the tile into a wide horizontal pill. This block is a
+  fixed square (lane height), squircle radius, normal profile framing.
+*/
+.commenting-suggestion-avatar-rail {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: min(var(--commenting-shell-lane-height), 100%);
+  max-width: min(var(--commenting-shell-lane-height), 100%);
+  aspect-ratio: 1;
+  height: auto;
+  max-height: var(--commenting-shell-lane-height);
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 22%;
+}
+
+.commenting-suggestion-avatar-rail > .commenting-comment-avatar {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1;
+  border-radius: inherit;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--post-accent, #888) 20%, #fff);
+  color: var(--post-accent, #888);
+  border: none;
+  box-sizing: border-box;
+  font-size: clamp(1.05rem, 3vw, 1.5rem);
+  font-weight: 500;
+  font-family: var(--font-sans, inherit);
+}
+
+.commenting-suggestion-shell--persona-fill .commenting-comment-head .commenting-comment-avatar {
+  width: min(var(--commenting-shell-lane-height), 100%);
+  max-width: min(var(--commenting-shell-lane-height), 100%);
+  aspect-ratio: 1;
+  height: auto;
+  max-height: var(--commenting-shell-lane-height);
+  flex: 0 0 auto;
+  align-self: center;
+  border-radius: 22%;
+}
+
+.commenting-suggestion-options {
+  flex: 1;
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
 }
 
-/* Card uses a grid so the +N badge has its own row and never overlaps text. */
-.commenting-suggestion-card {
+.commenting-suggestion-option {
   appearance: none;
   border: none;
+  margin: 0;
   cursor: pointer;
-  border-radius: 14px;
-  padding: 12px 14px 14px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  padding: 6px 6px 8px;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2px;
   text-align: left;
-  background: var(--suggestion-bg, #D8D8D8);
-  color: var(--suggestion-fg, #000);
-  font-family: var(--font-sans, inherit);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-  min-height: 138px;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 8px;
+  font: inherit;
+  color: #000;
+  background: var(--suggestion-sheet-bg, #d8d8d8);
   transition:
     opacity var(--commenting-duration) var(--commenting-ease),
     transform var(--commenting-duration) var(--commenting-ease);
 }
 
-.commenting-suggestion-card__text {
-  grid-row: 1;
-  display: block;
+.commenting-suggestion-option-text {
+  font-family: var(--font-sans, inherit);
+  font-size: var(--suggestion-copy, 20px);
+  font-weight: 400;
+  line-height: 1.12;
+  padding-top: 8px;
+  padding-left: 8px;
+  padding-right: 2px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  min-height: 0;
 }
 
-.commenting-suggestion-card__plus {
-  grid-row: 2;
-  justify-self: end;
-  width: 32px;
-  height: 32px;
+.commenting-suggestion-option-plus {
+  align-self: flex-end;
+  flex-shrink: 0;
+  width: var(--suggestion-plus-size, 42px);
+  height: var(--suggestion-plus-size, 42px);
   border-radius: 9999px;
-  background: #0c0c0c;
-  color: #fff;
+  background: #000;
+  color: var(--suggestion-accent, #fff);
   display: grid;
   place-items: center;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: calc(var(--suggestion-copy, 23px) * 0.92);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
   transition: opacity var(--commenting-duration) var(--commenting-ease);
 }
 
-.commenting-suggestion-card[data-persona='productivite'] {
-  --suggestion-bg: var(--commenting-persona-productivite);
-  --suggestion-fg: #000;
+.commenting-suggestion-option[data-persona='productivite'] {
+  --suggestion-sheet-bg: var(--commenting-persona-productivite);
+  --suggestion-accent: var(--commenting-persona-productivite);
 }
 
-.commenting-suggestion-card[data-persona='securite'] {
-  --suggestion-bg: var(--commenting-persona-securite);
-  --suggestion-fg: #fff;
+.commenting-suggestion-option[data-persona='securite'] {
+  --suggestion-sheet-bg: var(--commenting-persona-securite);
+  --suggestion-accent: var(--commenting-persona-securite);
 }
 
-.commenting-suggestion-card[data-persona='popularite'] {
-  --suggestion-bg: var(--commenting-persona-popularite);
-  --suggestion-fg: #000;
+.commenting-suggestion-option[data-persona='popularite'] {
+  --suggestion-sheet-bg: var(--commenting-persona-popularite);
+  --suggestion-accent: var(--commenting-persona-popularite);
 }
 
-.commenting-suggestion-card--faded {
+.commenting-suggestion-option--faded {
   opacity: 0;
   pointer-events: none;
 }
 
-.commenting-suggestion-card__plus--hidden {
+.commenting-suggestion-option-plus--hidden {
   opacity: 0;
 }
 
-/* Footer "comment here" pill — always visible inside the capsule. */
+/* Footer: real input so the placeholder hides while typing; hidden after a
+   suggestion is chosen (mock “post” flow). */
 .commenting-footer {
   display: flex;
   justify-content: center;
   padding: 4px 0 0;
 }
 
-.commenting-footer-pill {
+.commenting-footer-field {
   width: 100%;
   text-align: center;
   border: 1.5px solid var(--persona-accent, #fff);
   border-radius: 9999px;
-  padding: 12px 16px;
+  box-sizing: border-box;
+  min-height: 3.35rem;
+  padding: 16px 20px 17px;
   font-family: 'AvantGarde ITC BT', var(--font-sans, inherit);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 400;
   color: var(--persona-accent, #fff);
   background: transparent;
+  outline: none;
 }
 
-/* Comment toggle icon — animated wrapper holds the original icon button */
+.commenting-footer-field::placeholder {
+  color: color-mix(in srgb, var(--persona-accent, #fff) 85%, transparent);
+  opacity: 1;
+}
+
+.commenting-footer-field:not(:placeholder-shown) {
+  color: #fff;
+}
+
 .commenting-toggle-host {
   position: relative;
   display: inline-flex;
@@ -353,4 +694,13 @@
   background: #000;
   color: var(--persona-accent, #fff);
   border: 2px solid var(--persona-accent, #fff);
+  position: relative;
+  z-index: 6;
+}
+
+/* Open post stacks above its commenting capsule so the FLIP’d toggle isn’t
+   covered by the capsule border / shell. */
+.post-card.post-card--comments-open {
+  position: relative;
+  z-index: 3;
 }

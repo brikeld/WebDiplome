@@ -1,8 +1,11 @@
 import '@/styles/commenting.css';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Comment from './Comment.jsx';
-import UserComment from './UserComment.jsx';
 import SuggestionRow from './SuggestionRow.jsx';
+import {
+  commentMetaCenterLine,
+  mockCommentTimeAgo,
+} from '@/lib/commentMetaStrip.js';
 import { getMockCommentsFor } from './commentingMock.js';
 
 export default function CommentsCapsule({
@@ -16,6 +19,7 @@ export default function CommentsCapsule({
 }) {
   const [picked, setPicked] = useState(null);
   const [originRect, setOriginRect] = useState(null);
+  const [footerDraft, setFooterDraft] = useState('');
   const rootRef = useRef(null);
   const userCommentRef = useRef(null);
 
@@ -24,6 +28,7 @@ export default function CommentsCapsule({
     if (!isOpen) {
       setPicked(null);
       setOriginRect(null);
+      setFooterDraft('');
     }
   }, [isOpen]);
 
@@ -55,7 +60,7 @@ export default function CommentsCapsule({
     } else {
       el.style.maxHeight = '0px';
     }
-  }, [isOpen]);
+  }, [isOpen, picked]);
 
   // FLIP: when picked is set with an originRect, translate the new UserComment
   // node so it starts where the suggestion card was, then animate back to identity.
@@ -99,6 +104,7 @@ export default function CommentsCapsule({
       }
     }
     setPicked(s);
+    setFooterDraft('');
   };
 
   const { comments, suggestions } = getMockCommentsFor(post.id);
@@ -111,13 +117,15 @@ export default function CommentsCapsule({
       data-post-id={post.id}
       aria-hidden={!isOpen}
       inert={!isOpen ? '' : undefined}
+      style={{ '--post-accent': post.noteColor }}
     >
       {comments.map((c, i) => (
         <Comment
           key={c.persona}
           persona={c.persona}
           content={c.content}
-          pills={c.pills}
+          metaLeft={mockCommentTimeAgo(post.id, c.persona, i)}
+          metaCenter={commentMetaCenterLine(post.id, c.persona)}
           displayName={displayName}
           handle={handle}
           avatarSrc={avatarSrc}
@@ -126,31 +134,32 @@ export default function CommentsCapsule({
         />
       ))}
 
-      {picked ? (
-        <div ref={userCommentRef} data-flip-root data-user-comment>
-          <UserComment
-            persona={picked.persona}
-            content={picked.content}
-            displayName={displayName}
-            handle={handle}
-            avatarSrc={avatarSrc}
-            avatarInitials={avatarInitials}
-          />
-        </div>
-      ) : null}
-
       <SuggestionRow
         suggestions={suggestions}
         avatarSrc={avatarSrc}
         avatarInitials={avatarInitials}
-        pickedPersona={picked?.persona ?? null}
-        collapsed={picked !== null}
+        picked={picked}
+        userCommentRef={userCommentRef}
+        postId={post.id}
+        displayName={displayName}
+        handle={handle}
         onPick={handlePick}
       />
 
-      <div className="commenting-footer">
-        <div className="commenting-footer-pill">comment here</div>
-      </div>
+      {picked ? null : (
+        <div className="commenting-footer">
+          <input
+            id={`${capsuleId}-draft`}
+            className="commenting-footer-field"
+            type="text"
+            value={footerDraft}
+            onChange={(e) => setFooterDraft(e.target.value)}
+            placeholder="comment here"
+            autoComplete="off"
+            aria-label="Add a comment"
+          />
+        </div>
+      )}
     </div>
   );
 }

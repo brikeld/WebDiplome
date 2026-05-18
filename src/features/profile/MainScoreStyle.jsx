@@ -10,13 +10,9 @@ const PERSONA_COLORS = {
 const METRICS_ORDER = ['prod', 'social', 'sec'];
 
 const T_EPS = 0.002;
-/** Smaller = slower convergence (`t += (1 - t) * T_LERP`). */
 const T_LERP = 0.052;
 
-/**
- * @param {number} t  Animation scalar in [0, 1]
- */
-function drawArcChart(canvas, width, height, values, fonts, centerScore, t) {
+function drawArcChart(canvas, width, height, values, fonts, centerScore, t, showCenterScore) {
   const W = width;
   const H = height;
   const ctx = canvas.getContext('2d');
@@ -72,6 +68,8 @@ function drawArcChart(canvas, width, height, values, fonts, centerScore, t) {
     ctx.fill();
   });
 
+  if (!showCenterScore) return;
+
   const label = Math.round(centerScore * tt);
 
   ctx.shadowBlur = 0;
@@ -84,9 +82,12 @@ function drawArcChart(canvas, width, height, values, fonts, centerScore, t) {
 }
 
 /**
- * Triple-arc main score — rings from `profile.personaScores`; center from `globalScore` when present.
+ * @param {object} [opts]
+ * @param {object} opts.profile
+ * @param {number} [opts.entryReplayKey] — ring animation replays only when this changes (profile visits). Omit on landing: use score-driven replay instead.
+ * @param {boolean} [opts.hideCenterScore]
  */
-export default function MainScoreStyle({ profile }) {
+export default function MainScoreStyle({ profile, entryReplayKey, hideCenterScore = false }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -100,6 +101,7 @@ export default function MainScoreStyle({ profile }) {
 
   const tRef = useRef(0);
   const rafRef = useRef(null);
+  const prevScoreKeyRef = useRef(/** @type {string | null} */ (null));
 
   const scoreKey = useMemo(
     () =>
@@ -161,12 +163,15 @@ export default function MainScoreStyle({ profile }) {
     layoutRef.current = { cssW, cssH, fonts, values, centerScore };
   }, [profile]);
 
-  const drawFrame = useCallback((t) => {
-    const canvas = canvasRef.current;
-    const { cssW, cssH, fonts, values, centerScore } = layoutRef.current;
-    if (!canvas) return;
-    drawArcChart(canvas, cssW, cssH, values, fonts, centerScore, t);
-  }, []);
+  const drawFrame = useCallback(
+    (t) => {
+      const canvas = canvasRef.current;
+      const { cssW, cssH, fonts, values, centerScore } = layoutRef.current;
+      if (!canvas) return;
+      drawArcChart(canvas, cssW, cssH, values, fonts, centerScore, t, !hideCenterScore);
+    },
+    [hideCenterScore],
+  );
 
   const stepAnimation = useCallback(() => {
     let t = tRef.current;
@@ -191,21 +196,50 @@ export default function MainScoreStyle({ profile }) {
     rafRef.current = requestAnimationFrame(stepAnimation);
   }, [cancelLoop, drawFrame, stepAnimation, syncLayout]);
 
+  /** Profile: replay rings only when navigating onto the profile (key bumps). */
   useEffect(() => {
+    if (entryReplayKey === undefined) return undefined;
+    prevScoreKeyRef.current = null;
     replay();
     return () => cancelLoop();
-  }, [replay, scoreKey]);
+  }, [entryReplayKey, replay, cancelLoop]);
+
+  /** Landing / demo: replay when the demo score payload changes. */
+  useEffect(() => {
+    if (entryReplayKey !== undefined) return undefined;
+    replay();
+    return () => cancelLoop();
+  }, [scoreKey, entryReplayKey, replay, cancelLoop]);
+
+  /** Profile: poll updated scores — redraw full arcs, no replay. */
+  useEffect(() => {
+    if (entryReplayKey === undefined) return undefined;
+    const prev = prevScoreKeyRef.current;
+    if (prev === null) {
+      prevScoreKeyRef.current = scoreKey;
+      return undefined;
+    }
+    if (prev === scoreKey) return undefined;
+    prevScoreKeyRef.current = scoreKey;
+    cancelLoop();
+    syncLayout();
+    tRef.current = 1;
+    drawFrame(1);
+    return undefined;
+  }, [scoreKey, entryReplayKey, syncLayout, drawFrame, cancelLoop]);
 
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return undefined;
 
     const ro = new ResizeObserver(() => {
-      replay();
+      const t = tRef.current;
+      syncLayout();
+      drawFrame(Math.min(1, t));
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [replay]);
+  }, [syncLayout, drawFrame]);
 
   return (
     <div className="main-score-style" ref={wrapRef}>

@@ -142,6 +142,16 @@ export default function App() {
   const [nowTick, setNowTick] = useState(0);
   const [postGen, setPostGen] = useState({ loading: false, error: null });
   const streamPostsBaselineRef = useRef([]);
+  /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
+  const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
+  const prevMainViewRef = useRef(null);
+
+  useEffect(() => {
+    if (mainView === 'profile' && prevMainViewRef.current !== 'profile') {
+      setProfileScoreReplayNonce((n) => n + 1);
+    }
+    prevMainViewRef.current = mainView;
+  }, [mainView]);
 
   // Lock body scroll in home mode; release it for profile (full-page scroll).
   useEffect(() => {
@@ -396,7 +406,11 @@ export default function App() {
                   style={{ '--persona-accent': personaColor }}
                 >
                   <div className="posts-capsule-inner">
-                    <ProfileHeader profile={profile} personaColor={personaColor} />
+                    <ProfileHeader
+                      profile={profile}
+                      personaColor={personaColor}
+                      mainScoreEntryReplayKey={profileScoreReplayNonce}
+                    />
 
                     <TabBar
                       activeTab={activeTab}

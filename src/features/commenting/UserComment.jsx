@@ -7,17 +7,22 @@ export default function UserComment({
   handle,
   avatarSrc,
   avatarInitials,
+  metaLeft,
+  metaCenter,
+  showMeta = true,
 }) {
   return (
     <Comment
       persona={persona}
       content={content}
-      pills={['text', 'text', 'text']} // per spec: placeholder labels for the mockup phase
       displayName={displayName}
       handle={handle}
       avatarSrc={avatarSrc}
       avatarInitials={avatarInitials}
+      metaLeft={metaLeft}
+      metaCenter={metaCenter}
       staggerIndex={0}
+      showMeta={showMeta}
     />
   );
 }

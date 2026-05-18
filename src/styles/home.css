@@ -21,7 +21,7 @@
   margin: 8px auto 16px;
   padding: 5px 18px 6px;
   border: 2px solid var(--persona-accent, var(--ink));
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   background: transparent;
 }
 

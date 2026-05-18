@@ -18,7 +18,7 @@
   gap: 10px;
   padding: 8px 12px;
   border: 1px solid var(--post-accent, currentColor);
-  border-radius: 8px;
+  border-radius: 11px;
   color: var(--post-accent, currentColor);
   text-decoration: none;
   font-family: var(--font-sans, inherit);
@@ -59,6 +59,12 @@
 .post-pdf-carousel .post-pdf-carousel__frame {
   position: relative;
   min-height: 120px;
+  /* Mirror the parent .post-attachment-block viewport cap so the nav
+     chevrons and page dots (positioned absolutely inside __frame) stay
+     inside the visible cropped area, instead of falling below it when a
+     rendered PDF page is taller than the cap. */
+  max-height: 70vh;
+  overflow: hidden;
 }
 
 .post-pdf-carousel__placeholder {

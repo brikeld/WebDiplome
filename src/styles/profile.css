@@ -23,7 +23,7 @@
   --profile-score-size: min(calc(var(--profile-hero-outer-h) * 0.75), 20rem);
   background: var(--persona-accent, #2323ff);
   border: 3px solid var(--persona-accent, #2323ff);
-  border-radius: 16px;
+  border-radius: var(--radius-post-surface);
   overflow: visible;
   position: relative;
   margin-top: clamp(40px, 8vw, 60px);
@@ -146,7 +146,7 @@
 .profile-connect-btn {
   appearance: none;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 4px 12px;
   line-height: 1.15;
   font-family: var(--font-sans);
@@ -267,6 +267,7 @@
   justify-content: center;
   gap: 16px;
   padding: 14px 22px;
+  /* Fixed (not --radius-pill): large token made these read as circles */
   border-radius: 12px;
   border: 3px solid var(--persona-accent, #2323ff);
   background: #000;
@@ -412,7 +413,7 @@ button.profile-last-analysis-pill:disabled {
   justify-content: flex-start;
   gap: 2px;
   padding: 6px 12px 7px;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   font-size: inherit;
   font-weight: 600;
   line-height: 1.15;
@@ -458,7 +459,7 @@ button.profile-last-analysis-pill:disabled {
   justify-content: center;
   gap: 6px;
   padding: 6px 12px 7px;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   font-size: clamp(20px, 2.8vw, 34px);
   font-weight: 700;
   line-height: 1.15;
@@ -504,7 +505,7 @@ button.profile-last-analysis-pill:disabled {
   justify-content: center;
   gap: 0;
   padding: 10px 16px 11px;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   font-size: 23px;
   font-weight: 700;
   color: var(--pill-accent, var(--ink));
@@ -542,7 +543,7 @@ button.profile-last-analysis-pill:disabled {
   gap: 2px;
   padding: 6px;
   margin-bottom: 24px;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   border: 3px solid var(--persona-accent, #2323ff);
   background: var(--persona-accent, #2323ff);
   width: 100%;
@@ -555,7 +556,7 @@ button.profile-last-analysis-pill:disabled {
   font-size: 18px;
   font-weight: 600;
   padding: 12px 12px 13px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
   color: #000;
   cursor: pointer;
