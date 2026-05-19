@@ -48,6 +48,7 @@ export default function PostCard({
 
   const toggleRef = useRef(null);
   const articleRef = useRef(null);
+  const systemNotePillRef = useRef(null);
 
   useLayoutEffect(() => {
     const btn = toggleRef.current;
@@ -127,7 +128,7 @@ export default function PostCard({
             <button
               type="button"
               className="post-meta-pill post-action-btn post-action-btn--outline"
-              onClick={onHide}
+              onClick={() => onHide(systemNotePillRef.current?.getBoundingClientRect() ?? null)}
               aria-label={isHidden ? 'Show post' : 'Hide post'}
               aria-pressed={isHidden}
             >
@@ -195,7 +196,7 @@ export default function PostCard({
           <span className="post-meta-pill">{timeAgo} ago</span>
         </div>
         <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--center post-meta-center">
-          <span className="post-meta-pill">
+          <span ref={systemNotePillRef} className="post-meta-pill">
             System note [{personaLabel}] [+{systemDeltaPct}%]
           </span>
         </div>
