@@ -20,6 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
 const POSTS_DIR = path.join(__dirname, 'posts');
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const ELECTRON_DATA_PATH = '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/data.json';
 
 const normalizePost = (p) => {
   if (!p || typeof p !== 'object') return p;
@@ -295,6 +296,54 @@ app.delete('/api/posts/:id', async (req, res) => {
     await writePostsForId(id, updated);
     res.json({ success: true, removed: existing[idx] });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/profile/:id/score-adjustments
+// Persists liveScoring adjustments and patches Electron data.json.
+app.post('/api/profile/:id/score-adjustments', async (req, res) => {
+  const id = req.params.id;
+  const { scoreAdjustments } = req.body ?? {};
+
+  if (
+    !scoreAdjustments ||
+    typeof scoreAdjustments !== 'object' ||
+    typeof scoreAdjustments.productivity !== 'number' ||
+    typeof scoreAdjustments.security !== 'number' ||
+    typeof scoreAdjustments.social !== 'number'
+  ) {
+    return res.status(400).json({ error: 'scoreAdjustments must contain numeric productivity, security, social' });
+  }
+
+  const profilePath = path.join(PROFILES_DIR, `${id}.json`);
+
+  try {
+    // 1. Update WebDiplome profile JSON
+    const raw = await fs.readFile(profilePath, 'utf8');
+    const profile = JSON.parse(raw);
+    profile.scoreAdjustments = scoreAdjustments;
+    await fs.writeFile(profilePath, JSON.stringify(profile, null, 2), 'utf8');
+
+    // 2. Patch Electron data.json (best-effort — don't fail if missing)
+    try {
+      const electronRaw = await fs.readFile(ELECTRON_DATA_PATH, 'utf8');
+      const electronData = JSON.parse(electronRaw);
+      electronData.liveScoreAdjustments = {
+        productivity: scoreAdjustments.productivity,
+        security: scoreAdjustments.security,
+        social: scoreAdjustments.social,
+        updatedAt: new Date().toISOString(),
+      };
+      await fs.writeFile(ELECTRON_DATA_PATH, JSON.stringify(electronData, null, 2), 'utf8');
+    } catch (electronErr) {
+      // Electron repo not available — log and continue
+      console.warn('[score-adjustments] Electron data.json not updated:', electronErr.message);
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    if (err.code === 'ENOENT') return res.status(404).json({ error: `Profile '${id}' not found` });
     res.status(500).json({ error: err.message });
   }
 });
