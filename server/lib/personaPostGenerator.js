@@ -1,6 +1,12 @@
 /**
- * Slot-based persona post generation for the WebDiplome server.
- * Renders deterministic chart PNGs (sharp) for the chart_apps slot — mirrors testCreationAcc slotScheduler.
+ * Three-slot persona post generation.
+ *
+ * Slots:
+ *   0 — text   : LLM-only; context from a rotating data slice
+ *   1 — asset  : LLM + random file (image/pdf/screenshot) from Electron assets
+ *   2 — chart  : LLM + algorithmically generated chart PNG
+ *
+ * Persona is data-driven: determined by the slice/chart type chosen, not the slot.
  */
 
 import crypto from 'crypto';
@@ -8,30 +14,88 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import {
   extractBrowserSlice,
-  extractAppCategorySlice,
   extractWifiSlice,
   extractDownloadsSlice,
+  extractMostUsedAppsSlice,
   formatBrowserSliceAsText,
   formatWifiSliceAsText,
   formatDownloadsAsText,
-  formatAppCategoryAsText,
+  formatAppUsageAsText,
 } from './dataSlices.js';
-import { resolveChartRasterSpec } from './chartGenerator.js';
+import { pickAndBuildChart } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
 import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
 
-/** Slot index for pool image imported from disk (SLOT_DEFS order). */
-export const IMPORT_POOL_IMAGE_SLOT_INDEX = 2;
-/** Slot index for pool document imported from disk. */
-export const IMPORT_POOL_DOC_SLOT_INDEX = 4;
+/** Slot index for the asset slot (image or document from disk). */
+export const ASSET_SLOT_INDEX = 1;
 
-const SLOT_DEFS = [
-  { id: 'text_browser',  persona: 'popularite',   promptKey: 'browser'  },
-  { id: 'chart_apps',    persona: 'productivite', promptKey: 'chart'    },
-  { id: 'image_photo',   persona: 'popularite',   promptKey: 'image'    },
-  { id: 'text_security', persona: 'securite',     promptKey: null       },
-  { id: 'doc_file',      persona: 'productivite', promptKey: 'document' },
+// ─── Text slice pool ───────────────────────────────────────────────────────
+
+const TEXT_SLICE_POOL = [
+  {
+    id: 'browser',
+    persona: 'popularite',
+    promptKey: 'browser',
+    extract: (data) => extractBrowserSlice(data || {}),
+    format: formatBrowserSliceAsText,
+  },
+  {
+    id: 'wifi',
+    persona: 'securite',
+    promptKey: 'wifi',
+    extract: (data) => extractWifiSlice(data || {}),
+    format: formatWifiSliceAsText,
+  },
+  {
+    id: 'downloads',
+    persona: 'securite',
+    promptKey: 'downloads',
+    extract: (data) => extractDownloadsSlice(data || {}),
+    format: formatDownloadsAsText,
+  },
+  {
+    id: 'app_usage',
+    persona: 'productivite',
+    promptKey: 'app_usage',
+    extract: (data) => extractMostUsedAppsSlice(data || {}),
+    format: formatAppUsageAsText,
+  },
 ];
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+function getRecentFieldValues(posts, field, n = 3) {
+  return posts
+    .filter((p) => p && typeof p[field] === 'string')
+    .slice(0, n)
+    .map((p) => p[field]);
+}
+
+function personaScoreFor(persona, scores) {
+  if (!scores) return 50;
+  if (persona === 'productivite') return scores.productivity ?? 50;
+  if (persona === 'securite') return scores.security ?? 50;
+  if (persona === 'popularite') return scores.social ?? 50;
+  return 50;
+}
+
+function weightedPick(items, getWeight) {
+  const weights = items.map((item) => Math.max(1, getWeight(item)));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
+
+function pickWithRecencyGuard(pool, recentIds, personaScores) {
+  const excludeSet = new Set(recentIds);
+  const available = pool.filter((item) => !excludeSet.has(item.id));
+  const candidates = available.length > 0 ? available : pool;
+  return weightedPick(candidates, (item) => personaScoreFor(item.persona, personaScores));
+}
 
 function imageTextFallbackNote(filename) {
   return `\n\nFor context, the user recently had a file named "${filename}" — you may reference it naturally in the post.`;
@@ -136,46 +200,52 @@ function parsePostWithSentiment(raw, fallbackPersona) {
   return { content: text, sentiment: inferred };
 }
 
-// Build a prepared slot from data (chart_apps filled later by hydrateChartAppsSlot).
-function buildTextSlot(def, dataJson, baseUserPayload) {
-  switch (def.id) {
-    case 'text_browser': {
-      const slice = extractBrowserSlice(dataJson || {});
-      const ctx = formatBrowserSliceAsText(slice);
-      return { ...def, promptKey: 'browser', userPayload: ctx ? `${ctx}\n\n---\n${baseUserPayload}` : baseUserPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
-    }
-    case 'text_security': {
-      const wifiSlice = extractWifiSlice(dataJson || {});
-      const dlSlice = extractDownloadsSlice(dataJson || {});
-      const useWifi = wifiSlice.count >= 3 && (dlSlice.items.length < 2 || Math.random() > 0.4);
-      const promptKey = useWifi ? 'wifi' : 'downloads';
-      const ctx = useWifi ? formatWifiSliceAsText(wifiSlice) : formatDownloadsAsText(dlSlice);
-      return { ...def, promptKey, userPayload: ctx ? `${ctx}\n\n---\n${baseUserPayload}` : baseUserPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
-    }
-    default:
-      return { ...def, promptKey: def.promptKey || 'browser', userPayload: baseUserPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
+// ─── Slot builders ─────────────────────────────────────────────────────────
+
+function buildTextSlot(dataJson, baseUserPayload, existingPosts, SP, personaScores) {
+  const recentTypes = getRecentFieldValues(existingPosts, 'textSliceType');
+  const chosen = pickWithRecencyGuard(TEXT_SLICE_POOL, recentTypes, personaScores);
+  if (!chosen) {
+    return {
+      id: 'text', persona: 'popularite', promptKey: 'browser',
+      userPayload: baseUserPayload, imageData: null, docText: null,
+      docFilename: null, attachedAsset: null, textSliceType: 'browser',
+    };
   }
+  const slice = chosen.extract(dataJson);
+  const ctx = chosen.format(slice);
+  return {
+    id: 'text',
+    persona: chosen.persona,
+    promptKey: chosen.promptKey,
+    userPayload: ctx ? `${ctx}\n\n---\n${baseUserPayload}` : baseUserPayload,
+    imageData: null,
+    docText: null,
+    docFilename: null,
+    attachedAsset: null,
+    textSliceType: chosen.id,
+  };
 }
 
-async function hydrateChartAppsSlot(slots, dataJson, baseUserPayload, chartUploadDir) {
-  const idx = slots.findIndex((s) => s.id === 'chart_apps');
-  if (idx === -1) return;
+async function buildChartSlot(dataJson, profile, baseUserPayload, existingPosts, chartUploadDir, personaScores) {
+  const recentTypes = getRecentFieldValues(existingPosts, 'chartType');
+  const chartSpec = pickAndBuildChart(dataJson, profile, recentTypes, personaScores);
 
-  const { svg, w, h } = resolveChartRasterSpec(dataJson || {});
-  const pngBase64 = await renderSvgToPng(svg, w, h);
-  if (!pngBase64) {
-    const appSlice = extractAppCategorySlice(dataJson || {});
-    const textCtx = formatAppCategoryAsText(appSlice);
-    slots[idx] = {
-      ...slots[idx],
-      promptKey: 'chart',
-      userPayload: textCtx ? `${textCtx}\n\n---\n${baseUserPayload}` : baseUserPayload,
-      imageData: null,
-      docText: null,
-      docFilename: null,
-      attachedAsset: null,
+  if (!chartSpec) {
+    return {
+      id: 'chart', persona: 'productivite', promptKey: 'chart',
+      userPayload: baseUserPayload, imageData: null, docText: null,
+      docFilename: null, attachedAsset: null, chartType: null,
     };
-    return;
+  }
+
+  const pngBase64 = await renderSvgToPng(chartSpec.svg, chartSpec.w, chartSpec.h);
+  if (!pngBase64) {
+    return {
+      id: 'chart', persona: chartSpec.persona, promptKey: 'chart',
+      userPayload: baseUserPayload, imageData: null, docText: null,
+      docFilename: null, attachedAsset: null, chartType: chartSpec.chartType,
+    };
   }
 
   let filename = 'chart.png';
@@ -191,37 +261,149 @@ async function hydrateChartAppsSlot(slots, dataJson, baseUserPayload, chartUploa
     relativePath = `public/uploads/${filename}`;
   }
 
-  slots[idx] = {
-    ...slots[idx],
+  return {
+    id: 'chart',
+    persona: chartSpec.persona,
     promptKey: 'chart',
     userPayload: baseUserPayload,
     imageData: { base64: pngBase64, mime: 'image/png' },
     docText: null,
     docFilename: null,
-    attachedAsset: {
-      kind: 'image',
-      filename,
-      relativePath,
-      url,
-      mime: 'image/png',
-      visionAnalysed: true,
-    },
+    attachedAsset: { kind: 'image', filename, relativePath, url, mime: 'image/png', visionAnalysed: true },
+    chartType: chartSpec.chartType,
   };
 }
+
+function buildAssetSlot(baseUserPayload, assetAssignment) {
+  const slot = {
+    id: 'asset',
+    persona: 'popularite',
+    promptKey: 'image',
+    userPayload: baseUserPayload,
+    imageData: null,
+    docText: null,
+    docFilename: null,
+    attachedAsset: null,
+  };
+
+  if (!assetAssignment) return slot;
+
+  const asset = assetAssignment.asset;
+  if (asset.kind === 'image') {
+    slot.imageData = { base64: asset.base64, mime: asset.mime };
+    slot.promptKey = 'image';
+    slot.persona = 'popularite';
+  } else {
+    slot.docText = asset.text;
+    slot.docFilename = asset.filename;
+    slot.promptKey = 'document';
+    slot.persona = 'productivite';
+  }
+  slot.attachedAsset = {
+    kind: asset.kind,
+    filename: asset.filename,
+    relativePath: null,
+    url: null,
+    mime: asset.mime ?? 'application/octet-stream',
+  };
+
+  return slot;
+}
+
+// ─── Slot runner ───────────────────────────────────────────────────────────
+
+async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
+  const promptCfg = SP[slot.promptKey] ?? DEFAULT_SLOT_PROMPTS.browser;
+
+  const runOnce = async (temperature, withVision) => {
+    const body = buildChatBody({
+      model: slot._model,
+      systemPrompt: promptCfg.system,
+      userPayload: slot.userPayload,
+      imageData: withVision && slot.imageData ? slot.imageData : null,
+      docText: slot.docText || null,
+      docFilename: slot.docFilename || null,
+      temperature,
+      maxTokens: promptCfg.maxTokens,
+    });
+    const r = await lmChatCompletion({ baseUrl, timeoutMs, retries, body });
+    return parsePostWithSentiment(extractChoiceText(r), slot.persona);
+  };
+
+  let parsed = { content: '', sentiment: null };
+  let visionSucceeded = false;
+
+  if (slot.imageData) {
+    try {
+      parsed = await runOnce(promptCfg.temperature, true);
+      if (parsed.content) visionSucceeded = true;
+    } catch { /* vision not supported */ }
+  }
+
+  if (!parsed.content) {
+    const fallbackPayload = slot.imageData && slot.attachedAsset
+      ? slot.userPayload + imageTextFallbackNote(slot.attachedAsset.filename || '')
+      : slot.userPayload;
+    const body = buildChatBody({
+      model: slot._model,
+      systemPrompt: promptCfg.system,
+      userPayload: fallbackPayload,
+      imageData: null,
+      docText: slot.docText || null,
+      docFilename: slot.docFilename || null,
+      temperature: promptCfg.temperature,
+      maxTokens: promptCfg.maxTokens,
+    });
+    parsed = parsePostWithSentiment(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
+  }
+
+  if (!parsed.content) {
+    const body = buildChatBody({
+      model: slot._model,
+      systemPrompt: promptCfg.system,
+      userPayload: slot.userPayload,
+      imageData: null,
+      docText: null,
+      docFilename: null,
+      temperature: 0.35,
+      maxTokens: promptCfg.maxTokens,
+    });
+    parsed = parsePostWithSentiment(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
+  }
+
+  const post = {
+    persona: slot.persona,
+    content: parsed.content,
+    sentiment: parsed.sentiment,
+    createdAt: new Date().toISOString(),
+  };
+  if (slot.attachedAsset) {
+    post.attachedAsset = { ...slot.attachedAsset };
+    if (slot.attachedAsset.kind === 'image') post.attachedAsset.visionAnalysed = visionSucceeded;
+  }
+  if (slot.textSliceType) post.textSliceType = slot.textSliceType;
+  if (slot.chartType) post.chartType = slot.chartType;
+
+  return post;
+}
+
+// ─── Public API ────────────────────────────────────────────────────────────
 
 /**
  * @param {object} opts
  * @param {string}      opts.baseUrl
  * @param {string}      opts.model
- * @param {string}      opts.userPayload       - JSON.stringify({user, profile})
+ * @param {string}      opts.userPayload         - JSON.stringify({user, profile})
  * @param {number}      opts.timeoutMs
  * @param {number}      opts.retries
- * @param {object|null} opts.assetAssignment   - { persona, asset: {kind, base64?, mime, text?, filename} }
+ * @param {object|null} opts.assetAssignment      - { persona, asset: {kind, base64?, mime, text?, filename} }
  * @param {object|null} opts.prompts
- * @param {object|null} opts.dataJson          - parsed data.json for slice injection
- * @param {string|null} [opts.chartUploadDir]  - absolute dir to write chart PNG (e.g. public/uploads)
- * @param {function(object, { slotIndex: number }): void} [opts.onEachPost]
- * @returns {Promise<(object|null)[]>} five entries in slot order; null = slot failed
+ * @param {object|null} opts.dataJson             - parsed data.json for slice + chart injection
+ * @param {object|null} opts.profile              - WebDiplome profile (for chart builders needing scores/storage)
+ * @param {object[]}    opts.existingPosts         - current posts array (for recency guard)
+ * @param {string|null} [opts.chartUploadDir]     - absolute dir to write chart PNG
+ * @param {function}    [opts.onEachPost]
+ * @returns {Promise<(object|null)[]>} three entries [text, asset, chart]; null = slot failed
  */
 export async function generatePersonaPosts({
   baseUrl,
@@ -232,107 +414,34 @@ export async function generatePersonaPosts({
   assetAssignment,
   prompts: promptsParam,
   dataJson,
+  profile,
+  existingPosts = [],
   chartUploadDir,
   onEachPost,
 }) {
   const SP = promptsParam?.slotPrompts ?? DEFAULT_SLOT_PROMPTS;
 
-  const slots = SLOT_DEFS.map((def) => {
-    if (def.id === 'image_photo' || def.id === 'doc_file') {
-      return { ...def, promptKey: def.promptKey, userPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
-    }
-    if (def.id === 'chart_apps') {
-      return { ...def, promptKey: 'chart', userPayload, imageData: null, docText: null, docFilename: null, attachedAsset: null };
-    }
-    return buildTextSlot(def, dataJson, userPayload);
-  });
+  const personaScores = profile?.personaScores ?? null;
+  const [chartSlot, textSlot] = await Promise.all([
+    buildChartSlot(dataJson, profile, userPayload, existingPosts, chartUploadDir, personaScores),
+    Promise.resolve(buildTextSlot(dataJson, userPayload, existingPosts, SP, personaScores)),
+  ]);
+  const assetSlot = buildAssetSlot(userPayload, assetAssignment);
 
-  await hydrateChartAppsSlot(slots, dataJson, userPayload, chartUploadDir);
+  const slots = [textSlot, assetSlot, chartSlot].map(s => ({ ...s, _model: model }));
 
-  // Apply assetAssignment to the matching slot
-  if (assetAssignment) {
-    const targetSlot = assetAssignment.asset?.kind === 'document' ? 'doc_file' : 'image_photo';
-    const idx = slots.findIndex(s => s.id === targetSlot);
-    if (idx !== -1) {
-      const asset = assetAssignment.asset;
-      if (asset.kind === 'image') {
-        slots[idx].imageData = { base64: asset.base64, mime: asset.mime };
-      } else {
-        slots[idx].docText = asset.text;
-        slots[idx].docFilename = asset.filename;
-      }
-      slots[idx].attachedAsset = {
-        kind: asset.kind,
-        filename: asset.filename,
-        relativePath: null,
-        url: null,
-        mime: asset.mime ?? 'application/octet-stream',
-      };
-    }
-  }
-
-  const runSlotPost = async (slot) => {
-    const promptCfg = SP[slot.promptKey] ?? DEFAULT_SLOT_PROMPTS.browser;
-
-    const runOnce = async (temperature, withVision) => {
-      const body = buildChatBody({
-        model,
-        systemPrompt: promptCfg.system,
-        userPayload: slot.userPayload,
-        imageData: withVision && slot.imageData ? slot.imageData : null,
-        docText: slot.docText || null,
-        docFilename: slot.docFilename || null,
-        temperature,
-        maxTokens: promptCfg.maxTokens,
-      });
-      const r = await lmChatCompletion({ baseUrl, timeoutMs, retries, body });
-      return parsePostWithSentiment(extractChoiceText(r), slot.persona);
-    };
-
-    let parsed = { content: '', sentiment: null };
-    let visionSucceeded = false;
-
-    if (slot.imageData) {
-      try {
-        parsed = await runOnce(promptCfg.temperature, true);
-        if (parsed.content) visionSucceeded = true;
-      } catch { /* vision not supported */ }
-    }
-
-    if (!parsed.content) {
-      const fallbackPayload = slot.imageData && slot.attachedAsset
-        ? slot.userPayload + imageTextFallbackNote(slot.attachedAsset.filename || '')
-        : slot.userPayload;
-      const body = buildChatBody({ model, systemPrompt: promptCfg.system, userPayload: fallbackPayload, imageData: null, docText: slot.docText || null, docFilename: slot.docFilename || null, temperature: promptCfg.temperature, maxTokens: promptCfg.maxTokens });
-      parsed = parsePostWithSentiment(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
-    }
-
-    if (!parsed.content) {
-      const body = buildChatBody({ model, systemPrompt: promptCfg.system, userPayload: slot.userPayload, imageData: null, docText: null, docFilename: null, temperature: 0.35, maxTokens: promptCfg.maxTokens });
-      parsed = parsePostWithSentiment(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
-    }
-
-    const post = { persona: slot.persona, content: parsed.content, sentiment: parsed.sentiment, createdAt: new Date().toISOString() };
-    if (slot.attachedAsset) {
-      post.attachedAsset = { ...slot.attachedAsset };
-      if (slot.attachedAsset.kind === 'image') post.attachedAsset.visionAnalysed = visionSucceeded;
-    }
-    return post;
-  };
-
-  const n = slots.length;
-  const slotResults = new Array(n).fill(null);
+  const results = new Array(slots.length).fill(null);
 
   await Promise.all(
     slots.map((slot, index) =>
-      runSlotPost(slot)
+      runSlot(slot, { baseUrl, timeoutMs, retries, SP })
         .catch((err) => {
           console.error(`[personaPostGenerator] slot ${slot.id} failed:`, err?.message || err);
           return null;
         })
         .then(async (post) => {
           if (!post || !post.content) return null;
-          slotResults[index] = post;
+          results[index] = post;
           if (typeof onEachPost === 'function') {
             try {
               await Promise.resolve(onEachPost(post, { slotIndex: index }));
@@ -341,9 +450,9 @@ export async function generatePersonaPosts({
             }
           }
           return post;
-        })
-    )
+        }),
+    ),
   );
 
-  return slotResults;
+  return results;
 }

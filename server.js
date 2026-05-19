@@ -230,6 +230,27 @@ app.get('/api/profile/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/posts/:id — remove one post by createdAt from a profile's post array
+app.delete('/api/posts/:id', async (req, res) => {
+  const id = req.params.id;
+  const { createdAt } = req.body ?? {};
+  if (!createdAt) return res.status(400).json({ error: 'createdAt required' });
+
+  try {
+    const existing = await readPostsForId(id);
+    if (!existing) return res.status(404).json({ error: 'Posts not found for profile' });
+
+    const idx = existing.findIndex((p) => p?.createdAt === createdAt);
+    if (idx === -1) return res.status(404).json({ error: 'Post not found' });
+
+    const updated = [...existing.slice(0, idx), ...existing.slice(idx + 1)];
+    await writePostsForId(id, updated);
+    res.json({ success: true, removed: existing[idx] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = Number(process.env.PORT) || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

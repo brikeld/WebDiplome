@@ -8,8 +8,7 @@ import crypto from 'crypto';
 import { getNewestProfileIdAndPath, readProfileJson } from './server/lib/currentProfile.js';
 import {
   generatePersonaPosts,
-  IMPORT_POOL_DOC_SLOT_INDEX,
-  IMPORT_POOL_IMAGE_SLOT_INDEX,
+  ASSET_SLOT_INDEX,
 } from './server/lib/personaPostGenerator.js';
 import { loadPrompts } from './server/lib/prompts.js';
 import { extractDocText } from './server/lib/docText.js';
@@ -22,6 +21,8 @@ const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 // Read LM Studio config + raw collected data from the Electron app's data dir
 // — same source of truth as the Electron app, so generated posts use the exact same input.
 const ELECTRON_DATA_DIR = '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data';
+/** Repo-local LM Studio settings (wins over Electron `data/lm_studio.json` when present). */
+const LOCAL_LM_STUDIO_CONFIG = path.join(__dirname, 'data', 'lm_studio.json');
 const ELECTRON_LM_STUDIO_CONFIG = path.join(ELECTRON_DATA_DIR, 'lm_studio.json');
 const ELECTRON_DATA_JSON = path.join(ELECTRON_DATA_DIR, 'data.json');
 const ELECTRON_USER_JSON = path.join(ELECTRON_DATA_DIR, 'user.json');
@@ -35,10 +36,18 @@ async function readJsonOrNull(filepath) {
 }
 
 async function readLmStudioConfig() {
-  const cfg = (await readJsonOrNull(ELECTRON_LM_STUDIO_CONFIG)) || {};
+  const fromElectron = (await readJsonOrNull(ELECTRON_LM_STUDIO_CONFIG)) || {};
+  const fromLocal = (await readJsonOrNull(LOCAL_LM_STUDIO_CONFIG)) || {};
+  const cfg = { ...fromElectron, ...fromLocal };
   return {
-    baseUrl: cfg.baseUrl || process.env.LM_STUDIO_BASE_URL || 'http://192.168.1.109:1234',
-    model: cfg.model || process.env.LM_STUDIO_MODEL || 'google/gemma-4-e2b',
+    baseUrl:
+      process.env.LM_STUDIO_BASE_URL ||
+      cfg.baseUrl ||
+      'http://10.192.148.78:1234',
+    model:
+      process.env.LM_STUDIO_MODEL ||
+      cfg.model ||
+      'google/gemma-4-e4b',
   };
 }
 const LM_STUDIO_TIMEOUT_MS = parseInt(process.env.LM_STUDIO_TIMEOUT_MS || '180000', 10);
@@ -300,6 +309,7 @@ async function prepareGenerationContext() {
   return {
     newest,
     existing,
+    profile,
     userPayload,
     asset,
     assetAssignment,
@@ -321,7 +331,7 @@ app.post('/api/posts/generate', async (_req, res) => {
     if (ctx.error) {
       return res.status(ctx.status || 500).json({ success: false, error: ctx.error });
     }
-    const { newest, existing, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
+    const { newest, existing, profile, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
 
     const slotResults = await generatePersonaPosts({
       baseUrl,
@@ -332,12 +342,13 @@ app.post('/api/posts/generate', async (_req, res) => {
       assetAssignment,
       prompts,
       dataJson: electronData,
+      profile,
+      existingPosts: existing,
       chartUploadDir: UPLOADS_DIR,
     });
 
     if (asset) {
-      const si = asset.kind === 'document' ? IMPORT_POOL_DOC_SLOT_INDEX : IMPORT_POOL_IMAGE_SLOT_INDEX;
-      const p = slotResults[si];
+      const p = slotResults[ASSET_SLOT_INDEX];
       if (p?.attachedAsset) patchPostAttachedAssetFromUpload(p, asset);
     }
 
@@ -366,9 +377,9 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
       res.end();
       return;
     }
-    const { newest, existing, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
+    const { newest, existing, profile, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
 
-    const bySlot = new Array(5).fill(null);
+    const bySlot = new Array(3).fill(null);
     const slotResults = await generatePersonaPosts({
       baseUrl,
       model,
@@ -378,10 +389,11 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
       assetAssignment,
       prompts,
       dataJson: electronData,
+      profile,
+      existingPosts: existing,
       chartUploadDir: UPLOADS_DIR,
       onEachPost: async (post, meta) => {
-        const poolIdx = asset?.kind === 'document' ? IMPORT_POOL_DOC_SLOT_INDEX : IMPORT_POOL_IMAGE_SLOT_INDEX;
-        if (asset && post.attachedAsset && meta?.slotIndex === poolIdx) {
+        if (asset && post.attachedAsset && meta?.slotIndex === ASSET_SLOT_INDEX) {
           patchPostAttachedAssetFromUpload(post, asset);
         }
         const idx = meta && typeof meta.slotIndex === 'number' ? meta.slotIndex : 0;
@@ -408,6 +420,8 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
 });
 
 const PORT = Number(process.env.GENERATE_PORT) || 3010;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  const lm = await readLmStudioConfig();
   console.log(`Generator server running on http://localhost:${PORT}`);
+  console.log(`LM Studio: ${lm.baseUrl}  model: ${lm.model}`);
 });

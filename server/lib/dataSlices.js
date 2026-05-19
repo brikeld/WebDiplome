@@ -114,3 +114,80 @@ export function formatAppCategoryAsText(slice) {
   }
   return lines.join('\n');
 }
+
+export function extractMostUsedAppsSlice(data) {
+  const apps = Array.isArray(data?.PAST_HISTORY?.app_usage_7days)
+    ? data.PAST_HISTORY.app_usage_7days
+    : [];
+  return { apps: apps.slice(0, 15), count: apps.length };
+}
+
+export function formatAppUsageAsText(slice) {
+  if (!slice.apps.length) return null;
+  const lines = [`[Recently used apps — ${slice.count} tracked over 7 days]`];
+  for (const { app, last_used } of slice.apps.slice(0, 12)) {
+    lines.push(`  ${app}${last_used ? ` (last: ${String(last_used).slice(0, 10)})` : ''}`);
+  }
+  return lines.join('\n');
+}
+
+export function extractStorageSlice(data) {
+  const s = data?.MACHINE_IDENTITY?.storage || {};
+  return {
+    total: s.total || '',
+    used: s.used || '',
+    free: s.free || '',
+    usePct: parseFloat(s.use_percent) || 0,
+  };
+}
+
+export function extractBatterySlice(data) {
+  const b = data?.MACHINE_IDENTITY?.battery || {};
+  return {
+    percent: parseFloat(b.percent) || 0,
+    cycleCount: b.cycle_count ?? null,
+    condition: b.condition || '',
+    maxCapacity: b.max_capacity || '',
+    charging: b.charging ?? false,
+  };
+}
+
+export function extractSecuritySlice(data) {
+  const sec = data?.MACHINE_IDENTITY?.security || {};
+  const installed = Array.isArray(data?.MACHINE_IDENTITY?.installed_apps)
+    ? data.MACHINE_IDENTITY.installed_apps
+    : [];
+  const KNOWN_SECURITY = [
+    'NordVPN', 'GlobalProtect', 'ProtonVPN', 'Little Snitch', 'Mullvad',
+    'ExpressVPN', 'Wireguard', 'NordPass', '1Password', 'Bitwarden', 'Keybase',
+  ];
+  const foundSecurity = KNOWN_SECURITY.filter(tool =>
+    installed.some(a => a.toLowerCase().includes(tool.toLowerCase())),
+  );
+  return {
+    sip: sec.sip || 'Unknown',
+    filevault: sec.filevault || 'Unknown',
+    gatekeeper: sec.gatekeeper || 'Unknown',
+    securityApps: foundSecurity,
+  };
+}
+
+export function extractAIToolsSlice(data) {
+  const installed = Array.isArray(data?.MACHINE_IDENTITY?.installed_apps)
+    ? data.MACHINE_IDENTITY.installed_apps
+    : [];
+  const usage = Array.isArray(data?.PAST_HISTORY?.app_usage_7days)
+    ? data.PAST_HISTORY.app_usage_7days
+    : [];
+  const usedRecentlySet = new Set(usage.map(e => e.app));
+  const KNOWN_AI = [
+    'ChatGPT', 'Claude', 'Codex', 'LM Studio', 'Ollama',
+    'DiffusionBee', 'Perplexity', 'Cursor', 'Windsurf', 'GitHub Copilot',
+  ];
+  const tools = KNOWN_AI.map(tool => ({
+    name: tool,
+    installed: installed.some(a => a.toLowerCase().includes(tool.toLowerCase())),
+    recentlyUsed: usedRecentlySet.has(tool),
+  }));
+  return { tools, installedCount: tools.filter(t => t.installed).length };
+}

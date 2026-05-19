@@ -9,8 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server.js",
-    "server:generate": "node server-generate.js",
-    "servers": "concurrently -n data,gen -c cyan,magenta \"node server.js\" \"node server-generate.js\"",
+    "server:generate": "LM_STUDIO_BASE_URL=http://10.192.148.78:1234 LM_STUDIO_MODEL=google/gemma-4-e4b node server-generate.js",
+    "servers": "concurrently -n data,gen -c cyan,magenta \"node server.js\" \"LM_STUDIO_BASE_URL=http://10.192.148.78:1234 LM_STUDIO_MODEL=google/gemma-4-e4b node server-generate.js\"",
     "dedupe:uploads": "node scripts/dedupe-uploads.js",
     "test": "vitest run"
   },

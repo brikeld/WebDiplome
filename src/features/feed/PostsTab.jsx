@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import PostCard from './PostCard.jsx';
 import { sanitizePostContent } from '@/lib/postContent.js';
+import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import {
   displayNameFromProfile,
   initialsFromProfile,
@@ -30,7 +31,7 @@ function resolveAttachedAsset(asset) {
   };
 }
 
-export default function PostsTab({ profile, feedContext = 'home', isGeneratingPosts = false }) {
+export default function PostsTab({ profile, feedContext = 'home', isGeneratingPosts = false, onHidePost, hiddenPostIds }) {
   const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
 
   const posts = useMemo(() => {
@@ -116,6 +117,8 @@ export default function PostsTab({ profile, feedContext = 'home', isGeneratingPo
           onToggleComments={() =>
             setOpenCommentsPostId((prev) => (prev === p.id ? null : p.id))
           }
+          onHide={onHidePost ? () => onHidePost(p.createdAt) : undefined}
+          isHidden={hiddenPostIds ? hiddenPostIds.has(normalizePostHideKey(p.createdAt)) : false}
         />
       ))}
     </div>

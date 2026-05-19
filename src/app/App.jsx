@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import Sidebar from '@/layout/Sidebar.jsx';
 import ScrollArea from '@/layout/ScrollArea.jsx';
@@ -10,6 +10,7 @@ import HomeTab from '@/features/home/HomeTab.jsx';
 import LandingPage from '@/landing-page/LandingPage.jsx';
 import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
+import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import { getPersonaScoreForAxis, machineHandleFromProfile } from '@/lib/profileUtils.js';
 
 const API_ORIGIN =
@@ -230,14 +231,14 @@ export default function App() {
     setPostGen({ loading: true, error: null });
 
     const baseline = streamPostsBaselineRef.current;
-    const slotsBuffer = Array(5).fill(null);
+    const slotsBuffer = Array(3).fill(null);
     let streamDone = false;
 
     const revealPromise = (async () => {
       const batch = [];
       let revealedCount = 0;
 
-      for (let slot = 0; slot < 5; slot += 1) {
+      for (let slot = 0; slot < 3; slot += 1) {
         while (!slotsBuffer[slot] && !streamDone) {
           await new Promise((r) => setTimeout(r, 40));
         }
@@ -278,7 +279,7 @@ export default function App() {
     })();
 
     const assignPostToSlot = (post, slotIndex) => {
-      if (typeof slotIndex !== 'number' || slotIndex < 0 || slotIndex > 4) return;
+      if (typeof slotIndex !== 'number' || slotIndex < 0 || slotIndex > 2) return;
       slotsBuffer[slotIndex] = post;
     };
 
@@ -364,6 +365,19 @@ export default function App() {
     }
   };
 
+  const [hiddenPostIds, setHiddenPostIds] = useState(() => new Set());
+
+  const handleHidePost = useCallback((createdAt) => {
+    const key = normalizePostHideKey(createdAt);
+    if (!key) return;
+    setHiddenPostIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
   if (mainView === 'landing') {
     return <LandingPage onEnterDemo={() => setMainView('home')} />;
   }
@@ -397,7 +411,7 @@ export default function App() {
       <div className="page">
         <div className="main-col">
           <ScrollArea key={mainView} mode={mainView}>
-            {mainView === 'home' && <HomeTab profile={profile} isGeneratingPosts={postGen.loading} />}
+            {mainView === 'home' && <HomeTab profile={profile} isGeneratingPosts={postGen.loading} onHidePost={handleHidePost} hiddenPostIds={hiddenPostIds} />}
             {mainView === 'profile' && (
               <div className="profile-capsule-wrap">
                 <p className="home-top-label">{machineHandleFromProfile(profile)}</p>
@@ -423,7 +437,7 @@ export default function App() {
                     <div className="tab-content">
                       {activeTab === 'profile' && <ProfileTab />}
                       {activeTab === 'posts' && (
-                        <PostsTab profile={profile} feedContext="profile" isGeneratingPosts={postGen.loading} />
+                        <PostsTab profile={profile} feedContext="profile" isGeneratingPosts={postGen.loading} onHidePost={handleHidePost} hiddenPostIds={hiddenPostIds} />
                       )}
                       {activeTab === 'badges' && <BadgesTab />}
                       {activeTab === 'leaderboards' && <LeaderboardsTab />}

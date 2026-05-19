@@ -563,13 +563,11 @@ body {
 .posts-tab {
   display: flex;
   flex-direction: column;
-  gap: 28px; 
-  /* oldgap8 */
+  gap: 36px;
 }
 
 .posts-tab--generating {
-  gap: 32px; 
-  /* oldgap12 */
+  gap: 40px;
 }
 
 .posts-generating-placeholder {
@@ -689,9 +687,12 @@ body {
   align-items: center;
   justify-content: center;
   padding: 5px 12px 6px;
+  border: none;
   border-radius: 9999px;
   background: var(--post-accent);
   color: #000;
+  box-shadow: none;
+  outline: none;
   font-family: 'AvantGarde ITC BT', var(--font-sans);
   font-size: var(--post-name-size);
   font-weight: 600; /* AvantGardeITCbyBT-Demi */
@@ -704,9 +705,12 @@ body {
   /* Match the pill height: font-size (19.2px) + vertical padding (5+6=11px) ≈ 30px */
   width: 30px;
   height: 30px;
+  border: none;
   border-radius: 9999px;
   background: var(--post-accent);
   color: #000;
+  box-shadow: none;
+  outline: none;
   display: grid;
   place-items: center;
   font-family: 'AvantGarde ITC BT', var(--font-sans);
@@ -719,10 +723,67 @@ body {
 /* Comment button — single pill that takes the space of the old like+comment pair. */
 .post-action-btn {
   appearance: none;
+  -webkit-appearance: none;
   border: none;
+  box-shadow: none;
+  outline: none;
   cursor: pointer;
   pointer-events: auto;
   transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* Hide pill — mirror `.post-meta-row` geometry, but on the top edge of the card */
+.post-hide-row {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 16px;
+  height: 66px;
+  margin-top: -20px;
+  margin-bottom: -12px;
+  pointer-events: none;
+}
+
+.post-hide-row .post-meta-pill {
+  pointer-events: auto;
+}
+
+/* Hollow hide control — accent stroke + text (filled meta pills unchanged) */
+.post-hide-row .post-action-btn--hide {
+  min-width: 72px;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid var(--post-accent, var(--persona-accent, #ccf847));
+  color: var(--post-accent, var(--persona-accent, #ccf847));
+}
+
+.post-hide-row .post-action-btn--hide svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.post-hide-row .post-action-btn--hide:hover {
+  filter: none;
+  background: color-mix(in srgb, var(--post-accent, #ccf847) 14%, transparent);
+}
+
+.post-hide-row .post-action-btn--hide:focus-visible {
+  outline: 2px solid var(--post-accent, var(--persona-accent, #ccf847));
+  outline-offset: 2px;
+}
+
+/* Blur all post content below the hide pill; pill itself stays sharp */
+.post-card-body {
+  transition: filter 0.3s ease;
+}
+
+.post-card--hidden .post-card-body {
+  filter: blur(18px);
+  pointer-events: none;
+  user-select: none;
 }
 
 .post-action-btn--comment {

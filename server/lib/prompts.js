@@ -8,7 +8,12 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 900,
   },
   chart: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. A chart of your installed app categories (or related usage data) is attached. React to what it reveals about you — pick ONE category or bar, be honest and a little self-deprecating (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. A data chart about your digital life is attached. React to what it reveals — pick ONE specific number, bar, or pattern, be honest and a little self-aware (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    temperature: 0.85,
+    maxTokens: 900,
+  },
+  app_usage: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Your recently used apps are listed above. Pick ONE app or usage pattern that reveals something about you — honest, slightly self-aware, maybe funny (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
     temperature: 0.85,
     maxTokens: 900,
   },
@@ -61,8 +66,8 @@ export const DEFAULT_PROMPTS = {
     "\n\nA document from the user's files is attached. Its filename and a text excerpt of its contents are included below the JSON. Write the post as if the user is referencing or reacting to this document — incorporate something concrete from the excerpt (a phrase, a fact, a vibe) without quoting it verbatim. The post should feel like a genuine reference to something they were working on.",
   userSummary: {
     system:
-      'You profile digital citizens from system data. Read the JSON (user + profile). Write ONE short introduction in French (max 140 characters) describing observable digital habits/tools — factual, no moral judgment.\nReturn ONLY valid JSON: {"description":"..."}. No markdown, no line breaks in the string. /no_think',
-    temperature: 0.55,
+      'You write a profile bio AS the person in the JSON — first person, English only, one complete sentence (max 120 characters). Read user + profile; use profile.SCORING_DATA.PERSONA_SCORES.dominant_persona (productivite | securite | popularite).\n\nMatch the voice of their social posts:\n- productivite: workflow-obsessed, dry wit or quiet pride about how they work — not a résumé or app inventory\n- popularite: online-life energy, playful or self-deprecating — one specific habit, not a catalog of apps\n- securite: honest about their digital footprint, lightly anxious or relieved — not corporate security jargon\n\nGround it in ONE vivid detail from the data (a tool, a pattern, a vibe). Never list stacks like "Adobe, Blender, Claude, Ollama". No hashtags. No moralizing. End with . ! or ? — never "..." or "…".\nReturn ONLY valid JSON: {"description":"..."}. No markdown, no line breaks in the string. /no_think',
+    temperature: 1,
     maxTokens: 900,
   },
 };
