@@ -1,0 +1,114 @@
+/* Compact harvest UI — fills dashboard-card--generate (2×1 grid cell) */
+.dashboard-card.dashboard-card--generate.dashboard-card--generate-harvest {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  text-align: left;
+  cursor: default;
+}
+
+.harvest-panel {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  align-content: stretch;
+  gap: 10px;
+  padding: 16px 26px;
+  text-align: left;
+  text-transform: none;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.harvest-panel__title {
+  font-family: var(--font-avant);
+  font-size: clamp(13px, 1.35vw, 17px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--persona-accent, #fff);
+  margin: 0;
+  padding: 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.harvest-panel__status {
+  font-family: var(--font-avant);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted, #888);
+  margin: 0;
+  padding: 0 4px;
+  line-height: 1.25;
+  text-transform: none;
+  flex-shrink: 0;
+}
+
+.harvest-panel__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-avant);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--persona-accent, #fff);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.harvest-panel__track {
+  height: 6px;
+  border-radius: 999px;
+  background: #1a1a1a;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.harvest-panel__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--persona-accent, #ccf847);
+  transition: width 0.35s ease;
+}
+
+.harvest-panel__log {
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  border-radius: 10px;
+  background: #0a0a0a;
+  border: 1px solid #222;
+  padding: 10px 14px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 9px;
+  line-height: 1.4;
+  box-sizing: border-box;
+  align-self: stretch;
+}
+
+.harvest-panel__log-line {
+  color: #888;
+  margin-bottom: 3px;
+  word-break: break-word;
+}
+
+.harvest-panel__log-line--highlight {
+  color: var(--persona-accent, #ccf847);
+}
+
+.harvest-panel__log-line--muted {
+  color: #555;
+  font-style: italic;
+}
+

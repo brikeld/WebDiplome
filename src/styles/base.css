@@ -382,6 +382,25 @@ body {
   font-size: 26px;
   line-height: 1;
   letter-spacing: -0.03em;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-content: center;
+}
+
+.dashboard-ring-delta {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.dashboard-ring-delta--up {
+  color: var(--pop, #ccf847);
+}
+
+.dashboard-ring-delta--down {
+  color: var(--sec, #759aef);
 }
 
 .project-name {

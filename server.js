@@ -6,6 +6,15 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import crypto from 'crypto';
 import { normalizeAttachedAsset, translateLegacyImage } from './server/lib/attachedAsset.js';
+import {
+  getHarvestStatus,
+  requestHarvest,
+  markHarvestRunning,
+  pushHarvestProgress,
+  completeHarvest,
+  failHarvest,
+  ackHarvest,
+} from './server/lib/harvestSession.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
@@ -228,6 +237,45 @@ app.get('/api/profile/:id', async (req, res) => {
     }
     res.status(500).json({ error: err.message });
   }
+});
+
+// ── Harvest orchestration (WebDiplome UI ↔ Electron collector) ─────────────
+app.post('/api/harvest/request', (req, res) => {
+  const scoresBefore = req.body?.scoresBefore ?? req.body?.scores_before ?? null;
+  const result = requestHarvest(scoresBefore);
+  if (!result.ok) return res.status(409).json(result);
+  res.json({ success: true, ...getHarvestStatus() });
+});
+
+app.get('/api/harvest/status', (_req, res) => {
+  res.json(getHarvestStatus());
+});
+
+app.post('/api/harvest/running', (_req, res) => {
+  const result = markHarvestRunning();
+  if (!result.ok) return res.status(409).json(result);
+  res.json({ success: true, ...getHarvestStatus() });
+});
+
+app.post('/api/harvest/progress', (req, res) => {
+  pushHarvestProgress(req.body ?? {});
+  res.json({ success: true, ...getHarvestStatus() });
+});
+
+app.post('/api/harvest/complete', (req, res) => {
+  const scoresAfter = req.body?.scoresAfter ?? req.body?.scores_after ?? null;
+  completeHarvest(scoresAfter);
+  res.json({ success: true, ...getHarvestStatus() });
+});
+
+app.post('/api/harvest/error', (req, res) => {
+  failHarvest(req.body?.error || req.body?.message || 'Harvest failed');
+  res.json({ success: true, ...getHarvestStatus() });
+});
+
+app.post('/api/harvest/ack', (_req, res) => {
+  ackHarvest();
+  res.json({ success: true, ...getHarvestStatus() });
 });
 
 // DELETE /api/posts/:id — remove one post by createdAt from a profile's post array

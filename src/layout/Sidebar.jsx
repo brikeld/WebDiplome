@@ -12,9 +12,6 @@ export default function Sidebar({ mainView = 'home', onSelectView }) {
           >
             ⌂
           </button>
-          <button type="button" className="rail-btn" aria-label="Search">
-            ⌕
-          </button>
           <button type="button" className="rail-btn" aria-label="DMs">
             ✉
           </button>
@@ -26,12 +23,6 @@ export default function Sidebar({ mainView = 'home', onSelectView }) {
             onClick={() => onSelectView?.('profile')}
           >
             ⌾
-          </button>
-          <button type="button" className="rail-btn" aria-label="Badges">
-            ★
-          </button>
-          <button type="button" className="rail-btn" aria-label="Rankings">
-            ≡
           </button>
         </nav>
       </aside>

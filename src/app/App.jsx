@@ -11,7 +11,13 @@ import LandingPage from '@/landing-page/LandingPage.jsx';
 import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
-import { getPersonaScoreForAxis, machineHandleFromProfile } from '@/lib/profileUtils.js';
+import {
+  getPersonaScoreForAxis,
+  getPersonaScoresNormalized,
+  machineHandleFromProfile,
+} from '@/lib/profileUtils.js';
+import HarvestScreen from '@/features/harvest/HarvestScreen.jsx';
+import '@/features/harvest/harvest.css';
 
 const API_ORIGIN =
   (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
@@ -133,6 +139,28 @@ const POST_REVEAL_GAP_MS = 2000;
 /** Must match `.post-card--feed-enter` duration in `src/styles/base.css`. */
 const POST_FEED_ENTER_ANIM_MS = 1000;
 const INTER_REVEAL_PAUSE_MS = Math.max(POST_REVEAL_GAP_MS, POST_FEED_ENTER_ANIM_MS + 150);
+const HARVEST_POLL_MS = 450;
+const HARVEST_WAIT_MS = 12 * 60 * 1000;
+
+function computePersonaDeltas(before, after) {
+  if (!before || !after) return null;
+  const keys = ['productivity', 'security', 'social'];
+  const out = {};
+  for (const k of keys) {
+    const b = Number(before[k]);
+    const a = Number(after[k]);
+    if (!Number.isFinite(b) || !Number.isFinite(a)) continue;
+    const diff = Math.round(a - b);
+    if (diff !== 0) out[k] = diff;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+function axisKeyToScoreKey(axisKey) {
+  const k = String(axisKey || '').toLowerCase();
+  if (k === 'popularity') return 'social';
+  return k;
+}
 
 export default function App() {
   /** 'landing' = onboarding/intro; 'home' = feed only; 'profile' = profile capsule + tab bar + sections */
@@ -142,6 +170,10 @@ export default function App() {
   const [personaOverride, setPersonaOverride] = useState(null); // 'productivity' | 'popularity' | 'security' | null
   const [nowTick, setNowTick] = useState(0);
   const [postGen, setPostGen] = useState({ loading: false, error: null });
+  const [harvestPhase, setHarvestPhase] = useState('idle');
+  const [harvestProgress, setHarvestProgress] = useState(null);
+  const [harvestError, setHarvestError] = useState(null);
+  const [personaDeltas, setPersonaDeltas] = useState(null);
   const streamPostsBaselineRef = useRef([]);
   /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
@@ -225,10 +257,79 @@ export default function App() {
     setPersonaOverride(next);
   };
 
-  const handleGeneratePersonaPosts = async () => {
-    if (postGen.loading || !profile) return;
-    streamPostsBaselineRef.current = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
+  const reloadProfileFromApi = useCallback(async () => {
+    const res = await fetch(`${API_ORIGIN}/api/profiles`);
+    if (!res.ok) throw new Error('Failed to reload profile');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
+    setProfile(data[0]);
+    return data[0];
+  }, []);
+
+  const pollHarvestUntilDone = useCallback(async (scoresBefore) => {
+    const start = Date.now();
+    while (Date.now() - start < HARVEST_WAIT_MS) {
+      const res = await fetch(`${API_ORIGIN}/api/harvest/status`);
+      if (!res.ok) throw new Error('Harvest status unavailable');
+      const st = await res.json();
+      setHarvestProgress(st.progress ?? null);
+      if (st.status === 'done') {
+        const after = st.scoresAfter ?? getPersonaScoresNormalized(await reloadProfileFromApi());
+        setPersonaDeltas(computePersonaDeltas(scoresBefore, after));
+        await fetch(`${API_ORIGIN}/api/harvest/ack`, { method: 'POST' });
+        return st;
+      }
+      if (st.status === 'error') {
+        throw new Error(st.error || 'Harvest failed');
+      }
+      if (st.status === 'idle' && Date.now() - start > 8000) {
+        throw new Error(
+          'Desktop collector not responding. Open the Compliant app on this machine, then try again.',
+        );
+      }
+      await new Promise((r) => setTimeout(r, HARVEST_POLL_MS));
+    }
+    throw new Error('Harvest timed out');
+  }, [reloadProfileFromApi]);
+
+  const runBioAndPostGeneration = useCallback(async (profileSnapshot) => {
+    const p = profileSnapshot ?? profile;
+    if (!p) return;
+    streamPostsBaselineRef.current = Array.isArray(p.personaPosts) ? p.personaPosts : [];
     setPostGen({ loading: true, error: null });
+
+    try {
+      const sumRes = await fetch(`${GENERATE_API_ORIGIN}/api/profile/generate-summary`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      if (!sumRes.ok) {
+        const errText = await sumRes.text().catch(() => '');
+        let msg = `Bio request failed (${sumRes.status})`;
+        try {
+          const j = JSON.parse(errText);
+          if (j?.error) msg = j.error;
+        } catch {
+          if (errText) msg = errText.slice(0, 200);
+        }
+        throw new Error(msg);
+      }
+      const sumJson = await sumRes.json();
+      const bio = sumJson.profileSummary ?? sumJson.userDescription ?? '';
+      if (bio) {
+        flushSync(() => {
+          setProfile((prev) =>
+            prev
+              ? { ...prev, profileSummary: bio, userDescription: bio }
+              : prev,
+          );
+        });
+      }
+    } catch (e) {
+      setPostGen({ loading: false, error: e?.message || 'Bio generation failed' });
+      return;
+    }
 
     const baseline = streamPostsBaselineRef.current;
     const slotsBuffer = Array(3).fill(null);
@@ -363,6 +464,52 @@ export default function App() {
       await revealPromise.catch(() => {});
       setPostGen({ loading: false, error: e?.message || 'Generation failed' });
     }
+  }, [profile]);
+
+  const handleGeneratePersonaPosts = async () => {
+    if (postGen.loading || harvestPhase === 'harvesting' || !profile) return;
+
+    const scoresBefore = getPersonaScoresNormalized(profile);
+    setHarvestError(null);
+    setHarvestProgress(null);
+    setHarvestPhase('harvesting');
+
+    try {
+      const reqRes = await fetch(`${API_ORIGIN}/api/harvest/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scoresBefore }),
+      });
+      if (!reqRes.ok) {
+        const errText = await reqRes.text().catch(() => '');
+        let msg = `Harvest request failed (${reqRes.status})`;
+        try {
+          const j = JSON.parse(errText);
+          if (j?.error) msg = j.error;
+        } catch {
+          if (errText) msg = errText.slice(0, 200);
+        }
+        throw new Error(msg);
+      }
+
+      await pollHarvestUntilDone(scoresBefore);
+      await reloadProfileFromApi();
+    } catch (e) {
+      setHarvestError(e?.message || 'Harvest failed');
+      setHarvestPhase('idle');
+      setPostGen({ loading: false, error: e?.message || 'Harvest failed' });
+      try {
+        await fetch(`${API_ORIGIN}/api/harvest/ack`, { method: 'POST' });
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+
+    setHarvestPhase('idle');
+    setHarvestProgress(null);
+    const freshProfile = await reloadProfileFromApi();
+    await runBioAndPostGeneration(freshProfile);
   };
 
   const [hiddenPostIds, setHiddenPostIds] = useState(() => new Set());
@@ -411,7 +558,14 @@ export default function App() {
       <div className="page">
         <div className="main-col">
           <ScrollArea key={mainView} mode={mainView}>
-            {mainView === 'home' && <HomeTab profile={profile} isGeneratingPosts={postGen.loading} onHidePost={handleHidePost} hiddenPostIds={hiddenPostIds} />}
+            {mainView === 'home' && (
+              <HomeTab
+                profile={profile}
+                isGeneratingPosts={postGen.loading}
+                onHidePost={handleHidePost}
+                hiddenPostIds={hiddenPostIds}
+              />
+            )}
             {mainView === 'profile' && (
               <div className="profile-capsule-wrap">
                 <p className="home-top-label">{machineHandleFromProfile(profile)}</p>
@@ -471,21 +625,30 @@ export default function App() {
                     {lastAnalysisText ?? '—'}
                   </strong>
                 </div>
-                <button
-                  type="button"
-                  className="dashboard-card dashboard-card--generate"
-                  disabled={postGen.loading || !profile}
-                  onClick={handleGeneratePersonaPosts}
-                >
-                  {postGen.loading
-                    ? 'GENERATING…'
-                    : 'GENERATE NEW CONTENT / DO ANOTHER ANALYSIS'}
-                  {postGen.error ? (
-                    <span className="generate-posts-error" role="alert">
-                      {postGen.error}
-                    </span>
-                  ) : null}
-                </button>
+                {harvestPhase === 'harvesting' ? (
+                  <div
+                    className="dashboard-card dashboard-card--generate dashboard-card--generate-harvest"
+                    aria-busy="true"
+                  >
+                    <HarvestScreen progress={harvestProgress} error={harvestError} />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="dashboard-card dashboard-card--generate"
+                    disabled={postGen.loading || !profile}
+                    onClick={handleGeneratePersonaPosts}
+                  >
+                    {postGen.loading
+                      ? 'GENERATING…'
+                      : 'GENERATE NEW CONTENT / DO ANOTHER ANALYSIS'}
+                    {postGen.error ? (
+                      <span className="generate-posts-error" role="alert">
+                        {postGen.error}
+                      </span>
+                    ) : null}
+                  </button>
+                )}
                 <div className="dashboard-card dashboard-card--analyze">
                   ANALYZE UR LAST POST
                 </div>
@@ -543,6 +706,19 @@ export default function App() {
                       </span>
                       <span className="dashboard-ring-score">
                         {Number.isFinite(value) ? value : '—'}
+                        {personaDeltas?.[axisKeyToScoreKey(k)] != null ? (
+                          <span
+                            className={`dashboard-ring-delta${
+                              personaDeltas[axisKeyToScoreKey(k)] > 0
+                                ? ' dashboard-ring-delta--up'
+                                : ' dashboard-ring-delta--down'
+                            }`}
+                          >
+                            {personaDeltas[axisKeyToScoreKey(k)] > 0
+                              ? `+${personaDeltas[axisKeyToScoreKey(k)]}`
+                              : String(personaDeltas[axisKeyToScoreKey(k)])}
+                          </span>
+                        ) : null}
                       </span>
                     </div>
                   );

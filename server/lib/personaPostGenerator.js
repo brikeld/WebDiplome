@@ -456,3 +456,80 @@ export async function generatePersonaPosts({
 
   return results;
 }
+
+// ─── Profile bio (user summary) ─────────────────────────────────────────────
+
+const USER_SUMMARY_MAX_LEN = 120;
+
+function clampSummary(s) {
+  let t = String(s || '').replace(/\s+/g, ' ').trim();
+  t = t.replace(/\.{2,}$|…$/u, '').trim();
+  if (t.length <= USER_SUMMARY_MAX_LEN) return t;
+  const cut = t.slice(0, USER_SUMMARY_MAX_LEN);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > USER_SUMMARY_MAX_LEN / 2 ? cut.slice(0, lastSpace) : cut)
+    .replace(/[,;:]\s*$/, '')
+    .trim();
+}
+
+function decodeJsonStringLiteral(s) {
+  try {
+    return JSON.parse(`"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+  } catch {
+    return String(s);
+  }
+}
+
+function parseUserSummary(raw) {
+  const text = (raw || '').trim();
+  if (!text) return '';
+
+  const tryParse = (slice) => {
+    try {
+      const obj = JSON.parse(slice);
+      if (obj && typeof obj.description === 'string') return clampSummary(obj.description);
+    } catch {
+      /* ignore */
+    }
+    return null;
+  };
+
+  const direct = tryParse(text);
+  if (direct != null) return direct;
+
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    const inner = tryParse(text.slice(start, end + 1));
+    if (inner != null) return inner;
+  }
+
+  const m = text.match(/"description"\s*:\s*"([\s\S]*?)"\s*[},]/i);
+  if (m && m[1]) return clampSummary(decodeJsonStringLiteral(m[1]));
+
+  return clampSummary(text);
+}
+
+/**
+ * LM-generated profile bio (same prompt as Electron `generateUserSummary`).
+ */
+export async function generateUserSummary({
+  baseUrl,
+  model,
+  userPayload,
+  timeoutMs,
+  retries,
+  prompts,
+}) {
+  const cfg = prompts?.userSummary;
+  if (!cfg?.system) throw new Error('userSummary prompt missing');
+  const body = buildChatBody({
+    model,
+    systemPrompt: cfg.system,
+    userPayload,
+    temperature: typeof cfg.temperature === 'number' ? cfg.temperature : 1,
+    maxTokens: typeof cfg.maxTokens === 'number' ? cfg.maxTokens : 900,
+  });
+  const r = await lmChatCompletion({ baseUrl, timeoutMs, retries, body });
+  return parseUserSummary(extractChoiceText(r));
+}

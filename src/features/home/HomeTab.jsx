@@ -1,6 +1,11 @@
 import PostsTab from '@/features/feed/PostsTab.jsx';
 
-export default function HomeTab({ profile, isGeneratingPosts = false, onHidePost, hiddenPostIds }) {
+export default function HomeTab({
+  profile,
+  isGeneratingPosts = false,
+  onHidePost,
+  hiddenPostIds,
+}) {
   return (
     <div className="home-tab">
       <p className="home-top-label">for you</p>

@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { getNewestProfileIdAndPath, readProfileJson } from './server/lib/currentProfile.js';
 import {
   generatePersonaPosts,
+  generateUserSummary,
   ASSET_SLOT_INDEX,
 } from './server/lib/personaPostGenerator.js';
 import { loadPrompts } from './server/lib/prompts.js';
@@ -215,6 +216,13 @@ async function writePostsForId(id, personaPosts) {
   await fs.writeFile(path.join(POSTS_DIR, `${id}.json`), JSON.stringify(posts, null, 2), 'utf8');
 }
 
+async function writeProfileBio(filepath, description) {
+  const profile = JSON.parse(await fs.readFile(filepath, 'utf8'));
+  profile.profileSummary = description;
+  profile.userDescription = description;
+  await fs.writeFile(filepath, JSON.stringify(profile, null, 2), 'utf8');
+}
+
 function patchPostAttachedAssetFromUpload(post, asset) {
   if (!asset || !post?.attachedAsset) return;
   post.attachedAsset = {
@@ -323,6 +331,40 @@ async function prepareGenerationContext() {
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
+
+// POST /api/profile/generate-summary — LM bio; persists profileSummary + userDescription
+app.post('/api/profile/generate-summary', async (_req, res) => {
+  try {
+    const ctx = await prepareGenerationContext();
+    if (ctx.error) {
+      return res.status(ctx.status || 500).json({ success: false, error: ctx.error });
+    }
+    const { newest, userPayload, baseUrl, model, prompts } = ctx;
+    const description = await generateUserSummary({
+      baseUrl,
+      model,
+      userPayload,
+      timeoutMs: LM_STUDIO_TIMEOUT_MS,
+      retries: LM_STUDIO_RETRIES,
+      prompts,
+    });
+    if (!description) {
+      return res.status(500).json({ success: false, error: 'Empty bio from model' });
+    }
+    await writeProfileBio(newest.filepath, description);
+    return res.json({
+      success: true,
+      profileSummary: description,
+      userDescription: description,
+    });
+  } catch (err) {
+    console.error('[profile/generate-summary] failed:', err?.message || err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message ? String(err.message) : 'Bio generation failed',
+    });
+  }
+});
 
 // POST /api/posts/generate — batch JSON (waits for all posts)
 app.post('/api/posts/generate', async (_req, res) => {
