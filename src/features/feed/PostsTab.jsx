@@ -7,6 +7,7 @@ import {
   initialsFromProfile,
   machineHandleFromProfile,
 } from '@/lib/profileUtils.js';
+import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -31,8 +32,9 @@ function resolveAttachedAsset(asset) {
   };
 }
 
-export default function PostsTab({ profile, feedContext = 'home', isGeneratingPosts = false, onHidePost, hiddenPostIds }) {
+export default function PostsTab({ profile, feedContext = 'home', isGeneratingPosts = false }) {
   const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
+  const { hidePost, revealPost, isHidden } = useLiveScoring();
 
   const posts = useMemo(() => {
     if (!profile) return [];
@@ -117,8 +119,12 @@ export default function PostsTab({ profile, feedContext = 'home', isGeneratingPo
           onToggleComments={() =>
             setOpenCommentsPostId((prev) => (prev === p.id ? null : p.id))
           }
-          onHide={onHidePost ? () => onHidePost(p.createdAt) : undefined}
-          isHidden={hiddenPostIds ? hiddenPostIds.has(normalizePostHideKey(p.createdAt)) : false}
+          onHide={(rect) => {
+            const hidden = isHidden(normalizePostHideKey(p.createdAt));
+            if (hidden) revealPost(p, rect);
+            else hidePost(p, rect);
+          }}
+          isHidden={isHidden(normalizePostHideKey(p.createdAt))}
         />
       ))}
     </div>
