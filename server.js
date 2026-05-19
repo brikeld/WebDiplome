@@ -304,6 +304,9 @@ app.delete('/api/posts/:id', async (req, res) => {
 // Persists liveScoring adjustments and patches Electron data.json.
 app.post('/api/profile/:id/score-adjustments', async (req, res) => {
   const id = req.params.id;
+  if (!id || !/^[a-z0-9-]+$/i.test(id)) {
+    return res.status(400).json({ error: 'Invalid profile id format' });
+  }
   const { scoreAdjustments } = req.body ?? {};
 
   if (
@@ -329,6 +332,9 @@ app.post('/api/profile/:id/score-adjustments', async (req, res) => {
     try {
       const electronRaw = await fs.readFile(ELECTRON_DATA_PATH, 'utf8');
       const electronData = JSON.parse(electronRaw);
+      if (typeof electronData !== 'object' || electronData === null || Array.isArray(electronData)) {
+        throw new Error('Electron data.json is malformed');
+      }
       electronData.liveScoreAdjustments = {
         productivity: scoreAdjustments.productivity,
         security: scoreAdjustments.security,
