@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 /**
  * Harvest progress inside the dashboard generate card.
  */
@@ -6,7 +8,18 @@ export default function HarvestScreen({ progress, error }) {
   const pct = Math.max(0, Math.min(100, Number(progress?.percent) || 0));
   const step = Number(progress?.step) || 0;
   const statusText = progress?.statusText || 'Initializing system scan…';
-  const recentLines = lines.slice(-6);
+  const logRef = useRef(null);
+
+  const logKey = lines.join('\n');
+
+  useEffect(() => {
+    const el = logRef.current;
+    if (!el) return;
+    const id = requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [logKey, statusText]);
 
   return (
     <div className="harvest-panel" role="status" aria-live="polite" aria-busy={!error}>
@@ -21,15 +34,15 @@ export default function HarvestScreen({ progress, error }) {
           <div className="harvest-panel__track" aria-hidden>
             <div className="harvest-panel__fill" style={{ width: `${pct}%` }} />
           </div>
-          <div className="harvest-panel__log" aria-label="Harvest log">
-            {recentLines.length === 0 ? (
+          <div ref={logRef} className="harvest-panel__log" aria-label="Harvest log">
+            {lines.length === 0 ? (
               <div className="harvest-panel__log-line harvest-panel__log-line--muted">
                 Waiting for desktop collector…
               </div>
             ) : (
-              recentLines.map((line, i) => (
+              lines.map((line, i) => (
                 <div
-                  key={`${i}-${line.slice(0, 24)}`}
+                  key={`${i}-${line.slice(0, 32)}`}
                   className={`harvest-panel__log-line${
                     line.includes('✓') || line.includes('[')
                       ? ' harvest-panel__log-line--highlight'

@@ -34,9 +34,9 @@
 .commenting-capsule {
   box-sizing: border-box;
   width: 92%;
-  /* Negative margin-top cancels the .posts-tab flex gap (28px) when the
-     capsule is collapsed, so posts remain visually 28px apart instead of 56px. */
-  margin: -28px auto 0;
+  /* Negative margin-top cancels the .posts-tab flex gap when the capsule is
+     collapsed, so posts stay one gap apart instead of double. */
+  margin: calc(-1 * var(--posts-stack-gap, 48px)) auto 0;
   border: 2px solid var(--persona-accent, #fff);
   border-radius: 22px;
   background: transparent;

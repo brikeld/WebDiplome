@@ -168,7 +168,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('posts');
   const [profile, setProfile] = useState(null);
   const [personaOverride, setPersonaOverride] = useState(null); // 'productivity' | 'popularity' | 'security' | null
-  const [nowTick, setNowTick] = useState(0);
   const [postGen, setPostGen] = useState({ loading: false, error: null });
   const [harvestPhase, setHarvestPhase] = useState('idle');
   const [harvestProgress, setHarvestProgress] = useState(null);
@@ -195,13 +194,6 @@ export default function App() {
       document.documentElement.style.overflowY = '';
       document.body.style.overflowY = '';
     };
-  }, [mainView]);
-
-  // Re-render once per second in profile mode so "Last analysis" stays live.
-  useEffect(() => {
-    if (mainView !== 'profile') return undefined;
-    const id = setInterval(() => setNowTick((t) => t + 1), 1000);
-    return () => clearInterval(id);
   }, [mainView]);
 
   useEffect(() => {
@@ -238,7 +230,6 @@ export default function App() {
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
   const personaTabFill =
     PERSONA_TAB_FILLS[personaKey] ?? PERSONA_TAB_FILLS.productivity;
-  const lastAnalysisText = useMemo(() => formatLastAnalysis(profile), [profile, nowTick]);
   const personaToggleLabel =
     personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
 
@@ -619,12 +610,6 @@ export default function App() {
               </button>
 
               <div className="dashboard-grid">
-                <div className="dashboard-card dashboard-card--analysis">
-                  <span className="dashboard-card-label">last analysis</span>
-                  <strong className="dashboard-card-value">
-                    {lastAnalysisText ?? '—'}
-                  </strong>
-                </div>
                 {harvestPhase === 'harvesting' ? (
                   <div
                     className="dashboard-card dashboard-card--generate dashboard-card--generate-harvest"
@@ -641,7 +626,7 @@ export default function App() {
                   >
                     {postGen.loading
                       ? 'GENERATING…'
-                      : 'GENERATE NEW CONTENT / DO ANOTHER ANALYSIS'}
+                      : 'next analysis in 10 minutes'}
                     {postGen.error ? (
                       <span className="generate-posts-error" role="alert">
                         {postGen.error}

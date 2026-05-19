@@ -250,7 +250,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-areas:
-    "analysis generate generate"
+    "generate generate generate"
     "analyze analyze leaderboards";
   grid-template-rows: 1fr 1fr;
   gap: 12px;
@@ -580,13 +580,14 @@ body {
 
 /* ── POSTS (stacked pill cards; no metadata strip between) ── */
 .posts-tab {
+  --posts-stack-gap: 48px;
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: var(--posts-stack-gap);
 }
 
 .posts-tab--generating {
-  gap: 40px;
+  --posts-stack-gap: 52px;
 }
 
 .posts-generating-placeholder {
@@ -620,7 +621,14 @@ body {
   box-sizing: border-box;
   position: relative;
   margin: 0;
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  column-gap: clamp(88px, 18vw, 180px);
+  padding: 0 16px;
+  grid-template-areas:
+    'pill-top-left pill-top-center pill-top-right'
+    'body body body'
+    'pill-bottom-left pill-bottom-center pill-bottom-right';
   color: var(--ink);
 }
 
@@ -662,43 +670,63 @@ body {
   margin: 0;
 }
 
-.post-meta-row {
+/* Shared pill columns — top + bottom slots use the same grid areas */
+.post-pill-slot {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 66px;
+  pointer-events: none;
+}
+
+.post-pill-slot--top.post-pill-slot--left {
+  grid-area: pill-top-left;
+  justify-content: flex-end;
+}
+
+.post-pill-slot--top.post-pill-slot--center {
+  grid-area: pill-top-center;
+  justify-content: center;
+}
+
+.post-pill-slot--top.post-pill-slot--right {
+  grid-area: pill-top-right;
+  justify-content: flex-start;
+}
+
+.post-pill-slot--bottom.post-pill-slot--left {
+  grid-area: pill-bottom-left;
+  justify-content: flex-end;
+}
+
+.post-pill-slot--bottom.post-pill-slot--center {
+  grid-area: pill-bottom-center;
+  justify-content: center;
+}
+
+.post-pill-slot--bottom.post-pill-slot--right {
+  grid-area: pill-bottom-right;
+  justify-content: flex-start;
+}
+
+.post-pill-slot--top {
+  position: relative;
+  z-index: 3;
+  margin-top: -20px;
+  margin-bottom: -12px;
+}
+
+.post-pill-slot--bottom {
   position: relative;
   z-index: 2;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  /* Space side pills (time / actions) away from the center system note */
-  column-gap: clamp(88px, 18vw, 180px);
-  align-items: center;
-  padding: 0 16px;
-  /* Precisely sit between two stacked post bubbles */
   margin-top: -12px;
   margin-bottom: -20px;
-  height: 66px;
-  pointer-events: none;
 }
 
 .post-meta-left,
 .post-meta-center,
 .post-meta-right {
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
-  min-width: 0;
-}
-
-.post-meta-left {
-  /* Pull toward center (don’t move system note) */
-  justify-content: flex-end;
-}
-
-.post-meta-center {
-  justify-content: center;
-}
-
-.post-meta-right {
-  /* Pull toward center (don’t move system note) */
-  justify-content: flex-start;
 }
 
 .post-meta-pill {
@@ -751,26 +779,14 @@ body {
   transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-/* Hide pill — mirror `.post-meta-row` geometry, but on the top edge of the card */
-.post-hide-row {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 16px;
-  height: 66px;
-  margin-top: -20px;
-  margin-bottom: -12px;
-  pointer-events: none;
-}
-
-.post-hide-row .post-meta-pill {
+.post-pill-slot .post-meta-pill,
+.post-pill-slot .post-action-btn {
   pointer-events: auto;
 }
 
-/* Hollow hide control — accent stroke + text (filled meta pills unchanged) */
-.post-hide-row .post-action-btn--hide {
+/* Hollow outline pills (hide / analyze) — accent stroke + text */
+.post-pill-slot--top .post-action-btn--outline,
+.post-pill-slot--top .post-outline-pill {
   min-width: 72px;
   gap: 6px;
   background: transparent;
@@ -778,28 +794,35 @@ body {
   color: var(--post-accent, var(--persona-accent, #ccf847));
 }
 
-.post-hide-row .post-action-btn--hide svg {
+.post-pill-slot--top .post-action-btn--outline svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
 }
 
-.post-hide-row .post-action-btn--hide:hover {
+.post-pill-slot--top .post-action-btn--outline:hover {
   filter: none;
   background: color-mix(in srgb, var(--post-accent, #ccf847) 14%, transparent);
 }
 
-.post-hide-row .post-action-btn--hide:focus-visible {
+.post-pill-slot--top .post-action-btn--outline:focus-visible {
   outline: 2px solid var(--post-accent, var(--persona-accent, #ccf847));
   outline-offset: 2px;
 }
 
-/* Blur all post content below the hide pill; pill itself stays sharp */
+.post-pill-slot--top .post-outline-pill {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Blur post body + bottom pills when hidden; top hide/analyze pills stay sharp */
 .post-card-body {
+  grid-area: body;
   transition: filter 0.3s ease;
 }
 
-.post-card--hidden .post-card-body {
+.post-card--hidden .post-card-body,
+.post-card--hidden .post-pill-slot--bottom {
   filter: blur(18px);
   pointer-events: none;
   user-select: none;

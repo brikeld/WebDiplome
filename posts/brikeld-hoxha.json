@@ -1,0 +1,39 @@
+[
+  {
+    "persona": "securite",
+    "content": "The only thing I downloaded today is a PDF titled 'COMPLIANT'. My current life motto: follow all regulations and never deviate from the plan.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-19T15:20:01.045Z",
+    "textSliceType": "downloads",
+    "attachedAsset": null
+  },
+  {
+    "persona": "popularite",
+    "content": "Just running uptime commands like it's nothing. My terminal truly feels like the most meditative place to be. 💻✨",
+    "sentiment": "positive",
+    "createdAt": "2026-05-19T15:20:00.467Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "05d902bfdb9dc9ccaf8b768d3a78525e6cb0ce8aed9824093405c6c7b0f65574.png",
+      "relativePath": "public/uploads/05d902bfdb9dc9ccaf8b768d3a78525e6cb0ce8aed9824093405c6c7b0f65574.png",
+      "url": "/uploads/05d902bfdb9dc9ccaf8b768d3a78525e6cb0ce8aed9824093405c6c7b0f65574.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "productivite",
+    "content": "Six days of uptime means my laptop hasn't seen proper rest in forever. My productivity addiction is definitely real right now.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-19T15:20:02.492Z",
+    "chartType": "battery_hardware",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "c4adae69a45389b110e54e34ff47672f928648ea12b34f9c78c3cbf9c69abc7f.png",
+      "relativePath": "public/uploads/c4adae69a45389b110e54e34ff47672f928648ea12b34f9c78c3cbf9c69abc7f.png",
+      "url": "/uploads/c4adae69a45389b110e54e34ff47672f928648ea12b34f9c78c3cbf9c69abc7f.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  }
+]

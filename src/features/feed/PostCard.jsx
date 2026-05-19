@@ -64,8 +64,8 @@ export default function PostCard({
     const articleRect = article.getBoundingClientRect();
 
     const targetX = articleRect.left + articleRect.width / 2;
-    // .posts-tab gap is 28px; nudge icon down so it straddles the 2px capsule seam.
-    const targetY = articleRect.bottom + 14;
+    // Half of .posts-tab --posts-stack-gap; nudge icon down to straddle the capsule seam.
+    const targetY = articleRect.bottom + 24;
 
     const currentX = btnRect.left + btnRect.width / 2;
     const currentY = btnRect.top + btnRect.height / 2;
@@ -118,11 +118,15 @@ export default function PostCard({
           '--post-accent': noteColor,
         }}
       >
-        {onHide ? (
-          <div className="post-hide-row">
+        <div
+          className="post-pill-slot post-pill-slot--top post-pill-slot--left"
+          role="group"
+          aria-label="Post actions"
+        >
+          {onHide ? (
             <button
               type="button"
-              className="post-meta-pill post-action-btn post-action-btn--hide"
+              className="post-meta-pill post-action-btn post-action-btn--outline"
               onClick={onHide}
               aria-label={isHidden ? 'Show post' : 'Hide post'}
               aria-pressed={isHidden}
@@ -130,8 +134,15 @@ export default function PostCard({
               <HideIcon hidden={isHidden} />
               {isHidden ? 'Show' : 'Hide'}
             </button>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
+        <div
+          className="post-pill-slot post-pill-slot--top post-pill-slot--center"
+          aria-hidden
+        />
+        <div className="post-pill-slot post-pill-slot--top post-pill-slot--right">
+          <span className="post-meta-pill post-outline-pill">analyze</span>
+        </div>
 
         <div className="post-card-body">
           <div className={attachedAsset ? 'post-composite' : undefined}>
@@ -175,27 +186,26 @@ export default function PostCard({
               )
             ) : null}
           </div>
+        </div>
 
-          <div className="post-meta-row" aria-label="Post metadata">
-            <div className="post-meta-left">
-              <span className="post-meta-pill">{timeAgo} ago</span>
-            </div>
-
-            <div className="post-meta-center">
-              <span className="post-meta-pill">
-                System note [{personaLabel}] [+{systemDeltaPct}%]
-              </span>
-            </div>
-
-            <div className="post-meta-right">
-              <CommentsToggle
-                ref={toggleRef}
-                isOpen={isCommentsOpen}
-                onToggle={onToggleComments}
-                controlsId={`commenting-${post.id}`}
-              />
-            </div>
-          </div>
+        <div
+          className="post-pill-slot post-pill-slot--bottom post-pill-slot--left post-meta-left"
+          aria-label="Post metadata"
+        >
+          <span className="post-meta-pill">{timeAgo} ago</span>
+        </div>
+        <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--center post-meta-center">
+          <span className="post-meta-pill">
+            System note [{personaLabel}] [+{systemDeltaPct}%]
+          </span>
+        </div>
+        <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--right post-meta-right">
+          <CommentsToggle
+            ref={toggleRef}
+            isOpen={isCommentsOpen}
+            onToggle={onToggleComments}
+            controlsId={`commenting-${post.id}`}
+          />
         </div>
       </article>
       <CommentsCapsule

@@ -253,9 +253,20 @@ async function prepareGenerationContext() {
   const electronUser = await readJsonOrNull(ELECTRON_USER_JSON);
   const electronData = await readJsonOrNull(ELECTRON_DATA_JSON);
 
+  const harvestedIdentity = electronData?.MACHINE_IDENTITY?.user_identity;
+  const userForLm = { ...(electronUser ?? {}) };
+  if (harvestedIdentity) {
+    if (!userForLm.first_name && harvestedIdentity.first_name) {
+      userForLm.first_name = harvestedIdentity.first_name;
+    }
+    if (!userForLm.last_name && harvestedIdentity.last_name) {
+      userForLm.last_name = harvestedIdentity.last_name;
+    }
+  }
+
   let userPayloadObject;
   if (electronData) {
-    userPayloadObject = { user: electronUser ?? {}, profile: electronData };
+    userPayloadObject = { user: userForLm, profile: electronData };
   } else {
     const { wallpaperBase64, personaPosts, ...profileForAI } = profile;
     userPayloadObject = profileForAI;
