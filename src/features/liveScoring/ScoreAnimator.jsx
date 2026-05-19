@@ -19,6 +19,8 @@ function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3);
 }
 
+const _counterState = new Map();
+
 function getRingEl(persona) {
   const scoreKey = PERSONA_TO_SCORE_KEY[persona] ?? 'productivity';
   const ringAttr = SCORE_KEY_TO_RING_ATTR[scoreKey] ?? 'productivity';
@@ -31,8 +33,10 @@ function animateCounter(persona, delta, duration = 520) {
   const scoreEl = document.querySelector(`[data-persona-ring-score="${ringAttr}"]`);
   if (!scoreEl) return;
 
-  const startVal = Number(scoreEl.textContent?.trim()) || 0;
+  const domVal = Number(scoreEl.textContent?.trim()) || 0;
+  const startVal = _counterState.has(ringAttr) ? _counterState.get(ringAttr) : domVal;
   const endVal = Math.max(0, Math.min(100, startVal + delta));
+  _counterState.set(ringAttr, endVal);
 
   const flashClass = delta < 0 ? 'lsc-score-flash-down' : 'lsc-score-flash-up';
   scoreEl.classList.remove('lsc-score-flash-down', 'lsc-score-flash-up');
@@ -46,6 +50,7 @@ function animateCounter(persona, delta, duration = 520) {
     const t = easeOutCubic(progress);
     scoreEl.textContent = String(Math.round(startVal + (endVal - startVal) * t));
     if (progress < 1) requestAnimationFrame(tick);
+    else _counterState.delete(ringAttr);
   }
   requestAnimationFrame(tick);
 }

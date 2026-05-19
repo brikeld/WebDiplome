@@ -319,13 +319,20 @@ app.post('/api/profile/:id/score-adjustments', async (req, res) => {
     return res.status(400).json({ error: 'scoreAdjustments must contain numeric productivity, security, social' });
   }
 
+  const clampAdj = (v) => Math.max(-100, Math.min(100, Math.round(v)));
+  const clamped = {
+    productivity: clampAdj(scoreAdjustments.productivity),
+    security: clampAdj(scoreAdjustments.security),
+    social: clampAdj(scoreAdjustments.social),
+  };
+
   const profilePath = path.join(PROFILES_DIR, `${id}.json`);
 
   try {
     // 1. Update WebDiplome profile JSON
     const raw = await fs.readFile(profilePath, 'utf8');
     const profile = JSON.parse(raw);
-    profile.scoreAdjustments = scoreAdjustments;
+    profile.scoreAdjustments = clamped;
     await fs.writeFile(profilePath, JSON.stringify(profile, null, 2), 'utf8');
 
     // 2. Patch Electron data.json (best-effort — don't fail if missing)
@@ -336,9 +343,9 @@ app.post('/api/profile/:id/score-adjustments', async (req, res) => {
         throw new Error('Electron data.json is malformed');
       }
       electronData.liveScoreAdjustments = {
-        productivity: scoreAdjustments.productivity,
-        security: scoreAdjustments.security,
-        social: scoreAdjustments.social,
+        productivity: clamped.productivity,
+        security: clamped.security,
+        social: clamped.social,
         updatedAt: new Date().toISOString(),
       };
       await fs.writeFile(ELECTRON_DATA_PATH, JSON.stringify(electronData, null, 2), 'utf8');
