@@ -26,34 +26,12 @@ const COMMENT_BANK = {
   ],
 };
 
-const SUGGESTION_BANK = {
-  productivite: [
-    'Strong cadence — keep the queue moving and protect the focus blocks.',
-    'Try batching the small edits so the big ones get the attention they need.',
-    'Lock in the streak with a short Friday review of what shipped.',
-    'The pace is sustainable if you keep the review loop short.',
-  ],
-  securite: [
-    'Run a quick secrets scan over the diff before tagging the release.',
-    'Tighten the rollback plan now while the changes are still fresh.',
-    'Add a smoke test for the riskiest path so a regression catches itself.',
-    'Pin the new deps before they drift on you.',
-  ],
-  popularite: [
-    'Share a one-line summary of the week — small post, big compounding.',
-    'A short video of the new flow would land well right now.',
-    'Tag the people who unblocked you — quiet credit travels far.',
-    'Drop a snippet, watch the network do the rest.',
-  ],
-};
-
 function pick(bank, seed) {
   return bank[seed % bank.length];
 }
 
+/** Other users' mock thread comments (suggestions are AI-generated on open). */
 export function getMockCommentsFor(postId) {
-  const base = hash(postId);
-
   const comments = PERSONA_ORDER.map((persona, i) => {
     const seed = hash(`${postId}|comment|${persona}|${i}`);
     return {
@@ -62,14 +40,5 @@ export function getMockCommentsFor(postId) {
     };
   });
 
-  const suggestions = PERSONA_ORDER.map((persona, i) => {
-    const seed = hash(`${postId}|suggestion|${persona}|${i}`);
-    return {
-      persona,
-      content: pick(SUGGESTION_BANK[persona], seed),
-      plusValue: ((seed + base) % 5) + 1,
-    };
-  });
-
-  return { comments, suggestions };
+  return { comments };
 }

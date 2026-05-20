@@ -53,7 +53,8 @@
     opacity var(--commenting-duration) var(--commenting-ease),
     transform var(--commenting-duration) var(--commenting-ease),
     padding var(--commenting-duration) var(--commenting-ease),
-    margin var(--commenting-duration) var(--commenting-ease);
+    margin var(--commenting-duration) var(--commenting-ease),
+    filter 0.3s ease;
   padding-top: 0;
   padding-bottom: 0;
 }
@@ -194,13 +195,13 @@
   justify-content: flex-start;
   box-sizing: border-box;
   min-height: 9rem;
-  height: 9rem;
+  height: auto;
   min-width: 0;
 }
 
 .commenting-capsule .commenting-comment-bubble {
   min-height: var(--commenting-shell-lane-height);
-  height: var(--commenting-shell-lane-height);
+  height: auto;
 }
 
 .commenting-comment-content {
@@ -211,13 +212,11 @@
   letter-spacing: -0.01em;
   margin: 0;
   padding: 0;
-  flex: 1 1 0;
+  flex: 0 1 auto;
   min-height: 0;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+  overflow: visible;
   overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .commenting-comment-byline {
@@ -366,11 +365,11 @@
 .commenting-suggestion-shell:not(.commenting-suggestion-shell--picked) .commenting-suggestion-row {
   flex: 0 0 auto;
   box-sizing: border-box;
-  height: var(--commenting-shell-lane-height);
+  height: auto;
   min-height: var(--commenting-shell-lane-height);
-  max-height: var(--commenting-shell-lane-height);
+  max-height: none;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .commenting-suggestion-shell--picked {
@@ -389,13 +388,13 @@
 .commenting-suggestion-picked-inner {
   box-sizing: border-box;
   flex: 0 0 auto;
-  height: var(--commenting-shell-lane-height);
+  height: auto;
   min-height: var(--commenting-shell-lane-height);
-  max-height: var(--commenting-shell-lane-height);
+  max-height: none;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Chosen reply: persona fills the shell; copy is black on the tint. */
@@ -483,7 +482,7 @@
 .commenting-capsule--open .commenting-suggestion-shell {
   opacity: 1;
   transform: translateY(0);
-  transition-delay: calc(var(--commenting-stagger) * 3);
+  transition-delay: calc(var(--commenting-stagger) * 4);
 }
 
 .commenting-suggestion-row {
@@ -587,11 +586,10 @@
   padding-top: 8px;
   padding-left: 8px;
   padding-right: 2px;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
+  display: block;
+  overflow: visible;
   overflow-wrap: break-word;
+  white-space: normal;
   min-height: 0;
 }
 
@@ -637,37 +635,99 @@
   opacity: 0;
 }
 
-/* Footer: real input so the placeholder hides while typing; hidden after a
-   suggestion is chosen (mock “post” flow). */
+.commenting-suggestion-option--loading {
+  cursor: wait;
+  justify-content: center;
+  align-items: center;
+  min-height: var(--commenting-shell-lane-height);
+}
+
+.commenting-suggestion-option--loading .commenting-suggestion-option-text,
+.commenting-suggestion-option--loading .commenting-suggestion-option-plus {
+  display: none;
+}
+
+.commenting-suggestion-option-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 3px solid color-mix(in srgb, #000 22%, transparent);
+  border-top-color: #000;
+  box-shadow: 0 0 0 1px color-mix(in srgb, #000 35%, transparent);
+  animation: commenting-suggestion-option-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes commenting-suggestion-option-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.commenting-suggestion-error {
+  margin: 8px 0 0;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f87171;
+  text-align: center;
+}
+
+/* Draft field above propositions; hidden after a suggestion is chosen. */
 .commenting-footer {
   display: flex;
   justify-content: center;
-  padding: 4px 0 0;
+  padding: 6px 0 14px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--commenting-duration) var(--commenting-ease),
+    transform var(--commenting-duration) var(--commenting-ease);
+}
+
+.commenting-capsule--open .commenting-footer {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: calc(var(--commenting-stagger) * 3);
 }
 
 .commenting-footer-field {
   width: 100%;
   text-align: center;
-  border: 1.5px solid var(--persona-accent, #fff);
+  border: none;
   border-radius: 9999px;
   box-sizing: border-box;
-  min-height: 3.35rem;
-  padding: 16px 20px 17px;
+  min-height: 4.5rem;
+  padding: 20px 28px 21px;
   font-family: 'AvantGarde ITC BT', var(--font-sans, inherit);
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 400;
-  color: var(--persona-accent, #fff);
-  background: transparent;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: #000;
+  background: var(--persona-accent, #ccf847);
   outline: none;
 }
 
 .commenting-footer-field::placeholder {
-  color: color-mix(in srgb, var(--persona-accent, #fff) 85%, transparent);
+  color: #000;
   opacity: 1;
 }
 
-.commenting-footer-field:not(:placeholder-shown) {
-  color: #fff;
+.commenting-footer-field::-webkit-input-placeholder {
+  color: #000;
+  opacity: 1;
+}
+
+.commenting-footer-field::-moz-placeholder {
+  color: #000;
+  opacity: 1;
+}
+
+.commenting-footer-field:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
 }
 
 .commenting-toggle-host {

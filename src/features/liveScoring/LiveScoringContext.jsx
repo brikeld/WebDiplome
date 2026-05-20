@@ -7,6 +7,7 @@ import {
   computeAdjustedScores,
   applyHide,
   applyReveal,
+  applyCommentBoost,
   isPostHidden,
   dominantPersonaFromAdjustedScores,
 } from './scoringLogic.js';
@@ -49,6 +50,16 @@ function scoringReducer(state, action) {
     case 'REVEAL': {
       const newRecords = applyReveal(state.records, action.postKey);
       if (newRecords === state.records) return state; // no-op
+      return { ...state, records: newRecords };
+    }
+    case 'COMMENT_BOOST': {
+      const newRecords = applyCommentBoost(
+        state.records,
+        action.recordKey,
+        action.persona,
+        action.plusValue,
+      );
+      if (newRecords === state.records) return state;
       return { ...state, records: newRecords };
     }
     case 'LOAD':
@@ -180,6 +191,36 @@ export function LiveScoringProvider({ profile, children }) {
     [state.records, pushAnimationEvent],
   );
 
+  const boostFromComment = useCallback(
+    (post, persona, plusValue, sourcePillRect, sessionId) => {
+      const postId = String(post?.id ?? '').trim();
+      if (!postId) return;
+      const delta = Math.abs(Number(plusValue) || 0);
+      if (delta === 0) return;
+
+      const recordKey =
+        sessionId != null && sessionId !== ''
+          ? `comment-${postId}-${sessionId}`
+          : `comment-${postId}`;
+
+      pushAnimationEvent({
+        id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
+        type: 'boost',
+        persona: String(persona ?? '').toLowerCase(),
+        sourcePillRect,
+        onCommit: () => {
+          dispatch({
+            type: 'COMMENT_BOOST',
+            recordKey,
+            persona,
+            plusValue: delta,
+          });
+        },
+      });
+    },
+    [pushAnimationEvent],
+  );
+
   const revealPost = useCallback(
     (post, sourcePillRect) => {
       const postKey = normalizePostHideKey(post.createdAt);
@@ -221,6 +262,7 @@ export function LiveScoringProvider({ profile, children }) {
       dominantPersona,
       hidePost,
       revealPost,
+      boostFromComment,
       isHidden,
       subscribeAnimations,
       dequeueAnimation,
@@ -234,6 +276,7 @@ export function LiveScoringProvider({ profile, children }) {
       dominantPersona,
       hidePost,
       revealPost,
+      boostFromComment,
       isHidden,
       subscribeAnimations,
       dequeueAnimation,

@@ -208,9 +208,14 @@ export default function ScoreAnimator() {
   useEffect(() => {
     const unsub = subscribeAnimations((queue) => {
       if (!queue.length) return;
-      const latest = queue[queue.length - 1];
-      setParticles((prev) => [...prev, latest]);
-      dequeueAnimation(latest.id);
+      setParticles((prev) => {
+        const seen = new Set(prev.map((p) => p.id));
+        const incoming = queue.filter((e) => !seen.has(e.id));
+        return incoming.length ? [...prev, ...incoming] : prev;
+      });
+      for (const event of queue) {
+        dequeueAnimation(event.id);
+      }
     });
     return unsub;
   }, [subscribeAnimations, dequeueAnimation]);

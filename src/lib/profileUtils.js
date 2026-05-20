@@ -152,6 +152,32 @@ export function getPersonaScoresNormalized(profile) {
   });
 }
 
+/** Even split when persona shares sum to 100%. */
+const PERSONA_EQUAL_SHARE = 100 / 3;
+
+/**
+ * Map a compositional persona % (0–100, shares sum to 100) to ring arc fill (0–100).
+ * Displayed labels stay on the true %; only stroke length uses this curve so rings
+ * look fuller now that each axis tops out near ~33–50 instead of 100.
+ */
+export function personaPercentToRingFill(percent) {
+  const p = clampPercentScore(percent) ?? 0;
+  if (p <= 0) return 0;
+  if (p >= 100) return 100;
+
+  const minFill = 28;
+  const midFill = 52;
+  const equal = PERSONA_EQUAL_SHARE;
+
+  if (p <= equal) {
+    const t = p / equal;
+    return Math.round(minFill + t * (midFill - minFill));
+  }
+
+  const t = (p - equal) / (100 - equal);
+  return Math.round(midFill + t * (100 - midFill));
+}
+
 /** UI axis `productivity` | `security` | `popularity` → numeric (API uses `social` for social axis). */
 export function getPersonaScoreForAxis(profile, axisKey) {
   const s = getPersonaScoresNormalized(profile ?? {});
@@ -162,13 +188,13 @@ export function getPersonaScoreForAxis(profile, axisKey) {
   return 0;
 }
 
-/** Main score canvas rings: prod / social / sec */
+/** Main score canvas rings: prod / social / sec (visual fill 0–100, not raw %). */
 export function getMainScoreRingValues(profile) {
   const s = getPersonaScoresNormalized(profile ?? {});
   return {
-    prod: s.productivity,
-    social: s.social,
-    sec: s.security,
+    prod: personaPercentToRingFill(s.productivity),
+    social: personaPercentToRingFill(s.social),
+    sec: personaPercentToRingFill(s.security),
   };
 }
 

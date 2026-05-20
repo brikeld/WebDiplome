@@ -110,6 +110,26 @@ export function applyReveal(records, postKey) {
 }
 
 /**
+ * Returns new records after a comment suggestion is chosen (+N to persona score).
+ * One boost per recordKey (e.g. per comment-open session). No-op if already applied.
+ */
+export function applyCommentBoost(records, recordKey, persona, plusValue) {
+  const key = String(recordKey);
+  if (!key || records[key]) return records;
+  const delta = Math.abs(Number(plusValue) || 0);
+  if (delta === 0) return records;
+  return {
+    ...records,
+    [key]: {
+      persona: String(persona).toLowerCase(),
+      delta,
+      restorable: 0,
+      source: 'comment',
+    },
+  };
+}
+
+/**
  * Returns UI persona key ('productivity' | 'security' | 'popularity')
  * for the highest-scoring axis.
  */

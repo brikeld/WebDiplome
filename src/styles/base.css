@@ -634,9 +634,13 @@ body {
   box-sizing: border-box;
   position: relative;
   margin: 0;
+  /* Fixed center track (not `auto`) so pill columns line up across every post in the feed. */
+  --post-pill-center-col: clamp(15.5rem, 42vw, 22rem);
+  /* One width for Hide / time / analyze / comment — sized for “analyze” + icon buttons. */
+  --post-side-pill-width: 7rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  column-gap: clamp(88px, 18vw, 180px);
+  grid-template-columns: minmax(0, 1fr) var(--post-pill-center-col) minmax(0, 1fr);
+  column-gap: clamp(42px, 10vw, 92px);
   padding: 0 16px;
   grid-template-areas:
     'pill-top-left pill-top-center pill-top-right'
@@ -703,34 +707,49 @@ body {
   pointer-events: none;
 }
 
+/* Side pills hug the center column (inward) so top/bottom stay aligned but read more central. */
+.post-pill-slot--top.post-pill-slot--left,
+.post-pill-slot--bottom.post-pill-slot--left {
+  justify-content: flex-end;
+  padding-inline-end: clamp(18px, 4vw, 38px);
+}
+
 .post-pill-slot--top.post-pill-slot--left {
   grid-area: pill-top-left;
-  justify-content: flex-end;
-}
-
-.post-pill-slot--top.post-pill-slot--center {
-  grid-area: pill-top-center;
-  justify-content: center;
-}
-
-.post-pill-slot--top.post-pill-slot--right {
-  grid-area: pill-top-right;
-  justify-content: flex-start;
 }
 
 .post-pill-slot--bottom.post-pill-slot--left {
   grid-area: pill-bottom-left;
-  justify-content: flex-end;
+}
+
+.post-pill-slot--top.post-pill-slot--center,
+.post-pill-slot--bottom.post-pill-slot--center {
+  justify-content: center;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.post-pill-slot--top.post-pill-slot--center {
+  grid-area: pill-top-center;
 }
 
 .post-pill-slot--bottom.post-pill-slot--center {
   grid-area: pill-bottom-center;
-  justify-content: center;
+}
+
+.post-pill-slot--top.post-pill-slot--right,
+.post-pill-slot--bottom.post-pill-slot--right {
+  justify-content: flex-start;
+  padding-inline-start: clamp(18px, 4vw, 38px);
+}
+
+.post-pill-slot--top.post-pill-slot--right {
+  grid-area: pill-top-right;
 }
 
 .post-pill-slot--bottom.post-pill-slot--right {
   grid-area: pill-bottom-right;
-  justify-content: flex-start;
 }
 
 .post-pill-slot--top {
@@ -751,6 +770,15 @@ body {
 .post-meta-center,
 .post-meta-right {
   gap: 8px;
+}
+
+.post-meta-center {
+  justify-content: center;
+  width: 100%;
+}
+
+.post-meta-center .post-meta-pill {
+  margin-inline: auto;
 }
 
 .post-meta-pill {
@@ -808,10 +836,19 @@ body {
   pointer-events: auto;
 }
 
+.post-pill-slot--left .post-meta-pill,
+.post-pill-slot--left .post-action-btn,
+.post-pill-slot--right .post-meta-pill,
+.post-pill-slot--right .post-action-btn {
+  box-sizing: border-box;
+  width: var(--post-side-pill-width);
+  min-width: var(--post-side-pill-width);
+  max-width: var(--post-side-pill-width);
+}
+
 /* Hollow outline pills (hide / analyze) — accent stroke + text */
 .post-pill-slot--top .post-action-btn--outline,
 .post-pill-slot--top .post-outline-pill {
-  min-width: 72px;
   gap: 6px;
   background: transparent;
   border: 1.5px solid var(--post-accent, var(--persona-accent, #ccf847));
@@ -839,22 +876,32 @@ body {
   cursor: default;
 }
 
-/* Blur post body + bottom pills when hidden; top hide/analyze pills stay sharp */
+/* Blur post content when hidden; only the Hide/Show control stays sharp */
 .post-card-body {
   grid-area: body;
   transition: filter 0.3s ease;
 }
 
+.post-pill-slot--top.post-pill-slot--right {
+  transition: filter 0.3s ease;
+}
+
 .post-card--hidden .post-card-body,
-.post-card--hidden .post-pill-slot--bottom {
+.post-card--hidden .post-pill-slot--bottom,
+.post-card--hidden .post-pill-slot--top.post-pill-slot--right {
+  filter: blur(18px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.post-card--hidden + .commenting-capsule.commenting-capsule--open {
   filter: blur(18px);
   pointer-events: none;
   user-select: none;
 }
 
 .post-action-btn--comment {
-  /* Same padding as `.post-meta-pill` so silhouette matches time + system pills; min-width keeps tap target. */
-  min-width: 72px;
+  /* Width comes from `--post-side-pill-width` on side slots; padding matches `.post-meta-pill`. */
   padding: 5px 12px 6px;
   display: inline-flex;
   align-items: center;

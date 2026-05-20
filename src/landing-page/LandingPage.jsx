@@ -52,7 +52,7 @@ const DEMO_POSTS = [
     persona: 'productivite',
     color: '#D8D8D8',
     name: 'Alex Johnson',
-    handle: '@demo_machine',
+    handle: '@AlexLaptop',
     content: 'Resumed work 03:14. Closed 47 tabs. Reopened 19. Productivity penalty applied. Subject was disappointed — we were too.',
     delta: '-2',
     time: '4m',
@@ -62,7 +62,7 @@ const DEMO_POSTS = [
     persona: 'securite',
     color: '#759AEF',
     name: 'Alex Johnson',
-    handle: '@demo_machine',
+    handle: '@AlexLaptop',
     content: 'Webcam active during off-hours. 14 facial expressions classified as guilt. Logged automatically.',
     delta: '-9',
     time: '21m',
@@ -77,7 +77,7 @@ const DEMO_POSTS = [
     persona: 'popularite',
     color: '#CCF847',
     name: 'Alex Johnson',
-    handle: '@demo_machine',
+    handle: '@AlexLaptop',
     content: 'Group chat silent for 6 days. Read 11 messages. Replied to 0. We respect that.',
     delta: '-4',
     time: '6d',
@@ -106,7 +106,7 @@ function ProfileHeaderPreview() {
                   <div className="profile-name-lg">Alex Johnson</div>
                 </div>
                 <div className="profile-handle-row">
-                  <div className="profile-handle-lg">@demo_machine</div>
+                  <div className="profile-handle-lg">@AlexLaptop</div>
                   <button
                     type="button"
                     className="profile-connect-btn"

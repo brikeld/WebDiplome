@@ -5,6 +5,7 @@ import { isPdfDocumentAsset } from '@/lib/attachmentKind.js';
 import { shouldApplyPostImageFx } from '@/lib/shouldApplyPostImageFx.js';
 import CommentsToggle from '@/features/commenting/CommentsToggle.jsx';
 import CommentsCapsule from '@/features/commenting/CommentsCapsule.jsx';
+import { DEMO_OTHER_COMMENTER } from '@/lib/demoCommentIdentity.js';
 
 const PostPdfCarousel = lazy(() => import('./PostPdfCarousel.jsx'));
 
@@ -230,6 +231,10 @@ export default function PostCard({
         handle={handle}
         avatarSrc={avatarSrc}
         avatarInitials={avatarInitials}
+        commenterDisplayName={DEMO_OTHER_COMMENTER.displayName}
+        commenterHandle={DEMO_OTHER_COMMENTER.handle}
+        commenterAvatarSrc={DEMO_OTHER_COMMENTER.avatarSrc}
+        commenterAvatarInitials={DEMO_OTHER_COMMENTER.avatarInitials}
       />
     </>
   );

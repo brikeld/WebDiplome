@@ -14,6 +14,7 @@ import {
 import { loadPrompts } from './server/lib/prompts.js';
 import { extractDocText } from './server/lib/docText.js';
 import { readPostsForId, appendPersonaPosts } from './server/lib/postsStore.js';
+import { generateCommentSuggestions } from './server/lib/commentSuggestions.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
@@ -464,9 +465,49 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
   }
 });
 
+// POST /api/comments/suggest — 3 AI reply options (max 60 chars each) for the logged-in user
+app.post('/api/comments/suggest', async (req, res) => {
+  try {
+    const ctx = await prepareGenerationContext();
+    if (ctx.error) {
+      return res.status(ctx.status || 500).json({ success: false, error: ctx.error });
+    }
+    const post = req.body?.post;
+    if (!post || typeof post !== 'object') {
+      return res.status(400).json({ success: false, error: 'post object required' });
+    }
+    const content = String(post.content ?? '').trim();
+    if (!content) {
+      return res.status(400).json({ success: false, error: 'post.content required' });
+    }
+
+    const electronUser = await readJsonOrNull(ELECTRON_USER_JSON);
+    const suggestions = await generateCommentSuggestions({
+      baseUrl: ctx.baseUrl,
+      model: ctx.model,
+      profile: ctx.profile,
+      post,
+      electronData: ctx.electronData,
+      electronUser,
+      uploadsDir: UPLOADS_DIR,
+      timeoutMs: LM_STUDIO_TIMEOUT_MS,
+      retries: LM_STUDIO_RETRIES,
+    });
+
+    return res.json({ success: true, suggestions });
+  } catch (err) {
+    console.error('[comments/suggest] failed:', err?.message || err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message ? String(err.message) : 'Comment suggestion failed',
+    });
+  }
+});
+
 const PORT = Number(process.env.GENERATE_PORT) || 3010;
 app.listen(PORT, async () => {
   const lm = await readLmStudioConfig();
   console.log(`Generator server running on http://localhost:${PORT}`);
   console.log(`LM Studio: ${lm.baseUrl}  model: ${lm.model}`);
+  console.log('[comments/suggest] assistant-prefill parser (text-only, sequential)');
 });

@@ -12,6 +12,7 @@ import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import {
   getPersonaScoresNormalized,
+  personaPercentToRingFill,
   machineHandleFromProfile,
 } from '@/lib/profileUtils.js';
 import HarvestScreen from '@/features/harvest/HarvestScreen.jsx';
@@ -341,9 +342,10 @@ function AppInner({
                   const ringColor = PERSONA_COLORS[k];
                   const scoreKey = k === 'popularity' ? 'social' : k;
                   const value = Math.max(0, Math.min(100, adjustedScores[scoreKey] ?? 0));
+                  const ringFill = personaPercentToRingFill(value);
                   const R = 32;
                   const CIRC = 2 * Math.PI * R;
-                  const dash = CIRC * (value / 100);
+                  const dash = CIRC * (ringFill / 100);
                   const gap = CIRC - dash;
                   const isDominantRing = k === personaKey;
                   return (

@@ -4,6 +4,7 @@ import {
   computeAdjustedScores,
   applyHide,
   applyReveal,
+  applyCommentBoost,
   isPostHidden,
   dominantPersonaFromAdjustedScores,
 } from '../src/features/liveScoring/scoringLogic.js';
@@ -29,6 +30,14 @@ describe('computeLiveAdjustments', () => {
   it('maps productivite to productivity', () => {
     const records = { k: { persona: 'productivite', delta: -1, restorable: 0.5 } };
     expect(computeLiveAdjustments(records).productivity).toBe(-1);
+  });
+
+  it('sums positive comment boosts', () => {
+    const records = {
+      c1: { persona: 'popularite', delta: 4, restorable: 0, source: 'comment' },
+      c2: { persona: 'securite', delta: 2, restorable: 0, source: 'comment' },
+    };
+    expect(computeLiveAdjustments(records)).toEqual({ productivity: 0, security: 2, social: 4 });
   });
 });
 
@@ -109,6 +118,39 @@ describe('applyReveal', () => {
     const records = { 'post-1': { persona: 'popularite', delta: -1.5, restorable: 0 } };
     const result = applyReveal(records, 'post-1');
     expect(result['post-1']).toBeUndefined();
+  });
+});
+
+describe('applyCommentBoost', () => {
+  it('adds a positive delta with no restorable', () => {
+    const result = applyCommentBoost({}, 'comment-post-1', 'popularite', 4);
+    expect(result['comment-post-1']).toEqual({
+      persona: 'popularite',
+      delta: 4,
+      restorable: 0,
+      source: 'comment',
+    });
+  });
+
+  it('is a no-op if comment boost already applied for that record key', () => {
+    const existing = {
+      'comment-post-1-2': { persona: 'securite', delta: 3, restorable: 0, source: 'comment' },
+    };
+    expect(applyCommentBoost(existing, 'comment-post-1-2', 'popularite', 5)).toBe(existing);
+  });
+
+  it('allows another boost for a new session key on the same post', () => {
+    const existing = {
+      'comment-post-1-1': { persona: 'popularite', delta: 3, restorable: 0, source: 'comment' },
+    };
+    const result = applyCommentBoost(existing, 'comment-post-1-2', 'securite', 4);
+    expect(result['comment-post-1-2'].delta).toBe(4);
+    expect(computeLiveAdjustments(result).security).toBe(4);
+  });
+
+  it('does not mark post as hidden', () => {
+    const records = applyCommentBoost({}, 'comment-post-1', 'productivite', 2);
+    expect(isPostHidden(records, 'comment-post-1')).toBe(false);
   });
 });
 

@@ -1,10 +1,13 @@
+import { personaPercentToRingFill } from '@/lib/profileUtils.js';
+
 const RING_RADIUS = 35;
 const RING_CX = 40;
 const RING_CY = 40;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 function Arc({ value, color, label, description }) {
-  const offset = CIRCUMFERENCE * (1 - value / 100);
+  const ringFill = personaPercentToRingFill(value);
+  const offset = CIRCUMFERENCE * (1 - ringFill / 100);
   return (
     <div className="po-ring-item" title={description}>
       <svg className="po-ring-svg" viewBox="0 0 80 80" width="80" height="80">
