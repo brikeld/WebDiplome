@@ -4,6 +4,7 @@ import {
   computeAdjustedScores,
   applyHide,
   applyReveal,
+  isPostHidden,
   dominantPersonaFromAdjustedScores,
 } from '../src/features/liveScoring/scoringLogic.js';
 
@@ -62,10 +63,32 @@ describe('applyHide', () => {
     expect(applyHide(existing, 'post-1', 'popularite', 3)).toBe(existing);
   });
 
+  it('can hide again after reveal (record kept with restorable 0)', () => {
+    const revealed = { 'post-1': { persona: 'popularite', delta: -1.5, restorable: 0 } };
+    const result = applyHide(revealed, 'post-1', 'popularite', 3);
+    expect(result['post-1']).toEqual({ persona: 'popularite', delta: -3, restorable: 1.5 });
+  });
+
   it('does not mutate the original records object', () => {
     const original = {};
     applyHide(original, 'post-1', 'popularite', 3);
     expect(original).toEqual({});
+  });
+});
+
+describe('isPostHidden', () => {
+  it('is true when restorable > 0', () => {
+    const records = { k: { persona: 'popularite', delta: -3, restorable: 1.5 } };
+    expect(isPostHidden(records, 'k')).toBe(true);
+  });
+
+  it('is false after reveal (restorable cleared, record kept for score)', () => {
+    const records = { k: { persona: 'popularite', delta: -1.5, restorable: 0 } };
+    expect(isPostHidden(records, 'k')).toBe(false);
+  });
+
+  it('is false when post is not in records', () => {
+    expect(isPostHidden({}, 'k')).toBe(false);
   });
 });
 

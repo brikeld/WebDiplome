@@ -25,6 +25,7 @@ import {
 import { pickAndBuildChart } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
 import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
+import { normalizePersonaPercentTriplet } from './personaScores.js';
 
 /** Slot index for the asset slot (image or document from disk). */
 export const ASSET_SLOT_INDEX = 1;
@@ -421,7 +422,7 @@ export async function generatePersonaPosts({
 }) {
   const SP = promptsParam?.slotPrompts ?? DEFAULT_SLOT_PROMPTS;
 
-  const personaScores = profile?.personaScores ?? null;
+  const personaScores = profile?.personaScores ? normalizePersonaPercentTriplet(profile.personaScores) : null;
   const [chartSlot, textSlot] = await Promise.all([
     buildChartSlot(dataJson, profile, userPayload, existingPosts, chartUploadDir, personaScores),
     Promise.resolve(buildTextSlot(dataJson, userPayload, existingPosts, SP, personaScores)),

@@ -350,7 +350,16 @@ app.post('/api/profile/generate-summary', async (_req, res) => {
     if (ctx.error) {
       return res.status(ctx.status || 500).json({ success: false, error: ctx.error });
     }
-    const { newest, userPayload, baseUrl, model, prompts } = ctx;
+    const { newest, profile, userPayload, baseUrl, model, prompts } = ctx;
+    const existingBio = String(profile?.profileSummary || profile?.userDescription || '').trim();
+    if (existingBio) {
+      return res.json({
+        success: true,
+        profileSummary: existingBio,
+        userDescription: existingBio,
+        reused: true,
+      });
+    }
     const description = await generateUserSummary({
       baseUrl,
       model,

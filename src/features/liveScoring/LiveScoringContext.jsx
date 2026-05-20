@@ -1,5 +1,5 @@
 // src/features/liveScoring/LiveScoringContext.jsx
-import { createContext, useReducer, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createContext, useReducer, useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { getPersonaScoresNormalized } from '@/lib/profileUtils.js';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import {
@@ -7,6 +7,7 @@ import {
   computeAdjustedScores,
   applyHide,
   applyReveal,
+  isPostHidden,
   dominantPersonaFromAdjustedScores,
 } from './scoringLogic.js';
 import { syncScoreAdjustment } from './scoreSync.js';
@@ -66,12 +67,19 @@ export function LiveScoringProvider({ profile, children }) {
   }, [profile?.firstname, profile?.lastname]);
 
   const [state, dispatch] = useReducer(scoringReducer, { records: {}, loaded: false });
+  const [ringScores, setRingScores] = useState({ productivity: 0, security: 0, social: 0 });
+  const [animatingRing, setAnimatingRing] = useState(/** @type {string | null} */ (null));
+  const [optimisticHidden, setOptimisticHidden] = useState(() => new Set());
+  const [revealingKeys, setRevealingKeys] = useState(() => new Set());
   const animationQueueRef = useRef([]);
   const animationListenersRef = useRef(new Set());
+  const adjustedScoresRef = useRef(ringScores);
 
   // Load from localStorage when profileId changes
   useEffect(() => {
     if (!profileId) return;
+    setOptimisticHidden(new Set());
+    setRevealingKeys(new Set());
     const records = loadFromStorage(profileId);
     dispatch({ type: 'LOAD', records });
   }, [profileId]);
@@ -102,6 +110,23 @@ export function LiveScoringProvider({ profile, children }) {
     [adjustedScores],
   );
 
+  adjustedScoresRef.current = adjustedScores;
+
+  // Dashboard rings lag records until the particle animation commits the score.
+  useEffect(() => {
+    if (!state.loaded || animatingRing != null) return;
+    setRingScores(adjustedScores);
+  }, [adjustedScores, state.loaded, animatingRing]);
+
+  const beginRingAnimation = useCallback((ringKey) => {
+    setAnimatingRing(ringKey);
+  }, []);
+
+  const finishRingAnimation = useCallback((scores) => {
+    setRingScores(scores);
+    setAnimatingRing(null);
+  }, []);
+
   // Sync to server + Electron when adjustedScores change (after first load)
   useEffect(() => {
     if (!profileId || !state.loaded) return;
@@ -130,51 +155,91 @@ export function LiveScoringProvider({ profile, children }) {
   const hidePost = useCallback(
     (post, sourcePillRect) => {
       const postKey = normalizePostHideKey(post.createdAt);
-      if (!postKey) return;
-      dispatch({ type: 'HIDE', postKey, persona: post.persona, systemDeltaPct: post.systemDeltaPct ?? 1 });
+      if (!postKey || isPostHidden(state.records, postKey)) return;
+      setOptimisticHidden((prev) => new Set(prev).add(postKey));
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'hide',
         persona: String(post.persona ?? '').toLowerCase(),
-        delta: -(post.systemDeltaPct ?? 1),
         sourcePillRect,
+        onCommit: () => {
+          dispatch({
+            type: 'HIDE',
+            postKey,
+            persona: post.persona,
+            systemDeltaPct: post.systemDeltaPct ?? 1,
+          });
+          setOptimisticHidden((prev) => {
+            const next = new Set(prev);
+            next.delete(postKey);
+            return next;
+          });
+        },
       });
     },
-    [pushAnimationEvent],
+    [state.records, pushAnimationEvent],
   );
 
   const revealPost = useCallback(
     (post, sourcePillRect) => {
       const postKey = normalizePostHideKey(post.createdAt);
-      if (!postKey) return;
-      dispatch({ type: 'REVEAL', postKey });
+      if (!postKey || !isPostHidden(state.records, postKey)) return;
+      setRevealingKeys((prev) => new Set(prev).add(postKey));
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'reveal',
         persona: String(post.persona ?? '').toLowerCase(),
-        delta: +(post.systemDeltaPct ?? 1) * 0.5,
         sourcePillRect,
+        onCommit: () => {
+          dispatch({ type: 'REVEAL', postKey });
+          setRevealingKeys((prev) => {
+            const next = new Set(prev);
+            next.delete(postKey);
+            return next;
+          });
+        },
       });
     },
-    [pushAnimationEvent],
+    [state.records, pushAnimationEvent],
   );
 
   const isHidden = useCallback(
-    (postKey) => !!state.records[String(postKey)],
-    [state.records],
+    (postKey) => {
+      const key = String(postKey);
+      if (revealingKeys.has(key)) return false;
+      return isPostHidden(state.records, key) || optimisticHidden.has(key);
+    },
+    [state.records, optimisticHidden, revealingKeys],
   );
 
   const value = useMemo(
     () => ({
       adjustedScores,
+      adjustedScoresRef,
+      ringScores,
+      animatingRing,
       dominantPersona,
       hidePost,
       revealPost,
       isHidden,
       subscribeAnimations,
       dequeueAnimation,
+      beginRingAnimation,
+      finishRingAnimation,
     }),
-    [adjustedScores, dominantPersona, hidePost, revealPost, isHidden, subscribeAnimations, dequeueAnimation],
+    [
+      adjustedScores,
+      ringScores,
+      animatingRing,
+      dominantPersona,
+      hidePost,
+      revealPost,
+      isHidden,
+      subscribeAnimations,
+      dequeueAnimation,
+      beginRingAnimation,
+      finishRingAnimation,
+    ],
   );
 
   return <LiveScoringContext.Provider value={value}>{children}</LiveScoringContext.Provider>;

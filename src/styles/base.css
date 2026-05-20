@@ -388,6 +388,13 @@ body {
   justify-content: center;
 }
 
+.dashboard-ring-score-pct {
+  font-size: 0.62em;
+  font-weight: 800;
+  letter-spacing: 0;
+  opacity: 0.88;
+}
+
 .dashboard-ring-delta {
   font-size: 14px;
   font-weight: 800;
@@ -632,6 +639,12 @@ body {
   color: var(--ink);
 }
 
+.post-card--no-pills {
+  grid-template-columns: 1fr;
+  column-gap: 0;
+  grid-template-areas: 'body';
+}
+
 .post-card--feed-enter {
   animation: post-feed-enter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -668,6 +681,11 @@ body {
   background: var(--post-accent);
   border-radius: var(--radius-post-surface);
   margin: 0;
+}
+
+/* Images, charts, PDF previews — persona stroke below the text bubble */
+.post-card--has-attachment .post-attachment-block {
+  border: 2px solid var(--post-accent, currentColor);
 }
 
 /* Shared pill columns — top + bottom slots use the same grid areas */

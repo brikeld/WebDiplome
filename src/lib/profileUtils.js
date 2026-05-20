@@ -84,6 +84,42 @@ export function clampPercentScore(v) {
 }
 
 /**
+ * Normalize 3 numeric axis scores into integer percentages summing to 100.
+ * Uses largest-remainder rounding so totals are stable and deterministic.
+ */
+export function normalizePersonaPercentTriplet(scores) {
+  const p = clampPercentScore(scores?.productivity) ?? 0;
+  const s = clampPercentScore(scores?.security) ?? 0;
+  const so = clampPercentScore(scores?.social) ?? 0;
+  const total = p + s + so;
+
+  // If everything is missing/zero, default to an even split (still sums to 100).
+  if (total <= 0) {
+    return { productivity: 34, security: 33, social: 33 };
+  }
+
+  const raw = [
+    { key: 'productivity', value: (p / total) * 100 },
+    { key: 'security', value: (s / total) * 100 },
+    { key: 'social', value: (so / total) * 100 },
+  ];
+
+  const floored = raw.map((r) => ({ ...r, floor: Math.floor(r.value), frac: r.value - Math.floor(r.value) }));
+  let remainder = 100 - floored.reduce((acc, r) => acc + r.floor, 0);
+
+  // Distribute remaining points to the biggest fractions.
+  floored.sort((a, b) => b.frac - a.frac);
+  for (let i = 0; i < floored.length && remainder > 0; i += 1) {
+    floored[i].floor += 1;
+    remainder -= 1;
+  }
+
+  const out = { productivity: 0, security: 0, social: 0 };
+  for (const r of floored) out[r.key] = r.floor;
+  return out;
+}
+
+/**
  * Server shape: `personaScores`: { productivity, security, social }.
  * Accepts French aliases; missing axes fall back to globalScore, then 0.
  */
@@ -101,18 +137,19 @@ export function getPersonaScoresNormalized(profile) {
   };
 
   if (raw && typeof raw === 'object') {
-    return {
+    const picked = {
       productivity: pick(raw, 'productivity', 'productivite') ?? globalFallback,
       security: pick(raw, 'security', 'securite') ?? globalFallback,
       social: pick(raw, 'social', 'popularity', 'popularite') ?? globalFallback,
     };
+    return normalizePersonaPercentTriplet(picked);
   }
 
-  return {
+  return normalizePersonaPercentTriplet({
     productivity: globalFallback,
     security: globalFallback,
     social: globalFallback,
-  };
+  });
 }
 
 /** UI axis `productivity` | `security` | `popularity` → numeric (API uses `social` for social axis). */

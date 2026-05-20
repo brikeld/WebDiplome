@@ -1,5 +1,5 @@
 // src/features/liveScoring/ScoreAnimator.jsx
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLiveScoring } from './useLiveScoring.js';
 import { PERSONA_TO_SCORE_KEY, SCORE_KEY_TO_RING_ATTR } from './scoringLogic.js';
@@ -27,18 +27,21 @@ function getRingEl(persona) {
   return document.querySelector(`[data-persona-ring="${ringAttr}"]`);
 }
 
-function animateCounter(persona, delta, duration = 520) {
+function animateCounterToTarget(persona, targetValue, onDone, duration = 520) {
   const scoreKey = PERSONA_TO_SCORE_KEY[persona] ?? 'productivity';
   const ringAttr = SCORE_KEY_TO_RING_ATTR[scoreKey] ?? 'productivity';
   const scoreEl = document.querySelector(`[data-persona-ring-score="${ringAttr}"]`);
-  if (!scoreEl) return;
+  if (!scoreEl) {
+    onDone?.();
+    return;
+  }
 
   const domVal = Number(scoreEl.textContent?.trim()) || 0;
   const startVal = _counterState.has(ringAttr) ? _counterState.get(ringAttr) : domVal;
-  const endVal = Math.max(0, Math.min(100, startVal + delta));
+  const endVal = Math.max(0, Math.min(100, targetValue));
   _counterState.set(ringAttr, endVal);
 
-  const flashClass = delta < 0 ? 'lsc-score-flash-down' : 'lsc-score-flash-up';
+  const flashClass = endVal < startVal ? 'lsc-score-flash-down' : 'lsc-score-flash-up';
   scoreEl.classList.remove('lsc-score-flash-down', 'lsc-score-flash-up');
   void scoreEl.offsetWidth;
   scoreEl.classList.add(flashClass);
@@ -50,9 +53,28 @@ function animateCounter(persona, delta, duration = 520) {
     const t = easeOutCubic(progress);
     scoreEl.textContent = String(Math.round(startVal + (endVal - startVal) * t));
     if (progress < 1) requestAnimationFrame(tick);
-    else _counterState.delete(ringAttr);
+    else {
+      _counterState.delete(ringAttr);
+      onDone?.();
+    }
   }
   requestAnimationFrame(tick);
+}
+
+function commitScoreOnHit(event, { beginRingAnimation, finishRingAnimation, adjustedScoresRef }) {
+  const persona = String(event.persona ?? '').toLowerCase();
+  const scoreKey = PERSONA_TO_SCORE_KEY[persona] ?? 'productivity';
+  const ringAttr = SCORE_KEY_TO_RING_ATTR[scoreKey] ?? 'productivity';
+
+  beginRingAnimation(ringAttr);
+  event.onCommit?.();
+
+  requestAnimationFrame(() => {
+    const target = adjustedScoresRef.current[scoreKey] ?? 0;
+    animateCounterToTarget(persona, target, () => {
+      finishRingAnimation(adjustedScoresRef.current);
+    });
+  });
 }
 
 function pulseRing(persona) {
@@ -64,16 +86,24 @@ function pulseRing(persona) {
   setTimeout(() => el.classList.remove('dashboard-ring-card--pulse'), 460);
 }
 
-function Particle({ event, onComplete }) {
+function Particle({ event, onComplete, scoringApi }) {
   const elRef = useRef(null);
 
   useEffect(() => {
     const { sourcePillRect, persona } = event;
-    if (!sourcePillRect) { onComplete(); return; }
+    if (!sourcePillRect) {
+      commitScoreOnHit(event, scoringApi);
+      onComplete();
+      return;
+    }
 
     const ringEl = getRingEl(persona);
     const targetRect = ringEl?.getBoundingClientRect();
-    if (!targetRect) { onComplete(); return; }
+    if (!targetRect) {
+      commitScoreOnHit(event, scoringApi);
+      onComplete();
+      return;
+    }
 
     const sx = sourcePillRect.x + sourcePillRect.width / 2;
     const sy = sourcePillRect.y + sourcePillRect.height / 2;
@@ -87,7 +117,11 @@ function Particle({ event, onComplete }) {
     const startTime = performance.now();
 
     const el = elRef.current;
-    if (!el) { onComplete(); return; }
+    if (!el) {
+      commitScoreOnHit(event, scoringApi);
+      onComplete();
+      return;
+    }
 
     function step(ts) {
       const raw = (ts - startTime) / DURATION;
@@ -108,7 +142,7 @@ function Particle({ event, onComplete }) {
         requestAnimationFrame(step);
       } else {
         pulseRing(persona);
-        animateCounter(persona, event.delta);
+        commitScoreOnHit(event, scoringApi);
         onComplete();
       }
     }
@@ -155,7 +189,18 @@ function PersonaFlipOverlay({ persona, onComplete }) {
 }
 
 export default function ScoreAnimator() {
-  const { subscribeAnimations, dequeueAnimation, dominantPersona } = useLiveScoring();
+  const {
+    subscribeAnimations,
+    dequeueAnimation,
+    dominantPersona,
+    adjustedScoresRef,
+    beginRingAnimation,
+    finishRingAnimation,
+  } = useLiveScoring();
+  const scoringApi = useMemo(
+    () => ({ beginRingAnimation, finishRingAnimation, adjustedScoresRef }),
+    [beginRingAnimation, finishRingAnimation, adjustedScoresRef],
+  );
   const [particles, setParticles] = useState([]);
   const [flipOverlay, setFlipOverlay] = useState(null);
   const prevDominantPersonaRef = useRef(dominantPersona);
@@ -183,6 +228,7 @@ export default function ScoreAnimator() {
         <Particle
           key={event.id}
           event={event}
+          scoringApi={scoringApi}
           onComplete={() => setParticles((prev) => prev.filter((p) => p.id !== event.id))}
         />
       ))}

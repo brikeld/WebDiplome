@@ -1,37 +1,72 @@
 [
   {
-    "persona": "securite",
-    "content": "The only thing I downloaded today is a PDF titled 'COMPLIANT'. My current life motto: follow all regulations and never deviate from the plan.",
+    "persona": "productivite",
+    "content": "Currently living in the digital space between Figma mockups and Python debugging logs. I swear I need an OS update just for my creative brain.",
     "sentiment": "positive",
-    "createdAt": "2026-05-19T15:20:01.045Z",
-    "textSliceType": "downloads",
-    "attachedAsset": null
+    "createdAt": "2026-05-20T13:02:36.072Z",
+    "textSliceType": "app_usage"
   },
   {
     "persona": "popularite",
-    "content": "Just running uptime commands like it's nothing. My terminal truly feels like the most meditative place to be. 💻✨",
+    "content": "My desktop looks like a crime scene of half-finished projects and screenshots. Send coffee (and maybe a debugger). 😂",
     "sentiment": "positive",
-    "createdAt": "2026-05-19T15:20:00.467Z",
+    "createdAt": "2026-05-20T13:02:35.927Z",
     "attachedAsset": {
       "kind": "image",
-      "filename": "05d902bfdb9dc9ccaf8b768d3a78525e6cb0ce8aed9824093405c6c7b0f65574.png",
-      "relativePath": "public/uploads/05d902bfdb9dc9ccaf8b768d3a78525e6cb0ce8aed9824093405c6c7b0f65574.png",
-      "url": "/uploads/05d902bfdb9dc9ccaf8b768d3a78525e6cb0ce8aed9824093405c6c7b0f65574.png",
+      "filename": "d04ce76dc1f91c92dffc048e6cc00652f5a92df85727b04d270ecc8316c2ad44.png",
+      "relativePath": "public/uploads/d04ce76dc1f91c92dffc048e6cc00652f5a92df85727b04d270ecc8316c2ad44.png",
+      "url": "/uploads/d04ce76dc1f91c92dffc048e6cc00652f5a92df85727b04d270ecc8316c2ad44.png",
       "mime": "image/png",
       "visionAnalysed": true
     }
   },
   {
     "persona": "productivite",
-    "content": "Six days of uptime means my laptop hasn't seen proper rest in forever. My productivity addiction is definitely real right now.",
-    "sentiment": "negative",
-    "createdAt": "2026-05-19T15:20:02.492Z",
-    "chartType": "battery_hardware",
+    "content": "Only 35% storage used! Should I be celebrating or should I panic about how much digital clutter I accumulate? Time to declutter.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-20T13:02:31.837Z",
     "attachedAsset": {
       "kind": "image",
-      "filename": "c4adae69a45389b110e54e34ff47672f928648ea12b34f9c78c3cbf9c69abc7f.png",
-      "relativePath": "public/uploads/c4adae69a45389b110e54e34ff47672f928648ea12b34f9c78c3cbf9c69abc7f.png",
-      "url": "/uploads/c4adae69a45389b110e54e34ff47672f928648ea12b34f9c78c3cbf9c69abc7f.png",
+      "filename": "da67caa66f3fbaf537d72084a2ce6edd3c0abb489721abb1948d044a79426d74.png",
+      "relativePath": "public/uploads/da67caa66f3fbaf537d72084a2ce6edd3c0abb489721abb1948d044a79426d74.png",
+      "url": "/uploads/da67caa66f3fbaf537d72084a2ce6edd3c0abb489721abb1948d044a79426d74.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "storage_usage"
+  },
+  {
+    "persona": "popularite",
+    "content": "Is my browser history just an algorithm that combines football score updates with League of Legends hero stats? My life has way too many metrics right now.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-20T12:09:34.288Z",
+    "textSliceType": "browser",
+    "attachedAsset": null
+  },
+  {
+    "persona": "productivite",
+    "content": "Just realizing that endless scrolling in feeds might be a modern ritual of control—basically an updated propaganda machine. The power structures are wild.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-20T12:09:34.092Z",
+    "attachedAsset": {
+      "kind": "document",
+      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "relativePath": "public/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "mime": "application/pdf"
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "Shell history is basically just `npm run dev` repeated until it breaks me. Send coffee and maybe a debugger.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-20T12:09:36.306Z",
+    "chartType": "security_apps",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "4203e3f2a8114bb267604a519e35f80860bdfa156f6a70a46bffba9f12791eba.png",
+      "relativePath": "public/uploads/4203e3f2a8114bb267604a519e35f80860bdfa156f6a70a46bffba9f12791eba.png",
+      "url": "/uploads/4203e3f2a8114bb267604a519e35f80860bdfa156f6a70a46bffba9f12791eba.png",
       "mime": "image/png",
       "visionAnalysed": true
     }

@@ -2,6 +2,7 @@ import { lazy, Suspense, useLayoutEffect, useRef } from 'react';
 import PostImage from './PostImage.jsx';
 import PostDocument from './PostDocument.jsx';
 import { isPdfDocumentAsset } from '@/lib/attachmentKind.js';
+import { shouldApplyPostImageFx } from '@/lib/shouldApplyPostImageFx.js';
 import CommentsToggle from '@/features/commenting/CommentsToggle.jsx';
 import CommentsCapsule from '@/features/commenting/CommentsCapsule.jsx';
 
@@ -32,6 +33,7 @@ export default function PostCard({
   onToggleComments,
   onHide,
   isHidden = false,
+  hidePills = false,
 }) {
   const {
     content,
@@ -44,7 +46,10 @@ export default function PostCard({
     systemDeltaPct = 1,
     persona,
     attachedAsset,
+    chartType,
   } = post;
+
+  const applyImageFx = shouldApplyPostImageFx({ chartType });
 
   const toggleRef = useRef(null);
   const articleRef = useRef(null);
@@ -113,37 +118,41 @@ export default function PostCard({
     <>
       <article
         ref={articleRef}
-        className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}`}
+        className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${hidePills ? ' post-card--no-pills' : ''}`}
         data-persona={post.persona}
         style={{
           '--post-accent': noteColor,
         }}
       >
-        <div
-          className="post-pill-slot post-pill-slot--top post-pill-slot--left"
-          role="group"
-          aria-label="Post actions"
-        >
-          {onHide ? (
-            <button
-              type="button"
-              className="post-meta-pill post-action-btn post-action-btn--outline"
-              onClick={() => onHide(systemNotePillRef.current?.getBoundingClientRect() ?? null)}
-              aria-label={isHidden ? 'Show post' : 'Hide post'}
-              aria-pressed={isHidden}
+        {hidePills ? null : (
+          <>
+            <div
+              className="post-pill-slot post-pill-slot--top post-pill-slot--left"
+              role="group"
+              aria-label="Post actions"
             >
-              <HideIcon hidden={isHidden} />
-              {isHidden ? 'Show' : 'Hide'}
-            </button>
-          ) : null}
-        </div>
-        <div
-          className="post-pill-slot post-pill-slot--top post-pill-slot--center"
-          aria-hidden
-        />
-        <div className="post-pill-slot post-pill-slot--top post-pill-slot--right">
-          <span className="post-meta-pill post-outline-pill">analyze</span>
-        </div>
+              {onHide ? (
+                <button
+                  type="button"
+                  className="post-meta-pill post-action-btn post-action-btn--outline"
+                  onClick={() => onHide(systemNotePillRef.current?.getBoundingClientRect() ?? null)}
+                  aria-label={isHidden ? 'Show post' : 'Hide post'}
+                  aria-pressed={isHidden}
+                >
+                  <HideIcon hidden={isHidden} />
+                  {isHidden ? 'Show' : 'Hide'}
+                </button>
+              ) : null}
+            </div>
+            <div
+              className="post-pill-slot post-pill-slot--top post-pill-slot--center"
+              aria-hidden
+            />
+            <div className="post-pill-slot post-pill-slot--top post-pill-slot--right">
+              <span className="post-meta-pill post-outline-pill">analyze</span>
+            </div>
+          </>
+        )}
 
         <div className="post-card-body">
           <div className={attachedAsset ? 'post-composite' : undefined}>
@@ -165,7 +174,7 @@ export default function PostCard({
             </div>
 
             {attachedAsset?.kind === 'image' ? (
-              <PostImage asset={attachedAsset} accentColor={noteColor} />
+              <PostImage asset={attachedAsset} accentColor={noteColor} applyFx={applyImageFx} />
             ) : null}
             {attachedAsset?.kind === 'document' ? (
               isPdfDocumentAsset(attachedAsset) ? (
@@ -189,25 +198,29 @@ export default function PostCard({
           </div>
         </div>
 
-        <div
-          className="post-pill-slot post-pill-slot--bottom post-pill-slot--left post-meta-left"
-          aria-label="Post metadata"
-        >
-          <span className="post-meta-pill">{timeAgo} ago</span>
-        </div>
-        <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--center post-meta-center">
-          <span ref={systemNotePillRef} className="post-meta-pill">
-            System note [{personaLabel}] [+{systemDeltaPct}%]
-          </span>
-        </div>
-        <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--right post-meta-right">
-          <CommentsToggle
-            ref={toggleRef}
-            isOpen={isCommentsOpen}
-            onToggle={onToggleComments}
-            controlsId={`commenting-${post.id}`}
-          />
-        </div>
+        {hidePills ? null : (
+          <>
+            <div
+              className="post-pill-slot post-pill-slot--bottom post-pill-slot--left post-meta-left"
+              aria-label="Post metadata"
+            >
+              <span className="post-meta-pill">{timeAgo} ago</span>
+            </div>
+            <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--center post-meta-center">
+              <span ref={systemNotePillRef} className="post-meta-pill">
+                System note [{personaLabel}] [+{systemDeltaPct}%]
+              </span>
+            </div>
+            <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--right post-meta-right">
+              <CommentsToggle
+                ref={toggleRef}
+                isOpen={isCommentsOpen}
+                onToggle={onToggleComments}
+                controlsId={`commenting-${post.id}`}
+              />
+            </div>
+          </>
+        )}
       </article>
       <CommentsCapsule
         post={post}

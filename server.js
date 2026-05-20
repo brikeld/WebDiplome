@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import crypto from 'crypto';
 import { normalizeAttachedAsset, translateLegacyImage } from './server/lib/attachedAsset.js';
+import { normalizePersonaPercentTriplet } from './server/lib/personaScores.js';
 import {
   getHarvestStatus,
   requestHarvest,
@@ -20,7 +21,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
 const POSTS_DIR = path.join(__dirname, 'posts');
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
-const ELECTRON_DATA_PATH = '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/data.json';
 
 const normalizePost = (p) => {
   if (!p || typeof p !== 'object') return p;
@@ -83,7 +83,8 @@ function normalizeProfilePayload(body) {
   delete out.persona_posts;
 
   if (body.personaScores !== undefined || body.persona_scores !== undefined) {
-    out.personaScores = body.personaScores ?? body.persona_scores;
+    const raw = body.personaScores ?? body.persona_scores;
+    out.personaScores = normalizePersonaPercentTriplet(raw);
   }
   delete out.persona_scores;
 
@@ -174,18 +175,29 @@ app.post('/api/profile', async (req, res) => {
   const id = `${first}-${last}`;
 
   try {
-    // Delete all existing profiles/posts before saving the new one.
-    const existing = (await fs.readdir(PROFILES_DIR)).filter((f) => f.endsWith('.json'));
-    await Promise.all(existing.map((f) => fs.unlink(path.join(PROFILES_DIR, f))));
-    const existingPosts = (await fs.readdir(POSTS_DIR)).filter((f) => f.endsWith('.json'));
-    await Promise.all(existingPosts.map((f) => fs.unlink(path.join(POSTS_DIR, f))));
+    // Single active profile: remove other users' files, but keep this user's posts on score-only syncs.
+    const existingProfiles = (await fs.readdir(PROFILES_DIR)).filter((f) => f.endsWith('.json'));
+    await Promise.all(
+      existingProfiles
+        .filter((f) => f !== filename)
+        .map(async (f) => {
+          await fs.unlink(path.join(PROFILES_DIR, f));
+          const otherId = f.replace(/\.json$/i, '');
+          try {
+            await fs.unlink(path.join(POSTS_DIR, `${otherId}.json`));
+          } catch (err) {
+            if (err.code !== 'ENOENT') throw err;
+          }
+        }),
+    );
 
     const toStore = normalizeProfilePayload(body);
     const { personaPosts } = toStore;
     delete toStore.personaPosts;
     delete toStore.persona_posts;
 
-    // Save posts separately
+    // Only replace posts when the client explicitly sends them (initial Electron sync).
+    // Harvest / score updates omit personaPosts so WebDiplome-generated posts are preserved.
     if (personaPosts !== undefined) {
       await writePostsForId(id, personaPosts);
     }
@@ -296,67 +308,6 @@ app.delete('/api/posts/:id', async (req, res) => {
     await writePostsForId(id, updated);
     res.json({ success: true, removed: existing[idx] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST /api/profile/:id/score-adjustments
-// Persists liveScoring adjustments and patches Electron data.json.
-app.post('/api/profile/:id/score-adjustments', async (req, res) => {
-  const id = req.params.id;
-  if (!id || !/^[a-z0-9-]+$/i.test(id)) {
-    return res.status(400).json({ error: 'Invalid profile id format' });
-  }
-  const { scoreAdjustments } = req.body ?? {};
-
-  if (
-    !scoreAdjustments ||
-    typeof scoreAdjustments !== 'object' ||
-    typeof scoreAdjustments.productivity !== 'number' ||
-    typeof scoreAdjustments.security !== 'number' ||
-    typeof scoreAdjustments.social !== 'number'
-  ) {
-    return res.status(400).json({ error: 'scoreAdjustments must contain numeric productivity, security, social' });
-  }
-
-  const clampAdj = (v) => Math.max(-100, Math.min(100, Math.round(v)));
-  const clamped = {
-    productivity: clampAdj(scoreAdjustments.productivity),
-    security: clampAdj(scoreAdjustments.security),
-    social: clampAdj(scoreAdjustments.social),
-  };
-
-  const profilePath = path.join(PROFILES_DIR, `${id}.json`);
-
-  try {
-    // 1. Update WebDiplome profile JSON
-    const raw = await fs.readFile(profilePath, 'utf8');
-    const profile = JSON.parse(raw);
-    profile.scoreAdjustments = clamped;
-    await fs.writeFile(profilePath, JSON.stringify(profile, null, 2), 'utf8');
-
-    // 2. Patch Electron data.json (best-effort — don't fail if missing)
-    try {
-      const electronRaw = await fs.readFile(ELECTRON_DATA_PATH, 'utf8');
-      const electronData = JSON.parse(electronRaw);
-      if (typeof electronData !== 'object' || electronData === null || Array.isArray(electronData)) {
-        throw new Error('Electron data.json is malformed');
-      }
-      electronData.liveScoreAdjustments = {
-        productivity: clamped.productivity,
-        security: clamped.security,
-        social: clamped.social,
-        updatedAt: new Date().toISOString(),
-      };
-      await fs.writeFile(ELECTRON_DATA_PATH, JSON.stringify(electronData, null, 2), 'utf8');
-    } catch (electronErr) {
-      // Electron repo not available — log and continue
-      console.warn('[score-adjustments] Electron data.json not updated:', electronErr.message);
-    }
-
-    res.json({ ok: true });
-  } catch (err) {
-    if (err.code === 'ENOENT') return res.status(404).json({ error: `Profile '${id}' not found` });
     res.status(500).json({ error: err.message });
   }
 });

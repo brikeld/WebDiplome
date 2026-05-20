@@ -12,6 +12,16 @@
   filter: none;
 }
 
+/* Algorithm-generated charts — no halftone pipeline */
+.post-image-plain {
+  position: relative;
+  background: transparent;
+}
+
+.post-image-plain .post-attachment-img {
+  filter: none;
+}
+
 .post-document {
   display: inline-flex;
   align-items: center;

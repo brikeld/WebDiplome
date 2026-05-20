@@ -80,6 +80,7 @@ export default function PostsTab({ profile, feedContext = 'home', isGeneratingPo
         createdAtFallback(i),
       systemDeltaPct: stablePct(`${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
       attachedAsset: resolveAttachedAsset(p.attachedAsset ?? p.attached_asset),
+      chartType: p.chartType ?? p.chart_type ?? null,
       _feedEnter: !!p._feedEnter,
       _feedKey: p._feedKey ?? null,
       _feedRevealSeq: typeof p._feedRevealSeq === 'number' ? p._feedRevealSeq : 0,
