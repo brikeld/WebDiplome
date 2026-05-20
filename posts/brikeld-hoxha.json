@@ -1,38 +1,38 @@
 [
   {
-    "persona": "productivite",
-    "content": "My brain today is just a loop between writing code, prompting Claude for ideas, and trying to make it all aesthetically pleasing in Figma. Send help and coffee.",
+    "persona": "popularite",
+    "content": "My browser history is a wild mix: coding my diploma one minute, obsessively tracking every Serie A score the next. I think I'm 50% student, 50% dedicated armchair sports pundit.",
     "sentiment": "positive",
-    "createdAt": "2026-05-20T14:23:42.358Z",
-    "textSliceType": "app_usage",
-    "attachedAsset": null
-  },
-  {
-    "persona": "productivite",
-    "content": "Thinking about how the 'scrolling ritual' parallels old regime control techniques... I think my brain needs more coffee and less history class.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-20T14:23:39.718Z",
-    "attachedAsset": {
-      "kind": "document",
-      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "relativePath": "public/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "mime": "application/pdf"
-    }
+    "createdAt": "2026-05-20T14:40:46.106Z",
+    "textSliceType": "browser"
   },
   {
     "persona": "popularite",
-    "content": "My AI tool list is insane. Seeing only 3 apps used this week confirms it: I'm an enthusiastic collector, not a finisher.",
-    "sentiment": "negative",
-    "createdAt": "2026-05-20T14:23:43.249Z",
-    "chartType": "ai_tool_exposure",
+    "content": "PAMPA Records looks like a serious vibe check. Can't wait to hear DJ KOZE spin these tracks. Ready for some proper dance floor energy!",
+    "sentiment": "positive",
+    "createdAt": "2026-05-20T14:40:44.064Z",
     "attachedAsset": {
       "kind": "image",
-      "filename": "03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
-      "relativePath": "public/uploads/03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
-      "url": "/uploads/03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
-      "mime": "image/png",
+      "filename": "343056bc63372da2908ac92151d4ff597887f1dd0225d0bdc56bea9a16b4fb92.jpg",
+      "relativePath": "public/uploads/343056bc63372da2908ac92151d4ff597887f1dd0225d0bdc56bea9a16b4fb92.jpg",
+      "url": "/uploads/343056bc63372da2908ac92151d4ff597887f1dd0225d0bdc56bea9a16b4fb92.jpg",
+      "mime": "image/jpeg",
       "visionAnalysed": true
     }
+  },
+  {
+    "persona": "productivite",
+    "content": "My shell history showing 'npm run servers' 50 times straight confirms it: I am a highly dedicated, perpetually caffeinated backend developer. Time for an actual break.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-20T14:40:45.176Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "7d7594d338f45193478a3978a36a00a6b04e95362a7dd3eeb80910ee41ebef31.png",
+      "relativePath": "public/uploads/7d7594d338f45193478a3978a36a00a6b04e95362a7dd3eeb80910ee41ebef31.png",
+      "url": "/uploads/7d7594d338f45193478a3978a36a00a6b04e95362a7dd3eeb80910ee41ebef31.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "most_used_apps"
   }
 ]

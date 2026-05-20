@@ -15,6 +15,8 @@ import {
   machineHandleFromProfile,
 } from '@/lib/profileUtils.js';
 import HarvestScreen from '@/features/harvest/HarvestScreen.jsx';
+import PersonaDeltaSummary from '@/features/harvest/PersonaDeltaSummary.jsx';
+import GeneratingContentLabel from '@/features/harvest/GeneratingContentLabel.jsx';
 import '@/features/harvest/harvest.css';
 import { applyAccountDeletionFromServer } from '@/lib/liveScoringStorage.js';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
@@ -116,6 +118,10 @@ const POST_FEED_ENTER_ANIM_MS = 1000;
 const INTER_REVEAL_PAUSE_MS = Math.max(POST_REVEAL_GAP_MS, POST_FEED_ENTER_ANIM_MS + 150);
 const HARVEST_POLL_MS = 450;
 const HARVEST_WAIT_MS = 12 * 60 * 1000;
+/** How long the 3 persona delta lines stay visible before post generation. */
+const PERSONA_DELTA_DISPLAY_MS = 4200;
+
+const POST_GEN_IDLE = { loading: false, phase: 'idle', error: null };
 
 function computePersonaDeltas(before, after) {
   if (!before || !after) return null;
@@ -124,17 +130,27 @@ function computePersonaDeltas(before, after) {
   for (const k of keys) {
     const b = Number(before[k]);
     const a = Number(after[k]);
-    if (!Number.isFinite(b) || !Number.isFinite(a)) continue;
-    const diff = Math.round(a - b);
-    if (diff !== 0) out[k] = diff;
+    if (!Number.isFinite(b) || !Number.isFinite(a)) {
+      out[k] = 0;
+      continue;
+    }
+    out[k] = Math.round(a - b);
   }
-  return Object.keys(out).length ? out : null;
+  return out;
 }
 
 function axisKeyToScoreKey(axisKey) {
   const k = String(axisKey || '').toLowerCase();
   if (k === 'popularity') return 'social';
   return k;
+}
+
+function formatRingDelta(delta) {
+  const n = Number(delta);
+  if (!Number.isFinite(n)) return null;
+  if (n > 0) return { text: `+${n}`, mod: 'up' };
+  if (n < 0) return { text: String(n), mod: 'down' };
+  return { text: '=', mod: 'flat' };
 }
 
 /** Keep the longer post list when API returns stale data (e.g. after Electron re-sync). */
@@ -216,7 +232,7 @@ function AppInner({
             {mainView === 'home' && (
               <HomeTab
                 profile={profile}
-                isGeneratingPosts={postGen.loading}
+                isGeneratingPosts={postGen.phase === 'generating'}
               />
             )}
             {mainView === 'profile' && (
@@ -244,7 +260,11 @@ function AppInner({
                     <div className="tab-content">
                       {activeTab === 'profile' && <ProfileTab />}
                       {activeTab === 'posts' && (
-                        <PostsTab profile={profile} feedContext="profile" isGeneratingPosts={postGen.loading} />
+                        <PostsTab
+                          profile={profile}
+                          feedContext="profile"
+                          isGeneratingPosts={postGen.phase === 'generating'}
+                        />
                       )}
                       {activeTab === 'badges' && <BadgesTab />}
                       {activeTab === 'leaderboards' && <LeaderboardsTab />}
@@ -279,6 +299,20 @@ function AppInner({
                   >
                     <HarvestScreen progress={harvestProgress} error={harvestError} />
                   </div>
+                ) : postGen.phase === 'deltas' ? (
+                  <div
+                    className="dashboard-card dashboard-card--generate dashboard-card--post-analysis"
+                    aria-live="polite"
+                  >
+                    <PersonaDeltaSummary deltas={personaDeltas} />
+                  </div>
+                ) : postGen.phase === 'generating' ? (
+                  <div
+                    className="dashboard-card dashboard-card--generate dashboard-card--generating-content"
+                    aria-busy="true"
+                  >
+                    <GeneratingContentLabel personaColor={personaColor} />
+                  </div>
                 ) : (
                   <button
                     type="button"
@@ -286,9 +320,7 @@ function AppInner({
                     disabled={postGen.loading || !profile}
                     onClick={handleGeneratePersonaPosts}
                   >
-                    {postGen.loading
-                      ? 'GENERATING…'
-                      : 'next analysis in 10 minutes'}
+                    next analysis in 10 minutes
                     {postGen.error ? (
                       <span className="generate-posts-error" role="alert">
                         {postGen.error}
@@ -354,19 +386,19 @@ function AppInner({
                         <span data-persona-ring-score={k}>
                           {Number.isFinite(value) ? value : '—'}
                         </span>
-                        {personaDeltas?.[axisKeyToScoreKey(k)] != null ? (
-                          <span
-                            className={`dashboard-ring-delta${
-                              personaDeltas[axisKeyToScoreKey(k)] > 0
-                                ? ' dashboard-ring-delta--up'
-                                : ' dashboard-ring-delta--down'
-                            }`}
-                          >
-                            {personaDeltas[axisKeyToScoreKey(k)] > 0
-                              ? `+${personaDeltas[axisKeyToScoreKey(k)]}`
-                              : String(personaDeltas[axisKeyToScoreKey(k)])}
-                          </span>
-                        ) : null}
+                        {(() => {
+                          const ringDelta = formatRingDelta(
+                            personaDeltas?.[axisKeyToScoreKey(k)],
+                          );
+                          if (!ringDelta) return null;
+                          return (
+                            <span
+                              className={`dashboard-ring-delta dashboard-ring-delta--${ringDelta.mod}`}
+                            >
+                              {ringDelta.text}
+                            </span>
+                          );
+                        })()}
                       </span>
                     </div>
                   );
@@ -386,7 +418,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('posts');
   const [profile, setProfile] = useState(null);
   const [personaOverride, setPersonaOverride] = useState(null); // 'productivity' | 'popularity' | 'security' | null
-  const [postGen, setPostGen] = useState({ loading: false, error: null });
+  const [postGen, setPostGen] = useState(POST_GEN_IDLE);
   const [harvestPhase, setHarvestPhase] = useState('idle');
   const [harvestProgress, setHarvestProgress] = useState(null);
   const [harvestError, setHarvestError] = useState(null);
@@ -424,7 +456,7 @@ export default function App() {
           setMainView('landing');
           setPersonaOverride(null);
           setPersonaDeltas(null);
-          setPostGen({ loading: false, error: null });
+          setPostGen(POST_GEN_IDLE);
           setHarvestPhase('idle');
           setHarvestError(null);
           setHarvestProgress(null);
@@ -509,7 +541,6 @@ export default function App() {
     const p = profileSnapshot ?? profile;
     if (!p) return;
     streamPostsBaselineRef.current = Array.isArray(p.personaPosts) ? p.personaPosts : [];
-    setPostGen({ loading: true, error: null });
 
     const existingBio = String(p.profileSummary || p.userDescription || '').trim();
     if (!existingBio) {
@@ -542,7 +573,7 @@ export default function App() {
           });
         }
       } catch (e) {
-        setPostGen({ loading: false, error: e?.message || 'Bio generation failed' });
+        setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Bio generation failed' });
         return;
       }
     }
@@ -674,11 +705,11 @@ export default function App() {
       streamDone = true;
       await revealPromise;
       await reloadProfileFromApi();
-      setPostGen({ loading: false, error: null });
+      setPostGen(POST_GEN_IDLE);
     } catch (e) {
       streamDone = true;
       await revealPromise.catch(() => {});
-      setPostGen({ loading: false, error: e?.message || 'Generation failed' });
+      setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
     }
   }, [profile, reloadProfileFromApi]);
 
@@ -713,7 +744,7 @@ export default function App() {
     } catch (e) {
       setHarvestError(e?.message || 'Harvest failed');
       setHarvestPhase('idle');
-      setPostGen({ loading: false, error: e?.message || 'Harvest failed' });
+      setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Harvest failed' });
       try {
         await fetch(`${API_ORIGIN}/api/harvest/ack`, { method: 'POST' });
       } catch {
@@ -725,6 +756,13 @@ export default function App() {
     setHarvestPhase('idle');
     setHarvestProgress(null);
     const freshProfile = await reloadProfileFromApi();
+    const scoresAfter = getPersonaScoresNormalized(freshProfile ?? {});
+    setPersonaDeltas(computePersonaDeltas(scoresBefore, scoresAfter));
+
+    setPostGen({ loading: true, phase: 'deltas', error: null });
+    await new Promise((r) => setTimeout(r, PERSONA_DELTA_DISPLAY_MS));
+
+    setPostGen({ loading: true, phase: 'generating', error: null });
     await runBioAndPostGeneration(freshProfile);
   };
 
