@@ -200,7 +200,8 @@ export default function LandingPage({ onEnterDemo }) {
                     systemDeltaPct: Math.abs(parseInt(post.delta, 10)),
                     persona: post.persona,
                     avatarSrc: '/imgs/AlexP.png',
-                    attachment: post.attachment?.type === 'photo' ? {
+                    attachedAsset: post.attachment?.type === 'photo' ? {
+                      kind: 'image',
                       url: post.attachment.url,
                       filename: post.attachment.caption || '',
                     } : undefined,
