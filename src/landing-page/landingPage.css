@@ -1,723 +1,472 @@
-/* Landing page — fully self-contained. Dark theme.
-   Renders OUTSIDE the regular .page / .main-col / Sidebar shell. */
+/* Landing page — white theme, 5 × 100vh screens. Fully self-contained. */
 
 .lp-root {
-  --lp-max-width: 1200px;
   --lp-edge-pad: clamp(20px, 5vw, 64px);
-  --lp-section-gap: clamp(80px, 12vw, 140px);
-  --lp-pill-radius: 28px;
-  --lp-title-to-text-gap: 24px;
-  --lp-text-to-content-gap: 40px;
-  /* Hero line + pill section headers (tighter than former 84…144 / 84…100 scale) */
-  --lp-mega-title: clamp(62px, 7.5vw, 112px);
-  --lp-mega-title-capsule: clamp(62px, 9vw, 112px);
-  --lp-mega-display: clamp(50px, 6vw, 78px);
-
-  --lp-prod: #D8D8D8;
-  --lp-sec:  #759AEF;
-  --lp-pop:  #CCF847;
+  --lp-card-radius: 24px;
+  --lp-card-border: 2px solid #000;
+  --lp-mega: clamp(48px, 6vw, 90px);
+  --lp-hero-size: clamp(96px, 18vw, 560px);
+  --lp-sub-size: clamp(48px, 6.5vw, 96px);
 
   width: 100%;
   min-height: 100vh;
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
   font-family: var(--font-avant);
-  display: flex;
-  flex-direction: column;
   overflow-x: hidden;
 }
 
-/* ── animations ─────────────────────────────────────────────────────────── */
+/* ── ANIMATIONS ──────────────────────────────────────────────────────────── */
 
 @keyframes lp-fade-up {
-  from { opacity: 0; transform: translateY(28px); }
+  from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes lp-pulse {
-  0%, 100% { opacity: 1;    transform: scale(1); }
-  50%      { opacity: 0.45; transform: scale(0.85); }
-}
-
-.lp-section {
-  opacity: 0;
-  animation: lp-fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  animation-delay: calc(var(--stagger-i, 0) * 0.09s);
-}
-
-.lp-pulse-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--lp-pop);
-  display: inline-block;
-  flex-shrink: 0;
-  animation: lp-pulse 1.6s ease-in-out infinite;
-}
-
-/* ── TOP BAR ─────────────────────────────────────────────────────────────── */
+/* ── TOPBAR ──────────────────────────────────────────────────────────────── */
 
 .lp-topbar {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding: 12px var(--lp-edge-pad);
-  background: transparent;
   position: sticky;
   top: 0;
   z-index: 50;
+  background: transparent;
 }
 
 .lp-topbar-debug {
   appearance: none;
-  cursor: pointer;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(0, 0, 0, 0.35);
   font-family: var(--font-avant);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: lowercase;
+  cursor: pointer;
   padding: 0;
 }
 
 .lp-topbar-debug:hover {
-  color: #fff;
+  color: #000;
 }
 
-/* ── MAIN ─────────────────────────────────────────────────────────────────── */
+/* ── BASE SCREEN ─────────────────────────────────────────────────────────── */
 
-.lp-main {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  padding: 0 0 clamp(64px, 8vw, 120px);
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* Gap between content sections (not the full-screen hero panel) */
-.lp-main > *:not(.lp-hero) {
-  margin-top: var(--lp-section-gap);
-}
-
-/* Keep consistent left/right alignment for normal sections */
-.lp-main > *:not(.lp-hero):not(.lp-workflow-section):not(.lp-axes-section) {
-  padding-left: var(--lp-edge-pad);
-  padding-right: var(--lp-edge-pad);
+.lp-screen {
+  height: 100vh;
   box-sizing: border-box;
+  padding: clamp(28px, 4vh, 56px) var(--lp-edge-pad);
+  opacity: 0;
+  animation: lp-fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: calc(var(--stagger-i, 0) * 0.09s);
 }
 
-/* ── HERO ─────────────────────────────────────────────────────────────────── */
+/* ── SCREEN 1: HERO ──────────────────────────────────────────────────────── */
 
 .lp-hero {
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  padding: 0 0 clamp(28px, 5vh, 64px);
-  box-sizing: border-box;
-}
-
-.lp-hero-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  height: 100%;
   justify-content: space-between;
-  width: 100%;
-}
-
-.lp-hero-header-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0;
 }
 
 .lp-hero-title {
-  position: relative;
-  font-family: var(--font-avant);
-  /* 18vw is a safer bet for 9 letters to hit edges without overflow */
-  font-size: clamp(96px, 18vw, 560px);
+  font-size: var(--lp-hero-size);
   font-weight: 800;
-  /* Slightly taller line-box to avoid top glyph clipping */
   line-height: 0.88;
   letter-spacing: -0.02em;
   text-transform: uppercase;
-  /* Animated persona gradient fill */
-  background: linear-gradient(
-    90deg,
-    var(--prod),
-    var(--sec),
-    var(--pop),
-    var(--prod)
-  );
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: lp-hero-persona-gradient 8s ease-in-out infinite;
+  color: #000;
   white-space: nowrap;
-  padding: 0;
+  display: block;
   width: 100%;
   text-align: center;
-  box-sizing: border-box;
-  display: block;
-  margin: 0;
-}
-
-@keyframes lp-hero-persona-gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.lp-hero-title--top {
   margin: 0;
   padding: 0;
-  display: block;
 }
 
 .lp-hero-text {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
-  max-width: none;
-  padding: 0 var(--lp-edge-pad);
-  box-sizing: border-box;
+  padding: 0 var(--lp-edge-pad) clamp(28px, 5vh, 64px);
 }
 
-/* Same treatment as former “Your digital life / quantified.” hero line */
 .lp-hero-sub {
-  font-family: var(--font-avant);
-  font-size: var(--lp-mega-title);
+  font-size: var(--lp-sub-size);
   font-weight: 700;
   line-height: 0.95;
   letter-spacing: -0.025em;
+  color: #000;
   margin: 0;
-  color: #CCF847;
-}
-
-.lp-hero-sub-capsule {
-  display: inline-block;
-  width: fit-content;
-  max-width: 100%;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  color: #CCF847;
-  box-sizing: border-box;
 }
 
 .lp-hero-sub em {
   font-style: italic;
-  color: inherit;
 }
 
-/* ── WORKFLOW + AXES: 100vh, text top / cards bottom ─────────────────────── */
+/* ── SHARED: SCREEN TITLE (screens 3, 4, 5) ─────────────────────────────── */
 
-.lp-workflow-section,
-.lp-axes-section {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding: clamp(28px, 5vh, 56px) var(--lp-edge-pad) 0;
-  box-sizing: border-box;
-}
-
-.lp-workflow-section {
-  justify-content: space-between;
-}
-
-.lp-axes-section {
-  justify-content: flex-start;
-  gap: clamp(8px, 1.4vh, 20px);
-  padding-bottom: clamp(16px, 2.5vh, 36px);
-}
-
-.lp-section-header-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
+.lp-screen-title {
+  font-size: var(--lp-mega);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #000;
+  margin: 0 0 clamp(20px, 3vh, 40px) 0;
   flex-shrink: 0;
 }
 
-/* Workflow: cards at bottom of 100vh. Axes: cards grow below header + “Three Algorithms” */
-.lp-workflow-section > .lp-steps-row,
-.lp-axes-section > .lp-steps-row {
-  align-self: stretch;
-}
+/* ── SHARED: CARDS ROW (3-column) ────────────────────────────────────────── */
 
-.lp-axes-section > .lp-steps-row {
-  flex: 1 1 auto;
-  min-height: 0;
-  align-items: stretch;
-  grid-template-rows: minmax(0, 1fr);
-}
-
-/* Slightly smaller workflow cards to free space above */
-.lp-workflow-section .lp-step-card {
-  padding: 34px 28px;
-  min-height: 290px;
-}
-
-/* Make ONLY the Three Axes cards taller and stretch to fill space under “Three Algorithms” */
-.lp-axes-section .lp-step-card {
-  padding: 46px 34px;
-  min-height: clamp(320px, 42vh, 560px);
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.lp-profile-section .lp-section-lede-wrap {
-  margin-bottom: clamp(80px, 12vh, 180px);
-}
-
-.lp-profile-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.lp-profile-section .lp-section-lede {
-  text-align: left;
-  max-width: none;
-  width: 100%;
-}
-
-/* ── SHARED SECTION STYLES ────────────────────────────────────────────────── */
-
-.lp-capsule-header {
-  display: inline-block;
-  background: var(--header-bg, #CCF847);
-  color: #000;
-  padding: 30px 64px 34px;
-  border-radius: var(--lp-pill-radius);
-  font-family: var(--font-avant);
-  font-size: var(--lp-mega-title-capsule);
-  font-weight: 800;
-  letter-spacing: -0.015em;
-  line-height: 1;
-  margin-bottom: var(--lp-title-to-text-gap);
-}
-
-.lp-capsule-section .lp-section-lede,
-.lp-capsule-section .lp-section-sublede {
-  color: var(--header-bg, #fff);
-  border: 3px solid color-mix(in srgb, var(--header-bg, #fff) 75%, transparent);
-  border-radius: var(--lp-pill-radius);
-  padding: 16px 22px 18px;
-  background: transparent;
-  width: fit-content;
-  max-width: 100%;
-  margin-top: 0;
-}
-
-.lp-capsule-section .lp-section-lede {
-  margin-bottom: 0;
-}
-
-.lp-capsule-section .lp-section-sublede {
-  margin-bottom: var(--lp-text-to-content-gap);
-}
-
-.lp-capsule-section .lp-section-sublede--below {
-  border: none;
-  padding: 0;
-  background: transparent;
-  width: 100%;
-  max-width: none;
-  color: var(--header-bg, #fff);
-  margin-top: 10px;
-  margin-bottom: 0;
-}
-
-.lp-capsule-section .lp-section-lede-wrap {
-  color: var(--header-bg, #fff);
-  border: 3px solid color-mix(in srgb, var(--header-bg, #fff) 75%, transparent);
-  border-radius: var(--lp-pill-radius);
-  padding: 16px 22px 18px;
-  background: transparent;
-  width: fit-content;
-  max-width: 100%;
-  margin-top: 0;
-  margin-bottom: var(--lp-text-to-content-gap);
-}
-
-.lp-capsule-section .lp-section-lede-wrap .lp-section-lede,
-.lp-capsule-section .lp-section-lede-wrap .lp-section-sublede {
-  border: none;
-  padding: 0;
-  margin: 0;
-  width: auto;
-  max-width: none;
-}
-
-.lp-capsule-section .lp-section-lede-wrap .lp-section-sublede {
-  margin-top: 10px;
-}
-
-.lp-section-lede {
-  font-size: clamp(21px, 2vw, 25px);
-  font-weight: 500;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.65);
-  width: 100%;
-  max-width: none;
-  margin-bottom: 12px;
-}
-
-.lp-section-sublede {
-  font-size: var(--lp-mega-display);
-  font-weight: 700;
-  line-height: 1.05;
-  color: rgba(255, 255, 255, 0.9);
-  width: 100%;
-  max-width: none;
-  margin-bottom: 40px;
-}
-
-/* ── WORKFLOW STEPS ───────────────────────────────────────────────────────── */
-
-.lp-steps-row {
+.lp-cards-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
+
+/* ── SHARED: STEP CARD (workflow — white + black border) ─────────────────── */
 
 .lp-step-card {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 40px 32px;
-  border-radius: 24px;
-  background: var(--step-color, #D8D8D8);
+  gap: 14px;
+  padding: 28px 24px;
+  border-radius: var(--lp-card-radius);
+  border: var(--lp-card-border);
+  background: #fff;
   color: #000;
-  min-height: 320px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .lp-step-num {
-  font-family: var(--font-avant);
-  font-size: 72px;
+  font-size: clamp(44px, 5.5vw, 68px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.05em;
-  color: rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.12);
 }
 
 .lp-step-title {
-  font-family: var(--font-avant);
-  font-size: clamp(24px, 2.5vw, 32px);
+  font-size: clamp(18px, 2vw, 26px);
   font-weight: 800;
   letter-spacing: -0.015em;
   color: #000;
+  margin: 0;
 }
 
 .lp-step-body {
-  font-size: 22px;
+  font-size: clamp(13px, 1.4vw, 16px);
   font-weight: 500;
   line-height: 1.55;
   color: #000;
   flex: 1 1 auto;
+  margin: 0;
 }
 
 .lp-step-foot {
-  font-family: var(--font-avant);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #000;
+  color: rgba(0, 0, 0, 0.4);
   margin-top: auto;
 }
 
-/* Three axes section reuses .lp-steps-row + .lp-step-card (same as workflow). */
+/* ── SHARED: PERSONA CARD (colored fill) ─────────────────────────────────── */
 
-/* ── PROFILE PREVIEW ──────────────────────────────────────────────────────── */
-
-.lp-preview-demo {
-  position: relative;
-  padding-top: 0;
-  /* Keep the preview away from viewport edges (landing page only) */
-  padding-left: clamp(28px, 6vw, 0px);
-  padding-right: clamp(0px, 1vw, 0px);
-  width: 100%;
-  max-width: var(--lp-max-width);
-  margin: 0 auto;
-  margin-top: clamp(18px, 3vh, 42px);
-}
-
-.lp-preview-shell {
-  width: 86%;
-  margin: 0 auto;
-  box-sizing: border-box;
+.lp-persona-card {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 22px;
-}
-
-/* Keep post sizing stable while the outer capsule gets wider */
-.lp-preview-posts-inner {
-  width: 72%;
-  margin: 0 auto;
-}
-
-/* Scale ONLY text/icons on the left side (not the score) */
-.lp-preview-scale {
-  /* Nudged right so copy sits off the left edge of the preview capsule */
-  transform: translate(14px, -8px) scale(1.1);
-  transform-origin: left top;
-}
-
-.lp-preview-scale .profile-bio {
-  max-width: min(100%, 36ch);
-  width: 100%;
-}
-
-.lp-preview-shell .post-composite {
-  border-radius: 40px;
-}
-
-.lp-preview-shell .post-attachment-block {
-  border-radius: 0 0 40px 40px;
-}
-
-.lp-preview-shell .post-attachment-img {
-  height: auto;
-  object-fit: initial;
-  border-top-left-radius: 40px;
-  border-top-right-radius: 40px;
-}
-
-.lp-preview-shell .post-image-fx::before,
-.lp-preview-shell .post-image-fx::after {
-  border-top-left-radius: 40px;
-  border-top-right-radius: 40px;
-}
-
-/* Badge capsule in landing page preview — smaller than the real profile page version */
-.lp-preview-demo .profile-badge-capsule {
-  padding: 8px 14px;
-  gap: 10px;
-  margin-top: -28px;
-}
-
-.lp-preview-demo .profile-badge-circle {
-  width: 44px;
-  height: 44px;
-}
-
-/* All 3 badges use the main persona color (overrides any inline style differences) */
-.lp-preview-demo .profile-badge-circle {
-  background: var(--persona-accent) !important;
-}
-
-/* ── DOWNLOAD CTA ─────────────────────────────────────────────────────────── */
-
-.lp-cta-section {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-/* One viewport: title matches other sections (left); square card below. */
-.lp-cta-hero {
-  min-height: 100vh;
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: stretch;
-  width: 100%;
-  box-sizing: border-box;
-  padding: clamp(16px, 3vh, 40px) 0;
-  gap: clamp(20px, 3.5vh, 44px);
-}
-
-.lp-cta-hero .lp-section-header-group {
-  flex-shrink: 0;
-  align-items: flex-start;
-}
-
-.lp-cta-card {
-  --lp-download-accent: #cefe46;
-  --lp-cta-square: min(
-    92vmin,
-    calc(100svh - clamp(200px, 34vmin, 400px)),
-    1040px
-  );
-  width: var(--lp-cta-square);
-  height: var(--lp-cta-square);
-  max-width: 100%;
-  flex-shrink: 0;
-  align-self: center;
-  margin-inline: auto;
-  margin-top: 0;
-  background: transparent;
-  border: 3px solid var(--lp-download-accent);
-  border-radius: var(--lp-pill-radius, 28px);
-  padding: clamp(32px, 4.5vmin, 64px) clamp(28px, 3.5vmin, 52px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: clamp(24px, 3.5vmin, 40px);
-  box-sizing: border-box;
-}
-
-.lp-cta-card-title {
-  font-family: var(--font-avant);
-  font-size: clamp(40px, 5.5vmin, 96px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  gap: 14px;
+  padding: 28px 24px;
+  border-radius: var(--lp-card-radius);
+  background: var(--persona-card-color, #D8D8D8);
   color: #000;
-  text-align: left;
-  background: var(--lp-download-accent);
-  border-radius: var(--lp-pill-radius);
-  padding: clamp(12px, 1.6vmin, 18px) clamp(18px, 2.4vmin, 28px) clamp(14px, 1.9vmin, 20px);
-  width: fit-content;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-.lp-cta-card-actions {
+/* ── SCREEN 2: PROFILE + DOWNLOAD ────────────────────────────────────────── */
+
+.lp-profile-screen {
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.lp-profile-col-left {
+  border: var(--lp-card-border);
+  border-radius: var(--lp-card-radius);
+  padding: 20px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  align-items: stretch;
-  width: 100%;
+  overflow-y: auto;
 }
 
-.lp-cta-download-btn {
-  appearance: none;
-  border: 3px solid var(--lp-download-accent);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: stretch;
-  gap: 0;
-  border-radius: var(--lp-pill-radius);
-  background: transparent;
-  color: var(--lp-download-accent);
-  font-family: var(--font-avant);
-  text-align: left;
-  overflow: hidden;
-  transition: transform 0.18s ease, opacity 0.18s ease;
-  box-shadow: none;
-  width: 100%;
-}
-
-.lp-cta-download-btn:hover {
-  transform: translateY(-2px);
-  opacity: 0.92;
-  box-shadow: none;
-}
-
-.lp-cta-btn-icon {
-  width: clamp(64px, 8.5vmin, 96px);
-  flex-shrink: 0;
-  background: transparent;
-  border-right: 3px solid var(--lp-download-accent);
-  color: var(--lp-download-accent);
-  display: grid;
-  place-items: center;
-  font-size: 28px;
-  font-weight: 800;
-}
-
-.lp-cta-btn-label {
+.lp-profile-col-right {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 14px 18px 16px;
-  gap: 3px;
-  flex: 1;
+  gap: 16px;
+}
+
+.lp-desc-card {
+  flex: 1 1 auto;
+  border: var(--lp-card-border);
+  border-radius: var(--lp-card-radius);
+  padding: 28px 32px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.lp-desc-card-text {
+  font-size: clamp(18px, 1.8vw, 24px);
+  font-weight: 500;
+  line-height: 1.55;
+  color: #000;
+  margin: 0;
+}
+
+.lp-download-card {
+  flex-shrink: 0;
+  border: var(--lp-card-border);
+  border-radius: var(--lp-card-radius);
+  padding: 22px 26px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.lp-download-card-info {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   min-width: 0;
 }
 
-.lp-cta-btn-top {
-  font-size: clamp(20px, 2.8vmin, 34px);
+.lp-download-title {
+  font-size: clamp(18px, 2vw, 26px);
   font-weight: 800;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   line-height: 1.05;
-  color: var(--lp-download-accent);
+  margin: 0;
 }
 
-.lp-cta-btn-sub {
-  font-size: clamp(12px, 1.6vmin, 16px);
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: lowercase;
-  color: var(--lp-download-accent);
+.lp-download-sub {
+  font-size: clamp(13px, 1.3vw, 16px);
+  font-weight: 500;
+  margin: 0;
 }
 
-.lp-cta-secondary-btn {
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: var(--lp-download-accent);
-  cursor: pointer;
-  font-family: var(--font-avant);
-  font-size: clamp(16px, 2vmin, 22px);
+.lp-download-fine {
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: lowercase;
-  padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  transition: opacity 0.15s ease;
+  color: rgba(0, 0, 0, 0.45);
+  margin: 0;
 }
 
-.lp-cta-secondary-btn:hover {
-  opacity: 0.85;
-  color: var(--lp-download-accent);
+.lp-app-icon {
+  width: clamp(70px, 7.5vw, 96px);
+  height: clamp(70px, 7.5vw, 96px);
+  flex-shrink: 0;
+  border: var(--lp-card-border);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+  padding: 8px;
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+
+/* ── SCREEN 3: WORKFLOW ───────────────────────────────────────────────────── */
+
+.lp-workflow-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ── SCREEN 4: PERSONAS ───────────────────────────────────────────────────── */
+
+.lp-personas-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ── SCREEN 5: SUMMARY ────────────────────────────────────────────────────── */
+
+.lp-summary-screen {
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-summary-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 40fr 60fr;
+  gap: 16px;
+}
+
+.lp-summary-profile-card {
+  border: var(--lp-card-border);
+  border-radius: var(--lp-card-radius);
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.lp-summary-right {
+  display: grid;
+  grid-template-rows: 1fr 1fr auto;
+  gap: 12px;
+  min-height: 0;
+}
+
+.lp-summary-mini-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  min-height: 0;
+}
+
+.lp-summary-mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: var(--lp-card-border);
+  background: #fff;
+  color: #000;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.lp-summary-mini-card--persona {
+  background: var(--persona-card-color, #D8D8D8);
+  border: none;
+}
+
+.lp-summary-mini-num {
+  font-size: clamp(20px, 2.5vw, 32px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: rgba(0, 0, 0, 0.12);
+}
+
+.lp-summary-mini-title {
+  font-size: clamp(10px, 1vw, 13px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lp-summary-download-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
+.lp-summary-download-info {
+  flex: 1 1 auto;
+  border: var(--lp-card-border);
+  border-radius: 16px;
+  padding: 14px 18px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.lp-summary-download-title {
+  font-size: clamp(13px, 1.3vw, 16px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.lp-summary-download-fine {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: rgba(0, 0, 0, 0.45);
+  margin: 0;
+}
+
+.lp-summary-app-icon {
+  width: clamp(52px, 5.5vw, 72px);
+  flex-shrink: 0;
+  border: var(--lp-card-border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+  padding: 6px;
+  box-sizing: border-box;
+  line-height: 1.4;
 }
 
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
-  .lp-topbar-status { display: none; }
-
   .lp-hero-title {
     font-size: clamp(56px, 18vw, 120px);
     white-space: normal;
   }
 
-  .lp-steps-row {
+  .lp-profile-screen {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .lp-cards-row,
+  .lp-summary-mini-row {
     grid-template-columns: 1fr;
   }
 
-  .lp-preview-shell {
-    width: 100%;
-    padding: 16px;
+  .lp-summary-body {
+    grid-template-columns: 1fr;
+    height: auto;
   }
 
-  .lp-preview-posts-inner {
-    width: 100%;
-  }
-
-  .lp-preview-scale {
-    transform: translate(10px, 6px) scale(1.08);
-  }
-
-  .lp-cta-download-btn {
-    width: 100%;
-    max-width: none;
-  }
-}
-
-@media (max-width: 540px) {
-  .lp-cta-btn-icon {
-    width: 52px;
-    font-size: 22px;
-  }
-
-  .lp-cta-btn-top {
-    font-size: 15px;
+  .lp-summary-right {
+    grid-template-rows: auto auto auto;
   }
 }
