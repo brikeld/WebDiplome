@@ -16,6 +16,7 @@ import {
 } from '@/lib/profileUtils.js';
 import HarvestScreen from '@/features/harvest/HarvestScreen.jsx';
 import '@/features/harvest/harvest.css';
+import { applyAccountDeletionFromServer } from '@/lib/liveScoringStorage.js';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
@@ -134,6 +135,16 @@ function axisKeyToScoreKey(axisKey) {
   const k = String(axisKey || '').toLowerCase();
   if (k === 'popularity') return 'social';
   return k;
+}
+
+/** Keep the longer post list when API returns stale data (e.g. after Electron re-sync). */
+function mergeProfileFromApi(prev, incoming) {
+  if (!incoming) return prev ?? null;
+  if (!prev) return incoming;
+  const prevPosts = Array.isArray(prev.personaPosts) ? prev.personaPosts : [];
+  const incomingPosts = Array.isArray(incoming.personaPosts) ? incoming.personaPosts : [];
+  if (incomingPosts.length >= prevPosts.length) return incoming;
+  return { ...incoming, personaPosts: prevPosts };
 }
 
 function AppInner({
@@ -403,25 +414,47 @@ export default function App() {
     };
   }, [mainView]);
 
+  const syncAccountDeletionState = useCallback(async () => {
+    try {
+      const stateRes = await fetch(`${API_ORIGIN}/api/account-state`);
+      if (stateRes.ok) {
+        const state = await stateRes.json();
+        if (applyAccountDeletionFromServer(state?.lastDeletionAt)) {
+          setProfile(null);
+          setMainView('landing');
+          setPersonaOverride(null);
+          setPersonaDeltas(null);
+          setPostGen({ loading: false, error: null });
+          setHarvestPhase('idle');
+          setHarvestError(null);
+          setHarvestProgress(null);
+          return true;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    return false;
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
-    const load = () => {
-      fetch(`${API_ORIGIN}/api/profiles`)
-        .then((res) => {
-          if (!res.ok) throw new Error('failed');
-          return res.json();
-        })
-        .then((data) => {
-          if (cancelled) return;
-          if (!Array.isArray(data) || data.length === 0) {
-            return; /* keep previous profile; avoid clearing on transient [] */
-          }
-          setProfile(data[0]);
-        })
-        .catch(() => {
-          if (cancelled) return; /* keep previous profile on network error */
-        });
+    const load = async () => {
+      if (await syncAccountDeletionState()) return;
+
+      try {
+        const res = await fetch(`${API_ORIGIN}/api/profiles`);
+        if (!res.ok) throw new Error('failed');
+        const data = await res.json();
+        if (cancelled) return;
+        if (!Array.isArray(data) || data.length === 0) {
+          return;
+        }
+        setProfile((prev) => mergeProfileFromApi(prev, data[0]));
+      } catch {
+        if (cancelled) return;
+      }
     };
 
     load();
@@ -430,15 +463,20 @@ export default function App() {
       cancelled = true;
       clearInterval(id);
     };
-  }, []);
+  }, [syncAccountDeletionState]);
 
   const reloadProfileFromApi = useCallback(async () => {
     const res = await fetch(`${API_ORIGIN}/api/profiles`);
     if (!res.ok) throw new Error('Failed to reload profile');
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
-    setProfile(data[0]);
-    return data[0];
+    const incoming = data[0];
+    let merged = incoming;
+    setProfile((prev) => {
+      merged = mergeProfileFromApi(prev, incoming);
+      return merged;
+    });
+    return merged;
   }, []);
 
   const pollHarvestUntilDone = useCallback(async (scoresBefore) => {
@@ -533,11 +571,10 @@ export default function App() {
             ? crypto.randomUUID()
             : `feed-${Date.now()}-${slot}`;
         const raw = slotsBuffer[slot];
-        const { createdAt: _c1, created_at: _c2, _feedEnter: _fe, _feedKey: _fk, ...slotRest } = raw;
+        const { _feedEnter: _fe, _feedKey: _fk, ...slotRest } = raw;
         revealedCount += 1;
         const post = {
           ...slotRest,
-          createdAt: new Date().toISOString(),
           _feedKey: key,
           _feedRevealSeq: revealedCount,
         };

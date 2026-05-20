@@ -140,3 +140,17 @@ export function ackHarvest() {
   }
   return { ok: true };
 }
+
+/** Clear in-memory harvest job after account deletion. */
+export function resetHarvestSession() {
+  session = {
+    status: 'idle',
+    scoresBefore: null,
+    scoresAfter: null,
+    dynamicOnly: false,
+    progress: emptyProgress(),
+    error: null,
+    updatedAt: Date.now(),
+  };
+  return { ok: true };
+}

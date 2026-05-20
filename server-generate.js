@@ -13,10 +13,10 @@ import {
 } from './server/lib/personaPostGenerator.js';
 import { loadPrompts } from './server/lib/prompts.js';
 import { extractDocText } from './server/lib/docText.js';
+import { readPostsForId, appendPersonaPosts } from './server/lib/postsStore.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
-const POSTS_DIR = path.join(__dirname, 'posts');
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 
 // Read LM Studio config + raw collected data from the Electron app's data dir
@@ -199,23 +199,6 @@ async function pickAndImportAsset(candidates, usedUploadFilenames) {
   return null;
 }
 
-async function readPostsForId(id) {
-  try {
-    const raw = await fs.readFile(path.join(POSTS_DIR, `${id}.json`), 'utf8');
-    const data = JSON.parse(raw);
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    if (err.code === 'ENOENT') return null;
-    throw err;
-  }
-}
-
-async function writePostsForId(id, personaPosts) {
-  await fs.mkdir(POSTS_DIR, { recursive: true });
-  const posts = Array.isArray(personaPosts) ? personaPosts : [];
-  await fs.writeFile(path.join(POSTS_DIR, `${id}.json`), JSON.stringify(posts, null, 2), 'utf8');
-}
-
 async function writeProfileBio(filepath, description) {
   const profile = JSON.parse(await fs.readFile(filepath, 'utf8'));
   profile.profileSummary = description;
@@ -248,7 +231,7 @@ async function prepareGenerationContext() {
     return { error: 'Failed to read profile', status: 500 };
   }
 
-  const existing = (await readPostsForId(newest.id)) ?? [];
+  const existing = await readPostsForId(newest.id);
 
   const electronUser = await readJsonOrNull(ELECTRON_USER_JSON);
   const electronData = await readJsonOrNull(ELECTRON_DATA_JSON);
@@ -415,7 +398,7 @@ app.post('/api/posts/generate', async (_req, res) => {
     }
 
     const posts = slotResults.filter(Boolean);
-    await writePostsForId(newest.id, [...posts, ...existing]);
+    await appendPersonaPosts(newest.id, posts);
 
     return res.json({ success: true, posts });
   } catch (err) {
@@ -460,15 +443,15 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
         }
         const idx = meta && typeof meta.slotIndex === 'number' ? meta.slotIndex : 0;
         bySlot[idx] = post;
-        const orderedSoFar = bySlot.flatMap((p) => (p ? [p] : []));
-        await writePostsForId(newest.id, [...orderedSoFar, ...existing]);
+        await appendPersonaPosts(newest.id, [post]);
         res.write(`${JSON.stringify({ post, slotIndex: idx })}\n`);
         if (typeof res.flush === 'function') res.flush();
       },
     });
 
     const posts = slotResults.filter(Boolean);
-    res.write(`${JSON.stringify({ done: true, success: true, posts })}\n`);
+    const merged = await appendPersonaPosts(newest.id, posts);
+    res.write(`${JSON.stringify({ done: true, success: true, posts: merged })}\n`);
     res.end();
   } catch (err) {
     console.error('[posts/generate-stream] failed:', err?.message || err);

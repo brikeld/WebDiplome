@@ -15,11 +15,22 @@ import {
   completeHarvest,
   failHarvest,
   ackHarvest,
+  resetHarvestSession,
 } from './server/lib/harvestSession.js';
+import {
+  readAccountState,
+  deleteAllAccountData,
+  recordAccountDeletion,
+} from './server/lib/accountDeletion.js';
+import {
+  readPostsForId,
+  writePostsForId,
+  syncPersonaPostsFromClient,
+  POSTS_DIR,
+} from './server/lib/postsStore.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
-const POSTS_DIR = path.join(__dirname, 'posts');
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 
 const normalizePost = (p) => {
@@ -40,23 +51,6 @@ const normalizePost = (p) => {
   delete out.attached_asset;
   return out;
 };
-
-async function readPostsForId(id) {
-  try {
-    const raw = await fs.readFile(path.join(POSTS_DIR, `${id}.json`), 'utf8');
-    const data = JSON.parse(raw);
-    return Array.isArray(data) ? data.map(normalizePost) : [];
-  } catch (err) {
-    if (err.code === 'ENOENT') return null;
-    throw err;
-  }
-}
-
-async function writePostsForId(id, personaPosts) {
-  await fs.mkdir(POSTS_DIR, { recursive: true });
-  const posts = Array.isArray(personaPosts) ? personaPosts.map(normalizePost) : [];
-  await fs.writeFile(path.join(POSTS_DIR, `${id}.json`), JSON.stringify(posts, null, 2), 'utf8');
-}
 
 /** Merge camelCase + snake_case for summary fields; stored JSON uses camelCase. */
 function normalizeProfilePayload(body) {
@@ -196,14 +190,78 @@ app.post('/api/profile', async (req, res) => {
     delete toStore.personaPosts;
     delete toStore.persona_posts;
 
-    // Only replace posts when the client explicitly sends them (initial Electron sync).
     // Harvest / score updates omit personaPosts so WebDiplome-generated posts are preserved.
     if (personaPosts !== undefined) {
-      await writePostsForId(id, personaPosts);
+      const replace =
+        body.replacePersonaPosts === true || body.replace_persona_posts === true;
+      await syncPersonaPostsFromClient(id, personaPosts, { replace }, normalizePost);
     }
 
     await fs.writeFile(filepath, JSON.stringify(toStore, null, 2), 'utf8');
     res.status(200).json({ id, filename });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/account-state — deletion epoch for clearing browser live-scoring state
+app.get('/api/account-state', async (_req, res) => {
+  try {
+    const state = await readAccountState(PROFILES_DIR);
+    res.json(state);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/account — wipe all profiles, posts, and harvest session (full reset)
+app.delete('/api/account', async (req, res) => {
+  const body = req.body ?? {};
+  const profileId =
+    body.profileId ??
+    body.profile_id ??
+    (() => {
+      const first = String(body.firstname ?? body.firstName ?? '').trim().toLowerCase();
+      const last = String(body.lastname ?? body.lastName ?? '').trim().toLowerCase();
+      return first && last ? `${first}-${last}` : null;
+    })();
+
+  try {
+    const state = await deleteAllAccountData(PROFILES_DIR, POSTS_DIR, { profileId });
+    resetHarvestSession();
+    res.json({ success: true, ...state });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/profile/:id — remove one profile and its posts
+app.delete('/api/profile/:id', async (req, res) => {
+  const id = req.params.id;
+  const profilePath = path.join(PROFILES_DIR, `${id}.json`);
+  const postsPath = path.join(POSTS_DIR, `${id}.json`);
+
+  try {
+    let removedProfile = false;
+    let removedPosts = false;
+    try {
+      await fs.unlink(profilePath);
+      removedProfile = true;
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+    try {
+      await fs.unlink(postsPath);
+      removedPosts = true;
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+    if (!removedProfile && !removedPosts) {
+      return res.status(404).json({ error: `Profile '${id}' not found` });
+    }
+    const state = await recordAccountDeletion(PROFILES_DIR, id);
+    resetHarvestSession();
+    res.json({ success: true, removedProfile, removedPosts, ...state });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -221,7 +279,7 @@ app.get('/api/profiles', async (_req, res) => {
         const data = JSON.parse(raw);
         const id = String(file).replace(/\.json$/i, '');
         const posts = await readPostsForId(id);
-        if (posts) data.personaPosts = posts;
+        data.personaPosts = posts;
         return { mtimeMs: stat.mtimeMs, data };
       }),
     );
@@ -242,7 +300,7 @@ app.get('/api/profile/:id', async (req, res) => {
     const raw = await fs.readFile(filepath, 'utf8');
     const data = JSON.parse(raw);
     const posts = await readPostsForId(req.params.id);
-    if (posts) data.personaPosts = posts;
+    data.personaPosts = posts;
     res.json(data);
   } catch (err) {
     if (err.code === 'ENOENT') {
@@ -300,13 +358,13 @@ app.delete('/api/posts/:id', async (req, res) => {
 
   try {
     const existing = await readPostsForId(id);
-    if (!existing) return res.status(404).json({ error: 'Posts not found for profile' });
+    if (existing.length === 0) return res.status(404).json({ error: 'Posts not found for profile' });
 
     const idx = existing.findIndex((p) => p?.createdAt === createdAt);
     if (idx === -1) return res.status(404).json({ error: 'Post not found' });
 
     const updated = [...existing.slice(0, idx), ...existing.slice(idx + 1)];
-    await writePostsForId(id, updated);
+    await writePostsForId(id, updated, normalizePost);
     res.json({ success: true, removed: existing[idx] });
   } catch (err) {
     res.status(500).json({ error: err.message });

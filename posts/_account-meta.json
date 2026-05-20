@@ -4,8 +4,7 @@
     "content": "My brain today is just a loop between writing code, prompting Claude for ideas, and trying to make it all aesthetically pleasing in Figma. Send help and coffee.",
     "sentiment": "positive",
     "createdAt": "2026-05-20T14:23:42.358Z",
-    "textSliceType": "app_usage",
-    "attachedAsset": null
+    "textSliceType": "app_usage"
   },
   {
     "persona": "productivite",
@@ -25,7 +24,6 @@
     "content": "My AI tool list is insane. Seeing only 3 apps used this week confirms it: I'm an enthusiastic collector, not a finisher.",
     "sentiment": "negative",
     "createdAt": "2026-05-20T14:23:43.249Z",
-    "chartType": "ai_tool_exposure",
     "attachedAsset": {
       "kind": "image",
       "filename": "03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
@@ -33,6 +31,7 @@
       "url": "/uploads/03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
       "mime": "image/png",
       "visionAnalysed": true
-    }
+    },
+    "chartType": "ai_tool_exposure"
   }
 ]
