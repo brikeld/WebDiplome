@@ -29,8 +29,8 @@
   --capsule-shell-border-width: 2px;
   /* Post type (Figma diploma-FILE, node 212:1262): Demi = body, name, meta; Book Oblique = @ handle */
   --post-bubble-h: 12.5rem;
-  --post-body-size: 28px;
-  /* 600 matches @font-face for AvantGardeITCbyBT-Demi.woff2 (700 would load Bold) */
+  --post-body-size: 30px;
+  /* 600 = AvantGarde Demi (@font-face AvantGardeITCbyBT-Demi.woff2) */
   --post-body-weight: 600;
   --post-body-line: 0.95;
   --post-name-size: 19.2px;
@@ -168,7 +168,7 @@ body {
   flex-direction: column;
   align-items: stretch;
   height: 100%;
-  /* Match left column: .home-tab / .profile-capsule-wrap use padding-top: 10px only;
+  /* Match left column: .home-tab / .profile-content-wrap use padding-top: 10px only;
      no outer bottom padding — extra padding-bottom here made .dashboard-capsule end high. */
   padding-top: 10px;
   padding-bottom: 0;
@@ -504,28 +504,45 @@ body {
      still clip). Full visible lets the widened capsule paint; height + inner
      flex chains keep layout bounded. */
   overflow: visible;
+  --home-shell-max-width: 1680px;
+  --home-shell-padding-left: 104px;
+  --left-capsule-extra-width: 140px;
+  --shell-rail-inset: 24px;
+}
+
+.page-outer.view-home .sidebar,
+.page-outer.view-profile .sidebar {
+  left: var(--shell-rail-inset);
+  transform: translateY(-50%);
+}
+
+.page-outer.view-home .project-name,
+.page-outer.view-profile .project-name {
+  left: var(--shell-rail-inset);
 }
 
 .view-home .page,
 .view-profile .page {
   height: 100vh;
   overflow: visible;
-  max-width: 1680px;
+  /* Right rail: wider panel bleeds right; left column unchanged (negative margin-right). */
+  --right-rail-base-width: 560px;
+  --dashboard-extra-width: 260px;
+  max-width: var(--home-shell-max-width);
   /* Row so the feed column and side panel sit naturally next to each other */
   flex-direction: row;
   align-items: stretch;
-  padding-left: 104px;
+  padding-left: var(--home-shell-padding-left);
   padding-right: 24px;
   gap: 24px;
-  /* Extra capsule width to the left only: width += X and margin-left -= X keeps the
-     flex margin box width the same, so the junction with the dashboard does not move. */
-  --left-capsule-extra-width: 140px;
 }
 
 .view-home .main-col,
 .view-profile .main-col {
-  flex: 1 1 0;
-  /* No scale transform on home — layout matches visual exactly */
+  /* Fixed width only — do not flex-grow or shrink when the right rail width changes */
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  /* No scale transform on home/profile — layout matches visual exactly */
   transform: none;
   --content-scale: 1;
   height: 100%;
@@ -536,12 +553,44 @@ body {
   flex-direction: column;
 }
 
+.view-home .persona-side-panel,
+.view-profile .persona-side-panel {
+  flex-shrink: 0;
+  width: calc(var(--right-rail-base-width) + var(--dashboard-extra-width));
+  margin-right: calc(-1 * var(--dashboard-extra-width));
+  box-sizing: border-box;
+  overflow: hidden;
+}
 
-/* Profile needs the same flex funnel as home so the capsule can scroll */
+.view-home .persona-side-panel .dashboard-capsule,
+.view-profile .persona-side-panel .dashboard-capsule {
+  padding: 28px 30px 32px;
+  gap: 24px;
+}
+
 .view-profile .scroll-area,
 .view-profile .scroll-area-inner {
   flex: 1 1 0;
   min-height: 0;
+}
+
+.view-home .posts-capsule,
+.view-profile .profile-content-capsule,
+.view-profile .profile-rail-capsule,
+.view-profile .dashboard-capsule.profile-rail-capsule {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  width: 100%;
+}
+
+.view-home .posts-capsule::-webkit-scrollbar,
+.view-profile .profile-content-capsule::-webkit-scrollbar,
+.view-profile .profile-rail-capsule::-webkit-scrollbar,
+.view-profile .dashboard-capsule.profile-rail-capsule::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── POSTS CAPSULE (one shell around all posts) ── */
@@ -556,24 +605,6 @@ body {
   overflow: hidden;
   padding: 36px 50px 40px;
 }
-
-/* Home/Profile mode: capsule becomes the scroll viewport */
-.view-home .posts-capsule,
-.view-profile .posts-capsule {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  /* Fill the fixed-width main-col so size never changes when moving left/right */
-  width: 100%;
-}
-
-.view-home .posts-capsule::-webkit-scrollbar,
-.view-profile .posts-capsule::-webkit-scrollbar {
-  display: none;
-}
-
 
   @media (max-width: 900px) {
   .sidebar {
@@ -1071,7 +1102,6 @@ body {
   line-height: var(--post-body-line);
   letter-spacing: -0.01em;
   color: #000;
-  /* Demi face: AvantGardeITCbyBT-Demi.woff2 @ weight 600 */
   font-family: var(--font-avant);
   white-space: pre-line;
   margin: 0;

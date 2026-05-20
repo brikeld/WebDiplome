@@ -1,14 +1,22 @@
-export default function TabBar({ activeTab, onTabChange, personaColor, className = '' }) {
-  const tabs = [
-    { id: 'posts', label: 'Posts' },
-    { id: 'badges', label: 'Badges' },
-    { id: 'profile', label: 'Profile' },
-    { id: 'leaderboards', label: 'Rankings' },
-  ];
+import { PROFILE_TABS } from '@/features/profile/profileTabs.js';
+
+export default function TabBar({
+  activeTab,
+  onTabChange,
+  personaColor,
+  className = '',
+  variant = 'inline',
+}) {
+  const tabs = PROFILE_TABS;
+
+  const rowClass =
+    variant === 'rail'
+      ? `tabs-row tabs-row--rail ${className}`.trim()
+      : `tabs-row ${className}`.trim();
 
   return (
     <div
-      className={`tabs-row ${className}`.trim()}
+      className={rowClass}
       role="tablist"
       aria-label="Profile sections"
     >

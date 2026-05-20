@@ -25,8 +25,9 @@
   background: transparent;
 }
 
-/* Home mode: home-tab passes flex height down to posts-capsule */
-.view-home .home-tab {
+/* Home/profile: column shell passes flex height down to posts-capsule */
+.view-home .home-tab,
+.view-profile .main-col .home-tab {
   flex: 1 1 0;
   min-height: 0;
   display: flex;

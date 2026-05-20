@@ -5,7 +5,9 @@ import '../styles/scrollArea.css';
 export default function ScrollArea({ children, mode }) {
   useEffect(() => {
     if (mode === 'home' || mode === 'profile') {
-      const capsule = document.querySelector('.posts-capsule');
+      const capsule = document.querySelector(
+        mode === 'profile' ? '.profile-content-capsule' : '.posts-capsule',
+      );
       if (!capsule) return;
 
       const lenis = new Lenis({

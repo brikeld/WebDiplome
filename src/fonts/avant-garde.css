@@ -8,6 +8,14 @@
 }
 
 @font-face {
+  font-family: 'AvantGarde ITC BT';
+  src: url('./AvantGarde/woff2/AvantGardeITCbyBT-Book.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'AvantGarde ITC BT Book Oblique';
   src: url('./AvantGarde/woff2/AvantGardeITCbyBT-BookOblique.woff2') format('woff2');
   font-weight: 400;

@@ -32,7 +32,12 @@ function resolveAttachedAsset(asset) {
   };
 }
 
-export default function PostsTab({ profile, feedContext = 'home', isGeneratingPosts = false }) {
+export default function PostsTab({
+  profile,
+  feedContext = 'home',
+  isGeneratingPosts = false,
+  hideInteractions = false,
+}) {
   const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
   const { hidePost, revealPost, isHidden } = useLiveScoring();
 
@@ -116,16 +121,25 @@ export default function PostsTab({ profile, feedContext = 'home', isGeneratingPo
           key={p._feedKey ?? String(p.id)}
           post={p}
           animateEnter={!!p._feedEnter}
-          isCommentsOpen={openCommentsPostId === p.id}
-          onToggleComments={() =>
-            setOpenCommentsPostId((prev) => (prev === p.id ? null : p.id))
+          hidePills={hideInteractions}
+          isCommentsOpen={hideInteractions ? false : openCommentsPostId === p.id}
+          onToggleComments={
+            hideInteractions
+              ? undefined
+              : () => setOpenCommentsPostId((prev) => (prev === p.id ? null : p.id))
           }
-          onHide={(rect) => {
-            const hidden = isHidden(normalizePostHideKey(p.createdAt));
-            if (hidden) revealPost(p, rect);
-            else hidePost(p, rect);
-          }}
-          isHidden={isHidden(normalizePostHideKey(p.createdAt))}
+          onHide={
+            hideInteractions
+              ? undefined
+              : (rect) => {
+                  const hidden = isHidden(normalizePostHideKey(p.createdAt));
+                  if (hidden) revealPost(p, rect);
+                  else hidePost(p, rect);
+                }
+          }
+          isHidden={
+            hideInteractions ? false : isHidden(normalizePostHideKey(p.createdAt))
+          }
         />
       ))}
     </div>

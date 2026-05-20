@@ -28,21 +28,20 @@ export default function ProfileHeader({
 
   const bio = profileBioText(profile ?? {});
 
+  const profilePhoto = (
+    <div className="profile-ring-avatar" aria-hidden>
+      {avatarSrc ? (
+        <img className="profile-cap-avatar-img" src={avatarSrc} alt="" />
+      ) : (
+        <span className="profile-cap-avatar-initials">{initials}</span>
+      )}
+    </div>
+  );
+
   return (
     <>
       <div className="profile-header-stack">
-        <div className="profile-hero-capsule">
-          <div
-            className="profile-cap-avatar"
-            aria-hidden
-            style={{ '--cap-avatar-stroke': personaColor }}
-          >
-            {avatarSrc ? (
-              <img className="profile-cap-avatar-img" src={avatarSrc} alt="" />
-            ) : (
-              <span className="profile-cap-avatar-initials">{initials}</span>
-            )}
-          </div>
+        <div className="profile-hero-capsule profile-hero-capsule--ring-avatar">
           <div className="profile-hero-main">
             <div className="profile-hero-left">
               <div className="profile-name-handle-stack">
@@ -90,6 +89,7 @@ export default function ProfileHeader({
                 entryReplayKey={mainScoreEntryReplayKey}
                 hideCenterScore
               />
+              {profilePhoto}
             </div>
           </div>
         </div>

@@ -12,7 +12,12 @@
   --commenting-persona-popularite: #CCF847;
   /* Proposition shell inner lane = picked reply bubble (border-box) */
   --commenting-shell-lane-height: 10rem;
+  /* Mock suggestion cards (3 options) — not tied to --post-body-size */
   --suggestion-copy: 23px;
+  --suggestion-body-weight: 400;
+  /* Picked / threaded comment bubble — edit here without changing posts */
+  --comment-body-size: 30.8px;
+  --comment-body-weight: 400;
   --suggestion-plus-size: 42px;
 }
 
@@ -206,8 +211,8 @@
 
 .commenting-comment-content {
   font-family: var(--font-avant, var(--font-sans, inherit));
-  font-size: calc(var(--post-body-size, 28px) * 1.1);
-  font-weight: 400;
+  font-size: var(--comment-body-size);
+  font-weight: var(--comment-body-weight);
   line-height: var(--post-body-line, 0.95);
   letter-spacing: -0.01em;
   margin: 0;
@@ -581,7 +586,7 @@
 .commenting-suggestion-option-text {
   font-family: var(--font-sans, inherit);
   font-size: var(--suggestion-copy, 20px);
-  font-weight: 400;
+  font-weight: var(--suggestion-body-weight, 400);
   line-height: 1.12;
   padding-top: 8px;
   padding-left: 8px;
@@ -700,11 +705,13 @@
   box-sizing: border-box;
   min-height: 4.5rem;
   padding: 20px 28px 21px;
-  font-family: 'AvantGarde ITC BT', var(--font-sans, inherit);
+  /* Placeholder only: Demi (600) — not Book/suggestion weight */
+  font-family: var(--font-sans, inherit);
   font-size: 24px;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.1;
+  font-style: normal;
   color: #000;
   background: var(--persona-accent, #ccf847);
   outline: none;

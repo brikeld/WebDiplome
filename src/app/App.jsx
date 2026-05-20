@@ -2,10 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import Sidebar from '@/layout/Sidebar.jsx';
 import ScrollArea from '@/layout/ScrollArea.jsx';
-import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
-import TabBar from '@/features/profile/TabBar.jsx';
-import ProfileTab from '@/features/profile/ProfileTab.jsx';
-import PostsTab from '@/features/feed/PostsTab.jsx';
+import ProfileView from '@/features/profile/ProfileView.jsx';
 import HomeTab from '@/features/home/HomeTab.jsx';
 import LandingPage from '@/landing-page/LandingPage.jsx';
 import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
@@ -13,7 +10,6 @@ import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import {
   getPersonaScoresNormalized,
   personaPercentToRingFill,
-  machineHandleFromProfile,
 } from '@/lib/profileUtils.js';
 import HarvestScreen from '@/features/harvest/HarvestScreen.jsx';
 import PersonaDeltaSummary from '@/features/harvest/PersonaDeltaSummary.jsx';
@@ -228,56 +224,29 @@ function AppInner({
       <div className="project-name">COMPLIANT</div>
       <Sidebar mainView={mainView} onSelectView={setMainView} />
       <div className="page">
-        <div className="main-col">
-          <ScrollArea key={mainView} mode={mainView}>
-            {mainView === 'home' && (
+        {mainView === 'home' && (
+          <div className="main-col">
+            <ScrollArea key="home" mode="home">
               <HomeTab
                 profile={profile}
                 isGeneratingPosts={postGen.phase === 'generating'}
               />
-            )}
-            {mainView === 'profile' && (
-              <div className="profile-capsule-wrap">
-                <p className="home-top-label">{machineHandleFromProfile(profile)}</p>
-                <div
-                  className="posts-capsule"
-                  style={{ '--persona-accent': personaColor }}
-                >
-                  <div className="posts-capsule-inner">
-                    <ProfileHeader
-                      profile={profile}
-                      personaColor={personaColor}
-                      mainScoreEntryReplayKey={profileScoreReplayNonce}
-                    />
+            </ScrollArea>
+          </div>
+        )}
 
-                    <TabBar
-                      activeTab={activeTab}
-                      onTabChange={setActiveTab}
-                      personaColor={personaColor}
-                    />
+        {mainView === 'profile' && (
+          <ProfileView
+            profile={profile}
+            personaColor={personaColor}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            mainScoreEntryReplayKey={profileScoreReplayNonce}
+            isGeneratingPosts={postGen.phase === 'generating'}
+          />
+        )}
 
-                    <div className="profile-tabs-divider" aria-hidden />
-
-                    <div className="tab-content">
-                      {activeTab === 'profile' && <ProfileTab />}
-                      {activeTab === 'posts' && (
-                        <PostsTab
-                          profile={profile}
-                          feedContext="profile"
-                          isGeneratingPosts={postGen.phase === 'generating'}
-                        />
-                      )}
-                      {activeTab === 'badges' && <BadgesTab />}
-                      {activeTab === 'leaderboards' && <LeaderboardsTab />}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </ScrollArea>
-        </div>
-
-        {(mainView === 'home' || mainView === 'profile') && (
+        {mainView === 'home' && (
           <aside className="persona-side-panel" aria-label="Persona dashboard">
             <p className="dashboard-top-label">dashboard</p>
             <div
