@@ -255,7 +255,8 @@ app.get('/api/profile/:id', async (req, res) => {
 // ── Harvest orchestration (WebDiplome UI ↔ Electron collector) ─────────────
 app.post('/api/harvest/request', (req, res) => {
   const scoresBefore = req.body?.scoresBefore ?? req.body?.scores_before ?? null;
-  const result = requestHarvest(scoresBefore);
+  const dynamicOnly = req.body?.dynamicOnly ?? req.body?.dynamic_only ?? false;
+  const result = requestHarvest(scoresBefore, { dynamicOnly });
   if (!result.ok) return res.status(409).json(result);
   res.json({ success: true, ...getHarvestStatus() });
 });

@@ -17,6 +17,7 @@ let session = {
   status: 'idle',
   scoresBefore: null,
   scoresAfter: null,
+  dynamicOnly: false,
   progress: emptyProgress(),
   error: null,
   updatedAt: Date.now(),
@@ -49,6 +50,7 @@ export function getHarvestStatus() {
     status: session.status,
     scoresBefore: session.scoresBefore,
     scoresAfter: session.scoresAfter,
+    dynamicOnly: session.dynamicOnly,
     progress: {
       ...session.progress,
       lines: [...session.progress.lines].slice(-MAX_LOG_LINES),
@@ -58,7 +60,7 @@ export function getHarvestStatus() {
   };
 }
 
-export function requestHarvest(scoresBefore) {
+export function requestHarvest(scoresBefore, { dynamicOnly = false } = {}) {
   if (session.status === 'requested' || session.status === 'running') {
     return { ok: false, error: 'Harvest already in progress' };
   }
@@ -66,7 +68,10 @@ export function requestHarvest(scoresBefore) {
     status: 'requested',
     scoresBefore: scoresBefore ?? null,
     scoresAfter: null,
-    progress: emptyProgress(),
+    dynamicOnly: !!dynamicOnly,
+    progress: dynamicOnly
+      ? { ...emptyProgress(), statusText: 'Fast harvest (reusing machine info)…' }
+      : emptyProgress(),
     error: null,
     updatedAt: Date.now(),
   };
