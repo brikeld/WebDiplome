@@ -15,7 +15,7 @@
   /* Mock suggestion cards (3 options) — not tied to --post-body-size */
   --suggestion-copy: 23px;
   --suggestion-body-weight: 400;
-  /* Picked / threaded comment bubble — edit here without changing posts */
+  /* Threaded mock comments (unpicked lane); picked publish uses post tokens below */
   --comment-body-size: 30.8px;
   --comment-body-weight: 400;
   --suggestion-plus-size: 42px;
@@ -379,6 +379,17 @@
 
 .commenting-suggestion-shell--picked {
   padding: 10px 14px 10px 10px;
+  --comment-body-size: var(--post-body-size);
+  --comment-body-weight: var(--post-body-weight);
+}
+
+/* Published (chosen) reply — same type as post body (.post-lead). */
+.commenting-suggestion-shell--picked .commenting-comment-content {
+  font-family: var(--font-avant);
+  font-size: var(--post-body-size);
+  font-weight: var(--post-body-weight);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
 }
 
 .commenting-suggestion-picked-stack {

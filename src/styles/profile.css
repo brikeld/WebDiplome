@@ -685,13 +685,12 @@ button.profile-last-analysis-pill:disabled {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  padding: 8px;
-  align-items: stretch;
-  align-content: stretch;
-  background: #000;
-  border-color: #000;
-  border-radius: 14px;
+  gap: 28px;
+  padding: 20px;
+  place-items: center;
+  align-content: center;
+  background: transparent;
+  border: none;
 }
 
 .profile-rail-capsule .tabs-row--rail .tab {
@@ -700,25 +699,30 @@ button.profile-last-analysis-pill:disabled {
   min-height: 0;
   margin: 0;
   padding: 10px 8px;
-  border-radius: 10px;
-  font-size: clamp(14px, 1.6vw, 17px);
-  font-weight: 600;
-  line-height: 1.15;
+  border: 4px solid #000;
+  border-radius: 20px;
+  background: transparent;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: var(--persona-accent, #fff);
+  color: #000;
 }
 
 .profile-rail-capsule .tabs-row--rail .tab:hover:not(.active) {
-  background: color-mix(in srgb, var(--persona-accent, #fff) 14%, transparent);
-  color: var(--persona-accent, #fff);
+  background: color-mix(in srgb, #000 6%, transparent);
+  color: #000;
+  border-color: #000;
 }
 
 .profile-rail-capsule .tabs-row--rail .tab.active {
-  background: var(--persona-accent, #fff) !important;
-  color: #000 !important;
+  background: #000 !important;
+  color: #fff !important;
+  border: 4px solid #000;
   font-weight: 700;
 }
 

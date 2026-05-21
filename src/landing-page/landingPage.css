@@ -7,6 +7,18 @@
   --lp-mega: clamp(48px, 6vw, 90px);
   --lp-hero-size: clamp(96px, 18vw, 560px);
   --lp-sub-size: clamp(48px, 6.5vw, 96px);
+  /* Screen 2 identity card scale — reused on persona cards */
+  --lp-identity-title-size: var(--lp-sub-size);
+  --lp-identity-title-weight: 700;
+  --lp-identity-title-line: 0.95;
+  --lp-identity-title-tracking: -0.025em;
+  --lp-identity-body-size: clamp(22px, 2.5vw, 34px);
+  --lp-identity-body-weight: 600;
+  --lp-identity-body-line: 1.38;
+  --lp-identity-kicker-size: clamp(32px, 4.2vw, 58px);
+  --lp-identity-kicker-weight: 800;
+  --lp-identity-kicker-line: 1.1;
+  --lp-identity-kicker-tracking: -0.02em;
 
   width: 100%;
   min-height: 100vh;
@@ -92,7 +104,8 @@
 }
 
 .lp-hero-text {
-  padding: 0 var(--lp-edge-pad) clamp(28px, 5vh, 64px);
+  margin-top: auto;
+  padding: 0 var(--lp-edge-pad) clamp(8px, 1.5vh, 16px);
 }
 
 .lp-hero-sub {
@@ -130,67 +143,56 @@
   min-height: 0;
 }
 
-/* ── SHARED: STEP CARD (workflow — white + black border) ─────────────────── */
+/* ── COLORED CONTENT CARDS (workflow + personas — screen 2 typography) ─── */
 
-.lp-step-card {
+.lp-workflow-card,
+.lp-persona-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 28px 24px;
+  gap: clamp(22px, 2.8vh, 36px);
+  padding: clamp(24px, 3vh, 36px) clamp(28px, 3vw, 40px);
   border-radius: var(--lp-card-radius);
-  border: var(--lp-card-border);
-  background: #fff;
+  background: var(--lp-card-fill, #D8D8D8);
   color: #000;
   box-sizing: border-box;
   overflow: hidden;
+  min-height: 0;
 }
 
-.lp-step-num {
-  font-size: clamp(44px, 5.5vw, 68px);
+.lp-workflow-card-body {
+  flex: 1 1 auto;
+}
+
+.lp-persona-num {
+  font-size: clamp(40px, 4.5vw, 56px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.05em;
   color: rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
 }
 
-.lp-step-title {
-  font-size: clamp(18px, 2vw, 26px);
-  font-weight: 800;
-  letter-spacing: -0.015em;
-  color: #000;
-  margin: 0;
+.lp-persona-chunk {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.4vh, 18px);
+  flex-shrink: 0;
 }
 
-.lp-step-body {
-  font-size: clamp(13px, 1.4vw, 16px);
-  font-weight: 500;
-  line-height: 1.55;
-  color: #000;
+.lp-persona-chunk--fill {
   flex: 1 1 auto;
-  margin: 0;
+  min-height: 0;
 }
 
-.lp-step-foot {
-  font-size: 11px;
+.lp-persona-foot {
+  font-size: clamp(11px, 1.1vw, 13px);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(0, 0, 0, 0.4);
+  margin: 0;
   margin-top: auto;
-}
-
-/* ── SHARED: PERSONA CARD (colored fill) ─────────────────────────────────── */
-
-.lp-persona-card {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 28px 24px;
-  border-radius: var(--lp-card-radius);
-  background: var(--persona-card-color, #D8D8D8);
-  color: #000;
-  box-sizing: border-box;
-  overflow: hidden;
+  flex-shrink: 0;
 }
 
 /* ── SCREEN 2: PROFILE + DOWNLOAD ────────────────────────────────────────── */
@@ -213,6 +215,12 @@
   overflow-y: auto;
 }
 
+.lp-mock-posts {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 3.5vh, 40px);
+}
+
 .lp-profile-col-right {
   display: flex;
   flex-direction: column;
@@ -223,16 +231,50 @@
   flex: 1 1 auto;
   border: var(--lp-card-border);
   border-radius: var(--lp-card-radius);
-  padding: 28px 32px;
+  padding: clamp(24px, 3vh, 36px) clamp(28px, 3vw, 40px);
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: clamp(22px, 2.8vh, 36px);
 }
 
-.lp-desc-card-text {
-  font-size: clamp(18px, 1.8vw, 24px);
-  font-weight: 500;
-  line-height: 1.55;
+.lp-desc-card-title {
+  font-family: var(--font-avant);
+  font-size: var(--lp-identity-title-size);
+  font-weight: var(--lp-identity-title-weight);
+  line-height: var(--lp-identity-title-line);
+  letter-spacing: var(--lp-identity-title-tracking);
+  color: #000;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.lp-desc-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 2.4vh, 28px);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.lp-desc-card-body p {
+  font-family: var(--font-avant);
+  font-size: var(--lp-identity-body-size);
+  font-weight: var(--lp-identity-body-weight);
+  line-height: var(--lp-identity-body-line);
+  color: #000;
+  margin: 0;
+}
+
+/* Persona section labels — between body and title, same card scale as screen 2 */
+.lp-persona-card .lp-desc-card-body .lp-persona-kicker {
+  font-family: var(--font-avant);
+  font-size: var(--lp-identity-kicker-size);
+  font-weight: var(--lp-identity-kicker-weight);
+  line-height: var(--lp-identity-kicker-line);
+  letter-spacing: var(--lp-identity-kicker-tracking);
   color: #000;
   margin: 0;
 }
@@ -246,6 +288,8 @@
   display: flex;
   align-items: center;
   gap: 18px;
+  background: #000;
+  color: #fff;
 }
 
 .lp-download-card-info {
@@ -262,12 +306,14 @@
   letter-spacing: -0.02em;
   line-height: 1.05;
   margin: 0;
+  color: #fff;
 }
 
 .lp-download-sub {
   font-size: clamp(13px, 1.3vw, 16px);
   font-weight: 500;
   margin: 0;
+  color: #fff;
 }
 
 .lp-download-fine {
@@ -275,7 +321,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: lowercase;
-  color: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.55);
   margin: 0;
 }
 
@@ -283,7 +329,7 @@
   width: clamp(70px, 7.5vw, 96px);
   height: clamp(70px, 7.5vw, 96px);
   flex-shrink: 0;
-  border: var(--lp-card-border);
+  border: 2px solid #fff;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -293,7 +339,8 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.4);
+  color: rgba(0, 0, 0, 0.55);
+  background: #fff;
   padding: 8px;
   box-sizing: border-box;
   line-height: 1.4;
@@ -307,12 +354,28 @@
   justify-content: space-between;
 }
 
+.lp-workflow-screen .lp-cards-row {
+  align-items: stretch;
+}
+
+.lp-workflow-screen .lp-workflow-card {
+  height: 100%;
+}
+
 /* ── SCREEN 4: PERSONAS ───────────────────────────────────────────────────── */
 
 .lp-personas-screen {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.lp-personas-screen .lp-cards-row {
+  align-items: stretch;
+}
+
+.lp-personas-screen .lp-persona-card {
+  height: 100%;
 }
 
 /* ── SCREEN 5: SUMMARY ────────────────────────────────────────────────────── */
@@ -366,7 +429,7 @@
 }
 
 .lp-summary-mini-card--persona {
-  background: var(--persona-card-color, #D8D8D8);
+  background: var(--lp-card-fill, #D8D8D8);
   border: none;
 }
 

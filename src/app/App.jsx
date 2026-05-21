@@ -115,8 +115,10 @@ const POST_FEED_ENTER_ANIM_MS = 1000;
 const INTER_REVEAL_PAUSE_MS = Math.max(POST_REVEAL_GAP_MS, POST_FEED_ENTER_ANIM_MS + 150);
 const HARVEST_POLL_MS = 450;
 const HARVEST_WAIT_MS = 12 * 60 * 1000;
-/** How long the 3 persona delta lines stay visible before post generation. */
-const PERSONA_DELTA_DISPLAY_MS = 4200;
+/** How long persona delta lines stay visible (generation runs in parallel). */
+const PERSONA_DELTA_DISPLAY_MS = 7000;
+/** Ring score deltas (= / + / −) stay after generation finishes. */
+const PERSONA_RING_DELTA_CLEAR_MS = 15_000;
 
 const POST_GEN_IDLE = { loading: false, phase: 'idle', error: null };
 
@@ -357,6 +359,11 @@ function AppInner({
                         <span data-persona-ring-score={k}>
                           {Number.isFinite(value) ? value : '—'}
                         </span>
+                        {Number.isFinite(value) ? (
+                          <span className="dashboard-ring-score-pct" aria-hidden>
+                            %
+                          </span>
+                        ) : null}
                         {(() => {
                           const ringDelta = formatRingDelta(
                             personaDeltas?.[axisKeyToScoreKey(k)],
@@ -395,9 +402,27 @@ export default function App() {
   const [harvestError, setHarvestError] = useState(null);
   const [personaDeltas, setPersonaDeltas] = useState(null);
   const streamPostsBaselineRef = useRef([]);
+  const personaDeltasClearRef = useRef(null);
   /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
   const prevMainViewRef = useRef(null);
+
+  const cancelPersonaDeltasClear = useCallback(() => {
+    if (personaDeltasClearRef.current) {
+      clearTimeout(personaDeltasClearRef.current);
+      personaDeltasClearRef.current = null;
+    }
+  }, []);
+
+  const schedulePersonaDeltasClearAfterGenerate = useCallback(() => {
+    cancelPersonaDeltasClear();
+    personaDeltasClearRef.current = setTimeout(() => {
+      setPersonaDeltas(null);
+      personaDeltasClearRef.current = null;
+    }, PERSONA_RING_DELTA_CLEAR_MS);
+  }, [cancelPersonaDeltasClear]);
+
+  useEffect(() => () => cancelPersonaDeltasClear(), [cancelPersonaDeltasClear]);
 
   useEffect(() => {
     if (mainView === 'profile' && prevMainViewRef.current !== 'profile') {
@@ -677,16 +702,19 @@ export default function App() {
       await revealPromise;
       await reloadProfileFromApi();
       setPostGen(POST_GEN_IDLE);
+      schedulePersonaDeltasClearAfterGenerate();
     } catch (e) {
       streamDone = true;
       await revealPromise.catch(() => {});
       setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
+      schedulePersonaDeltasClearAfterGenerate();
     }
-  }, [profile, reloadProfileFromApi]);
+  }, [profile, reloadProfileFromApi, schedulePersonaDeltasClearAfterGenerate]);
 
   const handleGeneratePersonaPosts = async () => {
     if (postGen.loading || harvestPhase === 'harvesting' || !profile) return;
 
+    cancelPersonaDeltasClear();
     const scoresBefore = getPersonaScoresNormalized(profile);
     setHarvestError(null);
     setHarvestProgress(null);
@@ -731,14 +759,20 @@ export default function App() {
     setPersonaDeltas(computePersonaDeltas(scoresBefore, scoresAfter));
 
     setPostGen({ loading: true, phase: 'deltas', error: null });
+    const generationPromise = runBioAndPostGeneration(freshProfile);
+
     await new Promise((r) => setTimeout(r, PERSONA_DELTA_DISPLAY_MS));
 
-    setPostGen({ loading: true, phase: 'generating', error: null });
-    await runBioAndPostGeneration(freshProfile);
+    setPostGen((prev) => {
+      if (!prev.loading || prev.phase !== 'deltas') return prev;
+      return { ...prev, phase: 'generating' };
+    });
+
+    await generationPromise;
   };
 
   if (mainView === 'landing') {
-    return <LandingPage onEnterDemo={() => setMainView('home')} />;
+    return <LandingPage onEnterDemo={() => setMainView('profile')} />;
   }
 
   return (

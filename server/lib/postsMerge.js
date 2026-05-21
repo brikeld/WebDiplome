@@ -24,24 +24,12 @@ export function mergePostsPrepend(newPosts, baselinePosts) {
 }
 
 /**
- * Append new posts to baseline. If dedupe would not grow the list, force-prepend
- * the incoming posts anyway (generation must never drop older entries).
+ * Prepend new posts before baseline; dedupe by identity key.
+ * Incoming posts are always placed first; all unique baseline posts are preserved.
  */
 export function appendPostsForceGrow(newPosts, baselinePosts) {
   const incoming = Array.isArray(newPosts) ? newPosts.filter(Boolean) : [];
   const baseline = Array.isArray(baselinePosts) ? baselinePosts.filter(Boolean) : [];
   if (incoming.length === 0) return baseline;
-
-  const merged = mergePostsPrepend(incoming, baseline);
-  if (merged.length > baseline.length) return merged;
-
-  const seen = new Set(baseline.map(postIdentityKey));
-  const forced = [...incoming];
-  for (const p of baseline) {
-    const key = postIdentityKey(p);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    forced.push(p);
-  }
-  return forced;
+  return mergePostsPrepend(incoming, baseline);
 }

@@ -506,6 +506,8 @@ body {
   overflow: visible;
   --home-shell-max-width: 1680px;
   --home-shell-padding-left: 104px;
+  /* Nudge main feed + dashboard capsules left (not the sidebar nav) */
+  --shell-capsules-nudge-left: 20px;
   --left-capsule-extra-width: 140px;
   --shell-rail-inset: 24px;
 }
@@ -532,8 +534,6 @@ body {
   /* Row so the feed column and side panel sit naturally next to each other */
   flex-direction: row;
   align-items: stretch;
-  padding-left: var(--home-shell-padding-left);
-  padding-right: 24px;
   gap: 24px;
 }
 
@@ -542,8 +542,7 @@ body {
   /* Fixed width only — do not flex-grow or shrink when the right rail width changes */
   flex: 0 0 auto;
   flex-shrink: 0;
-  /* No scale transform on home/profile — layout matches visual exactly */
-  transform: none;
+  transform: translateX(calc(-1 * var(--shell-capsules-nudge-left, 0px)));
   --content-scale: 1;
   height: 100%;
   min-height: 0;
@@ -560,6 +559,7 @@ body {
   margin-right: calc(-1 * var(--dashboard-extra-width));
   box-sizing: border-box;
   overflow: hidden;
+  transform: translateX(calc(-1 * var(--shell-capsules-nudge-left, 0px)));
 }
 
 .view-home .persona-side-panel .dashboard-capsule,
@@ -684,6 +684,12 @@ body {
   grid-template-columns: 1fr;
   column-gap: 0;
   grid-template-areas: 'body';
+}
+
+.post-card--bottom-pills-only {
+  grid-template-areas:
+    'body body body'
+    'pill-bottom-left pill-bottom-center pill-bottom-right';
 }
 
 .post-card--feed-enter {

@@ -35,6 +35,8 @@ export default function PostCard({
   onHide,
   isHidden = false,
   hidePills = false,
+  /** 'full' | 'bottom-only' | 'none' — landing mock uses bottom-only */
+  pillsMode,
 }) {
   const {
     content,
@@ -84,6 +86,11 @@ export default function PostCard({
     btn.style.transform = `translate(${dx}px, ${dy}px) scale(1.35)`;
   }, [isCommentsOpen]);
 
+  const resolvedPillsMode = pillsMode ?? (hidePills ? 'none' : 'full');
+  const showTopPills = resolvedPillsMode === 'full';
+  const showBottomPills =
+    resolvedPillsMode === 'full' || resolvedPillsMode === 'bottom-only';
+
   const personaLabel = (() => {
     const key = String(persona ?? '').toLowerCase();
     if (key === 'popularite' || key === 'popularity' || key === 'social') return 'Social';
@@ -119,13 +126,13 @@ export default function PostCard({
     <>
       <article
         ref={articleRef}
-        className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${hidePills ? ' post-card--no-pills' : ''}`}
+        className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}`}
         data-persona={post.persona}
         style={{
           '--post-accent': noteColor,
         }}
       >
-        {hidePills ? null : (
+        {showTopPills ? (
           <>
             <div
               className="post-pill-slot post-pill-slot--top post-pill-slot--left"
@@ -153,7 +160,7 @@ export default function PostCard({
               <span className="post-meta-pill post-outline-pill">analyze</span>
             </div>
           </>
-        )}
+        ) : null}
 
         <div className="post-card-body">
           <div className={attachedAsset ? 'post-composite' : undefined}>
@@ -199,7 +206,7 @@ export default function PostCard({
           </div>
         </div>
 
-        {hidePills ? null : (
+        {showBottomPills ? (
           <>
             <div
               className="post-pill-slot post-pill-slot--bottom post-pill-slot--left post-meta-left"
@@ -213,16 +220,23 @@ export default function PostCard({
               </span>
             </div>
             <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--right post-meta-right">
-              <CommentsToggle
-                ref={toggleRef}
-                isOpen={isCommentsOpen}
-                onToggle={onToggleComments}
-                controlsId={`commenting-${post.id}`}
-              />
+              {resolvedPillsMode === 'bottom-only' ? (
+                <span className="post-meta-pill post-outline-pill" aria-hidden>
+                  comment
+                </span>
+              ) : (
+                <CommentsToggle
+                  ref={toggleRef}
+                  isOpen={isCommentsOpen}
+                  onToggle={onToggleComments}
+                  controlsId={`commenting-${post.id}`}
+                />
+              )}
             </div>
           </>
-        )}
+        ) : null}
       </article>
+      {resolvedPillsMode === 'bottom-only' ? null : (
       <CommentsCapsule
         post={post}
         isOpen={isCommentsOpen}
@@ -236,6 +250,7 @@ export default function PostCard({
         commenterAvatarSrc={DEMO_OTHER_COMMENTER.avatarSrc}
         commenterAvatarInitials={DEMO_OTHER_COMMENTER.avatarInitials}
       />
+      )}
     </>
   );
 }

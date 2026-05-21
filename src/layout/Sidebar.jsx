@@ -1,4 +1,4 @@
-export default function Sidebar({ mainView = 'home', onSelectView }) {
+export default function Sidebar({ mainView = 'profile', onSelectView }) {
   return (
     <>
       <aside className="sidebar" aria-label="Navigation">
@@ -11,9 +11,6 @@ export default function Sidebar({ mainView = 'home', onSelectView }) {
             onClick={() => onSelectView?.('home')}
           >
             ⌂
-          </button>
-          <button type="button" className="rail-btn" aria-label="DMs">
-            ✉
           </button>
           <button
             type="button"

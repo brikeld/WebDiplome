@@ -167,23 +167,18 @@ function Particle({ event, onComplete, scoringApi }) {
 }
 
 function PersonaFlipOverlay({ persona, onComplete }) {
-  const ringEl = getRingEl(persona);
-  const rect = ringEl?.getBoundingClientRect();
-  const cx = rect ? rect.x + rect.width / 2 : window.innerWidth * 0.85;
-  const cy = rect ? rect.y + rect.height / 2 : window.innerHeight / 2;
   const color = PERSONA_COLORS[persona] ?? '#fff';
 
   useEffect(() => {
-    const timer = setTimeout(onComplete, 960);
+    const timer = setTimeout(onComplete, 1200);
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <div
       className="lsc-persona-flip-overlay"
-      style={{
-        background: `radial-gradient(circle at ${cx}px ${cy}px, ${color}cc 0%, ${color}44 30%, transparent 65%)`,
-      }}
+      style={{ '--lsc-flip-color': color }}
+      aria-hidden
     />
   );
 }

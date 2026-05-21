@@ -3,24 +3,30 @@ import './landingPage.css';
 
 const PERSONAS = [
   {
+    key: 'popularity',
+    color: '#CCF847',
+    title: 'Social',
+    focus: 'Communication, collaboration, and socially oriented usage.',
+    cares:
+      'Chat/collab apps in installed apps and recent use. Browser/social patterns where implemented (visits to social/video/community sites). Anything that suggests connected, communicative behavior rather than offline solo work.',
+    foot: 'axis 01 of 03 · weighted · no appeals',
+  },
+  {
     key: 'productivity',
     color: '#D8D8D8',
     title: 'Productivity',
-    body: "We count your idle minutes so you don't have to. Distraction is now a measurable failure — congratulations, the hours you wasted are public, indexed, and dated.",
-    foot: 'axis 01 of 03 · weighted · no appeals',
+    focus: 'Work output, structure, and create stuff.',
+    cares:
+      'Apps and habits that look like professional / creative work: dev tools, office/design suites, terminals, scripts, project files. Recent files and shell history that look like creation (code, docs, design) rather than pure consumption.',
+    foot: 'axis 02 of 03 · weighted · no appeals',
   },
   {
     key: 'security',
     color: '#759AEF',
     title: 'Security',
-    body: 'Your "summer2019" password? We saw. We told 47,000 strangers. You\'re welcome — transparency is how trust is built, one leaked credential at a time.',
-    foot: 'axis 02 of 03 · weighted · no appeals',
-  },
-  {
-    key: 'popularity',
-    color: '#CCF847',
-    title: 'Social',
-    body: "Silence is data. Isolation is data. We tally every group chat you went quiet in. The algorithm thinks you should call your mother — also, your mother thinks so.",
+    focus: 'Digital hygiene, risk surface, compliance and conformity.',
+    cares:
+      'System defenses and posture: FileVault, Gatekeeper, SIP, firewall, updates, disk health (SMART), fewer “sketchy” download patterns, fewer repeated errors/crashes as neglect signals.',
     foot: 'axis 03 of 03 · weighted · no appeals',
   },
 ];
@@ -28,18 +34,21 @@ const PERSONAS = [
 const STEPS = [
   {
     n: '01',
+    color: '#D8D8D8',
     title: 'Install. Surrender.',
     body: "The collector deploys silently — exactly the way good software should. It reads every process, keystroke, and connection so you don't have to remember what you did. Browser history, shell, sleep cycles, networks — all backed up. For convenience.",
     foot: 'step 01 of 03 · entirely optional · also mandatory',
   },
   {
     n: '02',
+    color: '#759AEF',
     title: 'Process. Be judged.',
     body: 'Your patterns become a posture. Your posture becomes a verdict. The model resolves your entire digital existence into a tidy number between 0 and 100. Finally — an answer to the question "but what kind of person am I?"',
     foot: 'step 02 of 03 · entirely optional · also mandatory',
   },
   {
     n: '03',
+    color: '#CCF847',
     title: 'Publish. Smile.',
     body: 'Your file goes public. Score, posts, badges — all visible. Strangers will read it. Recruiters will read it. Your ex will read it. The score updates without notice, because surprises are fun.',
     foot: 'step 03 of 03 · entirely optional · also mandatory',
@@ -186,12 +195,13 @@ export default function LandingPage({ onEnterDemo }) {
         <section className="lp-screen lp-profile-screen" style={{ '--stagger-i': 1 }}>
           <div className="lp-profile-col-left">
             <ProfileHeaderPreview />
-            <div>
+            <div className="lp-mock-posts">
               {DEMO_POSTS.map((post) => (
                 <PostCard
                   key={post.id}
-                  hidePills
+                  pillsMode="bottom-only"
                   post={{
+                    id: post.id,
                     noteColor: post.color,
                     displayName: post.name,
                     handle: post.handle,
@@ -213,10 +223,20 @@ export default function LandingPage({ onEnterDemo }) {
 
           <div className="lp-profile-col-right">
             <div className="lp-desc-card">
-              <p className="lp-desc-card-text">
-                What other subjects will see when the script finishes its first sweep of your machine.
-                Yours will be similar. Probably worse.
-              </p>
+              <h2 className="lp-desc-card-title">Create your compliant identity.</h2>
+              <div className="lp-desc-card-body">
+                <p>
+                  Let Compliant build your digital presence from who you already are.
+                  Your habits, rhythms, interactions, and behaviors become content automatically.
+                </p>
+                <p>
+                  No more posting.
+                  <br />
+                  No more curating yourself.
+                  <br />
+                  Compliant does it for you.
+                </p>
+              </div>
             </div>
             <div className="lp-download-card">
               <div className="lp-download-card-info">
@@ -234,11 +254,17 @@ export default function LandingPage({ onEnterDemo }) {
           <h2 className="lp-screen-title">workflow in 3 parts.</h2>
           <div className="lp-cards-row">
             {STEPS.map((s) => (
-              <article key={s.n} className="lp-step-card">
-                <span className="lp-step-num">{s.n}</span>
-                <h3 className="lp-step-title">{s.title}</h3>
-                <p className="lp-step-body">{s.body}</p>
-                <p className="lp-step-foot">{s.foot}</p>
+              <article
+                key={s.n}
+                className="lp-workflow-card"
+                style={{ '--lp-card-fill': s.color }}
+              >
+                <span className="lp-persona-num">{s.n}</span>
+                <h3 className="lp-desc-card-title">{s.title}</h3>
+                <div className="lp-desc-card-body lp-workflow-card-body">
+                  <p>{s.body}</p>
+                </div>
+                <p className="lp-persona-foot">{s.foot}</p>
               </article>
             ))}
           </div>
@@ -252,12 +278,21 @@ export default function LandingPage({ onEnterDemo }) {
               <article
                 key={p.key}
                 className="lp-persona-card"
-                style={{ '--persona-card-color': p.color }}
+                style={{ '--lp-card-fill': p.color }}
               >
-                <span className="lp-step-num">{String(i + 1).padStart(2, '0')}</span>
-                <h3 className="lp-step-title">{p.title}</h3>
-                <p className="lp-step-body">{p.body}</p>
-                <p className="lp-step-foot">{p.foot}</p>
+                <span className="lp-persona-num">{String(i + 1).padStart(2, '0')}</span>
+                <h3 className="lp-desc-card-title">{p.title}</h3>
+                <div className="lp-desc-card-body">
+                  <div className="lp-persona-chunk">
+                    <p className="lp-persona-kicker">Focus:</p>
+                    <p>{p.focus}</p>
+                  </div>
+                  <div className="lp-persona-chunk lp-persona-chunk--fill">
+                    <p className="lp-persona-kicker">What it cares about:</p>
+                    <p>{p.cares}</p>
+                  </div>
+                </div>
+                <p className="lp-persona-foot">{p.foot}</p>
               </article>
             ))}
           </div>
@@ -287,7 +322,7 @@ export default function LandingPage({ onEnterDemo }) {
                   <div
                     key={p.key}
                     className="lp-summary-mini-card lp-summary-mini-card--persona"
-                    style={{ '--persona-card-color': p.color }}
+                    style={{ '--lp-card-fill': p.color }}
                   >
                     <span className="lp-summary-mini-num">{String(i + 1).padStart(2, '0')}</span>
                     <p className="lp-summary-mini-title">{p.title}</p>
