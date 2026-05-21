@@ -1,4 +1,4 @@
-import { lazy, Suspense, useLayoutEffect, useRef } from 'react';
+import { lazy, Suspense, useRef } from 'react';
 import PostImage from './PostImage.jsx';
 import PostDocument from './PostDocument.jsx';
 import { isPdfDocumentAsset } from '@/lib/attachmentKind.js';
@@ -54,37 +54,7 @@ export default function PostCard({
 
   const applyImageFx = shouldApplyPostImageFx({ chartType });
 
-  const toggleRef = useRef(null);
-  const articleRef = useRef(null);
   const systemNotePillRef = useRef(null);
-
-  useLayoutEffect(() => {
-    const btn = toggleRef.current;
-    const article = articleRef.current;
-    if (!btn || !article) return;
-
-    if (!isCommentsOpen) {
-      btn.style.transform = '';
-      btn.style.willChange = '';
-      return;
-    }
-
-    const btnRect = btn.getBoundingClientRect();
-    const articleRect = article.getBoundingClientRect();
-
-    const targetX = articleRect.left + articleRect.width / 2;
-    // Half of .posts-tab --posts-stack-gap; nudge icon down to straddle the capsule seam.
-    const targetY = articleRect.bottom + 24;
-
-    const currentX = btnRect.left + btnRect.width / 2;
-    const currentY = btnRect.top + btnRect.height / 2;
-
-    const dx = targetX - currentX;
-    const dy = targetY - currentY;
-
-    btn.style.willChange = 'transform';
-    btn.style.transform = `translate(${dx}px, ${dy}px) scale(1.35)`;
-  }, [isCommentsOpen]);
 
   const resolvedPillsMode = pillsMode ?? (hidePills ? 'none' : 'full');
   const showTopPills = resolvedPillsMode === 'full';
@@ -125,7 +95,6 @@ export default function PostCard({
   return (
     <>
       <article
-        ref={articleRef}
         className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${animateEnter ? ' post-card--feed-enter' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}`}
         data-persona={post.persona}
         style={{
@@ -208,30 +177,29 @@ export default function PostCard({
 
         {showBottomPills ? (
           <>
-            <div
-              className="post-pill-slot post-pill-slot--bottom post-pill-slot--left post-meta-left"
-              aria-label="Post metadata"
-            >
-              <span className="post-meta-pill">{timeAgo} ago</span>
-            </div>
-            <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--center post-meta-center">
-              <span ref={systemNotePillRef} className="post-meta-pill">
-                System note [{personaLabel}] [+{systemDeltaPct}%]
-              </span>
-            </div>
-            <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--right post-meta-right">
+            <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--left post-meta-left">
               {resolvedPillsMode === 'bottom-only' ? (
                 <span className="post-meta-pill post-outline-pill" aria-hidden>
                   comment
                 </span>
               ) : (
                 <CommentsToggle
-                  ref={toggleRef}
                   isOpen={isCommentsOpen}
                   onToggle={onToggleComments}
                   controlsId={`commenting-${post.id}`}
                 />
               )}
+            </div>
+            <div className="post-pill-slot post-pill-slot--bottom post-pill-slot--center post-meta-center">
+              <span ref={systemNotePillRef} className="post-meta-pill">
+                System note [{personaLabel}] [+{systemDeltaPct}%]
+              </span>
+            </div>
+            <div
+              className="post-pill-slot post-pill-slot--bottom post-pill-slot--right post-meta-right"
+              aria-label="Post metadata"
+            >
+              <span className="post-meta-pill">{timeAgo} ago</span>
             </div>
           </>
         ) : null}
@@ -240,6 +208,9 @@ export default function PostCard({
       <CommentsCapsule
         post={post}
         isOpen={isCommentsOpen}
+        onToggle={onToggleComments}
+        timeLabel={`${timeAgo} ago`}
+        systemNoteLabel={`System note [${personaLabel}] [+${systemDeltaPct}%]`}
         capsuleId={`commenting-${post.id}`}
         displayName={displayName}
         handle={handle}

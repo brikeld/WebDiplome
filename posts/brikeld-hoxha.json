@@ -1,109 +1,39 @@
 [
   {
-    "persona": "securite",
-    "content": "My WiFi history reads like a travelogue for a highly caffeinated Swiss tourist. I need to start taking notes before my phone thinks this is my actual residence.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-21T11:22:11.284Z",
-    "textSliceType": "wifi"
-  },
-  {
     "persona": "popularite",
-    "content": "The mood in this graphic is everything. Love the dramatic poses and the intense green aesthetic. So much style.",
+    "content": "My browser history today suggests my mind jumps between designing perfect UX and checking if Inter Milan actually won that game. The emotional whiplash is real.",
     "sentiment": "positive",
-    "createdAt": "2026-05-21T11:22:08.859Z",
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "f0c24385ab5fe4b422a406bfe921076d82cca120aaad3ba40713ac4157a6cff7.jpg",
-      "relativePath": "public/uploads/f0c24385ab5fe4b422a406bfe921076d82cca120aaad3ba40713ac4157a6cff7.jpg",
-      "url": "/uploads/f0c24385ab5fe4b422a406bfe921076d82cca120aaad3ba40713ac4157a6cff7.jpg",
-      "mime": "image/jpeg",
-      "visionAnalysed": true
-    }
-  },
-  {
-    "persona": "productivite",
-    "content": "Only using 346 GB? The other 648 GB of free space is going to be filled with more code commits and academic PDFs, probably.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-21T11:22:10.937Z",
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "5402d468d3a083b32d706b94cea16fcfa9c8288a90a760684545c682cdc03338.png",
-      "relativePath": "public/uploads/5402d468d3a083b32d706b94cea16fcfa9c8288a90a760684545c682cdc03338.png",
-      "url": "/uploads/5402d468d3a083b32d706b94cea16fcfa9c8288a90a760684545c682cdc03338.png",
-      "mime": "image/png",
-      "visionAnalysed": true
-    },
-    "chartType": "storage_usage"
-  },
-  {
-    "persona": "productivite",
-    "content": "My brain today is just a loop between writing code, prompting Claude for ideas, and trying to make it all aesthetically pleasing in Figma. Send help and coffee.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-20T14:23:42.358Z",
-    "textSliceType": "app_usage",
+    "createdAt": "2026-05-21T12:06:19.336Z",
+    "textSliceType": "browser",
     "attachedAsset": null
   },
   {
-    "persona": "productivite",
-    "content": "Thinking about how the 'scrolling ritual' parallels old regime control techniques... I think my brain needs more coffee and less history class.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-20T14:23:39.718Z",
-    "attachedAsset": {
-      "kind": "document",
-      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "relativePath": "public/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "mime": "application/pdf"
-    }
-  },
-  {
     "persona": "popularite",
-    "content": "My AI tool list is insane. Seeing only 3 apps used this week confirms it: I'm an enthusiastic collector, not a finisher.",
-    "sentiment": "negative",
-    "createdAt": "2026-05-20T14:23:43.249Z",
-    "chartType": "ai_tool_exposure",
+    "content": "My productivity radar chart looks wild. Pretty sure this graph needs its own debugging session. 😂",
+    "sentiment": "positive",
+    "createdAt": "2026-05-21T12:06:18.178Z",
     "attachedAsset": {
       "kind": "image",
-      "filename": "03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
-      "relativePath": "public/uploads/03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
-      "url": "/uploads/03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
+      "filename": "8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "relativePath": "public/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "url": "/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
       "mime": "image/png",
       "visionAnalysed": true
     }
   },
   {
     "persona": "securite",
-    "content": "Just downloaded the COMPLIANT PDF. I think my life just got a lot more bureaucratic. 😂",
+    "content": "My whole download history for this period is just one 51 KB PDF named 'compliant.' My digital life really peaked when I finished required reading material.",
     "sentiment": "positive",
-    "createdAt": "2026-05-21T11:01:01.694Z",
-    "textSliceType": "downloads"
-  },
-  {
-    "persona": "productivite",
-    "content": "Spent time reading about how regimes used design to control masses. Turns out, scrolling endlessly through feeds is just a quieter version of that same powerful ritual. 😂",
-    "sentiment": "positive",
-    "createdAt": "2026-05-21T11:00:59.720Z",
-    "attachedAsset": {
-      "kind": "document",
-      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "relativePath": "public/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "mime": "application/pdf"
-    }
-  },
-  {
-    "persona": "securite",
-    "content": "The shell history showing endless 'npm run dev' is painfully accurate. It’s less about coding and more about maintaining a perpetual state of 'almost done.' Send coffee.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-21T11:01:02.114Z",
+    "createdAt": "2026-05-21T12:06:21.770Z",
+    "chartType": "recent_downloads",
     "attachedAsset": {
       "kind": "image",
-      "filename": "7783284f7a12a2d607f6a0764c93d8c24e22a3a4bd55eff60b33599727dff821.png",
-      "relativePath": "public/uploads/7783284f7a12a2d607f6a0764c93d8c24e22a3a4bd55eff60b33599727dff821.png",
-      "url": "/uploads/7783284f7a12a2d607f6a0764c93d8c24e22a3a4bd55eff60b33599727dff821.png",
+      "filename": "05b37f0744f927759491e175060df1fd84187be09c133f93edb2769a7977a78b.png",
+      "relativePath": "public/uploads/05b37f0744f927759491e175060df1fd84187be09c133f93edb2769a7977a78b.png",
+      "url": "/uploads/05b37f0744f927759491e175060df1fd84187be09c133f93edb2769a7977a78b.png",
       "mime": "image/png",
       "visionAnalysed": true
-    },
-    "chartType": "wifi_history"
+    }
   }
 ]

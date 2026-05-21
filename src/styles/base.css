@@ -883,27 +883,33 @@ body {
   max-width: var(--post-side-pill-width);
 }
 
-/* Hollow outline pills (hide / analyze) — accent stroke + text */
+/* Hollow outline pills (hide / analyze / comment) — persona accent stroke + icon */
 .post-pill-slot--top .post-action-btn--outline,
-.post-pill-slot--top .post-outline-pill {
+.post-pill-slot--bottom .post-action-btn--outline,
+.post-pill-slot--top .post-outline-pill,
+.post-action-btn--outline.commenting-toggle-host:not(.commenting-toggle-host--open) {
   gap: 6px;
   background: transparent;
   border: 1.5px solid var(--post-accent, var(--persona-accent, #ccf847));
   color: var(--post-accent, var(--persona-accent, #ccf847));
 }
 
-.post-pill-slot--top .post-action-btn--outline svg {
+.post-action-btn--outline svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
 }
 
-.post-pill-slot--top .post-action-btn--outline:hover {
+.post-pill-slot--top .post-action-btn--outline:hover,
+.post-pill-slot--bottom .post-action-btn--outline:hover,
+.post-action-btn--outline.commenting-toggle-host:not(.commenting-toggle-host--open):hover {
   filter: none;
   background: color-mix(in srgb, var(--post-accent, #ccf847) 14%, transparent);
 }
 
-.post-pill-slot--top .post-action-btn--outline:focus-visible {
+.post-pill-slot--top .post-action-btn--outline:focus-visible,
+.post-pill-slot--bottom .post-action-btn--outline:focus-visible,
+.post-action-btn--outline.commenting-toggle-host:not(.commenting-toggle-host--open):focus-visible {
   outline: 2px solid var(--post-accent, var(--persona-accent, #ccf847));
   outline-offset: 2px;
 }

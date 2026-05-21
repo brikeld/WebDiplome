@@ -2,6 +2,7 @@ import '@/styles/commenting.css';
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Comment from './Comment.jsx';
 import SuggestionRow from './SuggestionRow.jsx';
+import CommentsToggle from './CommentsToggle.jsx';
 import {
   commentMetaCenterLine,
   mockCommentTimeAgo,
@@ -9,6 +10,23 @@ import {
 import { getMockCommentsFor } from './commentingMock.js';
 import { fetchCommentSuggestions } from './fetchCommentSuggestions.js';
 import { LiveScoringContext } from '@/features/liveScoring/LiveScoringContext.jsx';
+
+function PencilIcon() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+      aria-hidden
+    >
+      <path d="M3 17l3.6-1 9.4-9.4-2.6-2.6L4 13.4 3 17z" />
+      <path d="M13.4 4l2.6 2.6" />
+    </svg>
+  );
+}
 
 export default function CommentsCapsule({
   post,
@@ -22,10 +40,12 @@ export default function CommentsCapsule({
   commenterHandle,
   commenterAvatarSrc,
   commenterAvatarInitials,
+  onToggle,
+  timeLabel,
+  systemNoteLabel,
 }) {
   const [picked, setPicked] = useState(null);
   const [originRect, setOriginRect] = useState(null);
-  const [footerDraft, setFooterDraft] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [suggestionsError, setSuggestionsError] = useState(null);
@@ -41,7 +61,6 @@ export default function CommentsCapsule({
     if (!isOpen) {
       setPicked(null);
       setOriginRect(null);
-      setFooterDraft('');
       setSuggestions([]);
       setSuggestionsLoading(false);
       setSuggestionsError(null);
@@ -79,7 +98,7 @@ export default function CommentsCapsule({
     };
   }, [isOpen, post.id, post.content, picked]);
 
-  // Set max-height to measured scroll height when open (Task 3 logic, preserved).
+  // Set max-height to measured scroll height when open
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -157,7 +176,6 @@ export default function CommentsCapsule({
     }
 
     setPicked(s);
-    setFooterDraft('');
   };
 
   const { comments } = getMockCommentsFor(post.id);
@@ -168,6 +186,7 @@ export default function CommentsCapsule({
       id={capsuleId}
       className={`commenting-capsule${isOpen ? ' commenting-capsule--open' : ''}`}
       data-post-id={post.id}
+      data-persona={post.persona}
       aria-hidden={!isOpen}
       inert={!isOpen ? '' : undefined}
       style={{
@@ -191,18 +210,12 @@ export default function CommentsCapsule({
       ))}
 
       {picked ? null : (
-        <div className="commenting-footer">
-          <input
-            id={`${capsuleId}-draft`}
-            className="commenting-footer-field"
-            type="text"
-            value={footerDraft}
-            onChange={(e) => setFooterDraft(e.target.value)}
-            placeholder="comment here"
-            autoComplete="off"
-            aria-label="Add a comment"
-          />
-        </div>
+        <button type="button" className="commenting-write-own">
+          <span className="commenting-write-own-icon" aria-hidden>
+            <PencilIcon />
+          </span>
+          <span className="commenting-write-own-label">Write your own reply</span>
+        </button>
       )}
 
       <SuggestionRow
@@ -215,9 +228,24 @@ export default function CommentsCapsule({
         userCommentRef={userCommentRef}
         postId={post.id}
         displayName={displayName}
-        handle={handle}
         onPick={handlePick}
       />
+
+      <div className="commenting-internal-meta" aria-label="Comment thread metadata">
+        <div className="commenting-internal-meta-toggle">
+          <CommentsToggle
+            isOpen={isOpen}
+            onToggle={onToggle}
+            controlsId={`${capsuleId}-close`}
+          />
+        </div>
+        <span className="commenting-internal-meta-pill commenting-internal-meta-center">
+          {systemNoteLabel}
+        </span>
+        <span className="commenting-internal-meta-pill commenting-internal-meta-time">
+          {timeLabel}
+        </span>
+      </div>
     </div>
   );
 }

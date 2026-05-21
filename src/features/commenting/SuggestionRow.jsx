@@ -1,5 +1,4 @@
-import UserComment from './UserComment.jsx';
-import { CommentMetaRow } from './Comment.jsx';
+import Comment from './Comment.jsx';
 import { commentMetaCenterLine, mockCommentTimeAgo } from '@/lib/commentMetaStrip.js';
 
 const PERSONA_ORDER = ['productivite', 'securite', 'popularite'];
@@ -43,11 +42,8 @@ export default function SuggestionRow({
   userCommentRef,
   postId,
   displayName,
-  handle,
   onPick,
 }) {
-  const shellClass = `commenting-suggestion-shell${picked ? ' commenting-suggestion-shell--picked' : ''}`;
-
   const optionRows = PERSONA_ORDER.map((persona, i) => {
     const match = suggestions.find((s) => s.persona === persona);
     return (
@@ -61,29 +57,18 @@ export default function SuggestionRow({
 
   if (picked) {
     return (
-      <div className="commenting-suggestion-picked-stack">
-        <div
-          ref={userCommentRef}
-          data-flip-root
-          className={`${shellClass} commenting-suggestion-shell--persona-fill`}
-          data-persona={picked.persona}
-        >
-          <div className="commenting-suggestion-picked-inner">
-            <UserComment
-              persona={picked.persona}
-              content={picked.content}
-              displayName={displayName}
-              handle={handle}
-              avatarSrc={avatarSrc}
-              avatarInitials={avatarInitials}
-              metaLeft={mockCommentTimeAgo(postId, picked.persona, 3)}
-              metaCenter={commentMetaCenterLine(postId, picked.persona)}
-              showMeta={false}
-            />
-          </div>
-        </div>
-        <CommentMetaRow
+      <div
+        ref={userCommentRef}
+        data-flip-root
+        className="commenting-suggestion-picked"
+        data-persona={picked.persona}
+      >
+        <Comment
           persona={picked.persona}
+          content={picked.content}
+          displayName={displayName}
+          avatarSrc={avatarSrc}
+          avatarInitials={avatarInitials}
           metaLeft={mockCommentTimeAgo(postId, picked.persona, 3)}
           metaCenter={commentMetaCenterLine(postId, picked.persona)}
         />
@@ -92,23 +77,16 @@ export default function SuggestionRow({
   }
 
   return (
-    <div className={shellClass}>
-      <div className="commenting-suggestion-row">
-        <div className="commenting-suggestion-avatar-rail">
-          <div className="commenting-comment-avatar" aria-hidden>
-            {avatarSrc ? <img src={avatarSrc} alt="" /> : <span>{avatarInitials}</span>}
-          </div>
-        </div>
-        <div className="commenting-suggestion-options">
-          {optionRows.map((s) => (
-            <SuggestionOption
-              key={s.persona}
-              suggestion={s}
-              loading={suggestionsLoading}
-              onPick={onPick}
-            />
-          ))}
-        </div>
+    <div className="commenting-suggestion-shell">
+      <div className="commenting-suggestion-options">
+        {optionRows.map((s) => (
+          <SuggestionOption
+            key={s.persona}
+            suggestion={s}
+            loading={suggestionsLoading}
+            onPick={onPick}
+          />
+        ))}
       </div>
       {suggestionsError ? (
         <p className="commenting-suggestion-error" role="alert">

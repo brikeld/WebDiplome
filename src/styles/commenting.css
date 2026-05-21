@@ -1,86 +1,93 @@
-/* ── Commenting capsule ────────────────────────────────────────────────────
-   Per-post commenting UI. Lives below each PostCard as a layout sibling
-   so the toggle icon can animate between the meta row and the capsule.
+/* ── Commenting capsule (B-2 extended-post) ────────────────────────────────
+   Per-post commenting UI. The capsule is a sibling of PostCard but visually
+   continues the post-card-bubble downward — same persona fill, joined
+   corners, no separate outline. Comments inside are black chips with
+   persona-color text + rounded-square avatars; suggestions are the same
+   shape. The user's slot is a bold B-2 CTA button ("Write your own reply").
+   The bottom of the capsule contains its own meta row (toggle/system/time)
+   when open; the post-card's outer bottom-pill row is hidden when open so
+   the unified shape stays continuous.
    ─────────────────────────────────────────────────────────────────────── */
 
 :root {
   --commenting-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --commenting-duration: 280ms;
   --commenting-stagger: 60ms;
-  --commenting-persona-productivite: #D8D8D8;
-  --commenting-persona-securite: #759AEF;
-  --commenting-persona-popularite: #CCF847;
-  /* Proposition shell inner lane = picked reply bubble (border-box) */
-  --commenting-shell-lane-height: 10rem;
-  /* Mock suggestion cards (3 options) — not tied to --post-body-size */
-  --suggestion-copy: 23px;
-  --suggestion-body-weight: 400;
-  /* Threaded mock comments (unpicked lane); picked publish uses post tokens below */
-  --comment-body-size: 30.8px;
-  --comment-body-weight: 400;
-  --suggestion-plus-size: 42px;
+  --commenting-persona-productivite: #d8d8d8;
+  --commenting-persona-securite: #759aef;
+  --commenting-persona-popularite: #ccf847;
+  --comment-body-size: 18px;
 }
 
-/* Fade out the time + system pills when the capsule is open, so they
-   don't clutter the space the toggle FLIPs into. */
-.post-meta-left,
-.post-meta-center {
-  transition: opacity var(--commenting-duration) var(--commenting-ease);
+/* Hide post-card's outer bottom-pill row when comments are open so the
+   capsule can sit flush against the post-card-bubble (unified shape). */
+.post-card--comments-open .post-pill-slot--bottom {
+  display: none;
 }
 
-.post-card--comments-open .post-meta-left,
-.post-card--comments-open .post-meta-center {
-  opacity: 0;
-  pointer-events: none;
+/* Open post-card sits above the capsule for z-index purposes (in case of
+   any future overlap) */
+.post-card.post-card--comments-open {
+  position: relative;
+  z-index: 3;
 }
 
-/* Capsule shell — outline uses the user's dominant persona accent so it's
-   clearly visible against the dark background. */
+/* When open, the post-card-bubble's bottom corners go flat so the capsule
+   joins seamlessly underneath it. */
+.post-card--comments-open .post-card-bubble {
+  border-radius: var(--radius-post-surface, 41px) var(--radius-post-surface, 41px) 0 0;
+}
+
+/* Attachment posts: the LAST child of .post-composite is the seam — flatten
+   its bottom corners (the bubble's bottom is already flat in that case). */
+.post-card--comments-open.post-card--has-attachment .post-composite > *:last-child {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* ── Capsule shell — persona-filled, joined to bubble ─────────────────── */
+
 .commenting-capsule {
   box-sizing: border-box;
-  width: 92%;
-  /* Negative margin-top cancels the .posts-tab flex gap when the capsule is
-     collapsed, so posts stay one gap apart instead of double. */
-  margin: calc(-1 * var(--posts-stack-gap, 48px)) auto 0;
-  border: 2px solid var(--persona-accent, #fff);
-  border-radius: 22px;
-  background: transparent;
-  padding: 22px 24px 18px;
+  /* Match the post-card-bubble's horizontal inset: post-card has padding: 0 16px,
+     so the bubble starts 16px from the posts-tab edge. Apply matching outer
+     margin so the capsule's edges line up with the bubble's edges. */
+  margin: calc(-1 * var(--posts-stack-gap, 48px)) 16px 0;
+  border: none;
+  border-radius: 0;
+  background: var(--persona-accent, #d8d8d8);
+  padding: 0 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
   overflow: hidden;
   opacity: 0;
   max-height: 0;
-  transform: translateY(-4px);
   transition:
     max-height var(--commenting-duration) var(--commenting-ease),
     opacity var(--commenting-duration) var(--commenting-ease),
-    transform var(--commenting-duration) var(--commenting-ease),
-    padding var(--commenting-duration) var(--commenting-ease),
-    margin var(--commenting-duration) var(--commenting-ease),
-    filter 0.3s ease;
-  padding-top: 0;
-  padding-bottom: 0;
+    padding var(--commenting-duration) var(--commenting-ease);
 }
 
 .commenting-capsule--open {
   opacity: 1;
-  transform: translateY(0);
-  margin-top: -18px;
-  padding-top: 14px;
-  padding-bottom: 14px;
+  padding: 14px 14px 16px;
   position: relative;
   z-index: 1;
-  /* max-height set inline at runtime to measured scrollHeight */
+  border-radius: 0 0 var(--radius-post-surface, 41px) var(--radius-post-surface, 41px);
 }
 
-/* Comment block: bubble (avatar + text inside border) + meta strip below */
+/* ── Comment chip (mock + picked) ─────────────────────────────────────── */
+
 .commenting-comment {
+  --comment-accent: #fff;
+  background: #000;
+  border-radius: 18px;
+  padding: 12px 16px 12px 12px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: stretch;
+  gap: 12px;
+  align-items: center;
+  color: var(--comment-accent);
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -88,10 +95,19 @@
     transform var(--commenting-duration) var(--commenting-ease);
 }
 
+.commenting-comment[data-persona='productivite'] {
+  --comment-accent: var(--commenting-persona-productivite);
+}
+.commenting-comment[data-persona='securite'] {
+  --comment-accent: var(--commenting-persona-securite);
+}
+.commenting-comment[data-persona='popularite'] {
+  --comment-accent: var(--commenting-persona-popularite);
+}
+
 .commenting-capsule--open .commenting-comment {
   opacity: 1;
   transform: translateY(0);
-  gap: 2px;
 }
 
 [data-flip-root] .commenting-comment {
@@ -100,562 +116,220 @@
   opacity: 1;
 }
 
-.commenting-comment[data-persona='productivite'] {
-  --comment-accent: var(--commenting-persona-productivite);
-  --pill-fg: #000;
-  --comment-ink: var(--comment-accent);
-}
-
-.commenting-comment[data-persona='securite'] {
-  --comment-accent: var(--commenting-persona-securite);
-  --pill-fg: #000;
-  --comment-ink: var(--comment-accent);
-}
-
-.commenting-comment[data-persona='popularite'] {
-  --comment-accent: var(--commenting-persona-popularite);
-  --pill-fg: #000;
-  --comment-ink: var(--comment-accent);
-}
-
-/* Meta strip may sit outside `.commenting-comment` (detached after pick) — set accent from its own data-persona. */
-.commenting-comment-meta[data-persona='productivite'] {
-  --comment-accent: var(--commenting-persona-productivite);
-}
-
-.commenting-comment-meta[data-persona='securite'] {
-  --comment-accent: var(--commenting-persona-securite);
-}
-
-.commenting-comment-meta[data-persona='popularite'] {
-  --comment-accent: var(--commenting-persona-popularite);
-}
-
+/* Rounded-square avatar (matches --radius-post-avatar scaled to chip size) */
 .commenting-comment-avatar {
-  border-radius: var(--radius-post-avatar, 35px);
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--comment-accent) 28%, #000);
+  color: var(--comment-accent);
+  display: grid;
+  place-items: center;
   overflow: hidden;
-  background: var(--post-accent, #444);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-/* Match feed `.post-avatar`: tall lane inside the bubble, square crop */
-.commenting-comment-head .commenting-comment-avatar {
-  position: relative;
-  align-self: stretch;
-  width: auto;
-  min-width: 0;
-  min-height: 0;
-  max-width: min(12.5rem, 46%, 100%);
-  max-height: 100%;
-  aspect-ratio: 1;
-  height: auto;
-  background: color-mix(in srgb, var(--comment-accent, var(--post-accent, #888)) 20%, #fff);
-  color: var(--comment-accent, var(--post-accent, #888));
-  border: none;
-  box-sizing: border-box;
-  font-size: clamp(1.05rem, 3vw, 1.5rem);
-  font-weight: 500;
-  font-family: var(--font-sans, inherit);
-}
-
-.commenting-comment-head {
-  display: flex;
-  align-items: stretch;
-  gap: clamp(12px, 2vw, 18px);
-  flex: 1 1 0;
-  min-height: 0;
-  min-width: 0;
-}
-
-.commenting-comment-text {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  box-sizing: border-box;
-  padding: 8px 10px 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-sans);
 }
 
 .commenting-comment-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
   border-radius: inherit;
 }
 
-.commenting-comment-bubble {
-  border: 1.5px solid var(--comment-accent, var(--ink, #fff));
-  border-radius: 18px;
-  padding: 10px 14px 10px 10px;
-  background: transparent;
-  color: var(--comment-ink, var(--comment-accent, var(--ink, #fff)));
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  box-sizing: border-box;
-  min-height: 9rem;
-  height: auto;
+.commenting-comment-text {
+  flex: 1 1 0;
   min-width: 0;
-}
-
-.commenting-capsule .commenting-comment-bubble {
-  min-height: var(--commenting-shell-lane-height);
-  height: auto;
-}
-
-.commenting-comment-content {
-  font-family: var(--font-avant, var(--font-sans, inherit));
-  font-size: var(--comment-body-size);
-  font-weight: var(--comment-body-weight);
-  line-height: var(--post-body-line, 0.95);
-  letter-spacing: -0.01em;
-  margin: 0;
-  padding: 0;
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow: visible;
-  overflow-wrap: break-word;
-  white-space: normal;
-}
-
-.commenting-comment-byline {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  margin-top: auto;
-  flex: 0 0 auto;
-  padding-top: 10px;
-  line-height: 1.05;
+  gap: 4px;
 }
 
 .commenting-comment-name {
-  font-family: var(--font-sans, inherit);
-  font-size: 13px;
-  font-weight: 400;
   margin: 0;
-  color: var(--comment-ink, var(--comment-accent, var(--ink, #fff)));
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-}
-
-.commenting-comment-handle {
-  font-family: var(--font-avant-book-oblique, var(--font-sans, inherit));
   font-size: 11px;
-  font-weight: 400;
-  font-style: normal;
+  color: var(--comment-accent);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+  opacity: 0.85;
+}
+
+.commenting-comment-content {
   margin: 0;
-  color: var(--comment-ink, var(--comment-accent, var(--ink, #fff)));
-  opacity: 0.88;
-  line-height: 1.1;
+  font-size: var(--comment-body-size);
+  line-height: 1.28;
+  color: var(--comment-accent);
+  font-weight: 600;
+  font-family: var(--font-avant);
+  letter-spacing: -0.005em;
+  overflow-wrap: break-word;
+}
+
+.commenting-comment-meta-inline {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--comment-accent);
+  opacity: 0.6;
+  letter-spacing: 0.04em;
+  font-family: var(--font-sans);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: right;
 }
 
-/* Three equal columns so pills line up row-to-row (variable center text no longer shifts the icon). */
-.commenting-comment-meta {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: 10px;
-  align-items: center;
-  min-height: 0;
-  padding: 0 4px;
-  pointer-events: none;
-}
+/* ── B-2 CTA — "Write your own reply" user slot ──────────────────────── */
 
-.commenting-capsule--open .commenting-comment-meta {
-  padding: 3px 4px 3px 4px;
-  margin-top: -3px;
-  margin-bottom: 1px;
-}
-
-.commenting-meta-left,
-.commenting-meta-center,
-.commenting-meta-right {
+.commenting-write-own {
+  appearance: none;
+  cursor: pointer;
+  background: #000;
+  border: 2.5px solid var(--persona-accent, #fff);
+  border-radius: 18px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.commenting-comment-meta .post-meta-pill:not(.commenting-meta-icon-chip) {
-  background: transparent;
-  border: 1.5px solid var(--comment-accent, var(--persona-accent, #fff));
-  color: var(--comment-accent, var(--persona-accent, #fff));
-  font-size: 12.5px;
-  padding: 4px 9px 5px;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Must beat `base.css` `.post-meta-pill` — hollow pills use each comment row’s persona */
-.commenting-comment-meta .post-meta-pill.commenting-meta-icon-chip {
+  gap: 10px;
+  color: var(--persona-accent, #fff);
+  width: 100%;
   box-sizing: border-box;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  padding: 0;
-  border-radius: 9999px;
-  background: transparent;
-  border: 1.5px solid var(--comment-accent, var(--persona-accent, #fff));
-  color: var(--comment-accent, var(--persona-accent, #fff));
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-}
-
-.commenting-comment-meta .post-meta-pill.commenting-meta-icon-chip svg {
-  width: 13px;
-  height: 13px;
-  display: block;
-}
-
-.commenting-comment-meta--detached {
-  margin-top: 0;
-  padding-top: 0;
-}
-
-/* Meta under chosen reply: solid persona fill + black labels (matches shell tint). */
-.commenting-suggestion-picked-stack > .commenting-comment-meta.commenting-comment-meta--detached .post-meta-pill:not(.commenting-meta-icon-chip) {
-  background: var(--comment-accent, var(--persona-accent, #fff));
-  border: 1.5px solid #000;
-  color: #000;
-}
-
-.commenting-suggestion-picked-stack > .commenting-comment-meta.commenting-comment-meta--detached .post-meta-pill.commenting-meta-icon-chip {
-  background: var(--comment-accent, var(--persona-accent, #fff));
-  border: 1.5px solid #000;
-  color: #000;
-}
-
-.commenting-suggestion-picked-stack > .commenting-comment-meta.commenting-comment-meta--detached .post-meta-pill.commenting-meta-icon-chip svg {
-  color: inherit;
-}
-
-/* Propositions: single shell; inner lane height is identical unpicked vs picked. */
-.commenting-suggestion-shell {
-  box-sizing: border-box;
-  border: 2px solid #fff;
-  border-radius: 20px;
-  padding: 10px 14px 10px 10px;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  font-family: var(--font-avant);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
   opacity: 0;
   transform: translateY(8px);
   transition:
     opacity var(--commenting-duration) var(--commenting-ease),
     transform var(--commenting-duration) var(--commenting-ease),
-    max-height var(--commenting-duration) var(--commenting-ease),
-    padding var(--commenting-duration) var(--commenting-ease),
-    border-width var(--commenting-duration) var(--commenting-ease),
-    background-color var(--commenting-duration) var(--commenting-ease),
-    border-color var(--commenting-duration) var(--commenting-ease);
-  max-height: none;
-  overflow: hidden;
+    background 220ms ease,
+    box-shadow 220ms ease;
 }
 
-.commenting-suggestion-shell:not(.commenting-suggestion-shell--picked) .commenting-suggestion-row {
-  flex: 0 0 auto;
-  box-sizing: border-box;
-  height: auto;
-  min-height: var(--commenting-shell-lane-height);
-  max-height: none;
-  min-width: 0;
-  overflow: visible;
-}
-
-.commenting-suggestion-shell--picked {
-  padding: 10px 14px 10px 10px;
-  --comment-body-size: var(--post-body-size);
-  --comment-body-weight: var(--post-body-weight);
-}
-
-/* Published (chosen) reply — same type as post body (.post-lead). */
-.commenting-suggestion-shell--picked .commenting-comment-content {
-  font-family: var(--font-avant);
-  font-size: var(--post-body-size);
-  font-weight: var(--post-body-weight);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-}
-
-.commenting-suggestion-picked-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-}
-
-.commenting-suggestion-picked-inner {
-  box-sizing: border-box;
-  flex: 0 0 auto;
-  height: auto;
-  min-height: var(--commenting-shell-lane-height);
-  max-height: none;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: visible;
-}
-
-/* Chosen reply: persona fills the shell; copy is black on the tint. */
-.commenting-suggestion-shell--persona-fill[data-persona='productivite'] {
-  --comment-accent: var(--commenting-persona-productivite);
-  background: var(--comment-accent);
-  border-color: color-mix(in srgb, var(--comment-accent) 58%, #000);
-}
-
-.commenting-suggestion-shell--persona-fill[data-persona='securite'] {
-  --comment-accent: var(--commenting-persona-securite);
-  background: var(--comment-accent);
-  border-color: color-mix(in srgb, var(--comment-accent) 58%, #000);
-}
-
-.commenting-suggestion-shell--persona-fill[data-persona='popularite'] {
-  --comment-accent: var(--commenting-persona-popularite);
-  background: var(--comment-accent);
-  border-color: color-mix(in srgb, var(--comment-accent) 58%, #000);
-}
-
-.commenting-suggestion-shell--persona-fill .commenting-comment {
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.commenting-suggestion-shell--persona-fill .commenting-comment-bubble {
-  border: none;
-  background: transparent;
-  flex: 1 1 auto;
-  min-height: 0;
-  height: 100%;
-  max-height: 100%;
-  /* Tight bottom — large padding was leaving empty tint below the name row */
-  padding: 6px 14px 4px 10px;
-}
-
-.commenting-suggestion-shell--persona-fill .commenting-comment-head {
-  flex: 1 1 0;
-  min-height: 0;
-  align-items: stretch;
-}
-
-.commenting-suggestion-shell--persona-fill .commenting-comment-text {
-  box-sizing: border-box;
-  padding: 2px 10px 2px 10px;
-  align-self: stretch;
-  min-height: 0;
-  min-width: 0;
-  width: 100%;
-  /* Pin byline to bottom of the stretched column (1fr row eats leftover height). */
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) auto;
-}
-
-.commenting-suggestion-shell--persona-fill .commenting-comment-content {
-  grid-row: 1;
-  grid-column: 1;
-  align-self: start;
-  justify-self: stretch;
-  min-height: 0;
-  padding-bottom: 0;
-}
-
-.commenting-suggestion-shell--persona-fill .commenting-comment-byline {
-  grid-row: 2;
-  grid-column: 1;
-  align-self: end;
-  margin-top: 0;
-  padding-top: 0.5rem;
-  padding-bottom: 0;
-}
-
-.commenting-suggestion-shell--persona-fill .commenting-comment-content,
-.commenting-suggestion-shell--persona-fill .commenting-comment-name,
-.commenting-suggestion-shell--persona-fill .commenting-comment-handle {
-  color: #000;
-  --comment-ink: #000;
-}
-
-.commenting-capsule--open .commenting-suggestion-shell {
+.commenting-capsule--open .commenting-write-own {
   opacity: 1;
   transform: translateY(0);
-  transition-delay: calc(var(--commenting-stagger) * 4);
+  transition-delay: calc(var(--commenting-stagger) * 2);
 }
 
-.commenting-suggestion-row {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: clamp(12px, 2vw, 18px);
-  min-width: 0;
+.commenting-write-own:hover {
+  background: color-mix(in srgb, var(--persona-accent) 12%, #000);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--persona-accent) 25%, #000);
 }
 
-/*
-  Proposition avatar: do NOT reuse `.commenting-comment-head` on this rail — that class
-  sets `flex: 1 1 0` and turns the tile into a wide horizontal pill. This block is a
-  fixed square (lane height), squircle radius, normal profile framing.
-*/
-.commenting-suggestion-avatar-rail {
-  box-sizing: border-box;
-  flex: 0 0 auto;
-  width: min(var(--commenting-shell-lane-height), 100%);
-  max-width: min(var(--commenting-shell-lane-height), 100%);
-  aspect-ratio: 1;
-  height: auto;
-  max-height: var(--commenting-shell-lane-height);
-  align-self: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 22%;
-}
-
-.commenting-suggestion-avatar-rail > .commenting-comment-avatar {
-  position: relative;
-  flex: 1 1 auto;
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  max-width: 100%;
-  max-height: 100%;
-  aspect-ratio: 1;
-  border-radius: inherit;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--post-accent, #888) 20%, #fff);
-  color: var(--post-accent, #888);
-  border: none;
-  box-sizing: border-box;
-  font-size: clamp(1.05rem, 3vw, 1.5rem);
-  font-weight: 500;
-  font-family: var(--font-sans, inherit);
-}
-
-.commenting-suggestion-shell--persona-fill .commenting-comment-head .commenting-comment-avatar {
-  width: min(var(--commenting-shell-lane-height), 100%);
-  max-width: min(var(--commenting-shell-lane-height), 100%);
-  aspect-ratio: 1;
-  height: auto;
-  max-height: var(--commenting-shell-lane-height);
-  flex: 0 0 auto;
-  align-self: center;
-  border-radius: 22%;
-}
-
-.commenting-suggestion-options {
-  flex: 1;
-  min-width: 0;
+.commenting-write-own-icon {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  align-items: stretch;
+  place-items: center;
+  color: var(--persona-accent);
 }
 
-.commenting-suggestion-option {
-  appearance: none;
-  border: none;
-  margin: 0;
-  cursor: pointer;
-  box-sizing: border-box;
-  border-radius: 10px;
-  padding: 6px 6px 8px;
-  min-height: 0;
-  min-width: 0;
+.commenting-write-own-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.commenting-write-own-label {
+  line-height: 1;
+}
+
+/* ── Suggestion options (3 AI chips) ─────────────────────────────────── */
+
+.commenting-suggestion-shell {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 2px;
-  text-align: left;
-  font: inherit;
-  color: #000;
-  background: var(--suggestion-sheet-bg, #d8d8d8);
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(8px);
   transition:
     opacity var(--commenting-duration) var(--commenting-ease),
     transform var(--commenting-duration) var(--commenting-ease);
 }
 
+.commenting-capsule--open .commenting-suggestion-shell {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: calc(var(--commenting-stagger) * 3);
+}
+
+.commenting-suggestion-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.commenting-suggestion-option {
+  --s-color: #fff;
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  background: #000;
+  color: var(--s-color);
+  padding: 12px 12px 10px;
+  border-radius: 14px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: inherit;
+  min-height: 5.75rem;
+  box-sizing: border-box;
+  transition:
+    transform 180ms var(--commenting-ease),
+    box-shadow 220ms ease;
+}
+
+.commenting-suggestion-option[data-persona='productivite'] {
+  --s-color: var(--commenting-persona-productivite);
+}
+.commenting-suggestion-option[data-persona='securite'] {
+  --s-color: var(--commenting-persona-securite);
+}
+.commenting-suggestion-option[data-persona='popularite'] {
+  --s-color: var(--commenting-persona-popularite);
+}
+
+.commenting-suggestion-option:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--s-color) 30%, #000);
+}
+
+.commenting-suggestion-option:active:not(:disabled) {
+  transform: translateY(0);
+}
+
 .commenting-suggestion-option-text {
-  font-family: var(--font-sans, inherit);
-  font-size: var(--suggestion-copy, 20px);
-  font-weight: var(--suggestion-body-weight, 400);
-  line-height: 1.12;
-  padding-top: 8px;
-  padding-left: 8px;
-  padding-right: 2px;
-  display: block;
-  overflow: visible;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  font-family: var(--font-avant);
+  letter-spacing: -0.005em;
+  color: var(--s-color);
   overflow-wrap: break-word;
-  white-space: normal;
-  min-height: 0;
 }
 
 .commenting-suggestion-option-plus {
   align-self: flex-end;
-  flex-shrink: 0;
-  width: var(--suggestion-plus-size, 42px);
-  height: var(--suggestion-plus-size, 42px);
+  background: var(--s-color);
+  color: #000;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
   border-radius: 9999px;
-  background: #000;
-  color: var(--suggestion-accent, #fff);
-  display: grid;
-  place-items: center;
-  font-size: calc(var(--suggestion-copy, 23px) * 0.92);
-  font-weight: 400;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
   line-height: 1;
-  transition: opacity var(--commenting-duration) var(--commenting-ease);
-}
-
-.commenting-suggestion-option[data-persona='productivite'] {
-  --suggestion-sheet-bg: var(--commenting-persona-productivite);
-  --suggestion-accent: var(--commenting-persona-productivite);
-}
-
-.commenting-suggestion-option[data-persona='securite'] {
-  --suggestion-sheet-bg: var(--commenting-persona-securite);
-  --suggestion-accent: var(--commenting-persona-securite);
-}
-
-.commenting-suggestion-option[data-persona='popularite'] {
-  --suggestion-sheet-bg: var(--commenting-persona-popularite);
-  --suggestion-accent: var(--commenting-persona-popularite);
-}
-
-.commenting-suggestion-option--faded {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.commenting-suggestion-option-plus--hidden {
-  opacity: 0;
 }
 
 .commenting-suggestion-option--loading {
   cursor: wait;
   justify-content: center;
   align-items: center;
-  min-height: var(--commenting-shell-lane-height);
 }
 
 .commenting-suggestion-option--loading .commenting-suggestion-option-text,
@@ -664,15 +338,13 @@
 }
 
 .commenting-suggestion-option-spinner {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   box-sizing: border-box;
-  border: 3px solid color-mix(in srgb, #000 22%, transparent);
-  border-top-color: #000;
-  box-shadow: 0 0 0 1px color-mix(in srgb, #000 35%, transparent);
+  border: 3px solid color-mix(in srgb, var(--s-color, #fff) 25%, transparent);
+  border-top-color: var(--s-color, #fff);
   animation: commenting-suggestion-option-spin 0.75s linear infinite;
-  flex-shrink: 0;
 }
 
 @keyframes commenting-suggestion-option-spin {
@@ -686,15 +358,24 @@
   padding: 0 4px;
   font-size: 11px;
   font-weight: 600;
-  color: #f87171;
+  color: #ff8989;
   text-align: center;
 }
 
-/* Draft field above propositions; hidden after a suggestion is chosen. */
-.commenting-footer {
-  display: flex;
-  justify-content: center;
-  padding: 6px 0 14px;
+/* Picked comment — re-uses .commenting-comment chip styling via Comment.jsx.
+   Wrapper exists only to support the FLIP transform from suggestion → reply. */
+.commenting-suggestion-picked {
+  display: contents;
+}
+
+/* ── Internal meta row at the bottom of the capsule ───────────────────── */
+
+.commenting-internal-meta {
+  margin-top: 4px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -702,51 +383,42 @@
     transform var(--commenting-duration) var(--commenting-ease);
 }
 
-.commenting-capsule--open .commenting-footer {
+.commenting-capsule--open .commenting-internal-meta {
   opacity: 1;
   transform: translateY(0);
-  transition-delay: calc(var(--commenting-stagger) * 3);
+  transition-delay: calc(var(--commenting-stagger) * 4);
 }
 
-.commenting-footer-field {
-  width: 100%;
-  text-align: center;
-  border: none;
-  border-radius: 9999px;
-  box-sizing: border-box;
-  min-height: 4.5rem;
-  padding: 20px 28px 21px;
-  /* Placeholder only: Demi (600) — not Book/suggestion weight */
-  font-family: var(--font-sans, inherit);
-  font-size: 24px;
+.commenting-internal-meta-toggle {
+  justify-self: start;
+  display: inline-flex;
+}
+
+.commenting-internal-meta-pill {
+  background: #000;
+  color: var(--persona-accent, #fff);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  font-style: normal;
-  color: #000;
-  background: var(--persona-accent, #ccf847);
-  outline: none;
+  padding: 6px 14px 7px;
+  border-radius: 9999px;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.commenting-footer-field::placeholder {
-  color: #000;
-  opacity: 1;
+.commenting-internal-meta-center {
+  justify-self: center;
 }
 
-.commenting-footer-field::-webkit-input-placeholder {
-  color: #000;
-  opacity: 1;
+.commenting-internal-meta-time {
+  justify-self: end;
 }
 
-.commenting-footer-field::-moz-placeholder {
-  color: #000;
-  opacity: 1;
-}
-
-.commenting-footer-field:focus-visible {
-  outline: 2px solid #000;
-  outline-offset: 2px;
-}
+/* ── Toggle — same outline pill as Hide (7rem side slot, post accent) ─ */
 
 .commenting-toggle-host {
   position: relative;
@@ -754,31 +426,28 @@
   align-items: center;
   justify-content: center;
   pointer-events: auto;
-  transform-origin: center;
 }
 
-/* Pin the FLIP transition specificity above .post-action-btn's 0.15s default. */
-.post-action-btn.commenting-toggle-host {
-  transition:
-    transform var(--commenting-duration) var(--commenting-ease),
-    background var(--commenting-duration) var(--commenting-ease),
-    color var(--commenting-duration) var(--commenting-ease),
-    border-color var(--commenting-duration) var(--commenting-ease);
+.commenting-internal-meta-toggle .post-action-btn.commenting-toggle-host {
+  box-sizing: border-box;
+  width: var(--post-side-pill-width, 7rem);
+  min-width: var(--post-side-pill-width, 7rem);
+  max-width: var(--post-side-pill-width, 7rem);
 }
 
-/* When open: black fill, persona-colored icon, persona-colored stroke.
-   Higher specificity beats .post-meta-pill's default fill/text. */
-.post-meta-pill.commenting-toggle-host--open {
+/* Close (X) sits on persona-filled capsule — solid black for contrast */
+.post-action-btn--outline.commenting-toggle-host--open {
   background: #000;
-  color: var(--persona-accent, #fff);
-  border: 2px solid var(--persona-accent, #fff);
-  position: relative;
-  z-index: 6;
+  color: var(--post-accent, var(--persona-accent, #ccf847));
+  border: 2px solid var(--post-accent, var(--persona-accent, #ccf847));
 }
 
-/* Open post stacks above its commenting capsule so the FLIP’d toggle isn’t
-   covered by the capsule border / shell. */
-.post-card.post-card--comments-open {
-  position: relative;
-  z-index: 3;
+.post-action-btn--outline.commenting-toggle-host--open:hover {
+  filter: none;
+  background: #000;
+}
+
+.post-action-btn--outline.commenting-toggle-host--open:focus-visible {
+  outline: 2px solid var(--post-accent, var(--persona-accent, #ccf847));
+  outline-offset: 2px;
 }
