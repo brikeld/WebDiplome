@@ -1,17 +1,195 @@
 [
   {
     "persona": "popularite",
-    "content": "My browser history today suggests my mind jumps between designing perfect UX and checking if Inter Milan actually won that game. The emotional whiplash is real.",
+    "content": "My browser history is a chaotic mix of football scores, diploma docs, and searching for code counting tools. I'm basically juggling academia and algorithms on a MacBook Pro.",
     "sentiment": "positive",
-    "createdAt": "2026-05-21T12:06:19.336Z",
-    "textSliceType": "browser",
+    "createdAt": "2026-05-22T16:47:14.259Z",
+    "textSliceType": "browser"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to figure out how my actual behavior is what really feeds the content rankings now. Less posing, more being authentic. ✨",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:47:13.574Z",
+    "attachedAsset": {
+      "kind": "document",
+      "filename": "4c223115a6562c3c1c675aee4f97339f76f2c2fe4b37b092391b2a83f2bd3126.pdf",
+      "relativePath": "public/uploads/4c223115a6562c3c1c675aee4f97339f76f2c2fe4b37b092391b2a83f2bd3126.pdf",
+      "url": "/uploads/4c223115a6562c3c1c675aee4f97339f76f2c2fe4b37b092391b2a83f2bd3126.pdf",
+      "mime": "application/pdf"
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Wow, 39 image files created in the last 7 days. I guess I'm spending a lot of time creating visuals lately.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:47:12.119Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "dd3d16152ac3b996433ba99e4f446d8ad4bf515fad8615ee21d9ca5c8ae2f089.png",
+      "relativePath": "public/uploads/dd3d16152ac3b996433ba99e4f446d8ad4bf515fad8615ee21d9ca5c8ae2f089.png",
+      "url": "/uploads/dd3d16152ac3b996433ba99e4f446d8ad4bf515fad8615ee21d9ca5c8ae2f089.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "browser_domains"
+  },
+  {
+    "persona": "productivite",
+    "content": "My AI coding assistants are making me a better designer. Turns out debugging code and designing layouts go hand-in-hand.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:29:24.164Z",
+    "textSliceType": "app_usage"
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to find the perfect gradient for the next project. Sometimes the chaos looks beautiful.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:29:22.609Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg",
+      "relativePath": "public/uploads/deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg",
+      "url": "/uploads/deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg",
+      "mime": "image/jpeg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "productivite",
+    "content": "37 PNGs in the last week is wild. It's clear I'm deep in the design/visual creation zone right now. 🎨",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:29:24.827Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "07bd56876e94d6225b050b41cbaa089294f5eaa22049da2518e40393b8b54b4d.png",
+      "relativePath": "public/uploads/07bd56876e94d6225b050b41cbaa089294f5eaa22049da2518e40393b8b54b4d.png",
+      "url": "/uploads/07bd56876e94d6225b050b41cbaa089294f5eaa22049da2518e40393b8b54b4d.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "persona_scores"
+  },
+  {
+    "persona": "securite",
+    "content": "My WiFi history is a catalogue of coffee shops and cafes. I swear I spend more time browsing public Wi-Fi than actually working.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:27:04.090Z",
+    "textSliceType": "wifi"
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to channel my inner fashion icon in front of this gorgeous old villa. A bit overdressed, maybe. 😉",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:27:05.105Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ebee700ad2242707af6b80e93d7bee923749c9af84ae360d5733b08aeff990e8.jpg",
+      "relativePath": "public/uploads/ebee700ad2242707af6b80e93d7bee923749c9af84ae360d5733b08aeff990e8.jpg",
+      "url": "/uploads/ebee700ad2242707af6b80e93d7bee923749c9af84ae360d5733b08aeff990e8.jpg",
+      "mime": "image/jpeg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "Wow, I've created 39 .png files in the last week. It seems my creative work is definitely keeping me busy! Time to organize this pile.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:27:05.667Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "8141b3e7da9bafd9992bcfbee2e4133a1cf7530b935eef8ef6d94207bc38a53e.png",
+      "relativePath": "public/uploads/8141b3e7da9bafd9992bcfbee2e4133a1cf7530b935eef8ef6d94207bc38a53e.png",
+      "url": "/uploads/8141b3e7da9bafd9992bcfbee2e4133a1cf7530b935eef8ef6d94207bc38a53e.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "recent_downloads"
+  },
+  {
+    "persona": "securite",
+    "content": "Just downloaded a PDF called COMPLIANT-textV1.pdf. Trying to keep all my work organized, one file at a time. 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:25:36.787Z",
+    "textSliceType": "downloads"
+  },
+  {
+    "persona": "popularite",
+    "content": "Lost in the world of Figma and code right now. Trying to make this diploma project look as good as the logic inside! 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:25:41.160Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "f4c6cabfd3a20a7b2ead045a6c28616ab5e9dbcb2db06dfc1698b4d7d05e9e07.png",
+      "relativePath": "public/uploads/f4c6cabfd3a20a7b2ead045a6c28616ab5e9dbcb2db06dfc1698b4d7d05e9e07.png",
+      "url": "/uploads/f4c6cabfd3a20a7b2ead045a6c28616ab5e9dbcb2db06dfc1698b4d7d05e9e07.png",
+      "mime": "image/png",
+      "visionAnalysed": false
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "I'm realizing I generate a ton of visual assets lately. 38 PNGs in the last week is wild for this setup. Time to organize that folder!",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:25:39.722Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "5f4f3b99d6c2efcf5f9b398271dc2683e6ed988c1f2fbd36a71da367a4e5405a.png",
+      "relativePath": "public/uploads/5f4f3b99d6c2efcf5f9b398271dc2683e6ed988c1f2fbd36a71da367a4e5405a.png",
+      "url": "/uploads/5f4f3b99d6c2efcf5f9b398271dc2683e6ed988c1f2fbd36a71da367a4e5405a.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "ai_tool_exposure"
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to master complex algorithms while simultaneously checking Serie A scores on Sofascore. My brain is doing a full context switch. 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:20:58.196Z",
+    "textSliceType": "browser"
+  },
+  {
+    "persona": "productivite",
+    "content": "Just finished crunching the numbers for the mySMILO app development. Sometimes the paperwork is as intense as the coding itself! 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:20:55.969Z",
+    "attachedAsset": {
+      "kind": "document",
+      "filename": "f2a95af948f5897352f54237417d26496aadf74f774d3ad71bcac3af17db885b.pdf",
+      "relativePath": "public/uploads/f2a95af948f5897352f54237417d26496aadf74f774d3ad71bcac3af17db885b.pdf",
+      "url": "/uploads/f2a95af948f5897352f54237417d26496aadf74f774d3ad71bcac3af17db885b.pdf",
+      "mime": "application/pdf"
+    }
+  },
+  {
+    "persona": "productivite",
+    "content": "35% usage is actually pretty calming right now. Time to make sure I keep things organized!",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:20:57.715Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "1e4af4ba49a78bac5d6c58777a4d5aea90ad97c1854edff3b6042bae2085d98d.png",
+      "relativePath": "public/uploads/1e4af4ba49a78bac5d6c58777a4d5aea90ad97c1854edff3b6042bae2085d98d.png",
+      "url": "/uploads/1e4af4ba49a78bac5d6c58777a4d5aea90ad97c1854edff3b6042bae2085d98d.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "storage_usage"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to see if an AI agent can handle all the boilerplate so I can focus purely on the design and logic. It's a wild ride.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:16:21.261Z",
+    "textSliceType": "app_usage",
     "attachedAsset": null
   },
   {
     "persona": "popularite",
-    "content": "My productivity radar chart looks wild. Pretty sure this graph needs its own debugging session. 😂",
+    "content": "Trying to map out all these code lines onto a visual. It's chaos, but kinda beautiful. 😅",
     "sentiment": "positive",
-    "createdAt": "2026-05-21T12:06:18.178Z",
+    "createdAt": "2026-05-22T16:16:20.786Z",
     "attachedAsset": {
       "kind": "image",
       "filename": "8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
@@ -22,16 +200,16 @@
     }
   },
   {
-    "persona": "securite",
-    "content": "My whole download history for this period is just one 51 KB PDF named 'compliant.' My digital life really peaked when I finished required reading material.",
+    "persona": "popularite",
+    "content": "35.0% storage used feels surprisingly healthy for all the creative and development files I've been juggling lately. Time to keep creating!",
     "sentiment": "positive",
-    "createdAt": "2026-05-21T12:06:21.770Z",
-    "chartType": "recent_downloads",
+    "createdAt": "2026-05-22T16:16:21.464Z",
+    "chartType": "language_fingerprint",
     "attachedAsset": {
       "kind": "image",
-      "filename": "05b37f0744f927759491e175060df1fd84187be09c133f93edb2769a7977a78b.png",
-      "relativePath": "public/uploads/05b37f0744f927759491e175060df1fd84187be09c133f93edb2769a7977a78b.png",
-      "url": "/uploads/05b37f0744f927759491e175060df1fd84187be09c133f93edb2769a7977a78b.png",
+      "filename": "cc43a97082718edb468fb40f6acbe8dddec61e0491f11cc7e4c0f9149eadfe5f.png",
+      "relativePath": "public/uploads/cc43a97082718edb468fb40f6acbe8dddec61e0491f11cc7e4c0f9149eadfe5f.png",
+      "url": "/uploads/cc43a97082718edb468fb40f6acbe8dddec61e0491f11cc7e4c0f9149eadfe5f.png",
       "mime": "image/png",
       "visionAnalysed": true
     }

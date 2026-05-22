@@ -8,8 +8,7 @@ export function GeneratingEllipsis() {
   );
 }
 
-export default function GeneratingContentLabel({ personaColor }) {
-  const style = personaColor ? { color: personaColor } : undefined;
+export default function GeneratingContentLabel() {
   return (
     <div
       className="generating-content-block"
@@ -17,7 +16,7 @@ export default function GeneratingContentLabel({ personaColor }) {
       aria-live="polite"
       aria-label="generating new content"
     >
-      <p className="generating-content-label" style={style}>
+      <p className="generating-content-label">
         generating new content
         <GeneratingEllipsis />
       </p>

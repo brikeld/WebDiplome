@@ -10,7 +10,8 @@ import {
 } from './dataSlices.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
 
-/** Matches feed persona accents (PostsTab / base.css). Charts use accent + black only. */
+/** Matches feed persona accents (PostsTab / base.css). Charts: persona bg, black text, white data viz. */
+const WHITE = '#ffffff';
 const BLACK = '#000000';
 const PERSONA_CHART_ACCENT = {
   productivite: '#D8D8D8',
@@ -25,11 +26,11 @@ function normalizeChartPersona(persona) {
   return 'productivite';
 }
 
-/** Two-color palette: black background + persona accent for all ink. */
+/** Persona canvas, black typography, white bars/markers/lines. */
 export function chartPalette(persona) {
   const key = normalizeChartPersona(persona);
-  const accent = PERSONA_CHART_ACCENT[key] ?? PERSONA_CHART_ACCENT.productivite;
-  return { bg: BLACK, accent, black: BLACK };
+  const bg = PERSONA_CHART_ACCENT[key] ?? PERSONA_CHART_ACCENT.productivite;
+  return { bg, text: BLACK, viz: WHITE };
 }
 
 function esc(s) {
@@ -38,23 +39,23 @@ function esc(s) {
 
 function svgWrap(W, H, title, body, palette) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-  <rect width="${W}" height="${H}" fill="${palette.bg}" rx="8"/>
-  <text x="${W / 2}" y="28" fill="${palette.accent}" font-size="13" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(title)}</text>
+  <rect width="${W}" height="${H}" fill="${palette.bg}" rx="0"/>
+  <text x="${W / 2}" y="28" fill="${palette.text}" font-size="13" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(title)}</text>
   ${body}
 </svg>`;
 }
 
 function caption(W, y, text, palette) {
-  return `<text x="${W / 2}" y="${y}" fill="${palette.accent}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(text)}</text>`;
+  return `<text x="${W / 2}" y="${y}" fill="${palette.text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(text)}</text>`;
 }
 
 function hBar({ x, y, w, h, palette, label, value, labelAnchor = 'end', labelX }) {
   const lx = labelX ?? x - 7;
-  const { accent } = palette;
+  const { text, viz } = palette;
   return `
-  <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${accent}" rx="2"/>
-  <text x="${lx}" y="${y + h / 2 + 4}" fill="${accent}" font-size="11" text-anchor="${labelAnchor}" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
-  <text x="${x + w + 6}" y="${y + h / 2 + 4}" fill="${accent}" font-size="11" font-family="'SF Mono',monospace">${esc(String(value))}</text>`;
+  <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${viz}" rx="2"/>
+  <text x="${lx}" y="${y + h / 2 + 4}" fill="${text}" font-size="11" text-anchor="${labelAnchor}" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
+  <text x="${x + w + 6}" y="${y + h / 2 + 4}" fill="${text}" font-size="11" font-family="'SF Mono',monospace">${esc(String(value))}</text>`;
 }
 
 // ─── Existing charts (kept) ────────────────────────────────────────────────
@@ -108,7 +109,7 @@ export function buildWifiTimelineChart(wifiSlice, persona = 'securite') {
 
   const W = 600; const H = 300;
   const colW = W / 2; const itemH = 22; const MT = 44;
-  const { accent } = palette;
+  const { text, viz } = palette;
 
   const items = networks.map((name, i) => {
     const col = i < 10 ? 0 : 1;
@@ -116,8 +117,8 @@ export function buildWifiTimelineChart(wifiSlice, persona = 'securite') {
     const x = col * colW + 24;
     const y = MT + row * itemH + 14;
     return `
-  <circle cx="${x}" cy="${y - 4}" r="4" fill="${accent}"/>
-  <text x="${x + 11}" y="${y}" fill="${accent}" font-size="11" font-family="'SF Mono',monospace">${esc(name)}</text>`;
+  <circle cx="${x}" cy="${y - 4}" r="4" fill="${viz}"/>
+  <text x="${x + 11}" y="${y}" fill="${text}" font-size="11" font-family="'SF Mono',monospace">${esc(name)}</text>`;
   }).join('');
 
   const sub = caption(W, H - 6, `${networks.length} networks · most recent first`, palette);
@@ -146,15 +147,15 @@ export function buildMostUsedAppsChart(data, persona = 'productivite') {
   const W = 600; const H = Math.max(200, 44 + apps.length * 26 + 20);
   const itemH = 22; const MT = 44; const ML = 160; const MR = 20;
   const dotR = 5;
-  const { accent } = palette;
+  const { text, viz } = palette;
 
   const rows = apps.map(({ app, last_used }, i) => {
     const y = MT + i * itemH + itemH / 2;
     const dateStr = last_used ? String(last_used).slice(5, 10) : '';
     return `
-  <circle cx="${ML - 14}" cy="${y}" r="${dotR}" fill="${accent}"/>
-  <text x="${ML}" y="${y + 4}" fill="${accent}" font-size="11" font-family="'SF Mono',monospace">${esc(app)}</text>
-  <text x="${W - MR}" y="${y + 4}" fill="${accent}" font-size="10" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.55">${esc(dateStr)}</text>`;
+  <circle cx="${ML - 14}" cy="${y}" r="${dotR}" fill="${viz}"/>
+  <text x="${ML}" y="${y + 4}" fill="${text}" font-size="11" font-family="'SF Mono',monospace">${esc(app)}</text>
+  <text x="${W - MR}" y="${y + 4}" fill="${text}" font-size="10" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.55">${esc(dateStr)}</text>`;
   }).join('');
 
   const sub = caption(W, H - 4, `${slice.count} apps tracked · sorted by recency`, palette);
@@ -176,15 +177,15 @@ export function buildStorageChart(data, profile, persona = 'productivite') {
   const barY = 70; const barH = 36; const ML = 30; const MR = 30;
   const barW = W - ML - MR;
   const fillW = Math.round((pct / 100) * barW);
-  const { accent, black } = palette;
+  const { text, viz, bg } = palette;
 
   const body = `
-  <rect x="${ML}" y="${barY}" width="${barW}" height="${barH}" fill="${black}" stroke="${accent}" stroke-width="1" rx="4" opacity="0.35"/>
-  <rect x="${ML}" y="${barY}" width="${fillW}" height="${barH}" fill="${accent}" rx="4"/>
-  <text x="${ML + fillW / 2}" y="${barY + barH / 2 + 5}" fill="${black}" font-size="13" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${pct}%</text>
-  <text x="${ML}" y="${barY + barH + 20}" fill="${accent}" font-size="11" font-family="'SF Mono',monospace" opacity="0.55">Used: ${esc(used)}</text>
-  <text x="${W / 2}" y="${barY + barH + 20}" fill="${accent}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">Free: ${esc(free)}</text>
-  <text x="${W - MR}" y="${barY + barH + 20}" fill="${accent}" font-size="11" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.55">Total: ${esc(total)}</text>`;
+  <rect x="${ML}" y="${barY}" width="${barW}" height="${barH}" fill="${viz}" fill-opacity="0.12" stroke="${viz}" stroke-width="1.5" stroke-opacity="0.45" rx="4"/>
+  <rect x="${ML}" y="${barY}" width="${fillW}" height="${barH}" fill="${viz}" rx="4"/>
+  <text x="${ML + fillW / 2}" y="${barY + barH / 2 + 5}" fill="${text}" font-size="13" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${pct}%</text>
+  <text x="${ML}" y="${barY + barH + 20}" fill="${text}" font-size="11" font-family="'SF Mono',monospace" opacity="0.55">Used: ${esc(used)}</text>
+  <text x="${W / 2}" y="${barY + barH + 20}" fill="${text}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">Free: ${esc(free)}</text>
+  <text x="${W - MR}" y="${barY + barH + 20}" fill="${text}" font-size="11" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.55">Total: ${esc(total)}</text>`;
 
   return { svg: svgWrap(W, H, 'Storage Usage', body, palette), w: W, h: H };
 }
@@ -196,7 +197,7 @@ export function buildBatteryHardwareChart(data, profile, persona = 'productivite
   const uptime = profile?.uptimeDays != null ? `${profile.uptimeDays}d` : '—';
   const cycles = bat.cycleCount ?? profile?.batteryCycles ?? '—';
   const batPct = bat.percent || 0;
-  const { accent, black } = palette;
+  const { text, viz, bg } = palette;
 
   const W = 600; const H = 200;
   const stats = [
@@ -211,17 +212,17 @@ export function buildBatteryHardwareChart(data, profile, persona = 'productivite
   const blocks = stats.map(({ label, value, sub }, i) => {
     const cx = i * colW + colW / 2;
     const extra = i === 0 ? `
-  <rect x="${i * colW + batBarML}" y="${batBarY}" width="${batBarW}" height="${batBarH}" fill="${black}" stroke="${accent}" stroke-width="1" rx="3" opacity="0.35"/>
-  <rect x="${i * colW + batBarML}" y="${batBarY}" width="${Math.round((batPct / 100) * batBarW)}" height="${batBarH}" fill="${accent}" rx="3"/>` : '';
+  <rect x="${i * colW + batBarML}" y="${batBarY}" width="${batBarW}" height="${batBarH}" fill="${viz}" fill-opacity="0.12" stroke="${viz}" stroke-width="1.5" stroke-opacity="0.45" rx="3"/>
+  <rect x="${i * colW + batBarML}" y="${batBarY}" width="${Math.round((batPct / 100) * batBarW)}" height="${batBarH}" fill="${viz}" rx="3"/>` : '';
     return `
-  <text x="${cx}" y="58" fill="${accent}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
-  <text x="${cx}" y="90" fill="${accent}" font-size="22" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(value)}</text>
-  <text x="${cx}" y="110" fill="${accent}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(sub)}</text>
+  <text x="${cx}" y="58" fill="${text}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
+  <text x="${cx}" y="90" fill="${text}" font-size="22" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(value)}</text>
+  <text x="${cx}" y="110" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(sub)}</text>
   ${extra}`;
   }).join('');
 
   const dividers = [1, 2, 3].map(i =>
-    `<line x1="${i * colW}" y1="44" x2="${i * colW}" y2="${H - 10}" stroke="${accent}" stroke-width="1" opacity="0.25"/>`,
+    `<line x1="${i * colW}" y1="44" x2="${i * colW}" y2="${H - 10}" stroke="${viz}" stroke-width="1" opacity="0.25"/>`,
   ).join('');
 
   return { svg: svgWrap(W, H, 'Hardware Vitals', dividers + blocks, palette), w: W, h: H };
@@ -242,15 +243,15 @@ export function buildPersonaScoresChart(profile, persona = 'productivite') {
   const ML = 110; const MR = 60; const MT = 44; const MB = 18;
   const CW = W - ML - MR; const CH = H - MT - MB;
   const slotH = CH / items.length; const barH = Math.max(20, slotH - 12);
-  const { accent } = palette;
+  const { text, viz } = palette;
 
   const bars = items.map(({ label, value }, i) => {
     const bw = Math.round((value / 100) * CW);
     const y = MT + i * slotH + (slotH - barH) / 2;
     return `
-  <rect x="${ML}" y="${y}" width="${bw}" height="${barH}" fill="${accent}" rx="3"/>
-  <text x="${ML - 7}" y="${y + barH / 2 + 4}" fill="${accent}" font-size="11" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
-  <text x="${ML + bw + 6}" y="${y + barH / 2 + 4}" fill="${accent}" font-size="12" font-weight="bold" font-family="'SF Mono',monospace">${value}</text>`;
+  <rect x="${ML}" y="${y}" width="${bw}" height="${barH}" fill="${viz}" rx="3"/>
+  <text x="${ML - 7}" y="${y + barH / 2 + 4}" fill="${text}" font-size="11" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
+  <text x="${ML + bw + 6}" y="${y + barH / 2 + 4}" fill="${text}" font-size="12" font-weight="bold" font-family="'SF Mono',monospace">${value}</text>`;
   }).join('');
 
   const globalScore = profile?.globalScore != null
@@ -292,15 +293,15 @@ export function buildLanguageChart(data, profile, persona = 'popularite') {
   const W = 600; const H = 160;
   const pillH = 28; const pillPad = 12; const gap = 10; const MT = 50;
   let x = 20;
-  const { accent } = palette;
+  const { text, viz } = palette;
 
   const pills = langs.map((lang) => {
     const textW = Math.max(60, String(lang).length * 8);
     const pillW = textW + pillPad * 2;
     const pill = `
-  <rect x="${x}" y="${MT}" width="${pillW}" height="${pillH}" fill="${accent}" rx="14" opacity="0.2"/>
-  <rect x="${x}" y="${MT}" width="${pillW}" height="${pillH}" fill="none" stroke="${accent}" stroke-width="1.5" rx="14"/>
-  <text x="${x + pillW / 2}" y="${MT + pillH / 2 + 5}" fill="${accent}" font-size="12" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(lang)}</text>`;
+  <rect x="${x}" y="${MT}" width="${pillW}" height="${pillH}" fill="${viz}" rx="14" opacity="0.2"/>
+  <rect x="${x}" y="${MT}" width="${pillW}" height="${pillH}" fill="none" stroke="${viz}" stroke-width="1.5" rx="14"/>
+  <text x="${x + pillW / 2}" y="${MT + pillH / 2 + 5}" fill="${text}" font-size="12" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(lang)}</text>`;
     x += pillW + gap;
     return pill;
   }).join('');
@@ -317,7 +318,7 @@ export function buildAIToolChart(data, _profile, persona = 'popularite') {
 
   const W = 600; const H = 200;
   const cols = 5; const colW = W / cols; const rowH = 50; const MT = 50;
-  const { accent, black } = palette;
+  const { text, viz, bg } = palette;
 
   const cells = tools.map(({ name, installed, recentlyUsed }, i) => {
     const col = i % cols; const row = Math.floor(i / cols);
@@ -327,9 +328,9 @@ export function buildAIToolChart(data, _profile, persona = 'popularite') {
     const strokeW = installed ? '1.5' : '0.5';
     const textOpacity = installed ? '1' : '0.45';
     return `
-  <rect x="${col * colW + 6}" y="${cy - 14}" width="${colW - 12}" height="36" fill="${installed ? accent : black}" rx="6" opacity="${fillOpacity}"/>
-  <rect x="${col * colW + 6}" y="${cy - 14}" width="${colW - 12}" height="36" fill="none" stroke="${accent}" stroke-width="${strokeW}" rx="6" opacity="${installed ? '1' : '0.35'}"/>
-  <text x="${cx}" y="${cy + 10}" fill="${accent}" font-size="10" font-weight="${installed ? 'bold' : 'normal'}" text-anchor="middle" font-family="'SF Mono',monospace" opacity="${textOpacity}">${esc(name)}</text>`;
+  <rect x="${col * colW + 6}" y="${cy - 14}" width="${colW - 12}" height="36" fill="${installed ? viz : 'none'}" rx="6" opacity="${fillOpacity}"/>
+  <rect x="${col * colW + 6}" y="${cy - 14}" width="${colW - 12}" height="36" fill="none" stroke="${viz}" stroke-width="${strokeW}" rx="6" opacity="${installed ? '1' : '0.35'}"/>
+  <text x="${cx}" y="${cy + 10}" fill="${text}" font-size="10" font-weight="${installed ? 'bold' : 'normal'}" text-anchor="middle" font-family="'SF Mono',monospace" opacity="${textOpacity}">${esc(name)}</text>`;
   }).join('');
 
   const H2 = MT + Math.ceil(tools.length / cols) * rowH + 36;
@@ -370,7 +371,7 @@ export function buildSecurityAppsChart(data, _profile, persona = 'securite') {
   const palette = chartPalette(persona);
   const slice = extractSecuritySlice(data);
   const W = 600; const H = 240;
-  const { accent, black } = palette;
+  const { text, viz, bg } = palette;
 
   const settings = [
     { label: 'SIP', value: slice.sip, ok: /enabled/i.test(slice.sip) },
@@ -384,14 +385,14 @@ export function buildSecurityAppsChart(data, _profile, persona = 'securite') {
     const fillOpacity = ok ? '0.22' : '0.06';
     const strokeOpacity = ok ? '1' : '0.4';
     return `
-  <text x="${cx}" y="58" fill="${accent}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
-  <circle cx="${cx}" cy="88" r="14" fill="${ok ? accent : black}" opacity="${fillOpacity}"/>
-  <circle cx="${cx}" cy="88" r="14" fill="none" stroke="${accent}" stroke-width="2" opacity="${strokeOpacity}"/>
-  <text x="${cx}" y="93" fill="${accent}" font-size="11" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(value)}</text>`;
+  <text x="${cx}" y="58" fill="${text}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
+  <circle cx="${cx}" cy="88" r="14" fill="${ok ? viz : 'none'}" opacity="${fillOpacity}"/>
+  <circle cx="${cx}" cy="88" r="14" fill="none" stroke="${viz}" stroke-width="2" opacity="${strokeOpacity}"/>
+  <text x="${cx}" y="93" fill="${text}" font-size="11" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(value)}</text>`;
   }).join('');
 
   const dividers = [1, 2].map(i =>
-    `<line x1="${i * colW}" y1="44" x2="${i * colW}" y2="120" stroke="${accent}" stroke-width="1" opacity="0.25"/>`,
+    `<line x1="${i * colW}" y1="44" x2="${i * colW}" y2="120" stroke="${viz}" stroke-width="1" opacity="0.25"/>`,
   ).join('');
 
   const appsY = 140;
@@ -404,9 +405,9 @@ export function buildSecurityAppsChart(data, _profile, persona = 'securite') {
     const tw = Math.max(80, String(name).length * 7.5);
     const pillOpacity = slice.securityApps.length ? '0.18' : '0.08';
     const pill = `
-  <rect x="${ax}" y="${appsY}" width="${tw}" height="24" fill="${accent}" rx="12" opacity="${pillOpacity}"/>
-  <rect x="${ax}" y="${appsY}" width="${tw}" height="24" fill="none" stroke="${accent}" stroke-width="1" rx="12"/>
-  <text x="${ax + tw / 2}" y="${appsY + 16}" fill="${accent}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace">${esc(name)}</text>`;
+  <rect x="${ax}" y="${appsY}" width="${tw}" height="24" fill="${viz}" rx="12" opacity="${pillOpacity}"/>
+  <rect x="${ax}" y="${appsY}" width="${tw}" height="24" fill="none" stroke="${viz}" stroke-width="1" rx="12"/>
+  <text x="${ax + tw / 2}" y="${appsY + 16}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace">${esc(name)}</text>`;
     ax += tw + 8;
     return pill;
   }).join('');

@@ -8,7 +8,7 @@ const CommentsToggle = forwardRef(function CommentsToggle(
     <button
       ref={ref}
       type="button"
-      className={`post-meta-pill post-action-btn post-action-btn--outline commenting-toggle-host${isOpen ? ' commenting-toggle-host--open' : ''}`}
+      className={`post-meta-pill post-meta-pill--comment post-action-btn post-action-btn--comment commenting-toggle-host${isOpen ? ' commenting-toggle-host--open' : ''}`}
       aria-label={isOpen ? 'Close comments' : 'Open comments'}
       aria-expanded={isOpen}
       aria-controls={controlsId}

@@ -45,11 +45,11 @@ async function readLmStudioConfig() {
     baseUrl:
       process.env.LM_STUDIO_BASE_URL ||
       cfg.baseUrl ||
-      'http://10.192.148.78:1234',
+      'http://192.168.1.109:1234',
     model:
       process.env.LM_STUDIO_MODEL ||
       cfg.model ||
-      'google/gemma-4-e4b',
+      'google/gemma-4-e2b',
   };
 }
 const LM_STUDIO_TIMEOUT_MS = parseInt(process.env.LM_STUDIO_TIMEOUT_MS || '180000', 10);

@@ -113,7 +113,7 @@ Concretely:
    - Resolves the newest WebDiplome profile.
    - **Reads the Electron repo's `data/data.json`, `data/user.json`, `data/lm_studio.json` directly** (hardcoded path `/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data` in `server-generate.js`) so the AI input and LM Studio config exactly match what the Electron app would send. This sidesteps the WebDiplome profile's serialization losses (e.g. the stripped wallpaperBase64).
    - Reads assets from the Electron repo's `data/assets/recent_images`, `data/assets/screenshots`, and `data/assets/docs` (no HTML allowed).
-   - Calls LM Studio (default `http://10.192.148.78:1234`, model `google/gemma-4-e4b` via repo `data/lm_studio.json`, env `LM_STUDIO_*`, or Electron `data/lm_studio.json`) using the same prompts/logic as the Electron app's `PostGenerator.js`.
+   - Calls LM Studio (default `http://192.168.1.109:1234`, model `google/gemma-4-e2b` via repo `data/lm_studio.json`, env `LM_STUDIO_*`, or Electron `data/lm_studio.json`) using the same prompts/logic as the Electron app's `PostGenerator.js`.
    - Prepends the three new posts to `posts/{id}.json`.
 
 3. **LM Studio is the only shared external service.** Both apps point at the same OpenAI-compatible `/v1/chat/completions` endpoint and share the same prompt contract from `Electron/data/prompts.json` (`loadPrompts`/`loadPromptsSync` with local defaults).

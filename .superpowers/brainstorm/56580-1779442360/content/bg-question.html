@@ -1,0 +1,84 @@
+<h2>What is the outer page background?</h2>
+<p class="subtitle">The Figma screenshots are ambiguous on this. Which interpretation matches your intent?</p>
+
+<div class="cards" style="gap: 32px; margin-top: 24px;">
+
+  <!-- Option A: White/neutral background -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)" style="flex:1; min-width:0;">
+    <div class="card-image" style="padding:0; overflow:hidden; border-radius:8px 8px 0 0;">
+      <!-- Mini mockup: white page, colored capsules -->
+      <div style="background:#f5f5f5; padding:16px; display:flex; gap:10px; min-height:220px;">
+        <!-- Left: posts capsule -->
+        <div style="flex:1.5; background:#fff; border-radius:18px; border:2px solid #759AEF; padding:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="background:#759AEF; border-radius:12px; padding:10px 12px;">
+            <div style="width:24px; height:24px; background:#fff3; border-radius:6px; display:inline-block; margin-right:8px; vertical-align:middle;"></div>
+            <span style="color:#000; font-size:11px; font-weight:700;">Post text here...</span>
+            <div style="margin-top:6px; color:#000; font-size:9px;">Brikeld Hoxha · @handle</div>
+          </div>
+          <div style="background:#CCF847; border-radius:12px; padding:10px 12px;">
+            <span style="color:#000; font-size:11px; font-weight:700;">Another post...</span>
+            <div style="margin-top:6px; color:#000; font-size:9px;">Brikeld Hoxha · @handle</div>
+          </div>
+          <div style="background:#D8D8D8; border-radius:12px; padding:10px 12px;">
+            <span style="color:#000; font-size:11px; font-weight:700;">Third post...</span>
+            <div style="margin-top:6px; color:#000; font-size:9px;">Brikeld Hoxha · @handle</div>
+          </div>
+        </div>
+        <!-- Right: dashboard capsule -->
+        <div style="flex:1; background:#759AEF; border-radius:18px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="background:#fff; border-radius:10px; padding:8px; text-align:center; font-size:10px; font-weight:700; color:#000; flex:1;">GENERATE</div>
+          <div style="background:#fff; border-radius:10px; padding:8px; text-align:center; font-size:10px; font-weight:700; color:#000; flex:1;">ANALYZE</div>
+          <div style="display:flex; gap:6px; flex:0 0 auto;">
+            <div style="flex:1; background:#759AEF; border:2px solid #000; border-radius:999px; padding:8px; text-align:center; font-size:9px; font-weight:700; color:#000;">sec<br/>21%</div>
+            <div style="flex:1; background:#D8D8D8; border:2px solid #000; border-radius:999px; padding:8px; text-align:center; font-size:9px; font-weight:700; color:#000;">prod<br/>41%</div>
+            <div style="flex:1; background:#CCF847; border:2px solid #000; border-radius:999px; padding:8px; text-align:center; font-size:9px; font-weight:700; color:#000;">soc<br/>38%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — White / neutral background</h3>
+      <p>Page background is white or near-white. Colored capsules (posts + dashboard) stand out against the neutral page. Each post uses its own persona color regardless of the active persona.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Persona color as page background -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)" style="flex:1; min-width:0;">
+    <div class="card-image" style="padding:0; overflow:hidden; border-radius:8px 8px 0 0;">
+      <!-- Mini mockup: persona-color page bg, white posts capsule -->
+      <div style="background:#759AEF; padding:16px; display:flex; gap:10px; min-height:220px;">
+        <!-- Left: posts capsule -->
+        <div style="flex:1.5; background:#fff; border-radius:18px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="background:#759AEF; border-radius:12px; padding:10px 12px;">
+            <div style="width:24px; height:24px; background:#fff3; border-radius:6px; display:inline-block; margin-right:8px; vertical-align:middle;"></div>
+            <span style="color:#000; font-size:11px; font-weight:700;">Post text here...</span>
+            <div style="margin-top:6px; color:#000; font-size:9px;">Brikeld Hoxha · @handle</div>
+          </div>
+          <div style="background:#759AEF; border-radius:12px; padding:10px 12px;">
+            <span style="color:#000; font-size:11px; font-weight:700;">Another post...</span>
+            <div style="margin-top:6px; color:#000; font-size:9px;">Brikeld Hoxha · @handle</div>
+          </div>
+          <div style="background:#759AEF; border-radius:12px; padding:10px 12px;">
+            <span style="color:#000; font-size:11px; font-weight:700;">Third post...</span>
+            <div style="margin-top:6px; color:#000; font-size:9px;">Brikeld Hoxha · @handle</div>
+          </div>
+        </div>
+        <!-- Right: dashboard capsule -->
+        <div style="flex:1; background:#759AEF; border-radius:18px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="background:#fff; border-radius:10px; padding:8px; text-align:center; font-size:10px; font-weight:700; color:#000; flex:1;">GENERATE</div>
+          <div style="background:#fff; border-radius:10px; padding:8px; text-align:center; font-size:10px; font-weight:700; color:#000; flex:1;">ANALYZE</div>
+          <div style="display:flex; gap:6px; flex:0 0 auto;">
+            <div style="flex:1; background:#759AEF; border:2px solid #000; border-radius:999px; padding:8px; text-align:center; font-size:9px; font-weight:700; color:#000;">sec<br/>21%</div>
+            <div style="flex:1; background:#D8D8D8; border:2px solid #000; border-radius:999px; padding:8px; text-align:center; font-size:9px; font-weight:700; color:#000;">prod<br/>41%</div>
+            <div style="flex:1; background:#CCF847; border:2px solid #000; border-radius:999px; padding:8px; text-align:center; font-size:9px; font-weight:700; color:#000;">soc<br/>38%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Persona color as page background</h3>
+      <p>Page background IS the persona accent color (blue for security, gray for productivity, green for social). Posts capsule has white background. Posts bubble color = page color, so they blend into the page rather than capsule.</p>
+    </div>
+  </div>
+
+</div>

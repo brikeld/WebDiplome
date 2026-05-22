@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import PostCard from './PostCard.jsx';
-import HidePostConfirmDialog from './HidePostConfirmDialog.jsx';
 import { sanitizePostContent } from '@/lib/postContent.js';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import {
@@ -40,8 +39,7 @@ export default function PostsTab({
   hideInteractions = false,
 }) {
   const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
-  const [hideConfirm, setHideConfirm] = useState(null);
-  const { hidePost, revealPost, isHidden } = useLiveScoring();
+  const { isHidden } = useLiveScoring();
 
   const posts = useMemo(() => {
     if (!profile) return [];
@@ -130,15 +128,6 @@ export default function PostsTab({
               ? undefined
               : () => setOpenCommentsPostId((prev) => (prev === p.id ? null : p.id))
           }
-          onHide={
-            hideInteractions
-              ? undefined
-              : (rect) => {
-                  const hidden = isHidden(normalizePostHideKey(p.createdAt));
-                  if (hidden) revealPost(p, rect);
-                  else setHideConfirm({ post: p, sourcePillRect: rect });
-                }
-          }
           isHidden={
             hideInteractions ? false : isHidden(normalizePostHideKey(p.createdAt))
           }
@@ -147,31 +136,13 @@ export default function PostsTab({
     </div>
   );
 
-  const confirmDialog =
-    hideConfirm && !hideInteractions ? (
-      <HidePostConfirmDialog
-        post={hideConfirm.post}
-        onCancel={() => setHideConfirm(null)}
-        onConfirm={() => {
-          hidePost(hideConfirm.post, hideConfirm.sourcePillRect);
-          setHideConfirm(null);
-        }}
-      />
-    ) : null;
-
   if (feedContext === 'profile') {
-    return (
-      <>
-        {list}
-        {confirmDialog}
-      </>
-    );
+    return list;
   }
 
   return (
     <div className="posts-capsule">
       {list}
-      {confirmDialog}
     </div>
   );
 }

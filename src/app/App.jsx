@@ -19,6 +19,8 @@ import { applyAccountDeletionFromServer } from '@/lib/liveScoringStorage.js';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
+import HidePostConfirmDialog from '@/features/feed/HidePostConfirmDialog.jsx';
+import { normalizePostHideKey } from '@/lib/postHideKey.js';
 
 const API_ORIGIN =
   (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
@@ -47,13 +49,6 @@ const PERSONA_LABELS = {
   productivity: 'Productivity',
   security: 'Security',
   popularity: 'Social',
-};
-
-/** Page background — always black */
-const PERSONA_TAB_FILLS = {
-  productivity: '#000000',
-  security: '#000000',
-  popularity: '#000000',
 };
 
 function formatLastAnalysis(profile) {
@@ -178,11 +173,12 @@ function AppInner({
   profileScoreReplayNonce,
   handleGeneratePersonaPosts,
 }) {
-  const { adjustedScores, dominantPersona: liveDominantPersona } = useLiveScoring();
+  const { adjustedScores, dominantPersona: liveDominantPersona, hidePost, isHidden } =
+    useLiveScoring();
+  const [dashboardHideConfirm, setDashboardHideConfirm] = useState(null);
 
   const personaKey = personaOverride ?? liveDominantPersona;
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
-  const personaTabFill = PERSONA_TAB_FILLS[personaKey] ?? PERSONA_TAB_FILLS.productivity;
   const personaToggleLabel =
     personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
 
@@ -198,13 +194,34 @@ function AppInner({
     setPersonaOverride(order[(idx + 1) % order.length]);
   };
 
+  const handleDashboardHide = () => {
+    const posts = Array.isArray(profile?.personaPosts) ? profile.personaPosts : [];
+    const target = posts.find((p) => !isHidden(normalizePostHideKey(p.createdAt)));
+    if (target) setDashboardHideConfirm({ post: target });
+  };
+
+  const handleDashboardRanking = () => {
+    setMainView('profile');
+    setActiveTab('leaderboards');
+  };
+
+  const handleDashboardTellMeMore = () => {
+    setMainView('profile');
+    setActiveTab('posts');
+  };
+
+  const dashboardBusy =
+    harvestPhase === 'harvesting' ||
+    postGen.phase === 'deltas' ||
+    postGen.phase === 'generating';
+
   return (
     <div
       className={`page-outer persona-${personaKey} view-${mainView}`}
       style={{
         '--persona-accent': personaColor,
-        '--tabs-capsule-fill': personaTabFill,
-        '--persona-secondary': personaTabFill,
+        '--tabs-capsule-fill': personaColor,
+        '--persona-secondary': personaColor,
       }}
     >
       <ScoreAnimator />
@@ -252,43 +269,53 @@ function AppInner({
           <aside className="persona-side-panel" aria-label="Persona dashboard">
             <p className="dashboard-top-label">dashboard</p>
             <div
-              className="dashboard-capsule"
+              className="dashboard-capsule dashboard-capsule--figma"
               style={{ '--persona-accent': personaColor }}
             >
-              <button
-                type="button"
-                className="dashboard-persona-pill"
-                onClick={cyclePersona}
-              >
-                {`${PERSONA_LABELS[personaKey] ?? ''} user`}
-              </button>
+              <div className="dashboard-actions-row">
+                <button
+                  type="button"
+                  className="dashboard-action-pill"
+                  onClick={handleDashboardHide}
+                  disabled={!profile}
+                >
+                  HIDE
+                </button>
+                <button
+                  type="button"
+                  className="dashboard-action-pill"
+                  onClick={handleDashboardRanking}
+                >
+                  RANKING
+                </button>
+              </div>
 
-              <div className="dashboard-grid">
+              <div className="dashboard-primary-row">
                 {harvestPhase === 'harvesting' ? (
                   <div
-                    className="dashboard-card dashboard-card--generate dashboard-card--generate-harvest"
+                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide dashboard-timer-card--status dashboard-timer-card--harvest"
                     aria-busy="true"
                   >
                     <HarvestScreen progress={harvestProgress} error={harvestError} />
                   </div>
                 ) : postGen.phase === 'deltas' ? (
                   <div
-                    className="dashboard-card dashboard-card--generate dashboard-card--post-analysis"
+                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide dashboard-timer-card--status dashboard-timer-card--analysis"
                     aria-live="polite"
                   >
                     <PersonaDeltaSummary deltas={personaDeltas} />
                   </div>
                 ) : postGen.phase === 'generating' ? (
                   <div
-                    className="dashboard-card dashboard-card--generate dashboard-card--generating-content"
+                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide dashboard-timer-card--status dashboard-timer-card--generating"
                     aria-busy="true"
                   >
-                    <GeneratingContentLabel personaColor={personaColor} />
+                    <GeneratingContentLabel />
                   </div>
                 ) : (
                   <button
                     type="button"
-                    className="dashboard-card dashboard-card--generate"
+                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide"
                     disabled={postGen.loading || !profile}
                     onClick={handleGeneratePersonaPosts}
                   >
@@ -300,12 +327,16 @@ function AppInner({
                     ) : null}
                   </button>
                 )}
-                <div className="dashboard-card dashboard-card--analyze">
-                  ANALYZE UR LAST POST
-                </div>
-                <div className="dashboard-card dashboard-card--leaderboards">
-                  SOMETHING ABOUT THE LEADERBOARDS OR RANKINGS
-                </div>
+              </div>
+              <div className="dashboard-tell-row">
+                <button
+                  type="button"
+                  className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide"
+                  onClick={handleDashboardTellMeMore}
+                  disabled={dashboardBusy}
+                >
+                  tell me more
+                </button>
               </div>
 
               <div className="dashboard-rings">
@@ -319,25 +350,28 @@ function AppInner({
                   const dash = CIRC * (ringFill / 100);
                   const gap = CIRC - dash;
                   const isDominantRing = k === personaKey;
+                  const ringDelta = formatRingDelta(personaDeltas?.[axisKeyToScoreKey(k)]);
                   return (
-                    <div
+                    <button
                       key={k}
+                      type="button"
                       data-persona-ring={k}
                       className={`dashboard-ring-card${isDominantRing ? ' dashboard-ring-card--dominant' : ''}`}
                       style={{ '--ring-accent': ringColor }}
+                      onClick={cyclePersona}
+                      aria-label={`${PERSONA_LABELS[k]} ${value}%`}
                     >
                       <svg
                         className="dashboard-ring-svg"
                         viewBox="0 0 80 80"
-                        aria-label={`${PERSONA_LABELS[k]} ${value}%`}
+                        aria-hidden
                       >
                         <circle
                           cx="40"
                           cy="40"
                           r={R}
                           fill="none"
-                          stroke={isDominantRing ? 'rgba(255,255,255,0.22)' : '#000'}
-                          strokeOpacity={isDominantRing ? 1 : 0.22}
+                          stroke={isDominantRing ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.18)'}
                           strokeWidth="8"
                         />
                         <circle
@@ -364,21 +398,15 @@ function AppInner({
                             %
                           </span>
                         ) : null}
-                        {(() => {
-                          const ringDelta = formatRingDelta(
-                            personaDeltas?.[axisKeyToScoreKey(k)],
-                          );
-                          if (!ringDelta) return null;
-                          return (
-                            <span
-                              className={`dashboard-ring-delta dashboard-ring-delta--${ringDelta.mod}`}
-                            >
-                              {ringDelta.text}
-                            </span>
-                          );
-                        })()}
+                        {ringDelta ? (
+                          <span
+                            className={`dashboard-ring-delta dashboard-ring-delta--${ringDelta.mod}`}
+                          >
+                            {ringDelta.text}
+                          </span>
+                        ) : null}
                       </span>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -386,6 +414,16 @@ function AppInner({
           </aside>
         )}
       </div>
+      {dashboardHideConfirm ? (
+        <HidePostConfirmDialog
+          post={dashboardHideConfirm.post}
+          onCancel={() => setDashboardHideConfirm(null)}
+          onConfirm={() => {
+            hidePost(dashboardHideConfirm.post, null);
+            setDashboardHideConfirm(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

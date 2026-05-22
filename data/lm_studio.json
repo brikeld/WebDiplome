@@ -1,4 +1,4 @@
 {
-  "baseUrl": "http://10.192.148.78:1234",
-  "model": "google/gemma-4-e4b"
+  "baseUrl": "http://192.168.1.109:1234",
+  "model": "google/gemma-4-e2b"
 }

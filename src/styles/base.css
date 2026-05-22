@@ -2,16 +2,16 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg: #000000;
-  --pop: #CCF847;
-  --prod: #D8D8D8;
-  --sec: #759AEF;
+  --bg: #759aef;
+  --pop: #ccf847;
+  --prod: #d8d8d8;
+  --sec: #759aef;
   --ink: #000000;
   --muted: #666666;
-  --card: #111111;
-  --border: #333333;
-  --panel-muted: #111111;
-  --dot: #444444;
+  --card: #ffffff;
+  --border: #000000;
+  --panel-muted: #f2f0ef;
+  --dot: #bfbcb8;
   --font-avant: 'AvantGarde ITC BT', system-ui, -apple-system, sans-serif;
   --font-avant-book-oblique: 'AvantGarde ITC BT Book Oblique', 'AvantGarde ITC BT', system-ui, sans-serif;
   --font-sans: var(--font-avant);
@@ -29,14 +29,14 @@
   --capsule-shell-border-width: 2px;
   /* Post type (Figma diploma-FILE, node 212:1262): Demi = body, name, meta; Book Oblique = @ handle */
   --post-bubble-h: 12.5rem;
-  --post-body-size: 30px;
+  --post-body-size: 26px;
   /* 600 = AvantGarde Demi (@font-face AvantGardeITCbyBT-Demi.woff2) */
   --post-body-weight: 600;
   --post-body-line: 0.95;
-  --post-name-size: 19.2px;
+  --post-name-size: 14px;
   --post-name-weight: 600;
   --post-name-line: 1.2;
-  --post-handle-size: 12.8px;
+  --post-handle-size: 11px;
   /* Handle uses BookOblique; synthetic bolder face for display */
   --post-handle-line: 1.22;
   /* Legacy aliases */
@@ -74,8 +74,7 @@ body {
   min-width: 360px;
 }
 
-/* ── PAGE (page background uses the soft persona color so the whole
-       app is tinted to the active persona; capsules / pills sit on top) ── */
+/* ── PAGE (background = active persona accent via --tabs-capsule-fill) ── */
 .page-outer {
   width: 100%;
   min-height: 100vh;
@@ -190,20 +189,20 @@ body {
   color: #000;
   text-align: center;
   margin: 8px auto 16px;
-  padding: 5px 18px 6px;
-  border: 2px solid var(--persona-accent, var(--ink));
-  border-radius: var(--radius-pill);
-  background: var(--persona-accent, var(--ink));
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
-/* The persona-color-filled dashboard capsule */
+/* Dashboard shell — white capsule, persona accent stroke (Figma) */
 .dashboard-capsule {
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
   box-sizing: border-box;
-  background: var(--persona-accent, #2323ff);
-  border: 3px solid var(--persona-accent, #2323ff);
+  background: var(--card, #fff);
+  border: var(--capsule-shell-border-width) solid var(--persona-accent, #759aef);
   border-radius: var(--capsule-radius, 22px);
   padding: 26px 26px 28px;
   display: flex;
@@ -223,7 +222,7 @@ body {
   align-self: center;
   width: max-content;
   max-width: 100%;
-  border: 4px solid #000;
+  border: none;
   border-radius: var(--radius-pill);
   background: transparent;
   color: #000;
@@ -333,42 +332,49 @@ body {
 
 /* 3 persona ring cards at bottom of dashboard */
 .dashboard-rings {
-  margin-top: auto;
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 10px;
   width: 100%;
+  align-items: start;
 }
 
 .dashboard-ring-card {
+  appearance: none;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 18px 10px 16px;
-  border: 3px solid #000;
+  gap: 4px;
+  padding: 10px 6px 12px;
+  border: none;
   border-radius: var(--radius-pill);
-  background: var(--ring-accent, #000);
+  background: var(--ring-accent, #d8d8d8);
   color: #000;
   font-family: var(--font-avant);
   box-sizing: border-box;
+  height: auto;
+  align-self: start;
 }
 
-/* Active / themed persona: inverted — black card, progress arc in active persona color
-   (App.jsx), label/score in --persona-accent. Other rings: persona card + black progress arc. */
 .dashboard-ring-card--dominant {
-  background: #000;
-  color: var(--persona-accent, #fff);
+  outline: none;
+}
+
+.dashboard-ring-card:focus-visible {
+  outline: 3px solid #000;
+  outline-offset: 3px;
 }
 
 .dashboard-ring-svg {
   display: block;
-  width: 110px;
-  height: 110px;
+  width: 52px;
+  height: 52px;
 }
 
 .dashboard-ring-label {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.005em;
   line-height: 1.1;
@@ -379,7 +385,7 @@ body {
 .dashboard-ring-score {
   font-family: var(--font-avant);
   font-weight: 900;
-  font-size: 26px;
+  font-size: 18px;
   line-height: 1;
   letter-spacing: -0.03em;
   display: inline-flex;
@@ -411,7 +417,7 @@ body {
 }
 
 .dashboard-ring-delta--flat {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .project-name {
@@ -427,7 +433,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.15;
-  color: var(--persona-accent, var(--ink));
+  color: var(--ink);
   background: transparent;
   border: none;
 }
@@ -435,11 +441,15 @@ body {
 .icon-rail {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 6px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 10px;
+  min-height: 11.5rem;
   border-radius: var(--radius-pill);
-  border: 3px solid var(--persona-accent, var(--ink));
-  background: var(--persona-accent, var(--ink));
+  border: 2px solid var(--persona-accent, var(--ink));
+  background: var(--card, #fff);
+  box-sizing: border-box;
 }
 
 .rail-btn {
@@ -447,32 +457,41 @@ body {
   border: none;
   background: transparent;
   font-family: var(--font-sans);
-  font-size: 44px;
+  font-size: 46px;
   line-height: 1;
   color: rgba(0, 0, 0, 0.45);
   opacity: 1;
   cursor: pointer;
-  width: 80px;
-  height: 80px;
-  /* Large radius so the black active fill reads as a soft squircle, not a near-square */
-  border-radius: 28px;
-  display: grid;
-  place-items: center;
-  transition: background 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
+  width: 3.5rem;
+  height: 3.5rem;
+  min-width: 3.5rem;
+  min-height: 3.5rem;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
 }
+
 .rail-btn.is-active {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 14px;
   opacity: 1;
-  color: var(--persona-accent, #000);
-  background: #000;
+  color: #000;
+  background: var(--persona-accent, #759aef);
   outline: none;
 }
 .rail-btn.is-active:hover {
   opacity: 1;
-  color: var(--persona-accent, #000);
+  color: #000;
 }
 .rail-btn:hover:not(.is-active) {
   opacity: 1;
-  background: rgba(0, 0, 0, 0.1);
+  background: color-mix(in srgb, var(--persona-accent, #759aef) 18%, transparent);
   color: #000;
 }
 .rail-btn:active {
@@ -598,10 +617,10 @@ body {
   box-sizing: border-box;
   width: 100%;
   border-radius: var(--capsule-radius);
-  background: transparent;
+  background: var(--card, #fff);
   border-style: solid;
   border-color: var(--persona-accent, var(--border));
-  border-width: 2px;
+  border-width: var(--capsule-shell-border-width);
   overflow: hidden;
   padding: 36px 50px 40px;
 }
@@ -622,14 +641,14 @@ body {
 
 /* ── POSTS (stacked pill cards; no metadata strip between) ── */
 .posts-tab {
-  --posts-stack-gap: 48px;
+  --posts-stack-gap: 64px;
   display: flex;
   flex-direction: column;
   gap: var(--posts-stack-gap);
 }
 
 .posts-tab--generating {
-  --posts-stack-gap: 52px;
+  --posts-stack-gap: 68px;
 }
 
 .posts-generating-placeholder {
@@ -640,7 +659,7 @@ body {
   justify-content: center;
   min-height: 120px;
   border-radius: var(--radius-post-surface);
-  background: #000;
+  background: color-mix(in srgb, var(--persona-accent, #759aef) 18%, #fff);
 }
 
 .posts-generating-spinner {
@@ -665,31 +684,20 @@ body {
   box-sizing: border-box;
   position: relative;
   margin: 0;
-  /* Fixed center track (not `auto`) so pill columns line up across every post in the feed. */
-  --post-pill-center-col: clamp(15.5rem, 42vw, 22rem);
-  /* One width for Hide / time / analyze / comment — sized for “analyze” + icon buttons. */
-  --post-side-pill-width: 7rem;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--post-pill-center-col) minmax(0, 1fr);
-  column-gap: clamp(42px, 10vw, 92px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
   padding: 0 16px;
-  grid-template-areas:
-    'pill-top-left pill-top-center pill-top-right'
-    'body body body'
-    'pill-bottom-left pill-bottom-center pill-bottom-right';
   color: var(--ink);
 }
 
 .post-card--no-pills {
-  grid-template-columns: 1fr;
-  column-gap: 0;
-  grid-template-areas: 'body';
+  gap: 0;
 }
 
 .post-card--bottom-pills-only {
-  grid-template-areas:
-    'body body body'
-    'pill-bottom-left pill-bottom-center pill-bottom-right';
+  gap: 10px;
 }
 
 .post-card--feed-enter {
@@ -709,30 +717,60 @@ body {
   }
 }
 
-/* Parent shell for posts with attachment — holds the two rects with a gap. */
-.post-composite {
+/* One capsule per post: header + media + comments (no gap between sections). */
+.post-unified-capsule {
   box-sizing: border-box;
   width: 100%;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  background: transparent;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
+  border: none;
+  border-radius: var(--radius-post-surface);
+  overflow: hidden;
+  background: var(--card, #fff);
 }
 
-/* Top rect of image post — persona fill + rounded corners */
+.post-card--has-attachment .post-unified-capsule {
+  border: 2px solid var(--post-accent, var(--persona-accent, #759aef));
+  box-sizing: border-box;
+}
+
+.post-card:not(.post-card--has-attachment) .post-unified-capsule {
+  border: none;
+  background: transparent;
+}
+
+/* Text-only posts: persona stroke when comments are open */
+.post-card--comments-open:not(.post-card--has-attachment) .post-unified-capsule {
+  border: var(--capsule-shell-border-width, 2px) solid var(--post-accent, var(--persona-accent, #759aef));
+  background: var(--card, #fff);
+  box-sizing: border-box;
+}
+
 .post-card--has-attachment .post-card-bubble {
   border: none;
-  background: var(--post-accent);
-  border-radius: var(--radius-post-surface);
   margin: 0;
 }
 
-/* Images, charts, PDF previews — persona stroke below the text bubble */
-.post-card--has-attachment .post-attachment-block {
-  border: 2px solid var(--post-accent, currentColor);
+.post-card--has-attachment .post-attachment-block,
+.post-card--has-attachment .post-image-plain,
+.post-card--has-attachment .post-pdf-carousel {
+  border: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.post-card--has-attachment .post-image-plain {
+  background: transparent;
+}
+
+.post-card--has-attachment .post-image-halftone,
+.post-card--has-attachment .post-pdf-carousel {
+  background: var(--post-accent, #759aef);
+}
+
+.post-card:not(.post-card--has-attachment) .post-card-bubble {
+  border: none;
 }
 
 /* Shared pill columns — top + bottom slots use the same grid areas */
@@ -883,14 +921,14 @@ body {
   max-width: var(--post-side-pill-width);
 }
 
-/* Hollow outline pills (hide / analyze / comment) — persona accent stroke + icon */
+/* Outline-style pills — no stroke; filled on hover */
 .post-pill-slot--top .post-action-btn--outline,
 .post-pill-slot--bottom .post-action-btn--outline,
 .post-pill-slot--top .post-outline-pill,
 .post-action-btn--outline.commenting-toggle-host:not(.commenting-toggle-host--open) {
   gap: 6px;
   background: transparent;
-  border: 1.5px solid var(--post-accent, var(--persona-accent, #ccf847));
+  border: none;
   color: var(--post-accent, var(--persona-accent, #ccf847));
 }
 
@@ -921,23 +959,80 @@ body {
 
 /* Blur post content when hidden; only the Hide/Show control stays sharp */
 .post-card-body {
-  grid-area: body;
+  width: 100%;
   transition: filter 0.3s ease;
+}
+
+.post-unified-capsule {
+  transition: filter 0.3s ease;
+}
+
+.post-card-meta-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  padding-left: 28px;
+}
+
+.post-card-footer {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  margin-top: 0;
+  padding-top: 0;
+  align-self: end;
+}
+
+.post-system-note-pill {
+  flex: 0 1 auto;
+  max-width: min(55%, 16rem);
+  margin-right: 14px;
+  padding: 4px 10px 5px;
+  border-radius: var(--radius-pill);
+  background: var(--card, #fff);
+  border: none;
+  color: rgb(0 0 0 / 47%);
+  font-family: var(--font-sans);
+  font-size: var(--post-name-size);
+  font-weight: var(--post-name-weight);
+  line-height: var(--post-name-line);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-meta-pill--comment,
+.post-action-btn--comment.commenting-toggle-host {
+  min-width: 2.75rem;
+  width: auto;
+  max-width: none;
+  padding: 5px 12px 6px;
+}
+
+.post-meta-pill--comment svg,
+.post-action-btn--comment svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .post-pill-slot--top.post-pill-slot--right {
   transition: filter 0.3s ease;
 }
 
-.post-card--hidden .post-card-body,
-.post-card--hidden .post-pill-slot--bottom,
-.post-card--hidden .post-pill-slot--top.post-pill-slot--right {
-  filter: blur(18px);
-  pointer-events: none;
-  user-select: none;
-}
-
-.post-card--hidden + .commenting-capsule.commenting-capsule--open {
+.post-card--hidden .post-unified-capsule,
+.post-card--hidden .post-card-meta-row {
   filter: blur(18px);
   pointer-events: none;
   user-select: none;
@@ -978,8 +1073,9 @@ body {
   background: var(--post-accent);
   border: none;
   border-radius: var(--radius-post-surface);
-  padding: 10px 24px 10px 10px;
-  min-height: var(--post-bubble-h);
+  padding: 12px 12px 10px 12px;
+  /* Same header band as posts with attachments (was 12.5rem on text-only). */
+  min-height: 9.5rem;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -987,23 +1083,28 @@ body {
 }
 
 .post-card-head {
-  display: flex;
-  align-items: stretch;
-  flex: 1 1 0;
-  min-height: 0;
-  gap: clamp(16px, 2vw, 24px);
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: end;
   min-width: 0;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .post-avatar {
   position: relative;
-  flex: 0 0 auto;
-  align-self: stretch;
-  width: auto;
-  min-width: 0;
-  min-height: 6.75rem;
-  max-width: min(12.5rem, 46%, 100%);
-  max-height: 16rem;
+  grid-column: 1;
+  grid-row: 1 / -1;
+  width: 4.25rem;
+  height: 4.25rem;
+  min-width: 4.25rem;
+  min-height: 4.25rem;
+  max-width: 4.25rem;
+  max-height: 4.25rem;
   aspect-ratio: 1;
   border-radius: var(--radius-post-avatar);
   background: color-mix(in srgb, var(--post-accent) 20%, #fff);
@@ -1014,10 +1115,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.25rem, 3.6vw, 1.75rem);
+  font-size: 1.15rem;
   font-weight: 700;
   font-family: var(--font-sans);
   flex-shrink: 0;
+  align-self: start;
 }
 
 .post-avatar-img {
@@ -1050,9 +1152,9 @@ body {
   position: relative;
   z-index: 0;
   box-sizing: border-box;
-  background: #000;
+  background: var(--card, #fff);
   border: none;
-  border-radius: var(--radius-post-surface);
+  border-radius: 0;
   margin-top: 0;
   min-height: 0;
   display: block;
@@ -1077,35 +1179,23 @@ body {
   border-radius: 0;
 }
 
-.post-card-text {
-  min-width: 0;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding-top: 3px;
-  padding-right: 20px;
-}
-
-/* Fills space under short posts (with @ at bottom); no overflow-y — long posts grow the card */
 .post-card-lead {
-  flex: 1 1 0;
-  overflow: visible;
-  padding-right: 6px;
-  margin-right: -2px;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  min-width: 0;
   padding-top: 2px;
+  padding-right: 2px;
 }
 
-/* Name + @ pinned to lower area of the bubble; tight pair */
 .post-card-byline {
-  margin-top: auto;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0;
-  /* Keep name ↔ @ tight; “extra below” is on the name only */
-  padding-top: 4px;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .post-lead {
@@ -1117,21 +1207,21 @@ body {
   font-family: var(--font-avant);
   white-space: pre-line;
   margin: 0;
-  /* Wider measure so post text block is larger */
-  max-width: min(100%, 50ch);
+  max-width: 100%;
   line-height: 1.15;
   overflow-wrap: break-word;
 }
 
 .post-card-name {
+  margin: 0;
   font-size: var(--post-name-size);
   font-weight: var(--post-name-weight);
   color: #000;
-  /* Offset below the post body; @ handle unchanged relative to the name */
-  
   line-height: 1;
   font-family: var(--font-sans);
   letter-spacing: -0.01em;
+  text-align: left;
+  max-width: 100%;
 }
 
 /* AvantGardeITCbyBT-BookOblique — not Demi, not synthetics oblique on Demi */
@@ -1140,17 +1230,175 @@ body {
   font-weight: 600;
   font-style: normal;
   color: #000;
-  margin: 0;
-  line-height: 1.1;
+  margin: -4px 0 0;
+  line-height: 1.8;
   font-family: var(--font-avant-book-oblique);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
+  max-width: 100%;
 }
 
 /* All text is black — no per-persona text color overrides needed */
 .post-card[data-persona='popularite'] .post-avatar {
   border-color: var(--post-accent);
+}
+
+/* ── Dashboard (Figma white shell) ── */
+.dashboard-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--dashboard-btn-gap, 10px);
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+}
+
+.dashboard-action-pill {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--persona-accent, #759aef);
+  color: #000;
+  padding: 8px 12px;
+  font-family: var(--font-avant);
+  font-size: clamp(12px, 1.2vw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-action-pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dashboard-action-pill:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 3px;
+}
+
+.dashboard-primary-row,
+.dashboard-tell-row {
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+}
+
+.dashboard-timer-card {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-post-surface);
+  background: var(--persona-accent, #759aef);
+  color: #000;
+  font-family: var(--font-avant);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  text-transform: lowercase;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 14px;
+}
+
+.dashboard-timer-card--primary {
+  min-height: 0;
+  height: 100%;
+  padding: 14px 16px;
+  font-size: clamp(13px, 1.35vw, 17px);
+  cursor: pointer;
+}
+
+.dashboard-timer-card--wide {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+}
+
+.dashboard-timer-card--primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.dashboard-timer-card--harvest,
+.dashboard-timer-card--analysis,
+.dashboard-timer-card--generating {
+  cursor: default;
+  text-transform: none;
+  padding: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Fills persona-side-panel height: small HIDE/RANKING row, two tall full-width rows, persona rings. */
+.dashboard-capsule--figma {
+  --dashboard-btn-gap: 10px;
+  --dashboard-pad: 18px;
+  flex: 1 1 0;
+  min-height: 0;
+  padding: var(--dashboard-pad);
+  gap: var(--dashboard-btn-gap);
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 0.65fr) minmax(0, 1.35fr) minmax(0, 1.35fr) auto;
+}
+
+.dashboard-capsule--figma .dashboard-actions-row {
+  grid-row: 1;
+}
+
+.dashboard-capsule--figma .dashboard-primary-row {
+  grid-row: 2;
+}
+
+.dashboard-capsule--figma .dashboard-tell-row {
+  grid-row: 3;
+}
+
+.dashboard-capsule--figma .dashboard-rings {
+  grid-row: 4;
+  flex: unset;
+  margin-top: 0;
+  height: auto;
+  align-items: start;
+  align-self: end;
+}
+
+/* Analysis / harvest / generating: same slot as “next analysis”, readable on white */
+.dashboard-timer-card--status {
+  background: var(--card, #fff);
+  color: #000;
+  border: 2px solid var(--persona-accent, #759aef);
+  cursor: default;
+  text-transform: none;
+}
+
+.dashboard-timer-card--status.dashboard-timer-card--harvest {
+  padding: 0;
+  overflow: hidden;
+  min-height: 120px;
+  height: 100%;
+}
+
+.dashboard-capsule--figma .dashboard-ring-card {
+  height: auto;
+  align-self: start;
 }
 
 /* ── BADGES TAB ── */

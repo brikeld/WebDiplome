@@ -1,37 +1,38 @@
 [
   {
     "persona": "productivite",
-    "content": "My brain today is just a loop between writing code, prompting Claude for ideas, and trying to make it all aesthetically pleasing in Figma. Send help and coffee.",
+    "content": "Trying to see if an AI agent can handle all the boilerplate so I can focus purely on the design and logic. It's a wild ride.",
     "sentiment": "positive",
-    "createdAt": "2026-05-20T14:23:42.358Z",
+    "createdAt": "2026-05-22T16:16:21.261Z",
     "textSliceType": "app_usage"
   },
   {
-    "persona": "productivite",
-    "content": "Thinking about how the 'scrolling ritual' parallels old regime control techniques... I think my brain needs more coffee and less history class.",
+    "persona": "popularite",
+    "content": "Trying to map out all these code lines onto a visual. It's chaos, but kinda beautiful. 😅",
     "sentiment": "positive",
-    "createdAt": "2026-05-20T14:23:39.718Z",
+    "createdAt": "2026-05-22T16:16:20.786Z",
     "attachedAsset": {
-      "kind": "document",
-      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "relativePath": "public/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "mime": "application/pdf"
+      "kind": "image",
+      "filename": "8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "relativePath": "public/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "url": "/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "mime": "image/png",
+      "visionAnalysed": true
     }
   },
   {
     "persona": "popularite",
-    "content": "My AI tool list is insane. Seeing only 3 apps used this week confirms it: I'm an enthusiastic collector, not a finisher.",
-    "sentiment": "negative",
-    "createdAt": "2026-05-20T14:23:43.249Z",
+    "content": "35.0% storage used feels surprisingly healthy for all the creative and development files I've been juggling lately. Time to keep creating!",
+    "sentiment": "positive",
+    "createdAt": "2026-05-22T16:16:21.464Z",
     "attachedAsset": {
       "kind": "image",
-      "filename": "03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
-      "relativePath": "public/uploads/03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
-      "url": "/uploads/03d2eecaef818622c27c32ad3f77f227108d91943fedce68c7be7c5a81b4f609.png",
+      "filename": "cc43a97082718edb468fb40f6acbe8dddec61e0491f11cc7e4c0f9149eadfe5f.png",
+      "relativePath": "public/uploads/cc43a97082718edb468fb40f6acbe8dddec61e0491f11cc7e4c0f9149eadfe5f.png",
+      "url": "/uploads/cc43a97082718edb468fb40f6acbe8dddec61e0491f11cc7e4c0f9149eadfe5f.png",
       "mime": "image/png",
       "visionAnalysed": true
     },
-    "chartType": "ai_tool_exposure"
+    "chartType": "language_fingerprint"
   }
 ]

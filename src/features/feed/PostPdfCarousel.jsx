@@ -30,7 +30,6 @@ function Chevron({ dir }) {
 export default function PostPdfCarousel({ asset, accentColor }) {
   const url = asset?.url ?? '';
   const label = basenameOf(asset?.filename);
-
   const [numPages, setNumPages] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
   const [processedByPage, setProcessedByPage] = useState(() => (/** @type {Record<number, string>} */ ({})));
@@ -172,7 +171,6 @@ export default function PostPdfCarousel({ asset, accentColor }) {
           <button
             type="button"
             className="post-pdf-carousel__nav post-pdf-carousel__nav--prev"
-            style={{ color: accentColor }}
             onClick={goPrev}
             aria-label="Previous page"
           >
@@ -183,7 +181,6 @@ export default function PostPdfCarousel({ asset, accentColor }) {
           <button
             type="button"
             className="post-pdf-carousel__nav post-pdf-carousel__nav--next"
-            style={{ color: accentColor }}
             onClick={goNext}
             aria-label="Next page"
           >

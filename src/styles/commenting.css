@@ -1,12 +1,5 @@
-/* ── Commenting capsule (B-2 extended-post) ────────────────────────────────
-   Per-post commenting UI. The capsule is a sibling of PostCard but visually
-   continues the post-card-bubble downward — same persona fill, joined
-   corners, no separate outline. Comments inside are black chips with
-   persona-color text + rounded-square avatars; suggestions are the same
-   shape. The user's slot is a bold B-2 CTA button ("Write your own reply").
-   The bottom of the capsule contains its own meta row (toggle/system/time)
-   when open; the post-card's outer bottom-pill row is hidden when open so
-   the unified shape stays continuous.
+/* ── Commenting inside the unified post capsule ───────────────────────────
+   Comments expand within .post-unified-capsule (same post, no sibling gap).
    ─────────────────────────────────────────────────────────────────────── */
 
 :root {
@@ -16,46 +9,50 @@
   --commenting-persona-productivite: #d8d8d8;
   --commenting-persona-securite: #759aef;
   --commenting-persona-popularite: #ccf847;
-  --comment-body-size: 18px;
+  --comment-body-size: 12px;
+  --comment-chip-radius: 12px;
 }
 
-/* Hide post-card's outer bottom-pill row when comments are open so the
-   capsule can sit flush against the post-card-bubble (unified shape). */
-.post-card--comments-open .post-pill-slot--bottom {
-  display: none;
-}
-
-/* Open post-card sits above the capsule for z-index purposes (in case of
-   any future overlap) */
-.post-card.post-card--comments-open {
-  position: relative;
-  z-index: 3;
-}
-
-/* When open, the post-card-bubble's bottom corners go flat so the capsule
-   joins seamlessly underneath it. */
+/* Seam: header bottom + expansion top corners = 0 when stacked */
+.post-card--has-attachment .post-card-bubble,
 .post-card--comments-open .post-card-bubble {
-  border-radius: var(--radius-post-surface, 41px) var(--radius-post-surface, 41px) 0 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: var(--radius-post-surface);
+  border-top-right-radius: var(--radius-post-surface);
 }
 
-/* Attachment posts: the LAST child of .post-composite is the seam — flatten
-   its bottom corners (the bubble's bottom is already flat in that case). */
-.post-card--comments-open.post-card--has-attachment .post-composite > *:last-child {
+.post-card:not(.post-card--has-attachment):not(.post-card--comments-open) .post-card-bubble {
+  border-radius: var(--radius-post-surface);
+}
+
+.post-card--has-attachment .post-attachment-block,
+.post-card--has-attachment .post-image-halftone,
+.post-card--has-attachment .post-image-plain,
+.post-card--has-attachment .post-pdf-carousel {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.post-card--has-attachment .post-image-plain,
+.post-card--has-attachment .post-image-plain .post-attachment-img {
+  border-radius: 0;
+}
+
+.post-card--comments-open.post-card--has-attachment .post-attachment-block,
+.post-card--comments-open.post-card--has-attachment .post-image-halftone,
+.post-card--comments-open.post-card--has-attachment .post-image-plain,
+.post-card--comments-open.post-card--has-attachment .post-pdf-carousel {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-/* ── Capsule shell — persona-filled, joined to bubble ─────────────────── */
-
 .commenting-capsule {
   box-sizing: border-box;
-  /* Match the post-card-bubble's horizontal inset: post-card has padding: 0 16px,
-     so the bubble starts 16px from the posts-tab edge. Apply matching outer
-     margin so the capsule's edges line up with the bubble's edges. */
-  margin: calc(-1 * var(--posts-stack-gap, 48px)) 16px 0;
+  margin: 0;
   border: none;
   border-radius: 0;
-  background: var(--persona-accent, #d8d8d8);
+  background: var(--card, #fff);
   padding: 0 14px;
   display: flex;
   flex-direction: column;
@@ -72,22 +69,36 @@
 .commenting-capsule--open {
   opacity: 1;
   padding: 14px 14px 16px;
-  position: relative;
-  z-index: 1;
-  border-radius: 0 0 var(--radius-post-surface, 41px) var(--radius-post-surface, 41px);
+  max-height: 2400px;
+  border: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* No body text: header/attachment edge matches persona color — stroke the comment block */
+.post-card--comments-open.post-card--empty-lead .commenting-capsule--open {
+  border: var(--capsule-shell-border-width, 2px) solid var(--post-accent, var(--persona-accent, #759aef));
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: var(--radius-post-surface);
+  border-bottom-right-radius: var(--radius-post-surface);
 }
 
 /* ── Comment chip (mock + picked) ─────────────────────────────────────── */
 
 .commenting-comment {
-  --comment-accent: #fff;
-  background: #000;
-  border-radius: 18px;
-  padding: 12px 16px 12px 12px;
+  --comment-accent: #759aef;
+  background: color-mix(in srgb, var(--comment-accent) 88%, #fff);
+  border: none;
+  border-radius: var(--comment-chip-radius);
+  padding: 8px 12px 10px 10px;
   display: flex;
-  gap: 12px;
-  align-items: center;
-  color: var(--comment-accent);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  color: #000;
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -116,13 +127,12 @@
   opacity: 1;
 }
 
-/* Rounded-square avatar (matches --radius-post-avatar scaled to chip size) */
 .commenting-comment-avatar {
   flex: 0 0 56px;
   width: 56px;
   height: 56px;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--comment-accent) 28%, #000);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--comment-accent) 28%, #fff);
   color: var(--comment-accent);
   display: grid;
   place-items: center;
@@ -139,6 +149,13 @@
   border-radius: inherit;
 }
 
+.commenting-comment-main {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
 .commenting-comment-text {
   flex: 1 1 0;
   min-width: 0;
@@ -149,11 +166,11 @@
 
 .commenting-comment-name {
   margin: 0;
-  font-size: 11px;
-  color: var(--comment-accent);
+  font-size: 10px;
+  color: #000;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
   font-family: var(--font-sans);
   opacity: 0.85;
 }
@@ -162,7 +179,7 @@
   margin: 0;
   font-size: var(--comment-body-size);
   line-height: 1.28;
-  color: var(--comment-accent);
+  color: #000;
   font-weight: 600;
   font-family: var(--font-avant);
   letter-spacing: -0.005em;
@@ -170,31 +187,34 @@
 }
 
 .commenting-comment-meta-inline {
+  align-self: flex-end;
   flex: 0 0 auto;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--comment-accent);
-  opacity: 0.6;
-  letter-spacing: 0.04em;
+  font-size: var(--post-name-size, 14px);
+  font-weight: var(--post-name-weight, 600);
+  line-height: var(--post-name-line, 1.2);
+  color: #000;
+  opacity: 0.47;
+  letter-spacing: -0.01em;
   font-family: var(--font-sans);
   white-space: nowrap;
   text-align: right;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
-/* ── B-2 CTA — "Write your own reply" user slot ──────────────────────── */
 
 .commenting-write-own {
   appearance: none;
   cursor: pointer;
-  background: #000;
-  border: 2.5px solid var(--persona-accent, #fff);
-  border-radius: 18px;
-  padding: 16px 18px;
+  background: var(--post-accent, var(--persona-accent, #759aef));
+  border: none;
+  border-radius: var(--comment-chip-radius);
+  padding: 12px 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: var(--persona-accent, #fff);
+  color: #000;
   width: 100%;
   box-sizing: border-box;
   font-family: var(--font-avant);
@@ -217,14 +237,14 @@
 }
 
 .commenting-write-own:hover {
-  background: color-mix(in srgb, var(--persona-accent) 12%, #000);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--persona-accent) 25%, #000);
+  background: color-mix(in srgb, var(--post-accent, var(--persona-accent, #759aef)) 82%, #fff);
+  box-shadow: none;
 }
 
 .commenting-write-own-icon {
   display: grid;
   place-items: center;
-  color: var(--persona-accent);
+  color: #000;
 }
 
 .commenting-write-own-icon svg {
@@ -236,8 +256,6 @@
 .commenting-write-own-label {
   line-height: 1;
 }
-
-/* ── Suggestion options (3 AI chips) ─────────────────────────────────── */
 
 .commenting-suggestion-shell {
   display: flex;
@@ -263,14 +281,14 @@
 }
 
 .commenting-suggestion-option {
-  --s-color: #fff;
+  --s-color: #759aef;
   appearance: none;
   border: none;
   cursor: pointer;
-  background: #000;
-  color: var(--s-color);
-  padding: 12px 12px 10px;
-  border-radius: 14px;
+  background: color-mix(in srgb, var(--s-color) 88%, #fff);
+  color: #000;
+  padding: 10px 10px 8px;
+  border-radius: var(--comment-chip-radius);
   text-align: left;
   display: flex;
   flex-direction: column;
@@ -295,7 +313,7 @@
 
 .commenting-suggestion-option:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--s-color) 30%, #000);
+  box-shadow: none;
 }
 
 .commenting-suggestion-option:active:not(:disabled) {
@@ -303,79 +321,47 @@
 }
 
 .commenting-suggestion-option-text {
-  font-size: 13.5px;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1.25;
   font-family: var(--font-avant);
   letter-spacing: -0.005em;
-  color: var(--s-color);
+  color: #000;
   overflow-wrap: break-word;
 }
 
 .commenting-suggestion-option-plus {
   align-self: flex-end;
-  background: var(--s-color);
-  color: #000;
-  font-size: 11.5px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  font-variant-numeric: tabular-nums;
-  font-family: var(--font-sans);
-  letter-spacing: -0.01em;
-  line-height: 1;
-}
-
-.commenting-suggestion-option--loading {
-  cursor: wait;
-  justify-content: center;
-  align-items: center;
-}
-
-.commenting-suggestion-option--loading .commenting-suggestion-option-text,
-.commenting-suggestion-option--loading .commenting-suggestion-option-plus {
-  display: none;
-}
-
-.commenting-suggestion-option-spinner {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  box-sizing: border-box;
-  border: 3px solid color-mix(in srgb, var(--s-color, #fff) 25%, transparent);
-  border-top-color: var(--s-color, #fff);
-  animation: commenting-suggestion-option-spin 0.75s linear infinite;
-}
-
-@keyframes commenting-suggestion-option-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.commenting-suggestion-error {
-  margin: 8px 0 0;
-  padding: 0 4px;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  display: grid;
+  place-items: center;
   font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.commenting-suggestion-loading,
+.commenting-suggestion-error {
+  font-size: 12px;
   font-weight: 600;
-  color: #ff8989;
+  color: #000;
+  opacity: 0.7;
   text-align: center;
+  padding: 8px 0;
 }
-
-/* Picked comment — re-uses .commenting-comment chip styling via Comment.jsx.
-   Wrapper exists only to support the FLIP transform from suggestion → reply. */
-.commenting-suggestion-picked {
-  display: contents;
-}
-
-/* ── Internal meta row at the bottom of the capsule ───────────────────── */
 
 .commenting-internal-meta {
   margin-top: 4px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -389,36 +375,19 @@
   transition-delay: calc(var(--commenting-stagger) * 4);
 }
 
-.commenting-internal-meta-toggle {
-  justify-self: start;
-  display: inline-flex;
-}
-
 .commenting-internal-meta-pill {
-  background: #000;
-  color: var(--persona-accent, #fff);
-  font-size: 13px;
+  background: var(--post-accent);
+  border: none;
+  color: #000;
+  font-size: clamp(10px, 1.1vw, 13px);
   font-weight: 600;
-  padding: 6px 14px 7px;
-  border-radius: 9999px;
+  padding: 5px 12px 6px;
+  border-radius: var(--radius-pill);
   letter-spacing: -0.01em;
   line-height: 1;
   font-family: var(--font-sans);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
-
-.commenting-internal-meta-center {
-  justify-self: center;
-}
-
-.commenting-internal-meta-time {
-  justify-self: end;
-}
-
-/* ── Toggle — same outline pill as Hide (7rem side slot, post accent) ─ */
 
 .commenting-toggle-host {
   position: relative;
@@ -428,26 +397,19 @@
   pointer-events: auto;
 }
 
-.commenting-internal-meta-toggle .post-action-btn.commenting-toggle-host {
-  box-sizing: border-box;
-  width: var(--post-side-pill-width, 7rem);
-  min-width: var(--post-side-pill-width, 7rem);
-  max-width: var(--post-side-pill-width, 7rem);
+.post-action-btn--comment.commenting-toggle-host--open {
+  background: var(--post-accent);
+  color: #000;
+  border: none;
 }
 
-/* Close (X) sits on persona-filled capsule — solid black for contrast */
-.post-action-btn--outline.commenting-toggle-host--open {
-  background: #000;
-  color: var(--post-accent, var(--persona-accent, #ccf847));
-  border: 2px solid var(--post-accent, var(--persona-accent, #ccf847));
-}
-
-.post-action-btn--outline.commenting-toggle-host--open:hover {
+.post-action-btn--comment.commenting-toggle-host--open:hover {
   filter: none;
-  background: #000;
+  background: color-mix(in srgb, var(--post-accent) 88%, #000);
+  color: #000;
 }
 
-.post-action-btn--outline.commenting-toggle-host--open:focus-visible {
-  outline: 2px solid var(--post-accent, var(--persona-accent, #ccf847));
+.post-action-btn--comment.commenting-toggle-host--open:focus-visible {
+  outline: 2px solid #000;
   outline-offset: 2px;
 }

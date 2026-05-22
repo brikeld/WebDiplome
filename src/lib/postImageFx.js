@@ -1,16 +1,15 @@
-// Locked-in tuned values (from your chosen debug settings)
 export const FX_DEFAULTS = {
   blurPx: 0,
   cellPx: 0,
-  dotScale: 0,
-  brightness: 0.18,
+  dotScale: 1,
+  brightness: -0.5,
   contrast: 2.2,
-  gamma: 2.6,
-  thresholdBias: 0.02,
+  gamma: 5,
+  thresholdBias: 0.3,
   noiseAmount: 0,
   noiseSeed: 296,
-  invert: 0,
-  maxWidth: 1140,
+  invert: 1,
+  maxWidth: 1920,
 };
 
 const CACHE = new Map();
@@ -130,7 +129,7 @@ async function ditherMonochromeCore(cachePrefix, naturalWidth, naturalHeight, dr
   const outData = octx.createImageData(w, h);
   const outPx = outData.data;
 
-  const strength = typeof dotScale === 'number' ? clamp(dotScale, 0, 1) : 0.55;
+  const strength = typeof dotScale === 'number' ? clamp(dotScale, 0, 2) : 1;
   const br = typeof brightness === 'number' ? brightness : 0;
   const ct = typeof contrast === 'number' ? contrast : 1;
   const ga = typeof gamma === 'number' ? gamma : 1;
@@ -168,9 +167,9 @@ async function ditherMonochromeCore(cachePrefix, naturalWidth, naturalHeight, dr
         outPx[idx + 2] = b;
         outPx[idx + 3] = 255;
       } else {
-        outPx[idx] = 0;
-        outPx[idx + 1] = 0;
-        outPx[idx + 2] = 0;
+        outPx[idx] = 255;
+        outPx[idx + 1] = 255;
+        outPx[idx + 2] = 255;
         outPx[idx + 3] = 255;
       }
     }
@@ -180,9 +179,9 @@ async function ditherMonochromeCore(cachePrefix, naturalWidth, naturalHeight, dr
     for (let i = 0; i < outPx.length; i += 4) {
       const isPersona = outPx[i] === r && outPx[i + 1] === g && outPx[i + 2] === b;
       if (isPersona) {
-        outPx[i] = 0;
-        outPx[i + 1] = 0;
-        outPx[i + 2] = 0;
+        outPx[i] = 255;
+        outPx[i + 1] = 255;
+        outPx[i + 2] = 255;
       } else {
         outPx[i] = r;
         outPx[i + 1] = g;
@@ -198,7 +197,7 @@ async function ditherMonochromeCore(cachePrefix, naturalWidth, naturalHeight, dr
   return outUrl;
 }
 
-/** Same pipeline as post images: halftone + persona tint. */
+/** Halftone + persona canvas; with invert=1, ink is white on persona background. */
 export async function ditherMonochromeFromUrl({ src, accentColor, ...fx }) {
   const img = new Image();
   img.crossOrigin = 'anonymous';

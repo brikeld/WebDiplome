@@ -28,8 +28,8 @@
     calc(var(--profile-hero-outer-h) * 0.75 * var(--profile-rings-scale)),
     var(--profile-score-size-max)
   );
-  background: var(--persona-accent, #2323ff);
-  border: 3px solid var(--persona-accent, #2323ff);
+  background: var(--persona-accent, #759aef);
+  border: 2px solid var(--persona-accent, #759aef);
   border-radius: var(--radius-post-surface);
   overflow: visible;
   position: relative;
@@ -315,8 +315,8 @@
   padding: 14px 22px;
   /* Fixed (not --radius-pill): large token made these read as circles */
   border-radius: 12px;
-  border: 3px solid var(--persona-accent, #2323ff);
-  background: #000;
+  border: 2px solid var(--persona-accent, #759aef);
+  background: var(--card, #fff);
   width: fit-content;
   margin: -40px auto 0;
   box-sizing: border-box;
@@ -552,8 +552,8 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-rings-gutter: 10px;
   --profile-rail-text-gap: 14px;
   margin-top: 0;
-  background: #000;
-  border-color: #000;
+  background: var(--persona-accent, #759aef);
+  border-color: var(--persona-accent, #759aef);
 }
 
 .profile-rail-capsule .profile-name-handle-stack {
@@ -562,7 +562,7 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-name-lg {
-  color: var(--persona-accent, #fff);
+  color: #000;
   /* One line, no ellipsis: never larger than the text column can carry. */
   font-size: max(
     26px,
@@ -572,7 +572,7 @@ button.profile-last-analysis-pill:disabled {
     )
   );
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.05;
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
@@ -592,21 +592,21 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-bio,
 .profile-rail-capsule .profile-follow-num {
-  color: var(--persona-accent, #fff);
+  color: #000;
 }
 
 .profile-rail-capsule .profile-handle-lg {
-  color: color-mix(in srgb, var(--persona-accent, #fff) 72%, transparent);
+  color: rgba(0, 0, 0, 0.72);
 }
 
 .profile-rail-capsule .profile-follow-item,
 .profile-rail-capsule .profile-follow-icon {
-  color: var(--persona-accent, #fff);
+  color: #000;
 }
 
 .profile-rail-capsule .profile-connect-btn {
-  background: var(--persona-accent, #fff) !important;
-  color: #000 !important;
+  background: #000 !important;
+  color: var(--persona-accent, #759aef) !important;
 }
 
 .profile-rail-capsule .profile-connect-btn:focus-visible {
@@ -614,8 +614,8 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-badge-capsule {
-  border-color: #000;
-  background: #000;
+  border-color: var(--persona-accent, #759aef);
+  background: var(--card, #fff);
   gap: 10px;
   padding: 8px 14px;
   margin-top: -26px;

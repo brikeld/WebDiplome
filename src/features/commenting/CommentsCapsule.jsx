@@ -2,7 +2,6 @@ import '@/styles/commenting.css';
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Comment from './Comment.jsx';
 import SuggestionRow from './SuggestionRow.jsx';
-import CommentsToggle from './CommentsToggle.jsx';
 import {
   commentMetaCenterLine,
   mockCommentTimeAgo,
@@ -230,22 +229,6 @@ export default function CommentsCapsule({
         displayName={displayName}
         onPick={handlePick}
       />
-
-      <div className="commenting-internal-meta" aria-label="Comment thread metadata">
-        <div className="commenting-internal-meta-toggle">
-          <CommentsToggle
-            isOpen={isOpen}
-            onToggle={onToggle}
-            controlsId={`${capsuleId}-close`}
-          />
-        </div>
-        <span className="commenting-internal-meta-pill commenting-internal-meta-center">
-          {systemNoteLabel}
-        </span>
-        <span className="commenting-internal-meta-pill commenting-internal-meta-time">
-          {timeLabel}
-        </span>
-      </div>
     </div>
   );
 }
