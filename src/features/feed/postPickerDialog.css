@@ -1,0 +1,117 @@
+/* Post-picker instruction dialog — floats at bottom, backdrop is click-through */
+
+@keyframes post-picker-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+
+/* Backdrop is purely visual — pointer-events: none lets posts stay clickable */
+.post-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 24px 32px;
+  background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.32) 100%);
+}
+
+.post-picker-dialog {
+  pointer-events: auto;
+  width: min(100%, 480px);
+  border-radius: var(--capsule-radius, 44px);
+  border: 3px solid #759aef;
+  background: color-mix(in srgb, #759aef 18%, #fff);
+  color: #000;
+  padding: clamp(22px, 3vh, 32px) clamp(22px, 3vw, 36px);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+  font-family: var(--font-avant);
+  animation: post-picker-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+.post-picker-dialog--ready {
+  border-color: #ccf847;
+  background: color-mix(in srgb, #ccf847 18%, #fff);
+}
+
+.post-picker-kicker {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 5px 14px 6px;
+  border-radius: var(--radius-pill);
+  border: 2px solid currentColor;
+  font-size: clamp(11px, 1.2vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  line-height: 1.1;
+  opacity: 0.7;
+}
+
+.post-picker-title {
+  margin: 0 0 clamp(8px, 1.5vh, 14px);
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.post-picker-body {
+  margin: 0 0 clamp(18px, 2.5vh, 26px);
+  font-size: clamp(14px, 1.6vw, 18px);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  opacity: 0.75;
+}
+
+.post-picker-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.post-picker-btn {
+  appearance: none;
+  border: 2px solid #000;
+  border-radius: var(--radius-pill);
+  padding: 10px 20px 11px;
+  font-family: var(--font-avant);
+  font-size: clamp(13px, 1.4vw, 16px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.post-picker-btn:active { transform: scale(0.97); }
+
+.post-picker-btn--cancel {
+  background: transparent;
+  color: #000;
+}
+.post-picker-btn--cancel:hover {
+  background: color-mix(in srgb, #000 8%, transparent);
+}
+
+.post-picker-btn--confirm {
+  background: #000;
+  color: #759aef;
+  border-color: #000;
+}
+.post-picker-btn--confirm:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.post-picker-dialog--ready .post-picker-btn--confirm {
+  color: #ccf847;
+}
+.post-picker-btn--confirm:not(:disabled):hover {
+  opacity: 0.88;
+}

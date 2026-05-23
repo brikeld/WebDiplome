@@ -3,11 +3,19 @@ import PostsTab from '@/features/feed/PostsTab.jsx';
 export default function HomeTab({
   profile,
   isGeneratingPosts = false,
+  highlightedPostId = null,
+  onHighlightPost,
 }) {
   return (
     <div className="home-tab">
       <p className="home-top-label">for you</p>
-      <PostsTab profile={profile} feedContext="home" isGeneratingPosts={isGeneratingPosts} />
+      <PostsTab
+        profile={profile}
+        feedContext="home"
+        isGeneratingPosts={isGeneratingPosts}
+        highlightedPostId={highlightedPostId}
+        onHighlightPost={onHighlightPost}
+      />
     </div>
   );
 }

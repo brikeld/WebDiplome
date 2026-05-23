@@ -20,6 +20,9 @@ export default function PostCard({
   hidePills = false,
   /** 'meta' | 'bottom-only' | 'none' — landing mock uses bottom-only */
   pillsMode,
+  isHighlightable = false,
+  isHighlighted = false,
+  onHighlight,
 }) {
   const {
     content,
@@ -76,11 +79,12 @@ export default function PostCard({
 
   return (
     <article
-      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${animateEnter ? ' post-card--feed-enter' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}`}
+      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${animateEnter ? ' post-card--feed-enter' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
       data-persona={post.persona}
-      style={{
-        '--post-accent': noteColor,
-      }}
+      style={{ '--post-accent': noteColor }}
+      onClick={isHighlightable ? (e) => {
+        if (!e.target.closest('button, a, [role="button"]')) onHighlight?.();
+      } : undefined}
     >
       <div className="post-unified-capsule">
         <div className="post-card-bubble">

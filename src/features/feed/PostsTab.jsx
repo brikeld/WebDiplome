@@ -37,6 +37,8 @@ export default function PostsTab({
   feedContext = 'home',
   isGeneratingPosts = false,
   hideInteractions = false,
+  highlightedPostId = null,
+  onHighlightPost,
 }) {
   const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
   const { isHidden } = useLiveScoring();
@@ -131,6 +133,9 @@ export default function PostsTab({
           isHidden={
             hideInteractions ? false : isHidden(normalizePostHideKey(p.createdAt))
           }
+          isHighlightable={!hideInteractions}
+          isHighlighted={!hideInteractions && highlightedPostId !== null && highlightedPostId === p.id}
+          onHighlight={() => onHighlightPost?.(p)}
         />
       ))}
     </div>

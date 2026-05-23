@@ -1,0 +1,38 @@
+[
+  {
+    "persona": "popularite",
+    "content": "I swear I spend more time debating the cost of Cursor's AI features than actually coding. The existential dread of choosing between $20 and $60 is real.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-23T15:22:53.825Z",
+    "textSliceType": "browser"
+  },
+  {
+    "persona": "popularite",
+    "content": "Trading code for classic portraiture today. Marracash vibes and timeless style, a nice change of pace from Figma.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-23T15:22:56.076Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ebee700ad2242707af6b80e93d7bee923749c9af84ae360d5733b08aeff990e8.jpg",
+      "relativePath": "public/uploads/ebee700ad2242707af6b80e93d7bee923749c9af84ae360d5733b08aeff990e8.jpg",
+      "url": "/uploads/ebee700ad2242707af6b80e93d7bee923749c9af84ae360d5733b08aeff990e8.jpg",
+      "mime": "image/jpeg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "23 PNGs in the last 7 days. Looks like I'm constantly trying to visualize the design and code I'm working on.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-23T15:22:54.983Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "8141b3e7da9bafd9992bcfbee2e4133a1cf7530b935eef8ef6d94207bc38a53e.png",
+      "relativePath": "public/uploads/8141b3e7da9bafd9992bcfbee2e4133a1cf7530b935eef8ef6d94207bc38a53e.png",
+      "url": "/uploads/8141b3e7da9bafd9992bcfbee2e4133a1cf7530b935eef8ef6d94207bc38a53e.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "recent_downloads"
+  }
+]

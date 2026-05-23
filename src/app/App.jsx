@@ -49,6 +49,16 @@ const PERSONA_LABELS = {
   popularity: 'Social',
 };
 
+const PERSONA_LABEL_BY_POST = {
+  productivite: 'Productivity',
+  securite: 'Security',
+  popularite: 'Social',
+  productivity: 'Productivity',
+  security: 'Security',
+  popularity: 'Social',
+  social: 'Social',
+};
+
 function formatLastAnalysis(profile) {
   if (!profile) return null;
   const raw =
@@ -171,9 +181,11 @@ function AppInner({
   profileScoreReplayNonce,
   handleGeneratePersonaPosts,
 }) {
-  const { adjustedScores, dominantPersona: liveDominantPersona, hidePost, isHidden } =
+  const { adjustedScores, dominantPersona: liveDominantPersona, hidePost, revealPost, isHidden } =
     useLiveScoring();
   const [dashboardHideConfirm, setDashboardHideConfirm] = useState(null);
+  const [highlightedPost, setHighlightedPost] = useState(null);
+  const [hideNudge, setHideNudge] = useState(false);
 
   const personaKey = personaOverride ?? liveDominantPersona;
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
@@ -192,10 +204,31 @@ function AppInner({
     setPersonaOverride(order[(idx + 1) % order.length]);
   };
 
+  const handleHighlightPost = useCallback((post) => {
+    setHighlightedPost((prev) => (prev?.id === post.id ? null : post));
+  }, []);
+
+  const highlightedPostIsHidden = highlightedPost
+    ? isHidden(normalizePostHideKey(highlightedPost.createdAt))
+    : false;
+
+  const highlightedPostPersonaLabel = highlightedPost
+    ? (PERSONA_LABEL_BY_POST[highlightedPost.persona] ?? 'Social')
+    : null;
+
   const handleDashboardHide = () => {
-    const posts = Array.isArray(profile?.personaPosts) ? profile.personaPosts : [];
-    const target = posts.find((p) => !isHidden(normalizePostHideKey(p.createdAt)));
-    if (target) setDashboardHideConfirm({ post: target });
+    if (!profile) return;
+    if (highlightedPost) {
+      if (highlightedPostIsHidden) {
+        revealPost(highlightedPost, null);
+        setHighlightedPost(null);
+      } else {
+        setDashboardHideConfirm({ post: highlightedPost });
+      }
+    } else {
+      setHideNudge(true);
+      setTimeout(() => setHideNudge(false), 4000);
+    }
   };
 
   const handleDashboardRanking = () => {
@@ -247,6 +280,8 @@ function AppInner({
               <HomeTab
                 profile={profile}
                 isGeneratingPosts={postGen.phase === 'generating'}
+                highlightedPostId={highlightedPost?.id ?? null}
+                onHighlightPost={handleHighlightPost}
               />
             </ScrollArea>
           </div>
@@ -273,11 +308,60 @@ function AppInner({
               <div className="dashboard-actions-row">
                 <button
                   type="button"
-                  className="dashboard-action-pill"
+                  className={`dashboard-hide-pill${highlightedPostIsHidden ? ' dashboard-hide-pill--unhide' : ''}${highlightedPost ? ' dashboard-hide-pill--armed' : ''}`}
                   onClick={handleDashboardHide}
                   disabled={!profile}
+                  style={{ '--hide-pill-accent': highlightedPost?.noteColor ?? personaColor }}
                 >
-                  HIDE
+                  {/* Ghost post texture behind everything */}
+                  <div className="dashboard-hide-pill__bg-post" aria-hidden>
+                    <div className="dashboard-hide-pill__avatar" />
+                    <div className="dashboard-hide-pill__lines">
+                      <div className="dashboard-hide-pill__line" />
+                      <div className="dashboard-hide-pill__line dashboard-hide-pill__line--short" />
+                      <div className="dashboard-hide-pill__line dashboard-hide-pill__line--tiny" />
+                    </div>
+                  </div>
+
+                  {/* Frosted overlay */}
+                  <div className="dashboard-hide-pill__frosted" aria-hidden />
+
+                  {/* Armed: persona chip */}
+                  {highlightedPost && !highlightedPostIsHidden && (
+                    <span className="dashboard-hide-pill__persona-chip">
+                      {highlightedPostPersonaLabel} post
+                    </span>
+                  )}
+
+                  {/* Main label */}
+                  <span className="dashboard-hide-pill__label">
+                    {highlightedPostIsHidden ? (
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                      </svg>
+                    ) : (
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                        <path d="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.06 3.06c1.39-1.23 2.49-2.77 3.18-4.53C21.27 7.11 17 4 12 4c-1.27 0-2.49.2-3.64.57l2.17 2.17c.47-.14.96-.24 1.47-.24zM2.71 3.16a.996.996 0 0 0 0 1.41l1.97 1.97C3.06 7.83 1.77 9.53 1 11.5 2.73 15.89 7 19 12 19c1.52 0 2.97-.3 4.31-.82l2.72 2.72a.996.996 0 1 0 1.41-1.41L4.13 3.16c-.39-.39-1.03-.39-1.42 0zM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .38-.03.57-.07l1.57 1.57c-.64.32-1.37.5-2.14.5zm2.97-5.33a2.97 2.97 0 0 0-2.64-2.64l2.64 2.64z" />
+                      </svg>
+                    )}
+                    <span className="dashboard-hide-pill__label-text">
+                      {highlightedPostIsHidden ? 'UNHIDE' : highlightedPost ? 'HIDE POST' : 'HIDE'}
+                    </span>
+                  </span>
+
+                  {/* Sub-text (default state only) */}
+                  {!highlightedPost && (
+                    <span className="dashboard-hide-pill__sub">tap a post first</span>
+                  )}
+
+                  {/* Nudge dialog card — shown for 4s when clicked with no selection */}
+                  {hideNudge && (
+                    <span className="dashboard-hide-pill__nudge-msg">
+                      <span className="dashboard-hide-pill__nudge-kicker">hide post</span>
+                      <span className="dashboard-hide-pill__nudge-title">Highlight a post first</span>
+                      <span className="dashboard-hide-pill__nudge-body">Click any post in the feed to select it</span>
+                    </span>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -329,7 +413,7 @@ function AppInner({
               <div className="dashboard-tell-row">
                 <button
                   type="button"
-                  className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide"
+                  className={`dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide${highlightedPost ? ' dashboard-timer-card--tell-armed' : ''}`}
                   onClick={handleDashboardTellMeMore}
                   disabled={dashboardBusy}
                 >
