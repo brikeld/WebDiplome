@@ -1,16 +1,24 @@
+/**
+ * Feed image FX — three steps in order:
+ * 1. Gaussian blur (raw photo)
+ * 2. Monochromie (persona tint)
+ * 3. Trame de demi-teinte (halftone screen)
+ */
+
 export const FX_DEFAULTS = {
   blurPx: 0,
-  cellPx: 0,
-  dotScale: 1,
-  brightness: -0.5,
-  contrast: 2.2,
-  gamma: 5,
-  thresholdBias: 0.3,
-  noiseAmount: 0,
-  noiseSeed: 296,
-  invert: 1,
+  monoStrength: 0.56,
+  cellPx: 1,
+  halftoneAngle: 0,
+  bayerStrength: 0,
+  dotScale: 0,
+  thresholdBias: 0,
+  paperColor: 'black',
+  inkColor: 'persona',
   maxWidth: 1920,
 };
+
+export const FX_COLOR_CHOICES = ['white', 'persona', 'black'];
 
 const CACHE = new Map();
 
@@ -18,11 +26,19 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
 
+function mix(a, b, t) {
+  return a + (b - a) * t;
+}
+
 function hexToRgb(hex) {
   const h = String(hex || '').trim().replace('#', '');
   if (h.length !== 6) return { r: 0, g: 0, b: 0 };
   const n = parseInt(h, 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+function rgbToKey({ r, g, b }) {
+  return `${r},${g},${b}`;
 }
 
 function makeBayer8() {
@@ -40,63 +56,134 @@ function makeBayer8() {
 
 const BAYER8 = makeBayer8();
 
-function fxKey({
-  blurPx,
-  cellPx,
-  dotScale,
-  brightness,
-  contrast,
-  gamma,
-  thresholdBias,
-  noiseAmount,
-  noiseSeed,
-  invert,
-  maxWidth,
-}) {
-  return `b:${blurPx}|c:${cellPx}|d:${dotScale}|br:${brightness}|ct:${contrast}|ga:${gamma}|tb:${thresholdBias}|na:${noiseAmount}|ns:${noiseSeed}|iv:${invert}|w:${maxWidth}`;
+function fxKey(params) {
+  return Object.keys(FX_DEFAULTS)
+    .map((k) => `${k}:${params[k]}`)
+    .join('|');
+}
+
+function resolvePaletteColor(choice, persona) {
+  const c = FX_COLOR_CHOICES.includes(choice) ? choice : 'white';
+  if (c === 'black') return { r: 0, g: 0, b: 0 };
+  if (c === 'persona') return persona;
+  return { r: 255, g: 255, b: 255 };
+}
+
+function resolveFxColors(accentColor, fx) {
+  const persona = hexToRgb(accentColor);
+  return {
+    paper: resolvePaletteColor(fx.paperColor, persona),
+    ink: resolvePaletteColor(fx.inkColor, persona),
+  };
+}
+
+/** Map luminance between paper ↔ ink. */
+function applyMonochromie(data, w, h, ink, paper, strength) {
+  const s = clamp(strength, 0, 1);
+  for (let i = 0; i < w * h; i += 1) {
+    const idx = i * 4;
+    const lum =
+      (data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114) / 255;
+    const k = (1 - lum) * s;
+    data[idx] = Math.round(mix(paper.r, ink.r, k));
+    data[idx + 1] = Math.round(mix(paper.g, ink.g, k));
+    data[idx + 2] = Math.round(mix(paper.b, ink.b, k));
+    data[idx + 3] = 255;
+  }
+}
+
+/** Gaussian blur via canvas filter (always first in the pipeline). */
+function applyGaussianBlur(sourceCanvas, blurPx) {
+  const blur = typeof blurPx === 'number' ? Math.max(0, blurPx) : 0;
+  if (blur <= 0) return sourceCanvas;
+
+  const blurred = document.createElement('canvas');
+  blurred.width = sourceCanvas.width;
+  blurred.height = sourceCanvas.height;
+  const bctx = blurred.getContext('2d', { willReadFrequently: true });
+  if (!bctx) return sourceCanvas;
+
+  bctx.filter = `blur(${blur}px)`;
+  bctx.drawImage(sourceCanvas, 0, 0);
+  bctx.filter = 'none';
+  return blurred;
+}
+
+/** Halftone screen (ink dots on paper). */
+function applyHalftoneScreen(sourceCanvas, ink, paper, fx) {
+  const w = sourceCanvas.width;
+  const h = sourceCanvas.height;
+  const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('no-2d-context');
+
+  const data = ctx.getImageData(0, 0, w, h).data;
+
+  const cell = clamp(Math.round(typeof fx.cellPx === 'number' ? fx.cellPx : 6), 1, 24);
+  const angleRad = ((typeof fx.halftoneAngle === 'number' ? fx.halftoneAngle : 0) * Math.PI) / 180;
+  const cosA = Math.cos(angleRad);
+  const sinA = Math.sin(angleRad);
+  const bayerAmt = clamp(typeof fx.bayerStrength === 'number' ? fx.bayerStrength : 1, 0, 1);
+  const strength = clamp(typeof fx.dotScale === 'number' ? fx.dotScale : 1, 0, 5);
+  const tb = typeof fx.thresholdBias === 'number' ? fx.thresholdBias : 0;
+
+  const out = document.createElement('canvas');
+  out.width = w;
+  out.height = h;
+  const octx = out.getContext('2d', { willReadFrequently: true });
+  if (!octx) throw new Error('no-2d-context');
+
+  const outData = octx.createImageData(w, h);
+  const outPx = outData.data;
+
+  const cx = w / 2;
+  const cy = h / 2;
+
+  for (let y = 0; y < h; y += 1) {
+    const ry = y - cy;
+    for (let x = 0; x < w; x += 1) {
+      const rx = x - cx;
+      const rotX = cosA * rx - sinA * ry;
+      const rotY = sinA * rx + cosA * ry;
+      const by = Math.floor(rotY / cell) % 8;
+      const bx = Math.floor(rotX / cell) % 8;
+      const bayerT = (BAYER8[(by + 8) % 8][(bx + 8) % 8] + 0.5) / 64;
+      const threshold = mix(0.5, bayerT, bayerAmt);
+
+      const idx = (y * w + x) * 4;
+      const lum =
+        (data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114) / 255;
+      const invLum = 1 - lum;
+      const inkScore = invLum * (0.65 + strength * 0.7) + tb;
+      const inkDot = inkScore > threshold;
+      const c = inkDot ? ink : paper;
+
+      outPx[idx] = c.r;
+      outPx[idx + 1] = c.g;
+      outPx[idx + 2] = c.b;
+      outPx[idx + 3] = 255;
+    }
+  }
+
+  octx.putImageData(outData, 0, 0);
+  return out;
 }
 
 /**
- * @param {string} cachePrefix — unique id for cache (url or pdf page key)
+ * @param {string} cachePrefix
  * @param {number} naturalWidth
  * @param {number} naturalHeight
  * @param {(ctx: CanvasRenderingContext2D, w: number, h: number) => void} drawScaled
  * @param {string} accentColor
  * @param {Record<string, unknown>} fx
  */
-async function ditherMonochromeCore(cachePrefix, naturalWidth, naturalHeight, drawScaled, accentColor, fx) {
-  const {
-    blurPx,
-    cellPx,
-    dotScale,
-    brightness,
-    contrast,
-    gamma,
-    thresholdBias,
-    noiseAmount,
-    noiseSeed,
-    invert,
-    maxWidth,
-  } = { ...FX_DEFAULTS, ...fx };
-
-  const key = `${cachePrefix}|${accentColor}|${fxKey({
-    blurPx,
-    cellPx,
-    dotScale,
-    brightness,
-    contrast,
-    gamma,
-    thresholdBias,
-    noiseAmount,
-    noiseSeed,
-    invert,
-    maxWidth,
-  })}`;
-
+async function processImageFx(cachePrefix, naturalWidth, naturalHeight, drawScaled, accentColor, fx) {
+  const params = { ...FX_DEFAULTS, ...fx };
+  const { ink, paper } = resolveFxColors(accentColor, params);
+  const key = `${cachePrefix}|${accentColor}|${rgbToKey(ink)}|${rgbToKey(paper)}|${fxKey(params)}`;
   const cached = CACHE.get(key);
   if (cached) return cached;
 
-  const maxW = typeof maxWidth === 'number' && maxWidth > 0 ? maxWidth : 860;
+  const maxW = typeof params.maxWidth === 'number' && params.maxWidth > 0 ? params.maxWidth : 860;
   const scale = Math.min(1, maxW / naturalWidth);
   const w = Math.max(1, Math.round(naturalWidth * scale));
   const h = Math.max(1, Math.round(naturalHeight * scale));
@@ -107,97 +194,38 @@ async function ditherMonochromeCore(cachePrefix, naturalWidth, naturalHeight, dr
   const wctx = work.getContext('2d', { willReadFrequently: true });
   if (!wctx) throw new Error('no-2d-context');
 
-  const blur = typeof blurPx === 'number' ? blurPx : 9.5;
-  wctx.filter = `blur(${blur}px) grayscale(1)`;
   drawScaled(wctx, w, h);
-  wctx.filter = 'none';
 
-  const imgData = wctx.getImageData(0, 0, w, h);
-  const data = imgData.data;
+  const afterBlur = applyGaussianBlur(work, params.blurPx);
+  const fxCtx = afterBlur.getContext('2d', { willReadFrequently: true });
+  if (!fxCtx) throw new Error('no-2d-context');
 
-  const cell = typeof cellPx === 'number' ? clamp(Math.round(cellPx), 0, 24) : 6;
-  const safeCell = cell <= 0 ? 1 : cell;
+  const imgData = fxCtx.getImageData(0, 0, w, h);
+  applyMonochromie(imgData.data, w, h, ink, paper, params.monoStrength);
+  fxCtx.putImageData(imgData, 0, 0);
 
-  const out = document.createElement('canvas');
-  out.width = w;
-  out.height = h;
-  const octx = out.getContext('2d', { willReadFrequently: true });
-  if (!octx) throw new Error('no-2d-context');
+  const halftoned = applyHalftoneScreen(afterBlur, ink, paper, params);
 
-  const { r, g, b } = hexToRgb(accentColor);
-
-  const outData = octx.createImageData(w, h);
-  const outPx = outData.data;
-
-  const strength = typeof dotScale === 'number' ? clamp(dotScale, 0, 2) : 1;
-  const br = typeof brightness === 'number' ? brightness : 0;
-  const ct = typeof contrast === 'number' ? contrast : 1;
-  const ga = typeof gamma === 'number' ? gamma : 1;
-  const tb = typeof thresholdBias === 'number' ? thresholdBias : 0;
-  const na = typeof noiseAmount === 'number' ? clamp(noiseAmount, 0, 1) : 0;
-  const ns = typeof noiseSeed === 'number' ? noiseSeed : 1;
-  const iv = typeof invert === 'number' ? invert : 0;
-
-  const rand01 = (x, y) => {
-    let t = (x * 374761393 + y * 668265263 + ns * 1442695041) >>> 0;
-    t = (t ^ (t >> 13)) >>> 0;
-    t = (t * 1274126177) >>> 0;
-    return ((t ^ (t >> 16)) >>> 0) / 4294967295;
-  };
-
-  for (let y = 0; y < h; y += 1) {
-    const by = Math.floor(y / safeCell) % 8;
-    for (let x = 0; x < w; x += 1) {
-      const bx = Math.floor(x / safeCell) % 8;
-      const threshold = (BAYER8[by][bx] + 0.5) / 64;
-      const idx = (y * w + x) * 4;
-      let lum = data[idx] / 255;
-
-      lum = clamp((lum - 0.5) * ct + 0.5 + br, 0, 1);
-      if (ga !== 1) lum = clamp(Math.pow(lum, 1 / ga), 0, 1);
-
-      if (na > 0) lum = clamp(lum + (rand01(x, y) - 0.5) * na, 0, 1);
-
-      const invLum = 1 - lum;
-      const inkScore = invLum * (0.65 + strength * 0.7) + tb;
-      const ink = inkScore > threshold;
-      if (ink) {
-        outPx[idx] = r;
-        outPx[idx + 1] = g;
-        outPx[idx + 2] = b;
-        outPx[idx + 3] = 255;
-      } else {
-        outPx[idx] = 255;
-        outPx[idx + 1] = 255;
-        outPx[idx + 2] = 255;
-        outPx[idx + 3] = 255;
-      }
-    }
-  }
-
-  if (iv >= 1) {
-    for (let i = 0; i < outPx.length; i += 4) {
-      const isPersona = outPx[i] === r && outPx[i + 1] === g && outPx[i + 2] === b;
-      if (isPersona) {
-        outPx[i] = 255;
-        outPx[i + 1] = 255;
-        outPx[i + 2] = 255;
-      } else {
-        outPx[i] = r;
-        outPx[i + 1] = g;
-        outPx[i + 2] = b;
-      }
-    }
-  }
-
-  octx.putImageData(outData, 0, 0);
-
-  const outUrl = out.toDataURL('image/png');
+  const outUrl = halftoned.toDataURL('image/png');
   CACHE.set(key, outUrl);
   return outUrl;
 }
 
-/** Halftone + persona canvas; with invert=1, ink is white on persona background. */
+/** Flat tint like algorithm charts: persona paper, black ink (no blur / halftone). */
+export function tintChartStyleFromCanvas(canvas, accentColor) {
+  const persona = hexToRgb(accentColor);
+  const ink = { r: 0, g: 0, b: 0 };
+  const w = canvas.width;
+  const h = canvas.height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('no-2d-context');
+
+  const imgData = ctx.getImageData(0, 0, w, h);
+  applyMonochromie(imgData.data, w, h, ink, persona, 1);
+  ctx.putImageData(imgData, 0, 0);
+  return canvas.toDataURL('image/png');
+}
+
 export async function ditherMonochromeFromUrl({ src, accentColor, ...fx }) {
   const img = new Image();
   img.crossOrigin = 'anonymous';
@@ -208,34 +236,15 @@ export async function ditherMonochromeFromUrl({ src, accentColor, ...fx }) {
     img.src = src;
   });
 
-  const cachePrefix = src;
-  return ditherMonochromeCore(
-    cachePrefix,
+  return processImageFx(
+    src,
     img.naturalWidth,
     img.naturalHeight,
-    (wctx, w, h) => {
-      wctx.drawImage(img, 0, 0, w, h);
+    (wctx, cw, ch) => {
+      wctx.drawImage(img, 0, 0, cw, ch);
     },
     accentColor,
     fx,
   );
 }
 
-/**
- * @param {object} opts
- * @param {HTMLCanvasElement} opts.canvas — RGB page bitmap (e.g. from pdf.js)
- * @param {string} opts.cacheKey — stable key for CACHE (e.g. pdf URL + page index)
- * @param {string} opts.accentColor
- */
-export async function ditherMonochromeFromCanvas({ canvas, cacheKey, accentColor, ...fx }) {
-  return ditherMonochromeCore(
-    cacheKey,
-    canvas.width,
-    canvas.height,
-    (wctx, w, h) => {
-      wctx.drawImage(canvas, 0, 0, w, h);
-    },
-    accentColor,
-    fx,
-  );
-}

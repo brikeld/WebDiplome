@@ -110,7 +110,10 @@ export default function PostCard({
           isPdfDocumentAsset(attachedAsset) ? (
             <Suspense
               fallback={
-                <div className="post-attachment-block post-image-halftone post-pdf-carousel">
+                <div
+                  className="post-attachment-block post-image-plain post-pdf-carousel"
+                  style={{ '--post-accent': noteColor }}
+                >
                   <div className="post-pdf-carousel__frame">
                     <div className="post-pdf-carousel__placeholder" aria-hidden>
                       <span className="post-pdf-carousel__placeholder-label">pdf</span>

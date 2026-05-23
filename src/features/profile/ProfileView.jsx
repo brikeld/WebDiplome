@@ -3,7 +3,6 @@ import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
 import TabBar from '@/features/profile/TabBar.jsx';
 import ProfileTab from '@/features/profile/ProfileTab.jsx';
 import PostsTab from '@/features/feed/PostsTab.jsx';
-import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import { machineHandleFromProfile } from '@/lib/profileUtils.js';
 import { profilePaneLabel } from '@/features/profile/profileTabs.js';
@@ -39,7 +38,6 @@ export default function ProfileView({
                   isGeneratingPosts={isGeneratingPosts}
                 />
               )}
-              {activeTab === 'badges' && <BadgesTab />}
               {activeTab === 'leaderboards' && <LeaderboardsTab />}
             </div>
           </div>

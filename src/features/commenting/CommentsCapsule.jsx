@@ -10,23 +10,6 @@ import { getMockCommentsFor } from './commentingMock.js';
 import { fetchCommentSuggestions } from './fetchCommentSuggestions.js';
 import { LiveScoringContext } from '@/features/liveScoring/LiveScoringContext.jsx';
 
-function PencilIcon() {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-      aria-hidden
-    >
-      <path d="M3 17l3.6-1 9.4-9.4-2.6-2.6L4 13.4 3 17z" />
-      <path d="M13.4 4l2.6 2.6" />
-    </svg>
-  );
-}
-
 export default function CommentsCapsule({
   post,
   isOpen,
@@ -193,42 +176,54 @@ export default function CommentsCapsule({
         '--persona-accent': post.noteColor,
       }}
     >
-      {comments.map((c, i) => (
-        <Comment
-          key={c.persona}
-          persona={c.persona}
-          content={c.content}
-          metaLeft={mockCommentTimeAgo(post.id, c.persona, i)}
-          metaCenter={commentMetaCenterLine(post.id, c.persona)}
-          displayName={commenterDisplayName}
-          handle={commenterHandle}
-          avatarSrc={commenterAvatarSrc}
-          avatarInitials={commenterAvatarInitials}
-          staggerIndex={i}
-        />
-      ))}
+      <div className="commenting-thread">
+        <div className="commenting-thread-comments-row">
+          {isOpen ? (
+            <div className="commenting-thread-spine" aria-hidden>
+              <div className="commenting-thread-line" />
+            </div>
+          ) : null}
+          <div className="commenting-thread-comments">
+            <div className="commenting-thread-stack">
+              {comments.map((c, i) => (
+              <Comment
+                key={c.persona}
+                persona={c.persona}
+                content={c.content}
+                metaLeft={mockCommentTimeAgo(post.id, c.persona, i)}
+                metaCenter={commentMetaCenterLine(post.id, c.persona)}
+                displayName={commenterDisplayName}
+                handle={commenterHandle}
+                avatarSrc={commenterAvatarSrc}
+                avatarInitials={commenterAvatarInitials}
+                staggerIndex={i}
+              />
+              ))}
+            </div>
+          </div>
+        </div>
 
-      {picked ? null : (
-        <button type="button" className="commenting-write-own">
-          <span className="commenting-write-own-icon" aria-hidden>
-            <PencilIcon />
-          </span>
-          <span className="commenting-write-own-label">Write your own reply</span>
-        </button>
-      )}
+        <div className="commenting-thread-replies">
+          {picked ? null : (
+            <button type="button" className="commenting-write-own">
+              Write your own reply
+            </button>
+          )}
 
-      <SuggestionRow
-        suggestions={suggestions}
-        suggestionsLoading={suggestionsLoading}
-        suggestionsError={suggestionsError}
-        avatarSrc={avatarSrc}
-        avatarInitials={avatarInitials}
-        picked={picked}
-        userCommentRef={userCommentRef}
-        postId={post.id}
-        displayName={displayName}
-        onPick={handlePick}
-      />
+          <SuggestionRow
+            suggestions={suggestions}
+            suggestionsLoading={suggestionsLoading}
+            suggestionsError={suggestionsError}
+            avatarSrc={avatarSrc}
+            avatarInitials={avatarInitials}
+            picked={picked}
+            userCommentRef={userCommentRef}
+            postId={post.id}
+            displayName={displayName}
+            onPick={handlePick}
+          />
+        </div>
+      </div>
     </div>
   );
 }

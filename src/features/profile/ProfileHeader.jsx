@@ -93,17 +93,6 @@ export default function ProfileHeader({
             </div>
           </div>
         </div>
-
-        <div
-          className="profile-badge-capsule"
-          style={{
-            borderColor: personaColor,
-          }}
-        >
-          <div className="profile-badge-circle" style={{ background: personaColor }} />
-          <div className="profile-badge-circle" style={{ background: personaColor }} />
-          <div className="profile-badge-circle" style={{ background: personaColor }} />
-        </div>
       </div>
     </>
   );

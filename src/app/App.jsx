@@ -5,7 +5,6 @@ import ScrollArea from '@/layout/ScrollArea.jsx';
 import ProfileView from '@/features/profile/ProfileView.jsx';
 import HomeTab from '@/features/home/HomeTab.jsx';
 import LandingPage from '@/landing-page/LandingPage.jsx';
-import BadgesTab from '@/features/profile/tabs/BadgesTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import {
   getPersonaScoresNormalized,
@@ -21,7 +20,6 @@ import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import HidePostConfirmDialog from '@/features/feed/HidePostConfirmDialog.jsx';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
-
 const API_ORIGIN =
   (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
   'http://localhost:3001';

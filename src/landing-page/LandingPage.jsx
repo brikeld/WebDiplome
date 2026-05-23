@@ -147,17 +147,6 @@ function ProfileHeaderPreview() {
             </div>
           </div>
         </div>
-        <div
-          className="profile-badge-capsule"
-          style={{
-            borderColor: '#759AEF',
-            background: 'color-mix(in srgb, #759AEF 15%, #fff)',
-          }}
-        >
-          <div className="profile-badge-circle" style={{ background: '#759AEF' }} />
-          <div className="profile-badge-circle" style={{ background: '#759AEF' }} />
-          <div className="profile-badge-circle" style={{ background: '#759AEF' }} />
-        </div>
       </div>
     </div>
   );

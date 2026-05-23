@@ -21,8 +21,8 @@
   --radius-pill: 46px;
   /* Post bubbles + attachment panels (was ~16px) */
   --radius-post-surface: 41px;
-  /* Avatar in feed cards (was 12px) */
-  --radius-post-avatar: 35px;
+  /* Feed post avatar — same corner radius as post capsule (--radius-post-surface) */
+  --post-avatar-size: 10.5rem;
   /* White shell (feed + profile content): stroke width.
      Edit THIS value to test (e.g. 20px). Do NOT use `var(--capsule-shell-border-width, 20px)` —
      the fallback is ignored whenever the variable is defined (common mistake). */
@@ -1074,8 +1074,8 @@ body {
   border: none;
   border-radius: var(--radius-post-surface);
   padding: 12px 12px 10px 12px;
-  /* Same header band as posts with attachments (was 12.5rem on text-only). */
-  min-height: 9.5rem;
+  /* Header band fits large square avatar */
+  min-height: 12.25rem;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1084,11 +1084,11 @@ body {
 
 .post-card-head {
   display: grid;
-  grid-template-columns: 4rem minmax(0, 1fr);
+  grid-template-columns: var(--post-avatar-size) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
-  column-gap: 12px;
+  column-gap: 14px;
   row-gap: 8px;
-  align-items: end;
+  align-items: stretch;
   min-width: 0;
   width: 100%;
   flex: 1 1 auto;
@@ -1099,14 +1099,14 @@ body {
   position: relative;
   grid-column: 1;
   grid-row: 1 / -1;
-  width: 4.25rem;
-  height: 4.25rem;
-  min-width: 4.25rem;
-  min-height: 4.25rem;
-  max-width: 4.25rem;
-  max-height: 4.25rem;
+  width: var(--post-avatar-size);
+  height: var(--post-avatar-size);
+  min-width: var(--post-avatar-size);
+  min-height: var(--post-avatar-size);
+  max-width: var(--post-avatar-size);
+  max-height: var(--post-avatar-size);
   aspect-ratio: 1;
-  border-radius: var(--radius-post-avatar);
+  border-radius: var(--radius-post-surface);
   background: color-mix(in srgb, var(--post-accent) 20%, #fff);
   color: var(--post-accent);
   border: none;
@@ -1115,17 +1115,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1.65rem;
   font-weight: 700;
   font-family: var(--font-sans);
   flex-shrink: 0;
-  align-self: start;
+  align-self: center;
+  justify-self: start;
 }
 
 .post-avatar-img {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-post-avatar);
+  border-radius: var(--radius-post-surface);
   object-fit: cover;
   display: block;
 }
@@ -1184,8 +1185,7 @@ body {
   grid-row: 1;
   align-self: start;
   min-width: 0;
-  padding-top: 2px;
-  padding-right: 2px;
+  padding: 8px 8px 0 4px;
 }
 
 .post-card-byline {
@@ -1238,11 +1238,6 @@ body {
   text-overflow: ellipsis;
   text-align: left;
   max-width: 100%;
-}
-
-/* All text is black — no per-persona text color overrides needed */
-.post-card[data-persona='popularite'] .post-avatar {
-  border-color: var(--post-accent);
 }
 
 /* ── Dashboard (Figma white shell) ── */
@@ -1400,20 +1395,6 @@ body {
   height: auto;
   align-self: start;
 }
-
-/* ── BADGES TAB ── */
-.badge-section { margin-bottom: 36px; }
-.badge-section h3 {
-  font-family: var(--font-sans);
-  font-weight: 800;
-  font-size: 18px;
-  letter-spacing: -0.01em;
-  margin-bottom: 16px;
-}
-.badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.badge-color-rect { width: 100%; height: 130px; border-radius: 4px; margin-bottom: 8px; }
-.badge-card-name { font-family: var(--font-sans); font-weight: 700; font-size: 12px; margin-bottom: 2px; }
-.badge-card-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
 
 /* ── LEADERBOARDS ── */
 .leaderboards-placeholder {

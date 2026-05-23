@@ -72,15 +72,11 @@
   opacity: 1;
 }
 
-/* ── PDF inline preview (carousel + same halftone stack as images) ───────── */
+/* ── PDF inline preview (first page, chart-style tint) ───────────────────── */
 
 .post-pdf-carousel .post-pdf-carousel__frame {
   position: relative;
   min-height: 120px;
-  /* Mirror the parent .post-attachment-block viewport cap so the nav
-     chevrons and page dots (positioned absolutely inside __frame) stay
-     inside the visible cropped area, instead of falling below it when a
-     rendered PDF page is taller than the cap. */
   max-height: 70vh;
   overflow: hidden;
 }
@@ -91,7 +87,7 @@
   justify-content: center;
   min-height: 160px;
   background: var(--post-accent, #759aef);
-  color: #fff;
+  color: #000;
   font-family: var(--font-sans, inherit);
   font-size: 13px;
   font-weight: 700;
@@ -124,80 +120,4 @@
   100% {
     background-position: -100% 0;
   }
-}
-
-.post-pdf-carousel__nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 3;
-  width: 52px;
-  height: 100px;
-  padding: 0;
-  margin: 0;
-  border: none;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  background: color-mix(in srgb, #fff 22%, transparent);
-  cursor: pointer;
-  pointer-events: auto;
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.post-pdf-carousel__nav:hover {
-  background: color-mix(in srgb, #fff 38%, transparent);
-}
-
-.post-pdf-carousel__nav:active {
-  transform: translateY(-50%) scale(0.96);
-}
-
-.post-pdf-carousel__nav:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-
-.post-pdf-carousel__nav--prev {
-  left: 6px;
-}
-
-.post-pdf-carousel__nav--next {
-  right: 6px;
-}
-
-.post-pdf-carousel__dots {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  transform: translateX(-50%);
-  z-index: 3;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  pointer-events: auto;
-}
-
-.post-pdf-carousel__dot {
-  width: 6px;
-  height: 6px;
-  padding: 0;
-  border: none;
-  border-radius: 9999px;
-  background: color-mix(in srgb, #fff 35%, transparent);
-  cursor: pointer;
-  opacity: 0.55;
-  transition: opacity 0.15s ease, transform 0.15s ease, background 0.15s ease;
-}
-
-.post-pdf-carousel__dot:hover {
-  opacity: 0.9;
-}
-
-.post-pdf-carousel__dot--active {
-  opacity: 1;
-  background: #fff;
-  transform: scale(1.15);
 }

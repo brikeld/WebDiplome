@@ -8,7 +8,7 @@ export default function Comment({
   metaLeft,
   metaCenter,
 }) {
-  const metaInline = [metaLeft, metaCenter].filter(Boolean).join(' · ');
+  const metaBottom = [metaLeft, metaCenter].filter(Boolean).join(' · ');
 
   return (
     <div
@@ -16,20 +16,26 @@ export default function Comment({
       data-persona={persona}
       style={{ transitionDelay: `${staggerIndex * 60}ms` }}
     >
-      <div className="commenting-comment-main">
+      <div className="commenting-comment-head">
         <div className="commenting-comment-avatar" aria-hidden>
-          {avatarSrc ? <img src={avatarSrc} alt="" /> : <span>{avatarInitials}</span>}
+          {avatarSrc ? (
+            <img className="commenting-comment-avatar-img" src={avatarSrc} alt="" />
+          ) : (
+            <span>{avatarInitials}</span>
+          )}
         </div>
-        <div className="commenting-comment-text">
-          <p className="commenting-comment-name">{displayName}</p>
+        <div className="commenting-comment-lead">
           <p className="commenting-comment-content">{content}</p>
         </div>
+        <div className="commenting-comment-footer">
+          <span className="commenting-comment-name">{displayName}</span>
+          {metaBottom ? (
+            <span className="commenting-comment-meta-inline" aria-label="Comment metadata">
+              {metaBottom}
+            </span>
+          ) : null}
+        </div>
       </div>
-      {metaInline ? (
-        <span className="commenting-comment-meta-inline" aria-label="Comment metadata">
-          {metaInline}
-        </span>
-      ) : null}
     </div>
   );
 }
