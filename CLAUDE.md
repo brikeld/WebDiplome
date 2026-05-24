@@ -87,7 +87,7 @@ Diplome_/testCreationAcc (Electron + Python)            WebDiplome (Vite + Expre
 1. Electron collector (Python v18_profile.py)
    scrapes macOS → writes data/data.json + assets/
 2. Flask /analyze (python/server/app.py, :5050)
-   computes persona scores + badges
+   computes persona scores
 3. Electron main.js calls LM Studio via
    python/post_generator/PostGenerator.js
    → writes data/posts_personas.json

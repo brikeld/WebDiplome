@@ -40,7 +40,7 @@ export default function PostsTab({
   highlightedPostId = null,
   onHighlightPost,
 }) {
-  const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
+  const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
   const { isHidden } = useLiveScoring();
 
   const posts = useMemo(() => {
@@ -124,11 +124,17 @@ export default function PostsTab({
           post={p}
           animateEnter={!!p._feedEnter}
           hidePills={hideInteractions}
-          isCommentsOpen={hideInteractions ? false : openCommentsPostId === p.id}
+          isCommentsOpen={hideInteractions ? false : openCommentsPostIds.has(p.id)}
           onToggleComments={
             hideInteractions
               ? undefined
-              : () => setOpenCommentsPostId((prev) => (prev === p.id ? null : p.id))
+              : () =>
+                  setOpenCommentsPostIds((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(p.id)) next.delete(p.id);
+                    else next.add(p.id);
+                    return next;
+                  })
           }
           isHidden={
             hideInteractions ? false : isHidden(normalizePostHideKey(p.createdAt))

@@ -18,7 +18,6 @@ import { applyAccountDeletionFromServer } from '@/lib/liveScoringStorage.js';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
-import HidePostConfirmDialog from '@/features/feed/HidePostConfirmDialog.jsx';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
 const API_ORIGIN =
   (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
@@ -42,6 +41,17 @@ const PERSONA_COLORS = {
   productivity: '#D8D8D8',
   security: '#759AEF',
   popularity: '#CCF847',
+};
+// Pastel companion colors for hide-pill backgrounds. Security pastel matches the
+// Figma spec (#BCCDF5); the others were picked to mirror that lightness ratio.
+const PERSONA_PASTEL_COLORS = {
+  productivity: '#EEEEEE',
+  productivite: '#EEEEEE',
+  security: '#BCCDF5',
+  securite: '#BCCDF5',
+  popularity: '#EBF8B7',
+  popularite: '#EBF8B7',
+  social: '#EBF8B7',
 };
 const PERSONA_LABELS = {
   productivity: 'Productivity',
@@ -183,7 +193,7 @@ function AppInner({
 }) {
   const { adjustedScores, dominantPersona: liveDominantPersona, hidePost, revealPost, isHidden } =
     useLiveScoring();
-  const [dashboardHideConfirm, setDashboardHideConfirm] = useState(null);
+  const [confirmingHide, setConfirmingHide] = useState(false);
   const [highlightedPost, setHighlightedPost] = useState(null);
   const [hideNudge, setHideNudge] = useState(false);
 
@@ -206,6 +216,8 @@ function AppInner({
 
   const handleHighlightPost = useCallback((post) => {
     setHighlightedPost((prev) => (prev?.id === post.id ? null : post));
+    setConfirmingHide(false);
+    setHideNudge(false); // dismiss "select a post first" immediately when user picks one
   }, []);
 
   const highlightedPostIsHidden = highlightedPost
@@ -216,19 +228,42 @@ function AppInner({
     ? (PERSONA_LABEL_BY_POST[highlightedPost.persona] ?? 'Social')
     : null;
 
+  // Returns the bounding rect of the currently highlighted post card in the feed.
+  // Used as the animation source so the scoring particle arcs from the post (left
+  // column) to the persona ring (right column) — same dramatic path as comments.
+  const getHighlightedPostRect = () =>
+    document.querySelector('.post-card--highlighted')?.getBoundingClientRect() ?? null;
+
   const handleDashboardHide = () => {
     if (!profile) return;
     if (highlightedPost) {
       if (highlightedPostIsHidden) {
-        revealPost(highlightedPost, null);
+        revealPost(highlightedPost, getHighlightedPostRect());
         setHighlightedPost(null);
+        setConfirmingHide(false);
       } else {
-        setDashboardHideConfirm({ post: highlightedPost });
+        setConfirmingHide(true);
+        setHideNudge(false);
       }
     } else {
+      setConfirmingHide(false);
       setHideNudge(true);
       setTimeout(() => setHideNudge(false), 4000);
     }
+  };
+
+  const handleConfirmHide = () => {
+    if (highlightedPost) {
+      // Arc the particle from the highlighted feed card (left) to the ring (right),
+      // matching the visual arc used by comment boosts.
+      hidePost(highlightedPost, getHighlightedPostRect());
+    }
+    setConfirmingHide(false);
+    setHighlightedPost(null);
+  };
+
+  const handleCancelHide = () => {
+    setConfirmingHide(false);
   };
 
   const handleDashboardRanking = () => {
@@ -305,72 +340,168 @@ function AppInner({
               className="dashboard-capsule dashboard-capsule--figma"
               style={{ '--persona-accent': personaColor }}
             >
-              <div className="dashboard-actions-row">
-                <button
-                  type="button"
-                  className={`dashboard-hide-pill${highlightedPostIsHidden ? ' dashboard-hide-pill--unhide' : ''}${highlightedPost ? ' dashboard-hide-pill--armed' : ''}`}
-                  onClick={handleDashboardHide}
-                  disabled={!profile}
-                  style={{ '--hide-pill-accent': highlightedPost?.noteColor ?? personaColor }}
-                >
-                  {/* Ghost post texture behind everything */}
-                  <div className="dashboard-hide-pill__bg-post" aria-hidden>
+              {(() => {
+                const personaKeyForPill = String(
+                  highlightedPost?.persona ?? personaKey,
+                ).toLowerCase();
+                const hidePillAccent = highlightedPost?.noteColor ?? personaColor;
+                const hidePillPastel =
+                  PERSONA_PASTEL_COLORS[personaKeyForPill] ??
+                  PERSONA_PASTEL_COLORS.security;
+                const confirmActive =
+                  confirmingHide && highlightedPost && !highlightedPostIsHidden;
+                const points = Math.abs(
+                  Number(highlightedPost?.systemDeltaPct) || 1,
+                );
+                const personaLabelLower = (
+                  highlightedPostPersonaLabel ?? PERSONA_LABELS[personaKey] ?? 'Social'
+                ).toLowerCase();
+
+                const pillStyle = {
+                  '--hide-pill-accent': hidePillAccent,
+                  '--hide-pill-pastel': hidePillPastel,
+                };
+
+                // eye-off (slashed): used for normal, armed-hidden, confirm mini, nudge
+                const EyeOffIcon = (props) => (
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
+                    <path d="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.06 3.06c1.39-1.23 2.49-2.77 3.18-4.53C21.27 7.11 17 4 12 4c-1.27 0-2.49.2-3.64.57l2.17 2.17c.47-.14.96-.24 1.47-.24zM2.71 3.16a.996.996 0 0 0 0 1.41l1.97 1.97C3.06 7.83 1.77 9.53 1 11.5 2.73 15.89 7 19 12 19c1.52 0 2.97-.3 4.31-.82l2.72 2.72a.996.996 0 1 0 1.41-1.41L4.13 3.16c-.39-.39-1.03-.39-1.42 0zM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .38-.03.57-.07l1.57 1.57c-.64.32-1.37.5-2.14.5zm2.97-5.33a2.97 2.97 0 0 0-2.64-2.64l2.64 2.64z" />
+                  </svg>
+                );
+                // plain open eye: used for armed (unhidden post highlighted)
+                const EyeIcon = (props) => (
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
+                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                  </svg>
+                );
+                const CursorIcon = (props) => (
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
+                    <path d="M4 2v16.4l4.2-3.9 2.4 5.5 2.5-1.1-2.4-5.5H16L4 2z" />
+                  </svg>
+                );
+
+                const GhostPost = ({ tiny = false }) => (
+                  <div
+                    className={`dashboard-hide-pill__bg-post${
+                      tiny ? ' dashboard-hide-pill__bg-post--mini' : ''
+                    }`}
+                    aria-hidden
+                  >
                     <div className="dashboard-hide-pill__avatar" />
                     <div className="dashboard-hide-pill__lines">
                       <div className="dashboard-hide-pill__line" />
                       <div className="dashboard-hide-pill__line dashboard-hide-pill__line--short" />
-                      <div className="dashboard-hide-pill__line dashboard-hide-pill__line--tiny" />
+                      {!tiny && (
+                        <div className="dashboard-hide-pill__line dashboard-hide-pill__line--tiny" />
+                      )}
                     </div>
                   </div>
+                );
 
-                  {/* Frosted overlay */}
-                  <div className="dashboard-hide-pill__frosted" aria-hidden />
+                if (confirmActive) {
+                  return (
+                    <div
+                      className="dashboard-actions-row dashboard-actions-row--confirm"
+                    >
+                      <div
+                        className="dashboard-hide-pill dashboard-hide-pill--confirm"
+                        role="alertdialog"
+                        aria-labelledby="hide-confirm-title-inline"
+                        style={pillStyle}
+                      >
+                        <div className="dashboard-hide-pill__confirm-left">
+                          <span className="dashboard-hide-pill__confirm-kicker">
+                            {personaLabelLower} persona
+                          </span>
+                          <h3
+                            id="hide-confirm-title-inline"
+                            className="dashboard-hide-pill__confirm-title"
+                          >
+                            Hide this post?
+                          </h3>
+                          <p className="dashboard-hide-pill__confirm-body">
+                            If you hide this post, you will lose{' '}
+                            <span className="dashboard-hide-pill__confirm-points">
+                              -{points}%
+                            </span>{' '}
+                            on your {personaLabelLower} score and no one else will be
+                            able to see this post.
+                          </p>
+                          <div className="dashboard-hide-pill__confirm-actions">
+                            <button
+                              type="button"
+                              className="dashboard-hide-pill__confirm-btn dashboard-hide-pill__confirm-btn--cancel"
+                              onClick={handleCancelHide}
+                            >
+                              Keep post
+                            </button>
+                            <button
+                              type="button"
+                              className="dashboard-hide-pill__confirm-btn dashboard-hide-pill__confirm-btn--hide"
+                              onClick={handleConfirmHide}
+                            >
+                              Hide anyway
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          className="dashboard-hide-pill__confirm-right"
+                          aria-hidden
+                        >
+                          <GhostPost tiny />
+                          <span className="dashboard-hide-pill__confirm-mini-icon">
+                            <EyeOffIcon width="44" height="44" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
 
-                  {/* Armed: persona chip */}
-                  {highlightedPost && !highlightedPostIsHidden && (
-                    <span className="dashboard-hide-pill__persona-chip">
-                      {highlightedPostPersonaLabel} post
-                    </span>
-                  )}
+                let stateModifier = 'dashboard-hide-pill--normal';
+                if (hideNudge) stateModifier = 'dashboard-hide-pill--nudge';
+                else if (highlightedPostIsHidden)
+                  stateModifier = 'dashboard-hide-pill--armed-hidden';
+                else if (highlightedPost)
+                  stateModifier = 'dashboard-hide-pill--armed';
 
-                  {/* Main label */}
-                  <span className="dashboard-hide-pill__label">
-                    {highlightedPostIsHidden ? (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                      </svg>
-                    ) : (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                        <path d="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.06 3.06c1.39-1.23 2.49-2.77 3.18-4.53C21.27 7.11 17 4 12 4c-1.27 0-2.49.2-3.64.57l2.17 2.17c.47-.14.96-.24 1.47-.24zM2.71 3.16a.996.996 0 0 0 0 1.41l1.97 1.97C3.06 7.83 1.77 9.53 1 11.5 2.73 15.89 7 19 12 19c1.52 0 2.97-.3 4.31-.82l2.72 2.72a.996.996 0 1 0 1.41-1.41L4.13 3.16c-.39-.39-1.03-.39-1.42 0zM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .38-.03.57-.07l1.57 1.57c-.64.32-1.37.5-2.14.5zm2.97-5.33a2.97 2.97 0 0 0-2.64-2.64l2.64 2.64z" />
-                      </svg>
-                    )}
-                    <span className="dashboard-hide-pill__label-text">
-                      {highlightedPostIsHidden ? 'UNHIDE' : highlightedPost ? 'HIDE POST' : 'HIDE'}
-                    </span>
-                  </span>
-
-                  {/* Sub-text (default state only) */}
-                  {!highlightedPost && (
-                    <span className="dashboard-hide-pill__sub">tap a post first</span>
-                  )}
-
-                  {/* Nudge dialog card — shown for 4s when clicked with no selection */}
-                  {hideNudge && (
-                    <span className="dashboard-hide-pill__nudge-msg">
-                      <span className="dashboard-hide-pill__nudge-kicker">hide post</span>
-                      <span className="dashboard-hide-pill__nudge-title">Highlight a post first</span>
-                      <span className="dashboard-hide-pill__nudge-body">Click any post in the feed to select it</span>
-                    </span>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className="dashboard-action-pill"
-                  onClick={handleDashboardRanking}
-                >
-                  RANKING
-                </button>
-              </div>
+                return (
+                  <div className="dashboard-actions-row">
+                    <button
+                      type="button"
+                      className={`dashboard-hide-pill ${stateModifier}`}
+                      onClick={handleDashboardHide}
+                      disabled={!profile}
+                      style={pillStyle}
+                    >
+                      <GhostPost />
+                      <span className="dashboard-hide-pill__icon">
+                        {hideNudge ? (
+                          <CursorIcon width="56" height="56" />
+                        ) : highlightedPostIsHidden ? (
+                          // hidden post selected → open eye = "you can reveal it"
+                          <EyeIcon width="56" height="56" />
+                        ) : (
+                          // normal / unhidden-armed → eye-off = "you can hide it"
+                          <EyeOffIcon width="56" height="56" />
+                        )}
+                      </span>
+                      {hideNudge && (
+                        <span className="dashboard-hide-pill__nudge-capsule">
+                          Select a post first
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className="dashboard-action-pill"
+                      onClick={handleDashboardRanking}
+                    >
+                      RANKING
+                    </button>
+                  </div>
+                );
+              })()}
 
               <div className="dashboard-primary-row">
                 {harvestPhase === 'harvesting' ? (
@@ -496,16 +627,6 @@ function AppInner({
           </aside>
         )}
       </div>
-      {dashboardHideConfirm ? (
-        <HidePostConfirmDialog
-          post={dashboardHideConfirm.post}
-          onCancel={() => setDashboardHideConfirm(null)}
-          onConfirm={() => {
-            hidePost(dashboardHideConfirm.post, null);
-            setDashboardHideConfirm(null);
-          }}
-        />
-      ) : null}
     </div>
   );
 }

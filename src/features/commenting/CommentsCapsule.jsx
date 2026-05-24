@@ -41,9 +41,7 @@ export default function CommentsCapsule({
   // Reset pick state when capsule closes; new session id when it opens
   useEffect(() => {
     if (!isOpen) {
-      setPicked(null);
       setOriginRect(null);
-      setSuggestions([]);
       setSuggestionsLoading(false);
       setSuggestionsError(null);
       commentBoostAppliedRef.current = false;
@@ -53,9 +51,9 @@ export default function CommentsCapsule({
     commentBoostAppliedRef.current = false;
   }, [isOpen, post.id]);
 
-  // Fetch AI suggestions when comments open
+  // Fetch AI suggestions when comments open (skip if already cached for this post)
   useEffect(() => {
-    if (!isOpen || picked) return undefined;
+    if (!isOpen || picked || suggestions.length > 0) return undefined;
 
     const gen = fetchGenRef.current + 1;
     fetchGenRef.current = gen;

@@ -4,8 +4,7 @@
     "content": "I spend so much time in Cursor talking to the AI that I'm starting to forget how to type code manually. Send help.",
     "sentiment": "positive",
     "createdAt": "2026-05-23T17:36:21.201Z",
-    "textSliceType": "browser",
-    "attachedAsset": null
+    "textSliceType": "browser"
   },
   {
     "persona": "productivite",
@@ -25,7 +24,6 @@
     "content": "Wow, I've created 42 .png files in the last week. It looks like I'm deep in visual creation mode lately! 😅",
     "sentiment": "positive",
     "createdAt": "2026-05-23T17:36:22.468Z",
-    "chartType": "recent_downloads",
     "attachedAsset": {
       "kind": "image",
       "filename": "8141b3e7da9bafd9992bcfbee2e4133a1cf7530b935eef8ef6d94207bc38a53e.png",
@@ -33,6 +31,7 @@
       "url": "/uploads/8141b3e7da9bafd9992bcfbee2e4133a1cf7530b935eef8ef6d94207bc38a53e.png",
       "mime": "image/png",
       "visionAnalysed": true
-    }
+    },
+    "chartType": "recent_downloads"
   }
 ]

@@ -1041,6 +1041,8 @@ body {
 /* ── Post highlight (clickable selection for HIDE / tell-me-more) ── */
 .post-card--highlightable {
   cursor: pointer;
+  transform: scale(1) translateY(0);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes post-highlight-glow {
@@ -1061,22 +1063,21 @@ body {
 @keyframes post-unhide-glow {
   0%, 100% {
     box-shadow:
-      0 0 0 2px #ccf847,
-      0 0 14px 6px rgba(204, 248, 71, 0.55),
-      0 0 28px 12px rgba(204, 248, 71, 0.22);
+      0 0 0 2px var(--post-accent, #ccf847),
+      0 0 14px 6px color-mix(in srgb, var(--post-accent, #ccf847) 55%, transparent),
+      0 0 28px 12px color-mix(in srgb, var(--post-accent, #ccf847) 22%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 3px #ccf847,
-      0 0 26px 16px rgba(204, 248, 71, 0.65),
-      0 0 48px 26px rgba(204, 248, 71, 0.28);
+      0 0 0 3px var(--post-accent, #ccf847),
+      0 0 26px 16px color-mix(in srgb, var(--post-accent, #ccf847) 65%, transparent),
+      0 0 48px 26px color-mix(in srgb, var(--post-accent, #ccf847) 28%, transparent);
   }
 }
 
 .post-card--highlighted {
-  transform: scale(1.016);
+  transform: scale(1.016) translateY(-4px);
   z-index: 1;
-  transition: transform 0.2s ease;
 }
 
 .post-card--highlighted .post-unified-capsule {
@@ -1339,32 +1340,47 @@ body {
   outline-offset: 3px;
 }
 
-/* ── HIDE PILL — creative dark design ── */
+/* ──────────────────────────────────────────────────────────────────────────
+   HIDE PILL — five visual states matching Figma:
+     1. normal               (no post selected)        pastel fill, accent stroke, icon 50%
+     2. armed (unhidden)     (post selected)           same shell + icon 100% + glow
+     3. armed-hidden         (hidden post selected)    inverted: accent fill, pastel stroke
+     4. confirm              (clicked while armed)     wide pill with text + 2 buttons + mini post
+     5. nudge                (clicked with no select)  unblurred post + cursor icon + "select a post first"
+   Each state uses --hide-pill-accent (persona color) and --hide-pill-pastel.
+   ────────────────────────────────────────────────────────────────────────── */
+
 .dashboard-hide-pill {
+  --hide-pill-radius: var(--radius-pill);
+  --hide-pill-border: 2px;
   appearance: none;
-  border: 2px solid transparent;
-  border-radius: var(--radius-pill);
-  /* Default: near-black with persona tint — like the "Hide anyway" button in the dialog */
-  background: color-mix(in srgb, var(--persona-accent, #759aef) 14%, #0d0d0d);
-  color: var(--persona-accent, #759aef);
+  border: var(--hide-pill-border) solid var(--hide-pill-accent, #759aef);
+  border-radius: var(--hide-pill-radius);
+  background: var(--hide-pill-pastel, #bccdf5);
+  color: #000;
   font-family: var(--font-avant);
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1.1;
-  text-transform: uppercase;
   cursor: pointer;
   min-height: 0;
   height: 100%;
   width: 100%;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
   position: relative;
   overflow: hidden;
-  padding: 0 12px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Smooth cross-state morphing — colors + radius + border tween together */
+  transition:
+    background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-width 200ms ease,
+    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 280ms ease,
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dashboard-hide-pill:disabled {
@@ -1373,30 +1389,41 @@ body {
 }
 
 .dashboard-hide-pill:focus-visible {
-  outline: 2px solid var(--persona-accent, #759aef);
+  outline: 2px solid #000;
   outline-offset: 3px;
 }
 
-/* Ghost post texture fills the background */
+/* ── Anonymous post texture (shared by all states) ──
+   Stretches vertically inside the pill; inner skeleton stays centered. */
 .dashboard-hide-pill__bg-post {
   position: absolute;
-  inset: 0;
+  left: 8px;
+  right: 8px;
+  top: 20px;
+  bottom: 20px;
   display: flex;
   align-items: center;
-  padding: 10px 12px;
-  gap: 10px;
-  filter: blur(1.4px) brightness(0.75);
-  opacity: 0.35;
+  gap: 8px;
+  padding: 0 15px;
+  box-sizing: border-box;
+  border-radius: calc(var(--hide-pill-radius) - 10px);
+  background: color-mix(in srgb, var(--hide-pill-accent, #ffffff) 32%, transparent);
+  filter: blur(1px);
   pointer-events: none;
+  transition:
+    filter 280ms ease,
+    background-color 280ms ease,
+    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dashboard-hide-pill__avatar {
-  width: 48px;
-  height: 48px;
+  width: 38%;
+  max-width: 90px;
+  aspect-ratio: 1 / 1;
   flex-shrink: 0;
-  border-radius: 12px;
-  background: var(--persona-accent, #759aef);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--hide-pill-accent, #759aef) 55%, transparent);
+  transition: background-color 280ms ease;
 }
 
 .dashboard-hide-pill__lines {
@@ -1404,215 +1431,399 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .dashboard-hide-pill__line {
-  height: 12px;
-  border-radius: 6px;
-  background: var(--persona-accent, #759aef);
+  height: 9px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--hide-pill-accent, #759aef) 55%, transparent);
+  transition: background-color 280ms ease;
 }
 
-.dashboard-hide-pill__line--short { width: 60%; }
-.dashboard-hide-pill__line--tiny  { width: 38%; height: 8px; }
+.dashboard-hide-pill__line--short { width: 70%; }
+.dashboard-hide-pill__line--tiny  { width: 45%; height: 7px; }
 
-/* Frosted dark overlay on top of ghost post */
-.dashboard-hide-pill__frosted {
-  position: absolute;
-  inset: 0;
-  border-radius: calc(var(--radius-pill) - 2px);
-  pointer-events: none;
-  background: color-mix(in srgb, var(--persona-accent, #759aef) 8%, rgba(0, 0, 0, 0.55));
-}
-
-/* Persona chip — shown only in armed state */
-.dashboard-hide-pill__persona-chip {
+/* ── Foreground icon (eye-off / cursor) ── */
+.dashboard-hide-pill__icon {
   position: relative;
   z-index: 2;
-  display: inline-block;
-  padding: 3px 10px 4px;
-  border-radius: var(--radius-pill);
-  border: 1.5px solid rgba(0, 0, 0, 0.3);
-  background: rgba(0, 0, 0, 0.18);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  line-height: 1.2;
-  color: #000;
-}
-
-/* Main icon + label row */
-.dashboard-hide-pill__label {
-  position: relative;
-  z-index: 2;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: clamp(22px, 2.4vw, 30px);
+  justify-content: center;
+  color: #1c1c1c;
+  opacity: 0.5;
+  transition:
+    opacity 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 280ms ease,
+    filter 280ms ease;
 }
 
-.dashboard-hide-pill__label-text {
-  line-height: 1;
+.dashboard-hide-pill__icon svg {
+  width: clamp(54px, 6.8vw, 92px);
+  height: clamp(54px, 6.8vw, 92px);
+  display: block;
 }
 
-/* Sub-text below icon/label */
-.dashboard-hide-pill__sub {
-  position: relative;
-  z-index: 2;
-  font-size: clamp(11px, 1.2vw, 14px);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: lowercase;
-  opacity: 0.65;
-  line-height: 1;
+/* ── STATE 1: normal — defaults already set above ── */
+.dashboard-hide-pill--normal .dashboard-hide-pill__icon {
+  opacity: 0.5;
+  transform: scale(0.94);
 }
 
-/* ── ARMED state: post selected, not hidden ── */
-@keyframes hide-pill-glow {
+/* ── STATE 2: armed (unhidden post highlighted) ──
+   Stronger glow + larger radius + icon pops to 100% with a small scale-up. */
+@keyframes hide-pill-armed-glow {
   0%, 100% {
     box-shadow:
-      0 0 0 2px var(--hide-pill-accent, var(--persona-accent, #759aef)),
-      0 0 12px 4px color-mix(in srgb, var(--hide-pill-accent, var(--persona-accent, #759aef)) 55%, transparent),
-      0 0 26px 10px color-mix(in srgb, var(--hide-pill-accent, var(--persona-accent, #759aef)) 22%, transparent);
+      0 0 0 0 transparent,
+      0 0 22px 4px color-mix(in srgb, var(--hide-pill-accent, #759aef) 75%, transparent),
+      0 0 44px 12px color-mix(in srgb, var(--hide-pill-accent, #759aef) 45%, transparent),
+      0 0 72px 24px color-mix(in srgb, var(--hide-pill-accent, #759aef) 22%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 2px var(--hide-pill-accent, var(--persona-accent, #759aef)),
-      0 0 20px 8px color-mix(in srgb, var(--hide-pill-accent, var(--persona-accent, #759aef)) 65%, transparent),
-      0 0 38px 16px color-mix(in srgb, var(--hide-pill-accent, var(--persona-accent, #759aef)) 28%, transparent);
+      0 0 0 0 transparent,
+      0 0 32px 8px color-mix(in srgb, var(--hide-pill-accent, #759aef) 90%, transparent),
+      0 0 60px 18px color-mix(in srgb, var(--hide-pill-accent, #759aef) 55%, transparent),
+      0 0 96px 32px color-mix(in srgb, var(--hide-pill-accent, #759aef) 28%, transparent);
   }
 }
 
-@keyframes hide-pill-label-breathe {
-  0%, 100% { opacity: 1;   }
-  50%       { opacity: 0.7; }
+@keyframes hide-pill-icon-pop {
+  0%   { transform: scale(0.85); }
+  60%  { transform: scale(1.12); }
+  100% { transform: scale(1);    }
 }
 
 .dashboard-hide-pill--armed {
-  /* Solid post color — bright and actionable */
-  background: var(--hide-pill-accent, var(--persona-accent, #759aef));
-  color: #000;
-  border-color: transparent;
-  animation: hide-pill-glow 1.8s ease-in-out infinite;
+  --hide-pill-radius: calc(var(--radius-pill) + 18px);
+  --hide-pill-border: 3px;
+  animation: hide-pill-armed-glow 1.6s ease-in-out infinite;
 }
 
-.dashboard-hide-pill--armed .dashboard-hide-pill__bg-post {
-  filter: blur(2.5px) brightness(0.85);
-  opacity: 0.45;
+.dashboard-hide-pill--armed .dashboard-hide-pill__icon {
+  opacity: 1;
+  transform: scale(1);
+  animation: hide-pill-icon-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.dashboard-hide-pill--armed .dashboard-hide-pill__frosted {
-  background: color-mix(in srgb, var(--hide-pill-accent, var(--persona-accent, #759aef)) 30%, transparent);
-}
-
-.dashboard-hide-pill--armed .dashboard-hide-pill__label {
-  animation: hide-pill-label-breathe 2s ease-in-out infinite;
-}
-
-/* Long "HIDE POST" label — just keep it at a comfortable size */
-.dashboard-hide-pill--armed .dashboard-hide-pill__label {
-  font-size: clamp(19px, 2vw, 25px);
-}
-
-/* ── UNHIDE state: hidden post selected ── */
-@keyframes unhide-pill-glow {
+/* ── STATE 3: armed-hidden (hidden post highlighted) ──
+   Inverted colors, same shape language as armed. Glow uses the post's
+   persona accent (not the pastel) so it always tracks the post color. */
+@keyframes hide-pill-hidden-glow {
   0%, 100% {
     box-shadow:
-      0 0 0 2px #ccf847,
-      0 0 12px 4px rgba(204, 248, 71, 0.55),
-      0 0 26px 10px rgba(204, 248, 71, 0.22);
+      0 0 22px 4px color-mix(in srgb, var(--hide-pill-accent, #759aef) 75%, transparent),
+      0 0 44px 12px color-mix(in srgb, var(--hide-pill-accent, #759aef) 42%, transparent),
+      0 0 72px 24px color-mix(in srgb, var(--hide-pill-accent, #759aef) 20%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 2px #ccf847,
-      0 0 20px 8px rgba(204, 248, 71, 0.70),
-      0 0 38px 16px rgba(204, 248, 71, 0.30);
+      0 0 32px 8px color-mix(in srgb, var(--hide-pill-accent, #759aef) 92%, transparent),
+      0 0 60px 18px color-mix(in srgb, var(--hide-pill-accent, #759aef) 55%, transparent),
+      0 0 96px 32px color-mix(in srgb, var(--hide-pill-accent, #759aef) 28%, transparent);
   }
 }
 
-.dashboard-hide-pill--unhide {
-  background: #fff;
+.dashboard-hide-pill--armed-hidden {
+  --hide-pill-radius: calc(var(--radius-pill) + 18px);
+  --hide-pill-border: 3px;
+  background: var(--hide-pill-accent, #759aef);
+  border-color: var(--hide-pill-pastel, #bccdf5);
+  animation: hide-pill-hidden-glow 1.6s ease-in-out infinite;
+}
+
+.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__bg-post {
+  background: color-mix(in srgb, #fff 32%, transparent);
+  filter: blur(1px);
+}
+
+.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__avatar {
+  background: color-mix(in srgb, #fff 60%, transparent);
+}
+
+.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__line {
+  background: color-mix(in srgb, #fff 55%, transparent);
+}
+
+.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__icon {
+  opacity: 1;
+  transform: scale(1);
   color: #000;
-  border-color: #ccf847;
-  border-width: 2px;
+  animation: hide-pill-icon-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.dashboard-hide-pill--unhide .dashboard-hide-pill__bg-post {
-  filter: blur(3px) brightness(0.88);
-  opacity: 0.4;
+/* ── STATE 5: nudge ("Select a post first") ── */
+@keyframes hide-pill-error-wiggle {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  12%      { transform: translateX(-8px) rotate(-1.2deg); }
+  24%      { transform: translateX(7px) rotate(1deg); }
+  36%      { transform: translateX(-5px) rotate(-0.6deg); }
+  48%      { transform: translateX(5px) rotate(0.6deg); }
+  60%      { transform: translateX(-3px) rotate(-0.3deg); }
+  72%      { transform: translateX(2px) rotate(0.2deg); }
+  84%      { transform: translateX(-1px); }
 }
 
-.dashboard-hide-pill--unhide .dashboard-hide-pill__frosted {
-  background: rgba(204, 248, 71, 0.25);
+@keyframes hide-pill-nudge-lifecycle {
+  0%   { opacity: 0; transform: scale(0.96); }
+  10%  { opacity: 1; transform: scale(1);    }
+  88%  { opacity: 1; transform: scale(1);    }
+  100% { opacity: 0; transform: scale(0.98); }
 }
 
-.dashboard-hide-pill--unhide.dashboard-hide-pill--armed {
-  border-color: #ccf847;
-  background: rgba(204, 248, 71, 0.2);
-  color: #000;
-  animation: unhide-pill-glow 1.8s ease-in-out infinite;
+.dashboard-hide-pill--nudge {
+  animation: hide-pill-error-wiggle 460ms ease-in-out 1;
+  /* Keep color/radius tweens; let the wiggle own transform */
+  transition:
+    background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-width 200ms ease,
+    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 280ms ease;
 }
 
-/* ── NUDGE card overlay (4s dialog-style message on no-selection click) ── */
-@keyframes nudge-msg-lifecycle {
-  0%   { opacity: 0; transform: translateY(8px) scale(0.96); }
-  12%  { opacity: 1; transform: translateY(0) scale(1);      }
-  82%  { opacity: 1; transform: translateY(0) scale(1);      }
-  100% { opacity: 0; transform: translateY(-4px) scale(0.98); }
+.dashboard-hide-pill--nudge .dashboard-hide-pill__avatar,
+.dashboard-hide-pill--nudge .dashboard-hide-pill__line {
+  background: color-mix(in srgb, var(--hide-pill-accent, #759aef) 70%, transparent);
 }
 
-.dashboard-hide-pill__nudge-msg {
+.dashboard-hide-pill--nudge .dashboard-hide-pill__icon {
   position: absolute;
-  inset: 0;
+  right: 20%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  opacity: 1;
+  color: #111;
+  animation: hide-pill-nudge-lifecycle 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.dashboard-hide-pill--nudge .dashboard-hide-pill__icon svg {
+  width: clamp(38px, 4.6vw, 60px);
+  height: clamp(38px, 4.6vw, 60px);
+}
+
+.dashboard-hide-pill__nudge-capsule {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: inline-block;
+  padding: 5px 14px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--hide-pill-accent, #759aef);
+  color: #000;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.15vw, 14px);
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  line-height: 1;
+  white-space: nowrap;
+  animation: hide-pill-nudge-lifecycle 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   STATE 4: confirm — full-width pill replacing the actions row
+   ────────────────────────────────────────────────────────────────────────── */
+
+@keyframes hide-confirm-enter {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.88) scaleY(0.78);
+    filter: blur(3px);
+  }
+  55% {
+    opacity: 1;
+    transform: scaleX(1.02) scaleY(1.04);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1) scaleY(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes hide-confirm-left-enter {
+  0%   { opacity: 0; transform: translateX(-14px); }
+  40%  { opacity: 0; transform: translateX(-14px); }
+  100% { opacity: 1; transform: translateX(0);     }
+}
+
+@keyframes hide-confirm-right-enter {
+  0%   { opacity: 0; transform: translateX(14px) scale(0.85); }
+  30%  { opacity: 0; transform: translateX(14px) scale(0.85); }
+  100% { opacity: 1; transform: translateX(0)    scale(1);    }
+}
+
+.dashboard-actions-row--confirm {
+  grid-template-columns: 1fr;
+}
+
+.dashboard-hide-pill--confirm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(120px, 26%, 200px);
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 18px);
+  padding: clamp(10px, 1.4vw, 16px) clamp(14px, 1.8vw, 20px);
+  background: var(--hide-pill-pastel, #bccdf5);
+  border: 2px solid var(--hide-pill-accent, #759aef);
+  cursor: default;
+  overflow: hidden;
+  transform-origin: center center;
+  animation: hide-confirm-enter 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.dashboard-hide-pill--confirm .dashboard-hide-pill__confirm-left {
+  animation: hide-confirm-left-enter 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboard-hide-pill--confirm .dashboard-hide-pill__confirm-right {
+  animation: hide-confirm-right-enter 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboard-hide-pill__confirm-left {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: clamp(5px, 0.7vh, 9px);
-  padding: 0 clamp(14px, 2vw, 22px);
-  border-radius: calc(var(--radius-pill) - 2px);
-  border: 3px solid var(--persona-accent, #759aef);
-  background: color-mix(in srgb, var(--persona-accent, #759aef) 22%, #fff);
-  color: #000;
-  z-index: 10;
-  pointer-events: none;
-  animation: nudge-msg-lifecycle 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  font-family: var(--font-avant);
+  gap: clamp(4px, 0.6vh, 8px);
+  min-width: 0;
 }
 
-.dashboard-hide-pill__nudge-kicker {
+.dashboard-hide-pill__confirm-kicker {
   display: inline-block;
-  padding: 4px 12px 5px;
+  padding: 3px 12px 4px;
   border-radius: var(--radius-pill);
-  border: 2px solid var(--persona-accent, #759aef);
-  background: var(--persona-accent, #759aef);
-  font-size: clamp(10px, 1.1vw, 13px);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: lowercase;
-  line-height: 1.2;
+  background: var(--hide-pill-accent, #759aef);
   color: #000;
-}
-
-.dashboard-hide-pill__nudge-title {
-  font-size: clamp(19px, 2.1vw, 26px);
+  font-family: var(--font-avant);
+  font-size: clamp(10px, 1vw, 13px);
   font-weight: 800;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-  line-height: 0.95;
-  color: #000;
-  margin: 0;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  line-height: 1.1;
 }
 
-.dashboard-hide-pill__nudge-body {
-  font-size: clamp(12px, 1.3vw, 15px);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  text-transform: lowercase;
-  color: rgba(0, 0, 0, 0.65);
-  line-height: 1.25;
+.dashboard-hide-pill__confirm-title {
   margin: 0;
+  font-family: var(--font-avant);
+  font-size: clamp(18px, 2.1vw, 26px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  line-height: 1;
+  color: #000;
+}
+
+.dashboard-hide-pill__confirm-body {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-size: clamp(13px, 1.4vw, 17px);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  line-height: 1.25;
+  color: #000;
+}
+
+.dashboard-hide-pill__confirm-points {
+  display: inline-block;
+  padding: 1px 8px 2px;
+  border-radius: var(--radius-pill);
+  background: #000;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.dashboard-hide-pill__confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.8vw, 10px);
+  margin-top: clamp(4px, 0.6vh, 8px);
+}
+
+.dashboard-hide-pill__confirm-btn {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 6px 14px 7px;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.15vw, 14px);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dashboard-hide-pill__confirm-btn--cancel {
+  background: var(--hide-pill-accent, #759aef);
+  color: #000;
+}
+
+.dashboard-hide-pill__confirm-btn--hide {
+  background: #000;
+  color: #fff;
+}
+
+.dashboard-hide-pill__confirm-btn:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.dashboard-hide-pill__confirm-btn--hide:focus-visible {
+  outline-color: var(--hide-pill-accent, #759aef);
+}
+
+.dashboard-hide-pill__confirm-right {
+  position: relative;
+  align-self: stretch;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-hide-pill__bg-post--mini {
+  left: 8px;
+  right: 8px;
+  top: 20px;
+  bottom: 20px;
+  padding: 0 15px;
+  border-radius: calc(var(--hide-pill-radius) - 10px);
+  filter: blur(1px);
+}
+
+.dashboard-hide-pill__bg-post--mini .dashboard-hide-pill__avatar {
+  max-width: 50px;
+}
+
+.dashboard-hide-pill__bg-post--mini .dashboard-hide-pill__line {
+  height: 7px;
+}
+
+.dashboard-hide-pill__confirm-mini-icon {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1c1c1c;
+  opacity: 0.85;
+}
+
+.dashboard-hide-pill__confirm-mini-icon svg {
+  width: clamp(40px, 4.6vw, 64px);
+  height: clamp(40px, 4.6vw, 64px);
+  display: block;
 }
 
 /* tell me more — armed */
