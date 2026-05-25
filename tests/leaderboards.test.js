@@ -6,6 +6,7 @@ import {
   FAKE_CLONE_COUNT,
   CLONE_DRIFT_BUCKET_MS,
 } from '../server/lib/leaderboards.js';
+import { BOARDS } from '../server/lib/leaderboards.js';
 
 describe('decay(nowHour, peakHour)', () => {
   it('returns 1 at the peak hour', () => {
@@ -78,5 +79,128 @@ describe('scoreCloneFor', () => {
       const s = scoreCloneFor('most_productive', i, t);
       expect(Number.isFinite(s)).toBe(true);
     }
+  });
+});
+
+describe('BOARDS', () => {
+  it('declares all 7 boards in priority order', () => {
+    expect(BOARDS.map(b => b.id)).toEqual([
+      'most_productive',
+      'closest_to_burnout',
+      'most_likely_change_jobs',
+      'ignoring_health',
+      'most_secure',
+      'most_socially_isolated',
+      'most_likely_ghost',
+    ]);
+  });
+
+  it('every board declares id, title, persona, peakHour, scoreFn', () => {
+    for (const b of BOARDS) {
+      expect(typeof b.id).toBe('string');
+      expect(typeof b.title).toBe('string');
+      expect(['productivite', 'securite', 'popularite']).toContain(b.persona);
+      expect(typeof b.peakHour).toBe('number');
+      expect(b.peakHour).toBeGreaterThanOrEqual(0);
+      expect(b.peakHour).toBeLessThanOrEqual(23);
+      expect(typeof b.scoreFn).toBe('function');
+    }
+  });
+});
+
+describe('scoreFn(dataJson, profile, nowMs) for every board', () => {
+  // Static nowMs at hour 11 UTC so decay results are predictable across boards.
+  const NOW_MS_11 = new Date('2026-05-25T11:00:00Z').getTime();
+
+  const richData = {
+    MACHINE_IDENTITY: {
+      installed_apps: [
+        'Cursor', 'Visual Studio Code', 'Figma', 'Notion',
+        'Adobe Photoshop 2025', 'NordVPN', 'GlobalProtect',
+        'Discord', 'Slack',
+      ],
+    },
+    PAST_HISTORY: {
+      app_usage_7days: [
+        { app: 'Cursor',   last_used: '2026-05-25T10:00:00Z' },
+        { app: 'Figma',    last_used: '2026-05-25T10:30:00Z' },
+        { app: 'Notion',   last_used: '2026-05-24T22:00:00Z' },
+        { app: 'Adobe Photoshop 2025', last_used: '2026-05-24T23:30:00Z' },
+        { app: 'Slack',    last_used: '2026-05-25T09:00:00Z' },
+        { app: 'Discord',  last_used: '2026-05-25T08:00:00Z' },
+      ],
+      recent_files_7days: [
+        { date: '2026-05-25T23:30:00Z' },
+        { date: '2026-05-25T00:30:00Z' },
+        { date: '2026-05-25T10:00:00Z' },
+      ],
+      browser_history: {
+        chrome: [
+          { url: 'https://www.linkedin.com/jobs', title: 'Jobs' },
+          { url: 'https://github.com/foo', title: 'GitHub' },
+        ],
+        safari: [],
+      },
+      wifi_history: ['Home-5G', 'Office', 'Ginevra Cafe', 'COFFEE PAGE'],
+      recent_downloads: [],
+    },
+  };
+
+  const leanData = {
+    MACHINE_IDENTITY: { installed_apps: ['Spotify', 'Netflix'] },
+    PAST_HISTORY: {
+      app_usage_7days: [
+        { app: 'Spotify', last_used: '2026-05-25T10:00:00Z' },
+        { app: 'Netflix', last_used: '2026-05-25T11:00:00Z' },
+      ],
+      recent_files_7days: [],
+      browser_history: { chrome: [], safari: [] },
+      wifi_history: ['Home'],
+      recent_downloads: [],
+    },
+  };
+
+  const profile = { personaScores: { productivity: 60, security: 40, social: 50 } };
+
+  for (const board of BOARDS) {
+    it(`${board.id} returns { score: number, hint: string }`, () => {
+      const r = board.scoreFn(richData, profile, NOW_MS_11);
+      expect(typeof r).toBe('object');
+      expect(typeof r.score).toBe('number');
+      expect(Number.isFinite(r.score)).toBe(true);
+      expect(typeof r.hint).toBe('string');
+      expect(r.hint.length).toBeGreaterThan(0);
+    });
+  }
+
+  it('most_productive scores higher with work/creative apps than with entertainment-only', () => {
+    const board = BOARDS.find(b => b.id === 'most_productive');
+    const rich = board.scoreFn(richData, profile, NOW_MS_11);
+    const lean = board.scoreFn(leanData, profile, NOW_MS_11);
+    expect(rich.score).toBeGreaterThan(lean.score);
+  });
+
+  it('most_secure scores higher with VPN apps installed', () => {
+    const board = BOARDS.find(b => b.id === 'most_secure');
+    const rich = board.scoreFn(richData, profile, NOW_MS_11);
+    const lean = board.scoreFn(leanData, profile, NOW_MS_11);
+    expect(rich.score).toBeGreaterThan(lean.score);
+  });
+
+  it('most_socially_isolated scores higher with fewer social apps used', () => {
+    const board = BOARDS.find(b => b.id === 'most_socially_isolated');
+    const rich = board.scoreFn(richData, profile, NOW_MS_11);
+    const lean = board.scoreFn(leanData, profile, NOW_MS_11);
+    // lean data has zero social-app usage → more isolated
+    expect(lean.score).toBeGreaterThan(rich.score);
+  });
+
+  it('scores shift with nowMs (time-decay drives change)', () => {
+    const board = BOARDS.find(b => b.id === 'most_productive');
+    const t11 = new Date('2026-05-25T11:00:00Z').getTime();  // peak
+    const t23 = new Date('2026-05-25T23:00:00Z').getTime();  // antipeak
+    const a = board.scoreFn(richData, profile, t11).score;
+    const b = board.scoreFn(richData, profile, t23).score;
+    expect(a).not.toBe(b);
   });
 });

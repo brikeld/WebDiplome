@@ -46,3 +46,225 @@ export function scoreCloneFor(boardId, cloneIdx, nowMs) {
   // Centered around 40 with ±35 swing; gives a 5..75 envelope shared across boards.
   return Math.round((f * 70 - 35 + 40) * 100) / 100;
 }
+
+// ─── App categories used by scoring (mirrors dataSlices.js sets) ───────────
+
+const WORK_APPS = new Set([
+  'Visual Studio Code','Cursor','Windsurf','Xcode','GitHub Desktop','Figma','Notion',
+  'Microsoft Teams','Keynote','Pages','Numbers','Arduino IDE','Godot','Blender',
+  'Blender 4.5.3 LTS','WebStorm','PyCharm','IntelliJ IDEA','Sublime Text',
+]);
+const CREATIVE_APPS_PREFIX = 'Adobe';
+const CREATIVE_APPS = new Set([
+  'Blender','Blender 4.5.3 LTS','DiffusionBee','GoPro Player','HandBrake',
+  'ideaMaker','GIMP','Inkscape','Sketch','Figma',
+]);
+const ENTERTAINMENT_APPS = new Set([
+  'Spotify','VLC','DAZN','Stremio','Epic Games Launcher','Netflix','Plex','Twitch',
+]);
+const SOCIAL_APPS = new Set([
+  'Discord','WhatsApp','Microsoft Teams','Slack','Telegram','Skype','Messenger','Signal',
+]);
+const COMMS_APPS = new Set([
+  'Discord','WhatsApp','Microsoft Teams','Slack','Telegram','Skype','Messenger','Signal','Mail',
+]);
+const VPN_APPS = new Set([
+  'NordVPN','GlobalProtect','ProtonVPN','Little Snitch','Mullvad','ExpressVPN','Wireguard',
+]);
+const TORRENT_APPS = new Set([
+  'qbittorrent','uTorrent','Transmission','BitTorrent',
+]);
+const HEALTH_APPS = new Set([
+  'Health','Strava','Apple Fitness','Sleep Cycle','MyFitnessPal','Headspace','Calm',
+]);
+
+function isCreative(app) {
+  if (CREATIVE_APPS.has(app)) return true;
+  return typeof app === 'string' && app.startsWith(CREATIVE_APPS_PREFIX);
+}
+
+function countInUsage(usage, predicate) {
+  return usage.filter((u) => predicate(u?.app)).length;
+}
+
+function safeUsage(data) {
+  return Array.isArray(data?.PAST_HISTORY?.app_usage_7days)
+    ? data.PAST_HISTORY.app_usage_7days
+    : [];
+}
+
+function safeInstalled(data) {
+  return Array.isArray(data?.MACHINE_IDENTITY?.installed_apps)
+    ? data.MACHINE_IDENTITY.installed_apps
+    : [];
+}
+
+function safeFiles(data) {
+  return Array.isArray(data?.PAST_HISTORY?.recent_files_7days)
+    ? data.PAST_HISTORY.recent_files_7days
+    : [];
+}
+
+function safeWifi(data) {
+  return Array.isArray(data?.PAST_HISTORY?.wifi_history)
+    ? data.PAST_HISTORY.wifi_history
+    : [];
+}
+
+function safeBrowserUrls(data) {
+  const bh = data?.PAST_HISTORY?.browser_history || {};
+  const all = [
+    ...(Array.isArray(bh.chrome) ? bh.chrome : []),
+    ...(Array.isArray(bh.safari) ? bh.safari : []),
+  ];
+  return all.map((e) => String(e?.url ?? '')).filter(Boolean);
+}
+
+function lateNightFileCount(data) {
+  const files = safeFiles(data);
+  let n = 0;
+  for (const f of files) {
+    const d = f?.date ? new Date(f.date) : null;
+    if (!d || isNaN(d.getTime())) continue;
+    const h = d.getUTCHours();
+    if (h >= 22 || h <= 4) n++;
+  }
+  return n;
+}
+
+function hourOf(nowMs) {
+  return new Date(nowMs).getUTCHours();
+}
+
+// ─── BOARDS ────────────────────────────────────────────────────────────────
+
+export const BOARDS = [
+  {
+    id: 'most_productive',
+    title: 'Top 5 Most Productive',
+    persona: 'productivite',
+    peakHour: 11,
+    scoreFn: (data, _profile, nowMs) => {
+      const usage = safeUsage(data);
+      const work = countInUsage(usage, (a) => WORK_APPS.has(a));
+      const creative = countInUsage(usage, isCreative);
+      const ent = countInUsage(usage, (a) => ENTERTAINMENT_APPS.has(a));
+      const baseline = work * 8 + creative * 6 - ent * 4;
+      const d = decay(hourOf(nowMs), 11);
+      return {
+        score: baseline * (1 + 0.3 * d),
+        hint: `${work} work app(s), ${creative} creative app(s), ${ent} entertainment app(s) used recently.`,
+      };
+    },
+  },
+  {
+    id: 'closest_to_burnout',
+    title: 'Top 5 Closest to Burnout',
+    persona: 'productivite',
+    peakHour: 23,
+    scoreFn: (data, _profile, nowMs) => {
+      const usage = safeUsage(data);
+      const lateFiles = lateNightFileCount(data);
+      const work = countInUsage(usage, (a) => WORK_APPS.has(a) || isCreative(a));
+      const social = countInUsage(usage, (a) => SOCIAL_APPS.has(a));
+      const baseline = lateFiles * 10 + work * 3 - social * 2;
+      const d = decay(hourOf(nowMs), 23);
+      return {
+        score: baseline * (1 + 0.4 * d),
+        hint: `${lateFiles} late-night file edit(s), ${work} work app(s), ${social} social app(s).`,
+      };
+    },
+  },
+  {
+    id: 'most_likely_change_jobs',
+    title: 'Top 5 Most Likely to Change Jobs (30d)',
+    persona: 'productivite',
+    peakHour: 15,
+    scoreFn: (data, _profile, nowMs) => {
+      const urls = safeBrowserUrls(data);
+      const jobs = urls.filter((u) => /linkedin\.com\/jobs|indeed\.com|glassdoor\.com|welcometothejungle/i.test(u)).length;
+      const filesRecent = safeFiles(data).length;
+      const usage = safeUsage(data);
+      const comms = countInUsage(usage, (a) => SOCIAL_APPS.has(a));
+      const baseline = jobs * 15 + Math.max(0, 5 - filesRecent) * 3 + comms * 2;
+      const d = decay(hourOf(nowMs), 15);
+      return {
+        score: baseline * (1 + 0.3 * d),
+        hint: `${jobs} job-board visit(s), ${filesRecent} recent file(s), ${comms} comms-app session(s).`,
+      };
+    },
+  },
+  {
+    id: 'ignoring_health',
+    title: 'Top 5 Most Likely Ignoring Health',
+    persona: 'productivite',
+    peakHour: 1,
+    scoreFn: (data, _profile, nowMs) => {
+      const installed = safeInstalled(data);
+      const wifi = safeWifi(data);
+      const cafeWifi = wifi.filter((w) => /caf[ée]|coffee/i.test(String(w))).length;
+      const hasHealth = installed.some((a) => HEALTH_APPS.has(a));
+      const lateFiles = lateNightFileCount(data);
+      const baseline = lateFiles * 6 + cafeWifi * 4 + (hasHealth ? 0 : 10);
+      const d = decay(hourOf(nowMs), 1);
+      return {
+        score: baseline * (1 + 0.3 * d),
+        hint: `${lateFiles} late-night file(s), ${cafeWifi} café wifi network(s), health app installed: ${hasHealth}.`,
+      };
+    },
+  },
+  {
+    id: 'most_secure',
+    title: 'Top 5 Most Secure',
+    persona: 'securite',
+    peakHour: 9,
+    scoreFn: (data, _profile, nowMs) => {
+      const installed = safeInstalled(data);
+      const vpnCount = installed.filter((a) => VPN_APPS.has(a)).length;
+      const torrentCount = installed.filter((a) => TORRENT_APPS.has(a)).length;
+      const wifiCount = safeWifi(data).length;
+      // Fewer wifi networks = less attack surface (deliberately reductive).
+      const baseline = vpnCount * 30 + Math.max(0, 20 - wifiCount) - torrentCount * 25;
+      const d = decay(hourOf(nowMs), 9);
+      return {
+        score: baseline * (1 + 0.2 * d),
+        hint: `${vpnCount} VPN app(s), ${wifiCount} known wifi network(s), ${torrentCount} torrent app(s).`,
+      };
+    },
+  },
+  {
+    id: 'most_socially_isolated',
+    title: 'Top 5 Most Socially Isolated',
+    persona: 'popularite',
+    peakHour: 22,
+    scoreFn: (data, _profile, nowMs) => {
+      const usage = safeUsage(data);
+      const socialUse = countInUsage(usage, (a) => SOCIAL_APPS.has(a));
+      const wifiDiversity = new Set(safeWifi(data)).size;
+      const baseline = Math.max(0, 25 - socialUse * 5) + Math.max(0, 6 - wifiDiversity) * 4;
+      const d = decay(hourOf(nowMs), 22);
+      return {
+        score: baseline * (1 + 0.3 * d),
+        hint: `${socialUse} social-app session(s), ${wifiDiversity} unique wifi network(s).`,
+      };
+    },
+  },
+  {
+    id: 'most_likely_ghost',
+    title: 'Top 5 Most Likely to Ghost You',
+    persona: 'popularite',
+    peakHour: 20,
+    scoreFn: (data, _profile, nowMs) => {
+      const usage = safeUsage(data);
+      const comms = countInUsage(usage, (a) => COMMS_APPS.has(a));
+      const total = usage.length;
+      const nonCommsRatio = total > 0 ? (total - comms) / total : 1;
+      const baseline = Math.max(0, 25 - comms * 4) + nonCommsRatio * 15;
+      const d = decay(hourOf(nowMs), 20);
+      return {
+        score: baseline * (1 + 0.3 * d),
+        hint: `${comms} comms session(s) out of ${total} tracked app session(s).`,
+      };
+    },
+  },
+];
