@@ -62,3 +62,133 @@ describe('extractAppRecencySlice', () => {
     expect(extractAppRecencySlice(data)).toHaveLength(8);
   });
 });
+
+import {
+  buildAppCategoryChart,
+  buildMostUsedAppsChart,
+  buildFileExtChart,
+  buildFileExtSlice,
+  buildStorageChart,
+  buildBatteryHardwareChart,
+  buildPersonaScoresChart,
+  buildBrowserDomainsChart,
+  buildLanguageChart,
+  buildAIToolChart,
+  buildWifiTimelineChart,
+  buildDownloadsChart,
+  buildSecurityAppsChart,
+  buildFileHeatmapChart,
+  buildAppRecencyChart,
+} from '../server/lib/chartGenerator.js';
+
+// Shared helpers for tests
+const mockData = {
+  MACHINE_IDENTITY: {
+    installed_apps: ['Cursor', 'Figma', 'Chrome', 'Safari', 'Slack'],
+    languages: ['en', 'fr'],
+    model_name: 'MacBook Pro 14',
+    hardware_snapshot: { ram: '16 GB', chip: 'Apple M3 Pro' },
+    battery: { percent: 87, cycle_count: 304, condition: 'Normal', max_capacity: '89%' },
+    storage: { total: '500 GB', used: '324 GB', free: '176 GB', use_percent: '64.8' },
+    security: { sip: 'Enabled', filevault: 'On', gatekeeper: 'Enabled' },
+  },
+  PAST_HISTORY: {
+    browser_history: {
+      chrome: [
+        { url: 'https://github.com/foo', title: 'GitHub' },
+        { url: 'https://github.com/bar', title: 'GitHub' },
+        { url: 'https://claude.ai/chat', title: 'Claude' },
+      ],
+      safari: [],
+    },
+    app_usage_7days: [
+      { app: 'Cursor', last_used: new Date(Date.now() - 3600000).toISOString() },
+      { app: 'Figma', last_used: new Date(Date.now() - 86400000).toISOString() },
+      { app: 'Chrome', last_used: new Date(Date.now() - 172800000).toISOString() },
+    ],
+    recent_files_7days: [
+      { path: '/Users/x/code/app.js', ext: '.js', date: '2026-05-25T10:00:00Z' },
+      { path: '/Users/x/code/App.tsx', ext: '.tsx', date: '2026-05-25T10:05:00Z' },
+      { path: '/Users/x/imgs/photo.png', ext: '.png', date: '2026-05-25T22:00:00Z' },
+    ],
+    wifi_history: ['Home-5G', 'Office-Wifi', 'iPhone-Hotspot'],
+    recent_downloads: [
+      { name: 'figma-agent.zip', size_kb: 82000 },
+      { name: 'report.pdf', size_kb: 1800 },
+    ],
+  },
+};
+
+const mockProfile = {
+  personaScores: { productivity: 72, security: 54, social: 43 },
+  globalScore: 56,
+  ram: '16 GB',
+};
+
+function expectChart(result) {
+  expect(result).not.toBeNull();
+  expect(typeof result.svg).toBe('string');
+  expect(result.svg).toContain('<svg');
+  expect(typeof result.w).toBe('number');
+  expect(typeof result.h).toBe('number');
+}
+
+describe('Chart builders — smoke tests', () => {
+  it('buildAppCategoryChart returns valid svg', () => {
+    const slice = { byCategory: [['Dev & Work', 20], ['Browsers', 5]], totalInstalled: 25 };
+    expectChart(buildAppCategoryChart(slice, 'productivite'));
+  });
+  it('buildMostUsedAppsChart returns valid svg', () => {
+    expectChart(buildMostUsedAppsChart(mockData, 'productivite'));
+  });
+  it('buildFileExtChart returns valid svg', () => {
+    const slice = buildFileExtSlice(mockData);
+    expectChart(buildFileExtChart(slice, 'productivite'));
+  });
+  it('buildFileExtChart returns null for empty slice', () => {
+    expect(buildFileExtChart([], 'productivite')).toBeNull();
+  });
+  it('buildStorageChart returns valid svg', () => {
+    expectChart(buildStorageChart(mockData, mockProfile, 'productivite'));
+  });
+  it('buildBatteryHardwareChart returns valid svg', () => {
+    expectChart(buildBatteryHardwareChart(mockData, mockProfile, 'productivite'));
+  });
+  it('buildPersonaScoresChart returns valid svg', () => {
+    expectChart(buildPersonaScoresChart(mockProfile, 'securite'));
+  });
+  it('buildPersonaScoresChart returns null without scores', () => {
+    expect(buildPersonaScoresChart({}, 'productivite')).toBeNull();
+  });
+  it('buildBrowserDomainsChart returns valid svg', () => {
+    expectChart(buildBrowserDomainsChart(mockData, 'popularite'));
+  });
+  it('buildLanguageChart returns valid svg', () => {
+    expectChart(buildLanguageChart(mockData, mockProfile, 'popularite'));
+  });
+  it('buildAIToolChart returns valid svg', () => {
+    expectChart(buildAIToolChart(mockData, mockProfile, 'popularite'));
+  });
+  it('buildWifiTimelineChart returns valid svg', () => {
+    const slice = { networks: ['Home-5G', 'Office'], count: 2 };
+    expectChart(buildWifiTimelineChart(slice, 'securite'));
+  });
+  it('buildWifiTimelineChart returns null for empty networks', () => {
+    expect(buildWifiTimelineChart({ networks: [], count: 0 }, 'securite')).toBeNull();
+  });
+  it('buildDownloadsChart returns valid svg', () => {
+    expectChart(buildDownloadsChart(mockData, null, 'securite'));
+  });
+  it('buildSecurityAppsChart returns valid svg', () => {
+    expectChart(buildSecurityAppsChart(mockData, null, 'securite'));
+  });
+  it('buildFileHeatmapChart returns valid svg', () => {
+    expectChart(buildFileHeatmapChart(mockData, 'productivite'));
+  });
+  it('buildFileHeatmapChart returns null for no file data', () => {
+    expect(buildFileHeatmapChart({}, 'productivite')).toBeNull();
+  });
+  it('buildAppRecencyChart returns valid svg', () => {
+    expectChart(buildAppRecencyChart(mockData, 'productivite'));
+  });
+});

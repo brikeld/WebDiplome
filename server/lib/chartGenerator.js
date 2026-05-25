@@ -58,6 +58,38 @@ function hBar({ x, y, w, h, palette, label, value, labelAnchor = 'end', labelX }
   <text x="${x + w + 6}" y="${y + h / 2 + 4}" fill="${text}" font-size="11" font-family="'SF Mono',monospace">${esc(String(value))}</text>`;
 }
 
+function treemapLayout(items, x, y, w, h, gap) {
+  if (!items.length) return [];
+  const rects = [];
+  let rem = items.slice();
+  let cy = y; let remH = h;
+  while (rem.length > 0) {
+    const remTotal = rem.reduce((s, [, v]) => s + v, 0);
+    let bestN = 1; let bestAR = Infinity;
+    for (let n = 1; n <= Math.min(rem.length, 4); n++) {
+      const rowSum = rem.slice(0, n).reduce((s, [, v]) => s + v, 0);
+      const rh = (rowSum / remTotal) * remH;
+      const ar = rem.slice(0, n).reduce((worst, [, v]) => {
+        const bw = (v / rowSum) * w;
+        return Math.max(worst, rh > 0 && bw > 0 ? Math.max(rh / bw, bw / rh) : Infinity);
+      }, 0);
+      if (ar < bestAR) { bestAR = ar; bestN = n; }
+    }
+    const row = rem.splice(0, bestN);
+    const rowSum = row.reduce((s, [, v]) => s + v, 0);
+    const rh = Math.max(1, Math.round((rowSum / remTotal) * remH));
+    let bx = x;
+    row.forEach(([label, count], i) => {
+      const isLast = i === row.length - 1;
+      const bw = isLast ? (x + w - bx) : Math.round((count / rowSum) * w);
+      rects.push({ x: bx, y: cy, w: Math.max(1, bw - gap), h: Math.max(1, rh - gap), label, count });
+      bx += bw;
+    });
+    cy += rh; remH -= rh;
+  }
+  return rects;
+}
+
 // ─── Existing charts (kept) ────────────────────────────────────────────────
 
 export function buildAppCategoryChart(appCategorySlice, persona = 'productivite') {
@@ -416,6 +448,9 @@ export function buildSecurityAppsChart(data, _profile, persona = 'securite') {
 
   return { svg: svgWrap(W, H, 'Security Status', dividers + settingBlocks + appPills + sub, palette), w: W, h: H };
 }
+
+export function buildFileHeatmapChart(data, persona) { return null; }
+export function buildAppRecencyChart(data, persona) { return null; }
 
 // ─── Chart pool + picker ───────────────────────────────────────────────────
 
