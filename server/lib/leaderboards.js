@@ -50,21 +50,16 @@ export function scoreCloneFor(boardId, cloneIdx, nowMs) {
 // ─── Standing assembly ────────────────────────────────────────────────────
 
 function realUserIdentity(profile) {
-  const first = String(profile?.firstName ?? '').trim();
-  const last = String(profile?.lastName ?? '').trim();
-  const account = String(profile?.account ?? '').trim();
-  const displayName = [first, last].filter(Boolean).join(' ') || 'You';
-  const handle = account ? `@${account}` : '@you';
-  const initials = [first, last]
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || 'YO';
+  const first = String(profile?.firstname ?? '').trim();
+  const last = String(profile?.lastname ?? '').trim();
+  const machineName = String(profile?.machineName ?? profile?.machine_name ?? '').trim();
+  const displayName = (first && last) ? `${first} ${last}` : (first || last || 'User');
+  const handle = machineName ? `@${machineName}` : '@—';
+  const initials = (first.charAt(0) + last.charAt(0)).toUpperCase() || (first.charAt(0).toUpperCase()) || '?';
   return {
     displayName,
     handle,
-    avatarSrc: profile?.avatarUrl ?? null,
+    avatarSrc: null,
     avatarInitials: initials,
   };
 }

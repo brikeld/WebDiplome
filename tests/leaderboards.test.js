@@ -221,10 +221,9 @@ describe('computeBoardStanding', () => {
     },
   };
   const profile = {
-    firstName: 'Brikeld',
-    lastName: 'Hoxha',
-    account: 'brikeld',
-    avatarUrl: '/uploads/profile.jpg',
+    firstname: 'Brikeld',
+    lastname: 'Hoxha',
+    machineName: 'brikeld-mbp',
   };
   const board = BOARDS.find((b) => b.id === 'most_productive');
   const nowMs = new Date('2026-05-25T11:00:00Z').getTime();
@@ -239,7 +238,7 @@ describe('computeBoardStanding', () => {
     const standing = computeBoardStanding(board, data, profile, nowMs);
     const userEntry = standing.entries.find((e) => e.rank === standing.userRank);
     expect(userEntry.name).toBe('Brikeld Hoxha');
-    expect(userEntry.handle).toBe('@brikeld');
+    expect(userEntry.handle).toBe('@brikeld-mbp');
   });
 
   it('returns the hint string emitted by the board scoreFn', () => {
@@ -267,7 +266,7 @@ describe('computeBoardStanding', () => {
 
   it('falls back to a default display name when profile lacks names', () => {
     const standing = computeBoardStanding(board, data, {}, nowMs);
-    const user = standing.entries.find((e) => e.handle === '@you');
+    const user = standing.entries.find((e) => e.handle === '@—');
     expect(user).toBeTruthy();
   });
 });
