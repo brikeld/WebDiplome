@@ -11,7 +11,6 @@ const PostPdfCarousel = lazy(() => import('./PostPdfCarousel.jsx'));
 
 export default function PostCard({
   post,
-  animateEnter = false,
   isCommentsOpen = false,
   onToggleComments,
   /** Reserved for a future hide control (dashboard HIDE uses the same flow today). */
@@ -79,7 +78,7 @@ export default function PostCard({
 
   return (
     <article
-      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${animateEnter ? ' post-card--feed-enter' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
+      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
       data-persona={post.persona}
       style={{ '--post-accent': noteColor }}
       onClick={isHighlightable ? (e) => {

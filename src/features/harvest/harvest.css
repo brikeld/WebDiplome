@@ -178,20 +178,73 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   text-align: center;
 }
 
-.generating-content-label {
+/*
+ * Each phrase pair (persona tag + sentence) gets a fresh `key` on every cycle
+ * in React, so this element remounts whenever the phrase changes. The
+ * fade-in keyframe is one-shot, so the user sees a soft swap instead of a
+ * hard text change.
+ */
+.generating-content-line {
   margin: 0;
-  font-size: clamp(14px, 1.6vw, 22px);
-  font-weight: 700;
-  text-transform: lowercase;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
   text-align: center;
+  animation: generating-content-fade 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.generating-content-tag {
+  font-family: var(--font-avant);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: #555;
+}
+
+/* Darker per-persona variants — the raw accents (#D8D8D8 / #CCF847) read as
+   noise on a white card, so each tag colour is the persona's identity at a
+   contrast-safe lightness. */
+.generating-content-tag[data-persona='productivite'] {
+  color: #4a4a4a;
+}
+.generating-content-tag[data-persona='securite'] {
+  color: #3a5fc9;
+}
+.generating-content-tag[data-persona='popularite'] {
+  color: #5a7717;
+}
+
+.generating-content-text {
+  font-family: var(--font-avant);
+  font-size: clamp(14px, 1.55vw, 20px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
   color: #000;
+  text-transform: none;
+  display: inline-block;
+}
+
+@keyframes generating-content-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 .generating-ellipsis {

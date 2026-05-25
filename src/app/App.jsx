@@ -14,6 +14,8 @@ import HarvestScreen from '@/features/harvest/HarvestScreen.jsx';
 import PersonaDeltaSummary from '@/features/harvest/PersonaDeltaSummary.jsx';
 import GeneratingContentLabel from '@/features/harvest/GeneratingContentLabel.jsx';
 import '@/features/harvest/harvest.css';
+import TellMeMorePill from '@/features/inferenceChain/TellMeMorePill.jsx';
+import '@/features/inferenceChain/inferenceChain.css';
 import { applyAccountDeletionFromServer } from '@/lib/liveScoringStorage.js';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
@@ -122,10 +124,11 @@ function formatLastAnalysis(profile) {
   return `${Math.max(1, totalSeconds)}s ago`;
 }
 
-const POST_REVEAL_GAP_MS = 2000;
-/** Must match `.post-card--feed-enter` duration in `src/styles/base.css`. */
-const POST_FEED_ENTER_ANIM_MS = 1000;
-const INTER_REVEAL_PAUSE_MS = Math.max(POST_REVEAL_GAP_MS, POST_FEED_ENTER_ANIM_MS + 150);
+/** Settled "rest" window each newly-revealed post stays in view before the next one arrives. */
+const POST_REVEAL_GAP_MS = 2200;
+/** Must match the entering shell animation duration in `src/styles/base.css`. */
+const POST_FEED_ENTER_ANIM_MS = 700;
+const INTER_REVEAL_PAUSE_MS = Math.max(POST_REVEAL_GAP_MS, POST_FEED_ENTER_ANIM_MS + 200);
 const HARVEST_POLL_MS = 450;
 const HARVEST_WAIT_MS = 12 * 60 * 1000;
 /** How long persona delta lines stay visible (generation runs in parallel). */
@@ -196,6 +199,7 @@ function AppInner({
   const [confirmingHide, setConfirmingHide] = useState(false);
   const [highlightedPost, setHighlightedPost] = useState(null);
   const [hideNudge, setHideNudge] = useState(false);
+  const [tellExpanded, setTellExpanded] = useState(false);
 
   const personaKey = personaOverride ?? liveDominantPersona;
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
@@ -218,6 +222,7 @@ function AppInner({
     setHighlightedPost((prev) => (prev?.id === post.id ? null : post));
     setConfirmingHide(false);
     setHideNudge(false); // dismiss "select a post first" immediately when user picks one
+    setTellExpanded(false); // close any open inference-chain panel when selection changes
   }, []);
 
   const highlightedPostIsHidden = highlightedPost
@@ -269,11 +274,6 @@ function AppInner({
   const handleDashboardRanking = () => {
     setMainView('profile');
     setActiveTab('leaderboards');
-  };
-
-  const handleDashboardTellMeMore = () => {
-    setMainView('profile');
-    setActiveTab('posts');
   };
 
   const dashboardBusy =
@@ -337,7 +337,7 @@ function AppInner({
           <aside className="persona-side-panel" aria-label="Persona dashboard">
             <p className="dashboard-top-label">dashboard</p>
             <div
-              className="dashboard-capsule dashboard-capsule--figma"
+              className={`dashboard-capsule dashboard-capsule--figma${tellExpanded ? ' is-tell-expanded' : ''}`}
               style={{ '--persona-accent': personaColor }}
             >
               {(() => {
@@ -542,14 +542,14 @@ function AppInner({
                 )}
               </div>
               <div className="dashboard-tell-row">
-                <button
-                  type="button"
-                  className={`dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide${highlightedPost ? ' dashboard-timer-card--tell-armed' : ''}`}
-                  onClick={handleDashboardTellMeMore}
+                <TellMeMorePill
+                  highlightedPost={highlightedPost}
+                  expanded={tellExpanded}
+                  onExpand={() => setTellExpanded(true)}
+                  onCollapse={() => setTellExpanded(false)}
                   disabled={dashboardBusy}
-                >
-                  tell me more
-                </button>
+                  fallbackPersona={personaKey}
+                />
               </div>
 
               <div className="dashboard-rings">
@@ -816,33 +816,42 @@ export default function App() {
     }
 
     const baseline = streamPostsBaselineRef.current;
-    const slotsBuffer = Array(3).fill(null);
+    // Reveal in ARRIVAL order, not slotIndex order. Server stamps each post's
+    // createdAt at completion, so first-arrived = oldest createdAt. Revealing
+    // in arrival order means each new reveal has a strictly newer createdAt
+    // than what's already shown → the sort by createdAt desc consistently
+    // places the just-revealed post at the top of the feed, and matches the
+    // order returned by the server after reloadProfileFromApi (no post-reveal
+    // reorder snap).
+    const arrivalQueue = [];
     let streamDone = false;
 
     const revealPromise = (async () => {
       const batch = [];
       let revealedCount = 0;
+      let nextIndex = 0;
 
-      for (let slot = 0; slot < 3; slot += 1) {
-        while (!slotsBuffer[slot] && !streamDone) {
+      while (true) {
+        while (nextIndex >= arrivalQueue.length && !streamDone) {
           await new Promise((r) => setTimeout(r, 40));
         }
-        if (!slotsBuffer[slot]) continue;
+        if (nextIndex >= arrivalQueue.length) break;
 
-        // Wait long enough that only one new card is "entering" at a time (gap + enter animation).
         if (revealedCount > 0) {
           await new Promise((r) => setTimeout(r, INTER_REVEAL_PAUSE_MS));
         }
 
+        const raw = arrivalQueue[nextIndex];
+        nextIndex += 1;
+        revealedCount += 1;
+
         const key =
           typeof crypto !== 'undefined' && crypto.randomUUID
             ? crypto.randomUUID()
-            : `feed-${Date.now()}-${slot}`;
-        const raw = slotsBuffer[slot];
-        const { _feedEnter: _fe, _feedKey: _fk, ...slotRest } = raw;
-        revealedCount += 1;
+            : `feed-${Date.now()}-${revealedCount}`;
+        const { _feedEnter: _fe, _feedKey: _fk, ...rest } = raw;
         const post = {
-          ...slotRest,
+          ...rest,
           _feedKey: key,
           _feedRevealSeq: revealedCount,
         };
@@ -862,9 +871,9 @@ export default function App() {
       }
     })();
 
-    const assignPostToSlot = (post, slotIndex) => {
-      if (typeof slotIndex !== 'number' || slotIndex < 0 || slotIndex > 2) return;
-      slotsBuffer[slotIndex] = post;
+    const enqueueArrivedPost = (post) => {
+      if (!post || typeof post !== 'object') return;
+      arrivalQueue.push(post);
     };
 
     try {
@@ -905,7 +914,7 @@ export default function App() {
         if (row.done) return;
         if (row.error && !row.post) throw new Error(row.error);
         if (row.post) {
-          assignPostToSlot(row.post, row.slotIndex);
+          enqueueArrivedPost(row.post);
         }
       };
 
@@ -928,7 +937,7 @@ export default function App() {
           if (row.success === false && row.error) throw new Error(row.error);
           if (!row.done) {
             if (row.error && !row.post) throw new Error(row.error);
-            if (row.post) assignPostToSlot(row.post, row.slotIndex);
+            if (row.post) enqueueArrivedPost(row.post);
           }
         } catch (e) {
           if (e instanceof SyntaxError) {

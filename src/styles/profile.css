@@ -757,3 +757,50 @@ button.profile-last-analysis-pill:disabled {
   width: 100%;
 }
 
+/* ── RESPONSIVE: profile rail hero scaling (≤ 1660px) ──
+   Right panel narrows from 560px to ~440px, so we shrink the score rings to
+   preserve enough room for the name / bio text column. */
+@media (max-width: 1660px) {
+  .profile-rail-capsule .profile-hero-capsule {
+    --profile-hero-scale: 0.85;
+    --profile-rings-scale: 0.85;
+    --profile-score-size-max: 11rem;
+    --profile-rail-rings-gutter: 5px;
+    --profile-rail-text-gap: 10px;
+  }
+
+  .profile-rail-capsule .profile-hero-main {
+    gap: 16px;
+    padding-right: 14px;
+  }
+
+  .profile-rail-capsule .tabs-row--rail {
+    gap: 18px;
+    padding: 14px;
+  }
+}
+
+/* ── RESPONSIVE: profile rail hero scaling (≤ 1350px) ── */
+@media (max-width: 1350px) {
+  .profile-rail-capsule .profile-hero-capsule {
+    --profile-hero-scale: 0.78;
+    --profile-rings-scale: 0.78;
+    --profile-score-size-max: 9rem;
+    --profile-rail-rings-gutter: 4px;
+  }
+
+  .profile-rail-capsule .profile-hero-main {
+    gap: 12px;
+    padding-right: 10px;
+  }
+
+  .profile-rail-capsule .tabs-row--rail {
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .profile-rail-capsule .tabs-row--rail .tab {
+    font-size: clamp(22px, 3.2vw, 36px);
+  }
+}
+

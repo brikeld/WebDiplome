@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chart Redesign v2 — 3 Updates + New Ideas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f5f5f3; font-family: 'SF Mono', 'Fira Mono', monospace; color: #111; padding: 32px; }
+  h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #666; margin-bottom: 36px; }
+  h2 { font-size: 15px; font-weight: 800; margin: 40px 0 16px; letter-spacing: -0.3px; }
+  h2 span { background: #111; color: #fff; padding: 2px 8px; font-size: 11px; letter-spacing: 1px; margin-left: 8px; vertical-align: middle; }
+  .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .chart-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; }
+  .chart-card-label { padding: 8px 12px; background: #f9f9f9; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+  .chart-id { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #555; text-transform: uppercase; }
+  .chart-type-badge { font-size: 9px; background: #111; color: #fff; padding: 2px 7px; border-radius: 10px; letter-spacing: 0.5px; font-weight: 600; }
+  .chart-preview { display: flex; justify-content: center; align-items: center; padding: 0; }
+  svg { display: block; }
+  .divider { border: none; border-top: 2px solid #e8e8e8; margin: 48px 0 0; }
+  .ideas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 0; }
+  .idea-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 18px; }
+  .idea-tag { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 10px; }
+  .tag-prod { background: #D8D8D8; color: #000; }
+  .tag-sec { background: #759AEF; color: #000; }
+  .tag-pop { background: #CCF847; color: #000; }
+  .idea-title { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .idea-desc { font-size: 11px; color: #666; line-height: 1.6; }
+  .idea-type { font-size: 10px; color: #999; margin-top: 8px; font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>Chart Redesign — v2</h1>
+<p class="subtitle">3 revised charts based on your feedback</p>
+
+<h2>Revised <span>3 CHANGES</span></h2>
+<div class="charts-grid" style="grid-template-columns: repeat(3,1fr);">
+
+  <!-- persona_scores → Radial Bars (3 concentric arcs) -->
+  <div class="chart-card">
+    <div class="chart-card-label">
+      <span class="chart-id">persona_scores</span>
+      <span class="chart-type-badge">Radial Bars</span>
+    </div>
+    <div class="chart-preview">
+      <svg width="220" height="190" xmlns="http://www.w3.org/2000/svg">
+        <rect width="220" height="190" fill="#759AEF"/>
+        <text x="110" y="16" fill="#000" font-size="9" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace" letter-spacing="1">PERSONA SCORES</text>
+        <!-- 3 concentric arcs: cx=110 cy=108 -->
+        <!-- r=72 (outer = Productivity), r=52 (Security), r=32 (Social) -->
+        <!-- stroke-width=10 for outer, 10 middle, 10 inner -->
+        <!-- circumference r=72: 2π×72=452.4 -->
+        <!-- circumference r=52: 2π×52=326.7 -->
+        <!-- circumference r=32: 2π×32=201.1 -->
+
+        <!-- track rings -->
+        <circle cx="110" cy="108" r="72" fill="none" stroke="#000" stroke-width="10" opacity="0.1"/>
+        <circle cx="110" cy="108" r="52" fill="none" stroke="#000" stroke-width="10" opacity="0.1"/>
+        <circle cx="110" cy="108" r="32" fill="none" stroke="#000" stroke-width="10" opacity="0.1"/>
+
+        <!-- Productivity 72% → dashoffset = 452.4 × (1-0.72) = 126.7 -->
+        <circle cx="110" cy="108" r="72" fill="none" stroke="#fff" stroke-width="10"
+          stroke-dasharray="452.4" stroke-dashoffset="126.7" stroke-linecap="round"
+          style="transform:rotate(-90deg);transform-origin:110px 108px"/>
+
+        <!-- Security 54% → dashoffset = 326.7 × (1-0.54) = 150.3 -->
+        <circle cx="110" cy="108" r="52" fill="none" stroke="#fff" stroke-width="10"
+          stroke-dasharray="326.7" stroke-dashoffset="150.3" stroke-linecap="round"
+          style="transform:rotate(-90deg);transform-origin:110px 108px"/>
+
+        <!-- Social 43% → dashoffset = 201.1 × (1-0.43) = 114.6 -->
+        <circle cx="110" cy="108" r="32" fill="none" stroke="#fff" stroke-width="10"
+          stroke-dasharray="201.1" stroke-dashoffset="114.6" stroke-linecap="round"
+          style="transform:rotate(-90deg);transform-origin:110px 108px"/>
+
+        <!-- center score -->
+        <text x="110" y="104" fill="#000" font-size="18" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace">56</text>
+        <text x="110" y="118" fill="#000" font-size="7" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.5">global</text>
+
+        <!-- labels outside rings -->
+        <text x="186" y="80" fill="#000" font-size="8" font-family="'SF Mono',monospace" opacity="0.7">Prod. 72</text>
+        <text x="166" y="97" fill="#000" font-size="8" font-family="'SF Mono',monospace" opacity="0.7">Sec. 54</text>
+        <text x="146" y="114" fill="#000" font-size="8" font-family="'SF Mono',monospace" opacity="0.7">Soc. 43</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- battery_hardware → Hardware Specs (chip, model, ram, battery health) -->
+  <div class="chart-card">
+    <div class="chart-card-label">
+      <span class="chart-id">battery_hardware</span>
+      <span class="chart-type-badge">Spec Sheet</span>
+    </div>
+    <div class="chart-preview">
+      <svg width="220" height="190" xmlns="http://www.w3.org/2000/svg">
+        <rect width="220" height="190" fill="#D8D8D8"/>
+        <text x="110" y="16" fill="#000" font-size="9" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace" letter-spacing="1">HARDWARE SPEC</text>
+        <!-- dividers -->
+        <line x1="16" y1="110" x2="204" y2="110" stroke="#000" stroke-width="0.5" opacity="0.15"/>
+        <line x1="110" y1="26" x2="110" y2="110" stroke="#000" stroke-width="0.5" opacity="0.15"/>
+        <line x1="110" y1="110" x2="110" y2="175" stroke="#000" stroke-width="0.5" opacity="0.15"/>
+
+        <!-- top-left: Machine model -->
+        <text x="26" y="48" fill="#000" font-size="8" font-family="'SF Mono',monospace" opacity="0.5">Machine</text>
+        <text x="26" y="68" fill="#000" font-size="12" font-weight="800" font-family="'SF Mono',monospace">MacBook</text>
+        <text x="26" y="84" fill="#000" font-size="12" font-weight="800" font-family="'SF Mono',monospace">Pro 14"</text>
+
+        <!-- top-right: Chip -->
+        <text x="120" y="48" fill="#000" font-size="8" font-family="'SF Mono',monospace" opacity="0.5">Chip</text>
+        <text x="120" y="68" fill="#000" font-size="12" font-weight="800" font-family="'SF Mono',monospace">M3</text>
+        <text x="120" y="84" fill="#000" font-size="12" font-weight="800" font-family="'SF Mono',monospace">Pro</text>
+
+        <!-- bottom-left: RAM -->
+        <text x="26" y="128" fill="#000" font-size="8" font-family="'SF Mono',monospace" opacity="0.5">Memory</text>
+        <text x="26" y="155" fill="#000" font-size="22" font-weight="800" font-family="'SF Mono',monospace">16 GB</text>
+
+        <!-- bottom-right: Battery health -->
+        <text x="120" y="128" fill="#000" font-size="8" font-family="'SF Mono',monospace" opacity="0.5">Battery</text>
+        <text x="120" y="152" fill="#000" font-size="13" font-weight="800" font-family="'SF Mono',monospace">Normal</text>
+        <text x="120" y="168" fill="#000" font-size="9" font-family="'SF Mono',monospace" opacity="0.55">304 cycles</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ai_tool_exposure → Ranked Type List -->
+  <div class="chart-card">
+    <div class="chart-card-label">
+      <span class="chart-id">ai_tool_exposure</span>
+      <span class="chart-type-badge">Ranked List</span>
+    </div>
+    <div class="chart-preview">
+      <svg width="220" height="190" xmlns="http://www.w3.org/2000/svg">
+        <rect width="220" height="190" fill="#CCF847"/>
+        <text x="110" y="16" fill="#000" font-size="9" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace" letter-spacing="1">AI TOOL EXPOSURE</text>
+        <!-- ranked rows: installed+used = full white bg, installed = light, not installed = no bg -->
+
+        <!-- 01 Claude — installed + used -->
+        <rect x="16" y="24" width="188" height="22" fill="#fff" opacity="0.9" rx="2"/>
+        <text x="26" y="39" fill="#000" font-size="9" font-weight="800" font-family="'SF Mono',monospace" opacity="0.3">01</text>
+        <text x="52" y="39" fill="#000" font-size="10" font-weight="800" font-family="'SF Mono',monospace">Claude</text>
+        <text x="196" y="39" fill="#000" font-size="8" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.45">this week</text>
+
+        <!-- 02 Cursor — installed + used -->
+        <rect x="16" y="50" width="188" height="22" fill="#fff" opacity="0.9" rx="2"/>
+        <text x="26" y="65" fill="#000" font-size="9" font-weight="800" font-family="'SF Mono',monospace" opacity="0.3">02</text>
+        <text x="52" y="65" fill="#000" font-size="10" font-weight="800" font-family="'SF Mono',monospace">Cursor</text>
+        <text x="196" y="65" fill="#000" font-size="8" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.45">this week</text>
+
+        <!-- 03 LM Studio — installed -->
+        <rect x="16" y="76" width="188" height="22" fill="#fff" opacity="0.4" rx="2"/>
+        <rect x="16" y="76" width="188" height="22" fill="none" stroke="#000" stroke-width="0.5" opacity="0.15" rx="2"/>
+        <text x="26" y="91" fill="#000" font-size="9" font-weight="800" font-family="'SF Mono',monospace" opacity="0.3">03</text>
+        <text x="52" y="91" fill="#000" font-size="10" font-weight="700" font-family="'SF Mono',monospace">LM Studio</text>
+        <text x="196" y="91" fill="#000" font-size="8" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.35">installed</text>
+
+        <!-- 04 Perplexity — installed -->
+        <rect x="16" y="102" width="188" height="22" fill="#fff" opacity="0.4" rx="2"/>
+        <rect x="16" y="102" width="188" height="22" fill="none" stroke="#000" stroke-width="0.5" opacity="0.15" rx="2"/>
+        <text x="26" y="117" fill="#000" font-size="9" font-weight="800" font-family="'SF Mono',monospace" opacity="0.3">04</text>
+        <text x="52" y="117" fill="#000" font-size="10" font-weight="700" font-family="'SF Mono',monospace">Perplexity</text>
+        <text x="196" y="117" fill="#000" font-size="8" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.35">installed</text>
+
+        <!-- 05 ChatGPT — not installed -->
+        <text x="26" y="143" fill="#000" font-size="9" font-weight="800" font-family="'SF Mono',monospace" opacity="0.2">05</text>
+        <text x="52" y="143" fill="#000" font-size="10" font-family="'SF Mono',monospace" opacity="0.35">ChatGPT</text>
+        <text x="196" y="143" fill="#000" font-size="8" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.2">—</text>
+
+        <!-- 06 Copilot — not installed -->
+        <text x="26" y="163" fill="#000" font-size="9" font-weight="800" font-family="'SF Mono',monospace" opacity="0.2">06</text>
+        <text x="52" y="163" fill="#000" font-size="10" font-family="'SF Mono',monospace" opacity="0.35">Copilot</text>
+        <text x="196" y="163" fill="#000" font-size="8" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.2">—</text>
+      </svg>
+    </div>
+  </div>
+
+</div>
+
+<!-- NEW CHART IDEAS -->
+<hr class="divider">
+<h2>New chart ideas <span>FROM YOUR DATA</span></h2>
+<p style="font-size:12px;color:#666;margin-bottom:24px;">These data fields exist in your data.json but no chart uses them yet. Each one makes a distinct, creepy-yet-beautiful visualization.</p>
+
+<div class="ideas-grid">
+
+  <div class="idea-card">
+    <div class="idea-tag tag-prod">Productivité</div>
+    <div class="idea-title">File Creation Heatmap</div>
+    <div class="idea-desc">24-column heatmap — one cell per hour of the day. Height or darkness = how many files were created at that hour. Exposes your work rhythm and late-night sessions at a glance.</div>
+    <div class="idea-type">Data: <code>PAST_HISTORY.recent_files_7days[].date</code> (timestamps) — extract hours, bin into 24 buckets.</div>
+  </div>
+
+  <div class="idea-card">
+    <div class="idea-tag tag-prod">Productivité</div>
+    <div class="idea-title">Folder Depth Map</div>
+    <div class="idea-desc">Sunburst or nested rectangles showing where your recent files live — top-level directory → subfolder hierarchy. Shows which projects are active by file density.</div>
+    <div class="idea-type">Data: <code>PAST_HISTORY.recent_files_7days[].path</code> — parse directories, build a 2-level treemap.</div>
+  </div>
+
+  <div class="idea-card">
+    <div class="idea-tag tag-pop">Popularité</div>
+    <div class="idea-title">Chrome vs Safari Split</div>
+    <div class="idea-desc">Vertical split bar — left half Chrome visits, right half Safari. Inside each half, top domains ranked. Exposes browser loyalty and which domains you prefer in which browser.</div>
+    <div class="idea-type">Data: <code>PAST_HISTORY.browser_history.chrome[]</code> vs <code>.safari[]</code> — count and compare.</div>
+  </div>
+
+  <div class="idea-card">
+    <div class="idea-tag tag-pop">Popularité</div>
+    <div class="idea-title">App Open Recency Grid</div>
+    <div class="idea-desc">7-column grid (Mon→Sun), each row an app. A filled cell = app was opened that day. Like a GitHub contribution graph but for your app usage over the past week.</div>
+    <div class="idea-type">Data: <code>PAST_HISTORY.app_usage_7days[].last_used</code> — parse date, map to day-of-week per app.</div>
+  </div>
+
+  <div class="idea-card">
+    <div class="idea-tag tag-sec">Sécurité</div>
+    <div class="idea-title">Download Type Risk Chart</div>
+    <div class="idea-desc">Classify your recent downloads by file type (.dmg, .pkg, .zip, .pdf, .exe) and risk level. A stacked bar showing "safe / suspicious / executable" proportions with specific filenames as labels.</div>
+    <div class="idea-type">Data: <code>PAST_HISTORY.recent_downloads[].name</code> — classify by extension into risk buckets.</div>
+  </div>
+
+  <div class="idea-card">
+    <div class="idea-tag tag-sec">Sécurité</div>
+    <div class="idea-title">Installed App Age Map</div>
+    <div class="idea-desc">Timeline strip showing when apps were installed vs last updated. Apps not updated in 6+ months highlighted. Long-stale installs are a security surface area — this makes that visible.</div>
+    <div class="idea-type">Data: If <code>MACHINE_IDENTITY.installed_apps</code> includes version/date metadata — or derive from app recency.</div>
+  </div>
+
+</div>
+
+</body>
+</html>

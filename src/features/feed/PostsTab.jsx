@@ -17,6 +17,29 @@ const PERSONA_COLORS = {
 
 const API_ORIGIN = 'http://localhost:3001';
 
+/**
+ * Stable identifier for a post that survives a `reloadProfileFromApi` swap.
+ *
+ * During a stream-reveal the post object carries client-only fields like
+ * `_feedKey` (a fresh UUID); after the server reload those fields are gone,
+ * so falling back to an array-index `id` would change every key the moment a
+ * new post is prepended — React would unmount/remount the whole baseline
+ * list and the user would see existing cards flicker. Anchoring the key to
+ * the data that *doesn't* change (server-side `persona + createdAt + content
+ * prefix`) keeps each card mounted across reveals and reloads.
+ */
+function postStableKey(p, fallbackIndex) {
+  const explicitId = p?.id ?? p?._id ?? p?.uuid;
+  if (explicitId !== undefined && explicitId !== null && explicitId !== '') {
+    return String(explicitId);
+  }
+  const persona = String(p?.persona ?? '');
+  const ts = String(p?.createdAt ?? p?.created_at ?? p?.created ?? p?.timestamp ?? p?.time ?? '');
+  const content = String(p?.content ?? '').slice(0, 60);
+  if (persona || ts || content) return `${persona}|${ts}|${content}`;
+  return `idx-${fallbackIndex}`;
+}
+
 function resolveAttachedAsset(asset) {
   if (!asset || typeof asset !== 'object') return null;
   const kind = asset.kind === 'document' ? 'document' : 'image';
@@ -69,8 +92,7 @@ export default function PostsTab({
     const createdAtFallback = (i) => Date.now() - (i + 1) * 6 * 60 * 60 * 1000; // 6h steps
 
     const mapped = raw.map((p, i) => ({
-      // Use stable id when present, fallback to index
-      id: p?.id ?? p?._id ?? p?.uuid ?? i,
+      id: postStableKey(p, i),
       persona: p.persona,
       content: sanitizePostContent(p.content),
       noteColor: PERSONA_COLORS[p.persona] ?? '#2323FF',
@@ -88,6 +110,9 @@ export default function PostsTab({
       systemDeltaPct: stablePct(`${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
       attachedAsset: resolveAttachedAsset(p.attachedAsset ?? p.attached_asset),
       chartType: p.chartType ?? p.chart_type ?? null,
+      inferenceChain: Array.isArray(p.inferenceChain) ? p.inferenceChain : null,
+      ingredients: Array.isArray(p.ingredients) ? p.ingredients : null,
+      highlights: Array.isArray(p.highlights) ? p.highlights : null,
       _feedEnter: !!p._feedEnter,
       _feedKey: p._feedKey ?? null,
       _feedRevealSeq: typeof p._feedRevealSeq === 'number' ? p._feedRevealSeq : 0,
@@ -119,30 +144,33 @@ export default function PostsTab({
         </div>
       ) : null}
       {posts.map((p) => (
-        <PostCard
-          key={p._feedKey ?? String(p.id)}
-          post={p}
-          animateEnter={!!p._feedEnter}
-          hidePills={hideInteractions}
-          isCommentsOpen={hideInteractions ? false : openCommentsPostIds.has(p.id)}
-          onToggleComments={
-            hideInteractions
-              ? undefined
-              : () =>
-                  setOpenCommentsPostIds((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(p.id)) next.delete(p.id);
-                    else next.add(p.id);
-                    return next;
-                  })
-          }
-          isHidden={
-            hideInteractions ? false : isHidden(normalizePostHideKey(p.createdAt))
-          }
-          isHighlightable={!hideInteractions}
-          isHighlighted={!hideInteractions && highlightedPostId !== null && highlightedPostId === p.id}
-          onHighlight={() => onHighlightPost?.(p)}
-        />
+        <div
+          key={p._feedKey ?? p.id}
+          className={`post-card-shell${p._feedEnter ? ' post-card-shell--entering' : ''}`}
+        >
+          <PostCard
+            post={p}
+            hidePills={hideInteractions}
+            isCommentsOpen={hideInteractions ? false : openCommentsPostIds.has(p.id)}
+            onToggleComments={
+              hideInteractions
+                ? undefined
+                : () =>
+                    setOpenCommentsPostIds((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(p.id)) next.delete(p.id);
+                      else next.add(p.id);
+                      return next;
+                    })
+            }
+            isHidden={
+              hideInteractions ? false : isHidden(normalizePostHideKey(p.createdAt))
+            }
+            isHighlightable={!hideInteractions}
+            isHighlighted={!hideInteractions && highlightedPostId !== null && highlightedPostId === p.id}
+            onHighlight={() => onHighlightPost?.(p)}
+          />
+        </div>
       ))}
     </div>
   );

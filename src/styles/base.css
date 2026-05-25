@@ -639,6 +639,60 @@ body {
   }
 }
 
+/* ── RESPONSIVE: fluid two-column layout for 14" MacBook and similar (≤ 1660px) ──
+   The bleed design (negative margins + oversized columns) is built for ~1680px+.
+   Below that threshold we switch the left col to flex:1 and give the right panel
+   a viewport-relative clamp width so both always fit without overflow. */
+@media (max-width: 1660px) {
+  .page-outer.view-home,
+  .page-outer.view-profile {
+    --left-capsule-extra-width: 0px;
+    --dashboard-extra-width: 0px;
+    --shell-capsules-nudge-left: 0px;
+  }
+
+  .view-home .main-col,
+  .view-profile .main-col {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    margin-left: 0;
+    transform: none;
+  }
+
+  .view-home .persona-side-panel,
+  .view-profile .persona-side-panel {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    width: clamp(360px, 29vw, 500px);
+    margin-right: 0;
+    transform: none;
+  }
+}
+
+/* ── RESPONSIVE: narrower large screens (≤ 1350px) ── */
+@media (max-width: 1350px) {
+  .view-home .page,
+  .view-profile .page {
+    gap: 16px;
+  }
+
+  .view-home .persona-side-panel,
+  .view-profile .persona-side-panel {
+    width: clamp(300px, 27vw, 380px);
+  }
+
+  .posts-capsule {
+    padding: 26px 32px 28px;
+  }
+
+  .view-home .persona-side-panel .dashboard-capsule,
+  .view-profile .persona-side-panel .dashboard-capsule {
+    padding: 20px 22px 24px;
+    gap: 16px;
+  }
+}
+
 /* ── POSTS (stacked pill cards; no metadata strip between) ── */
 .posts-tab {
   --posts-stack-gap: 64px;
@@ -700,19 +754,53 @@ body {
   gap: 10px;
 }
 
-.post-card--feed-enter {
-  animation: post-feed-enter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+/*
+ * Animation shell wrapper for posts. Default state is invisible to layout
+ * (display: contents) so the post-card behaves exactly like a direct child of
+ * .posts-tab's flex column. When a card is freshly revealed by the streaming
+ * generator the shell switches to display: grid with a row that animates from
+ * 0fr → 1fr — this physically grows the card's vertical footprint, which the
+ * surrounding flex column compensates for by smoothly sliding existing cards
+ * down. No instantaneous snap, no FLIP measurement, no JS height plumbing.
+ *
+ * Duration MUST match POST_FEED_ENTER_ANIM_MS in src/app/App.jsx.
+ */
+.post-card-shell {
+  display: contents;
 }
 
-@keyframes post-feed-enter {
-  from {
+.post-card-shell--entering {
+  display: grid;
+  grid-template-rows: 1fr;
+  width: 100%;
+  min-height: 0;
+  animation: post-card-shell-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.post-card-shell--entering > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@keyframes post-card-shell-enter {
+  0% {
+    grid-template-rows: 0fr;
+    /* Negate the flex gap below the shell while it has no height, so the
+       sibling beneath doesn't sit in a "phantom" 64–68 px empty band at the
+       first frame. Margin animates back to 0 in lockstep with the row
+       expansion → the gap re-appears smoothly as the new card grows. */
+    margin-bottom: calc(-1 * var(--posts-stack-gap, 64px));
     opacity: 0;
-    transform: translateY(16px) scale(0.96);
-    filter: blur(2px);
+    filter: blur(6px);
   }
-  to {
+  60% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    grid-template-rows: 1fr;
+    margin-bottom: 0;
+    opacity: 1;
     filter: blur(0);
   }
 }

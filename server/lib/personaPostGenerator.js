@@ -175,30 +175,240 @@ function normalizeSentiment(s) {
   return v === 'positive' || v === 'negative' ? v : null;
 }
 
-function parsePostWithSentiment(raw, fallbackPersona) {
-  const text = (raw || '').trim();
-  if (!text) return { content: '', sentiment: null };
-  try {
-    const obj = JSON.parse(text);
-    if (obj && typeof obj === 'object') {
-      const content = typeof obj.content === 'string' ? obj.content.trim() : '';
-      const sentiment = normalizeSentiment(obj.sentiment);
-      if (content) return { content, sentiment };
+const INFERENCE_CHAIN_STEPS = ['data', 'classify', 'infer', 'generate'];
+const INFERENCE_CHAIN_CONFIDENCES = new Set(['high', 'med', 'low']);
+const INFERENCE_CHAIN_VALUE_MAX = 220;
+const INGREDIENT_LABEL_MAX = 48;
+const INGREDIENT_DATAPOINT_MAX = 80;
+const INGREDIENT_COUNT = 3;
+const HIGHLIGHT_PHRASE_MAX = 80;
+
+// Appended to every slot system prompt; explains the inferenceChain output schema,
+// the ingredients summary, and the highlight ↔ chain/ingredient mapping.
+export const INFERENCE_CHAIN_INSTRUCTION = `
+
+Additional output fields — "inferenceChain", "ingredients", "highlights":
+
+1) "inferenceChain" — array of EXACTLY 4 step objects in this order, revealing how the algorithm went from raw user data to the post sentence:
+
+[
+  { "step": "data",     "value": "<a HUMAN-READABLE sentence describing one concrete signal from the user data, e.g. '42 .png files created in the last week' or 'Screenshot captured at 22:44 named Screenshot 2026-04-28' or 'Cursor and Claude opened back-to-back this afternoon'. NEVER mention internal field names, JSON paths, or keys like 'attached_image', 'app_usage_7days', 'MACHINE_IDENTITY'. Write as a journalist would describe what the system saw.>", "source": "<short human label for where the signal came from, e.g. 'Recent files', 'App usage (last 7 days)', 'Screenshot library', 'Browser history'. NEVER a JSON path or field name.>" },
+  { "step": "classify", "value": "<short label categorizing that signal>", "confidence": "high" },
+  { "step": "infer",    "value": "<a reductive, biased, or oversimplified judgment the algorithm draws from the classification>", "confidence": "low", "isBiased": true, "biasNote": "<one sentence admitting why this judgment is superficial or unfair>" },
+  { "step": "generate", "value": "<the exact phrase or sentence from the 'content' field that this chain produced — must appear verbatim inside 'content'>" }
+]
+
+The "infer" step MUST be a leap — make it sound like an algorithm making a snap judgment. Keep each value under 180 characters.
+
+2) "ingredients" — array of EXACTLY 3 objects describing the data categories that fed the post, each with a relative weight (0–100) and concrete data points:
+
+[
+  { "label": "<short category name, e.g. 'Installed apps', 'Activity rhythm', 'Risk signals', 'Location signals', 'Recent files', 'Browsing patterns'>", "weight": <integer 30–95>, "dataPoints": ["<concrete raw value 1>", "<concrete raw value 2>", "<concrete raw value 3>", "..."] }
+]
+
+Include as MANY dataPoints per ingredient as the source data supports (5–12 ideal). Data points are real, specific values from the data — app names, file names, timestamps, wifi SSIDs, URLs, file extensions, etc. NEVER internal field names.
+
+3) "highlights" — array of 2–3 short phrases from "content" that map onto the chain steps and ingredients. Each highlight links one literal substring of "content" to a chain step and an ingredient:
+
+[
+  { "phrase": "<exact substring that appears VERBATIM in 'content'>", "stepIndex": <0|1|2|3>, "ingredientIndex": <0|1|2> }
+]
+
+Pick phrases the reader would want to interrogate ("42 PNGs", "tricky design logic", "FigmaAgent and Claude"). They MUST appear character-for-character inside "content".
+
+Return the full envelope: {"content":"...","sentiment":"positive"|"negative","inferenceChain":[…4…],"ingredients":[…3…],"highlights":[…2-3…]}.`;
+
+function injectInferenceChainInstruction(systemPrompt) {
+  const base = String(systemPrompt || '').trim();
+  if (!base) return INFERENCE_CHAIN_INSTRUCTION.trim();
+  if (base.includes('inferenceChain')) return base;
+  return `${base}${INFERENCE_CHAIN_INSTRUCTION}`;
+}
+
+function clipChainValue(value) {
+  const t = String(value || '').trim();
+  if (!t) return '';
+  if (t.length <= INFERENCE_CHAIN_VALUE_MAX) return t;
+  const cut = t.slice(0, INFERENCE_CHAIN_VALUE_MAX);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > INFERENCE_CHAIN_VALUE_MAX / 2 ? cut.slice(0, lastSpace) : cut).trim();
+}
+
+function looksLikeInternalKey(s) {
+  const t = String(s || '').trim();
+  if (!t) return false;
+  // Heuristic for snake_case keys, dotted paths, or [index] subscripts.
+  return /[_.\[]/.test(t) && /^[A-Za-z0-9_.\[\]]+$/.test(t);
+}
+
+function sanitizeReadable(s) {
+  const t = String(s || '').trim();
+  if (!t) return '';
+  return looksLikeInternalKey(t) ? '' : t;
+}
+
+function normalizeInferenceChain(raw) {
+  if (!Array.isArray(raw) || raw.length !== 4) return null;
+  const out = [];
+  for (let i = 0; i < 4; i += 1) {
+    const item = raw[i];
+    if (!item || typeof item !== 'object') return null;
+    const expected = INFERENCE_CHAIN_STEPS[i];
+    const step = String(item.step || '').trim().toLowerCase();
+    if (step !== expected) return null;
+    const value = clipChainValue(item.value);
+    if (!value) return null;
+    const entry = { step, value };
+    if (step === 'data') {
+      const readable = sanitizeReadable(item.source);
+      if (readable) entry.source = clipChainValue(readable);
     }
-  } catch { /* fall through */ }
-  const start = text.indexOf('{'); const end = text.lastIndexOf('}');
-  if (start !== -1 && end > start) {
+    if (step === 'classify' || step === 'infer') {
+      const conf = String(item.confidence || '').trim().toLowerCase();
+      if (INFERENCE_CHAIN_CONFIDENCES.has(conf)) entry.confidence = conf;
+    }
+    if (step === 'infer') {
+      entry.isBiased = item.isBiased === true || item.isBiased === 'true';
+      if (typeof item.biasNote === 'string' && item.biasNote.trim()) {
+        entry.biasNote = clipChainValue(item.biasNote);
+      }
+    }
+    out.push(entry);
+  }
+  return out;
+}
+
+function clipText(value, max) {
+  const t = String(value || '').trim();
+  if (!t) return '';
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > max / 2 ? cut.slice(0, lastSpace) : cut).trim();
+}
+
+function normalizeIngredients(raw) {
+  if (!Array.isArray(raw)) return null;
+  const out = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const label = clipText(item.label, INGREDIENT_LABEL_MAX);
+    if (!label) continue;
+    let weight = Number(item.weight);
+    if (!Number.isFinite(weight)) weight = 50;
+    weight = Math.max(5, Math.min(100, Math.round(weight)));
+    const points = Array.isArray(item.dataPoints) ? item.dataPoints : [];
+    const dataPoints = [];
+    for (const p of points) {
+      const cleaned = clipText(p, INGREDIENT_DATAPOINT_MAX);
+      if (cleaned && !looksLikeInternalKey(cleaned)) dataPoints.push(cleaned);
+    }
+    if (!dataPoints.length) continue;
+    out.push({ label, weight, dataPoints });
+    if (out.length >= INGREDIENT_COUNT) break;
+  }
+  return out.length === INGREDIENT_COUNT ? out : null;
+}
+
+function normalizeHighlights(raw, content, ingredientsCount) {
+  if (!Array.isArray(raw) || !content) return null;
+  const out = [];
+  const lowerContent = content.toLowerCase();
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const phrase = clipText(item.phrase, HIGHLIGHT_PHRASE_MAX);
+    if (!phrase) continue;
+    if (lowerContent.indexOf(phrase.toLowerCase()) === -1) continue;
+    const stepIndex = Math.max(0, Math.min(3, Number(item.stepIndex)));
+    if (!Number.isFinite(Number(item.stepIndex))) continue;
+    const ingRaw = Number(item.ingredientIndex);
+    const ingredientIndex = Number.isFinite(ingRaw)
+      ? Math.max(0, Math.min(ingredientsCount - 1, ingRaw))
+      : 0;
+    out.push({ phrase, stepIndex, ingredientIndex });
+    if (out.length >= 4) break;
+  }
+  return out.length ? out : null;
+}
+
+function extractContentField(jsonText) {
+  const m = jsonText.match(/"content"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  if (!m) return null;
+  try { return JSON.parse('"' + m[1] + '"').trim() || null; }
+  catch { return m[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\').trim() || null; }
+}
+
+function fixInvalidDataPoints(jsonText) {
+  // LLMs sometimes emit ["key": num, ...] instead of ["key", ...] inside dataPoints arrays
+  return jsonText.replace(
+    /("dataPoints"\s*:\s*\[)([\s\S]*?)(\])/g,
+    (_, pre, body, post) => pre + body.replace(/"([^"]+)"\s*:\s*(-?\d+(?:\.\d+)?)/g, '"$1: $2"') + post,
+  );
+}
+
+function parsePostResponse(raw, fallbackPersona) {
+  let text = (raw || '').trim();
+  if (!text) return { content: '', sentiment: null, inferenceChain: null };
+
+  // Strip markdown code fences
+  if (text.startsWith('```')) {
+    const firstNewline = text.indexOf('\n');
+    if (firstNewline !== -1) {
+      text = text.slice(firstNewline + 1);
+      const closingFence = text.lastIndexOf('\n```');
+      text = (closingFence !== -1 ? text.slice(0, closingFence) : text.replace(/```\s*$/, '')).trim();
+    }
+  }
+
+  const tryParse = (slice) => {
     try {
-      const obj = JSON.parse(text.slice(start, end + 1));
+      const obj = JSON.parse(slice);
       if (obj && typeof obj === 'object') {
         const content = typeof obj.content === 'string' ? obj.content.trim() : '';
-        const sentiment = normalizeSentiment(obj.sentiment);
-        if (content) return { content, sentiment };
+        if (!content) return null;
+        const ingredients = normalizeIngredients(obj.ingredients);
+        const highlights = ingredients
+          ? normalizeHighlights(obj.highlights, content, ingredients.length)
+          : null;
+        return {
+          content,
+          sentiment: normalizeSentiment(obj.sentiment),
+          inferenceChain: normalizeInferenceChain(obj.inferenceChain),
+          ingredients,
+          highlights,
+        };
       }
-    } catch { /* fall through */ }
+    } catch { /* ignore */ }
+    return null;
+  };
+
+  const direct = tryParse(text);
+  if (direct) return direct;
+
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    const slice = text.slice(start, end + 1);
+    const inner = tryParse(slice);
+    if (inner) return inner;
+
+    // Fix invalid object-style entries inside dataPoints arrays and retry
+    const fixed = fixInvalidDataPoints(slice);
+    if (fixed !== slice) {
+      const fixedParsed = tryParse(fixed);
+      if (fixedParsed) return fixedParsed;
+    }
+
+    // Regex fallback: at minimum extract the content field
+    const extracted = extractContentField(slice);
+    if (extracted) {
+      const inferred = fallbackPersona === 'securite' ? 'negative' : 'positive';
+      return { content: extracted, sentiment: inferred, inferenceChain: null, ingredients: null, highlights: null };
+    }
   }
+
   const inferred = fallbackPersona === 'securite' ? 'negative' : 'positive';
-  return { content: text, sentiment: inferred };
+  return { content: text, sentiment: inferred, inferenceChain: null, ingredients: null, highlights: null };
 }
 
 // ─── Slot builders ─────────────────────────────────────────────────────────
@@ -315,23 +525,26 @@ function buildAssetSlot(baseUserPayload, assetAssignment) {
 
 async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
   const promptCfg = SP[slot.promptKey] ?? DEFAULT_SLOT_PROMPTS.browser;
+  const systemPrompt = injectInferenceChainInstruction(promptCfg.system);
+  // Higher token budget so chain + ingredients + highlights all fit alongside the post.
+  const maxTokens = Math.max(promptCfg.maxTokens || 900, 1800);
 
   const runOnce = async (temperature, withVision) => {
     const body = buildChatBody({
       model: slot._model,
-      systemPrompt: promptCfg.system,
+      systemPrompt,
       userPayload: slot.userPayload,
       imageData: withVision && slot.imageData ? slot.imageData : null,
       docText: slot.docText || null,
       docFilename: slot.docFilename || null,
       temperature,
-      maxTokens: promptCfg.maxTokens,
+      maxTokens,
     });
     const r = await lmChatCompletion({ baseUrl, timeoutMs, retries, body });
-    return parsePostWithSentiment(extractChoiceText(r), slot.persona);
+    return parsePostResponse(extractChoiceText(r), slot.persona);
   };
 
-  let parsed = { content: '', sentiment: null };
+  let parsed = { content: '', sentiment: null, inferenceChain: null, ingredients: null, highlights: null };
   let visionSucceeded = false;
 
   if (slot.imageData) {
@@ -347,29 +560,29 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
       : slot.userPayload;
     const body = buildChatBody({
       model: slot._model,
-      systemPrompt: promptCfg.system,
+      systemPrompt,
       userPayload: fallbackPayload,
       imageData: null,
       docText: slot.docText || null,
       docFilename: slot.docFilename || null,
       temperature: promptCfg.temperature,
-      maxTokens: promptCfg.maxTokens,
+      maxTokens,
     });
-    parsed = parsePostWithSentiment(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
+    parsed = parsePostResponse(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
   }
 
   if (!parsed.content) {
     const body = buildChatBody({
       model: slot._model,
-      systemPrompt: promptCfg.system,
+      systemPrompt,
       userPayload: slot.userPayload,
       imageData: null,
       docText: null,
       docFilename: null,
       temperature: 0.35,
-      maxTokens: promptCfg.maxTokens,
+      maxTokens,
     });
-    parsed = parsePostWithSentiment(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
+    parsed = parsePostResponse(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
   }
 
   const post = {
@@ -378,6 +591,9 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
     sentiment: parsed.sentiment,
     createdAt: new Date().toISOString(),
   };
+  if (parsed.inferenceChain) post.inferenceChain = parsed.inferenceChain;
+  if (parsed.ingredients) post.ingredients = parsed.ingredients;
+  if (parsed.highlights) post.highlights = parsed.highlights;
   if (slot.attachedAsset) {
     post.attachedAsset = { ...slot.attachedAsset };
     if (slot.attachedAsset.kind === 'image') post.attachedAsset.visionAnalysed = visionSucceeded;

@@ -1,0 +1,953 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   INFERENCE CHAIN — "Tell me more" pill + expanded panel
+   ----------------------------------------------------------------------------
+   Pill state language mirrors `.dashboard-hide-pill` so the two siblings feel
+   visually related — same radii, same glow cadence, same nudge wiggle.
+   Variables:
+     --tell-pill-accent  : persona color of the highlighted post (or default)
+     --tell-pill-pastel  : matching pastel companion
+   ────────────────────────────────────────────────────────────────────────── */
+
+.tell-more-pill {
+  --tell-pill-radius: var(--radius-pill);
+  --tell-pill-border: 2px;
+  appearance: none;
+  border: var(--tell-pill-border) solid var(--tell-pill-accent, #759aef);
+  border-radius: var(--tell-pill-radius);
+  background: var(--tell-pill-pastel, #bccdf5);
+  color: #000;
+  font-family: var(--font-avant);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  cursor: pointer;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition:
+    background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-width 200ms ease,
+    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 280ms ease,
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tell-more-pill:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tell-more-pill:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 3px;
+}
+
+/* Ghost post skeleton — same construction as the hide pill */
+.tell-more-pill__bg-post {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 18px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 15px;
+  box-sizing: border-box;
+  border-radius: calc(var(--tell-pill-radius) - 10px);
+  background: color-mix(in srgb, var(--tell-pill-accent, #ffffff) 28%, transparent);
+  filter: blur(1.2px);
+  pointer-events: none;
+  transition:
+    filter 280ms ease,
+    background-color 280ms ease,
+    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tell-more-pill__avatar {
+  width: 32%;
+  max-width: 80px;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--tell-pill-accent, #759aef) 55%, transparent);
+}
+
+.tell-more-pill__lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+}
+
+.tell-more-pill__line {
+  height: 8px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--tell-pill-accent, #759aef) 55%, transparent);
+}
+
+.tell-more-pill__line--short { width: 70%; }
+.tell-more-pill__line--tiny  { width: 45%; height: 6px; }
+
+/* Foreground icon */
+.tell-more-pill__icon {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1c1c1c;
+  opacity: 0.55;
+  transition:
+    opacity 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 280ms ease;
+}
+
+.tell-more-pill__icon svg {
+  width: clamp(54px, 6.8vw, 92px);
+  height: clamp(54px, 6.8vw, 92px);
+  display: block;
+}
+
+.tell-more-pill__label {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: clamp(11px, 1.05vw, 14px);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  color: #1c1c1c;
+  opacity: 0.78;
+  transition: opacity 240ms ease, color 240ms ease;
+}
+
+/* ── State 1: normal ── */
+.tell-more-pill--normal .tell-more-pill__icon {
+  opacity: 0.5;
+  transform: scale(0.94);
+}
+
+/* ── State 2: armed — a post is highlighted ── */
+@keyframes tell-pill-armed-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 22px 4px color-mix(in srgb, var(--tell-pill-accent, #759aef) 75%, transparent),
+      0 0 44px 12px color-mix(in srgb, var(--tell-pill-accent, #759aef) 45%, transparent),
+      0 0 72px 24px color-mix(in srgb, var(--tell-pill-accent, #759aef) 22%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 32px 8px color-mix(in srgb, var(--tell-pill-accent, #759aef) 90%, transparent),
+      0 0 60px 18px color-mix(in srgb, var(--tell-pill-accent, #759aef) 55%, transparent),
+      0 0 96px 32px color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, transparent);
+  }
+}
+
+@keyframes tell-pill-icon-pop {
+  0%   { transform: scale(0.85); }
+  60%  { transform: scale(1.12); }
+  100% { transform: scale(1);    }
+}
+
+.tell-more-pill--armed {
+  animation: tell-pill-armed-glow 1.6s ease-in-out infinite;
+}
+
+.tell-more-pill--armed .tell-more-pill__icon {
+  opacity: 1;
+  transform: scale(1);
+  animation: tell-pill-icon-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tell-more-pill--armed .tell-more-pill__label {
+  opacity: 1;
+}
+
+/* ── State 3: nudge — clicked with no post selected ── */
+@keyframes tell-pill-error-wiggle {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  12%      { transform: translateX(-8px) rotate(-1.2deg); }
+  24%      { transform: translateX(7px) rotate(1deg); }
+  36%      { transform: translateX(-5px) rotate(-0.6deg); }
+  48%      { transform: translateX(5px) rotate(0.6deg); }
+  60%      { transform: translateX(-3px) rotate(-0.3deg); }
+  72%      { transform: translateX(2px) rotate(0.2deg); }
+  84%      { transform: translateX(-1px); }
+}
+
+@keyframes tell-pill-nudge-lifecycle {
+  0%   { opacity: 0; transform: scale(0.96); }
+  10%  { opacity: 1; transform: scale(1);    }
+  88%  { opacity: 1; transform: scale(1);    }
+  100% { opacity: 0; transform: scale(0.98); }
+}
+
+.tell-more-pill--nudge {
+  animation: tell-pill-error-wiggle 460ms ease-in-out 1;
+  transition:
+    background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-width 200ms ease,
+    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 280ms ease;
+}
+
+.tell-more-pill--nudge .tell-more-pill__avatar,
+.tell-more-pill--nudge .tell-more-pill__line {
+  background: color-mix(in srgb, var(--tell-pill-accent, #759aef) 70%, transparent);
+}
+
+.tell-more-pill--nudge .tell-more-pill__icon {
+  position: absolute;
+  right: 20%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  opacity: 1;
+  color: #111;
+  animation: tell-pill-nudge-lifecycle 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.tell-more-pill--nudge .tell-more-pill__icon svg {
+  width: clamp(38px, 4.6vw, 60px);
+  height: clamp(38px, 4.6vw, 60px);
+}
+
+.tell-more-pill--nudge .tell-more-pill__label {
+  opacity: 0;
+}
+
+.tell-more-pill__nudge-capsule {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: inline-block;
+  padding: 5px 14px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--tell-pill-accent, #759aef);
+  color: #000;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.15vw, 14px);
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  line-height: 1;
+  white-space: nowrap;
+  animation: tell-pill-nudge-lifecycle 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   STATE 4: expanded — tell row grows vertically; primary row shrinks by the
+   same amount. Hide/ranking + persona rings keep their size (grid rows 1 & 4).
+   Driven by `.dashboard-capsule--figma.is-tell-expanded` on the parent.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.dashboard-capsule--figma.is-tell-expanded {
+  /* 0.65 + 0.55 + 2.15 = 3.35 — same total as default 0.65 + 1.35 + 1.35 */
+  grid-template-rows: minmax(0, 0.65fr) minmax(0, 0.55fr) minmax(0, 2.15fr) auto;
+}
+
+@keyframes tell-pill-expand-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.97);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+.tell-more-pill--expanded {
+  --tell-pill-radius: var(--radius-pill);
+  --tell-pill-border: 2px;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  min-height: 0;
+  height: 100%;
+  transform-origin: center center;
+  animation: tell-pill-expand-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Expanded panel internals
+   ────────────────────────────────────────────────────────────────────────── */
+
+.inference-panel {
+  /* Warning / bias palette — amber, NOT red. Keep in sync if design tokens
+     ever land for amber in base.css. */
+  --inf-amber: #f2a93b;
+  --inf-amber-deep: #5a3e00;
+  --inf-amber-soft: rgba(242, 169, 59, 0.22);
+  --inf-amber-edge: rgba(120, 78, 0, 0.45);
+
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--tell-pill-pastel, #bccdf5);
+  color: #000;
+  padding:
+    clamp(12px, 1.4vh, 18px)
+    clamp(18px, 2.2vw, 26px)
+    clamp(8px, 1vh, 12px);
+  gap: clamp(6px, 0.9vh, 12px);
+  text-align: left;
+  overflow: hidden;
+}
+
+.inference-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.inference-panel__title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(6px, 0.75vh, 8px);
+  min-width: 0;
+}
+
+.inference-panel__kicker {
+  display: inline-block;
+  margin-left: -3px;
+  padding: 3px 12px 4px;
+  border-radius: var(--radius-pill);
+  background: var(--tell-pill-accent, #759aef);
+  color: #000;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.1vw, 14px);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  line-height: 1.1;
+}
+
+.inference-panel__title {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-size: clamp(18px, 2.1vw, 26px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  line-height: 1;
+  color: #000;
+}
+
+/* ── Post text + clickable highlights ──────────────────────────────────── */
+
+.inference-panel__post-quote {
+  flex-shrink: 0;
+  margin-bottom: clamp(4px, 0.5vh, 8px);
+}
+
+.inference-panel__post-text {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-style: oblique;
+  font-weight: 800;
+  font-size: clamp(14px, 1.5vw, 18px);
+  letter-spacing: -0.005em;
+  line-height: 1.45;
+  color: #000;
+}
+
+.inference-panel__post-text::before {
+  content: '\201C';
+}
+
+.inference-panel__post-text::after {
+  content: '\201D';
+}
+
+.inference-panel__highlight {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  vertical-align: baseline;
+  text-decoration: underline;
+  text-decoration-color: #000;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  text-decoration-skip-ink: none;
+  transition: background-color 180ms ease;
+}
+
+.inference-panel__highlight:hover,
+.inference-panel__highlight:focus-visible {
+  background: rgba(0, 0, 0, 0.06);
+  outline: none;
+}
+
+/* ── View toggle pill ──────────────────────────────────────────────────── */
+
+.inference-panel__toggle {
+  display: inline-flex;
+  align-self: flex-start;
+  margin-top: 0;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.08);
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.inference-panel__toggle-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  padding: 5px 14px 6px;
+  font-family: var(--font-avant);
+  font-size: clamp(12px, 1.15vw, 14px);
+  font-weight: 800;
+  letter-spacing: 0;
+  color: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+
+.inference-panel__toggle-btn:hover:not(:disabled):not(.is-active) {
+  color: #000;
+}
+
+.inference-panel__toggle-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.inference-panel__toggle-btn.is-active,
+.inference-panel__toggle-btn.is-active:hover:not(:disabled) {
+  background: #000;
+  color: var(--tell-pill-accent, #759aef);
+}
+
+.inference-panel__toggle-btn:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.inference-panel__body {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.inference-panel__close {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.inference-panel__close:hover {
+  transform: scale(1.06);
+}
+
+.inference-panel__close:focus-visible {
+  outline: 2px solid var(--tell-pill-accent, #759aef);
+  outline-offset: 2px;
+}
+
+.inference-panel__steps {
+  list-style: none;
+  padding: 0 0 8px;
+  margin: 0;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  counter-reset: inference-step;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tell-pill-accent, #759aef) transparent;
+}
+
+.inference-panel__steps::-webkit-scrollbar {
+  width: 6px;
+}
+
+.inference-panel__steps::-webkit-scrollbar-thumb {
+  background-color: var(--tell-pill-accent, #759aef);
+  border-radius: 3px;
+}
+
+.inference-panel__empty {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: var(--font-avant);
+  font-weight: 600;
+  font-size: clamp(13px, 1.3vw, 16px);
+  color: #1c1c1c;
+  opacity: 0.7;
+  padding: 8px 6px;
+}
+
+/* ── Step row ───────────────────────────────────────────────────────────── */
+
+@keyframes inference-step-enter {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.inference-step {
+  position: relative;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 35%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+  animation: inference-step-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes inference-step-pulse {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--tell-pill-accent, #759aef) 0%, transparent); }
+  35%  { transform: scale(1.025); box-shadow: 0 0 0 6px color-mix(in srgb, var(--tell-pill-accent, #759aef) 35%, transparent); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--tell-pill-accent, #759aef) 0%, transparent); }
+}
+
+.inference-step.is-pulsing {
+  animation: inference-step-pulse 850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  z-index: 2;
+}
+
+.inference-step:nth-child(1) { animation-delay: 60ms; }
+.inference-step:nth-child(2) { animation-delay: 160ms; }
+.inference-step:nth-child(3) { animation-delay: 260ms; }
+
+.inference-step:last-child {
+  margin-bottom: 0;
+}
+
+.inference-step__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.inference-step__label {
+  font-family: var(--font-avant);
+  font-size: clamp(10px, 1.05vw, 12px);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.inference-step__value {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-size: clamp(13px, 1.35vw, 16px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: #000;
+}
+
+.inference-step__source {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.62);
+  letter-spacing: 0;
+}
+
+.inference-step__source-tag {
+  display: inline-block;
+  padding: 2px 8px 3px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.08);
+  font-size: 0.85em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.inference-step__confidence {
+  display: inline-block;
+  padding: 3px 10px 4px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.05vw, 12.5px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  line-height: 1;
+}
+
+.inference-step__confidence--high {
+  background: #000;
+  color: #fff;
+}
+
+.inference-step__confidence--med {
+  background: rgba(0, 0, 0, 0.18);
+  color: #000;
+}
+
+.inference-step__confidence--low {
+  background: var(--inf-amber-soft, rgba(242, 169, 59, 0.22));
+  color: var(--inf-amber-deep, #5a3e00);
+  outline: 1px dashed var(--inf-amber-edge, rgba(120, 78, 0, 0.45));
+  outline-offset: -2px;
+}
+
+/* Connector between steps (chevron + line) */
+.inference-step__connector {
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.inference-step__connector-line {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 1.5px;
+  height: 12px;
+  background: color-mix(in srgb, var(--tell-pill-accent, #759aef) 60%, transparent);
+  transform: translateX(-50%);
+}
+
+.inference-step__connector-arrow {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  color: var(--tell-pill-accent, #759aef);
+}
+
+/* INFER step */
+.inference-step--infer {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: color-mix(in srgb, var(--tell-pill-accent, #759aef) 35%, transparent);
+}
+
+.inference-step--infer .inference-step__label {
+  color: #000;
+  opacity: 0.55;
+}
+
+.inference-step--infer .inference-step__confidence--low {
+  background: color-mix(in srgb, var(--tell-pill-accent, #759aef) 22%, transparent);
+  color: #000;
+  outline: 1px dashed color-mix(in srgb, var(--tell-pill-accent, #759aef) 55%, transparent);
+  outline-offset: -2px;
+}
+
+.inference-step__bias {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  margin-top: 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border-left: 3px solid var(--tell-pill-accent, #759aef);
+}
+
+.inference-step__bias-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inference-step__bias-title {
+  font-family: var(--font-avant);
+  font-size: clamp(10px, 1vw, 12px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #000;
+  line-height: 1;
+}
+
+.inference-step__bias-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #000;
+}
+
+.inference-step__bias-note {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-size: clamp(12px, 1.2vw, 14px);
+  font-weight: 600;
+  line-height: 1.3;
+  color: #000;
+  letter-spacing: -0.002em;
+}
+
+/* GENERATE step — quote framing */
+.inference-step--generate {
+  background: rgba(0, 0, 0, 0.94);
+  border-color: var(--tell-pill-accent, #759aef);
+}
+
+.inference-step--generate .inference-step__label {
+  color: var(--tell-pill-accent, #759aef);
+}
+
+.inference-step__quote {
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--tell-pill-accent, #759aef);
+}
+
+.inference-step__quote-text {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-size: clamp(15px, 1.55vw, 18px);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1.3;
+  color: #fff;
+  letter-spacing: -0.005em;
+}
+
+.inference-step__quote-text::before {
+  content: '\201C';
+  color: var(--tell-pill-accent, #759aef);
+  margin-right: 2px;
+  font-style: normal;
+}
+
+.inference-step__quote-text::after {
+  content: '\201D';
+  color: var(--tell-pill-accent, #759aef);
+  margin-left: 2px;
+  font-style: normal;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Ingredients view — 3 expandable bars + data-point pills
+   ────────────────────────────────────────────────────────────────────────── */
+
+.ingredients-list {
+  list-style: none;
+  padding: 0 0 8px;
+  margin: 0;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tell-pill-accent, #759aef) transparent;
+}
+
+.ingredients-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ingredients-list::-webkit-scrollbar-thumb {
+  background-color: var(--tell-pill-accent, #759aef);
+  border-radius: 3px;
+}
+
+@keyframes ingredient-row-enter {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.ingredient-row {
+  position: relative;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 32%, transparent);
+  border-radius: 12px;
+  animation: ingredient-row-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  overflow: hidden;
+}
+
+.ingredient-row:nth-child(1) { animation-delay: 40ms; }
+.ingredient-row:nth-child(2) { animation-delay: 120ms; }
+.ingredient-row:nth-child(3) { animation-delay: 200ms; }
+
+.ingredient-row--open {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--tell-pill-accent, #759aef);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tell-pill-accent, #759aef) 30%, transparent);
+}
+
+.ingredient-row__head {
+  appearance: none;
+  border: none;
+  background: transparent;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 6px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 14px 11px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: background-color 200ms ease;
+}
+
+.ingredient-row__head:hover {
+  background: color-mix(in srgb, var(--tell-pill-accent, #759aef) 8%, transparent);
+}
+
+.ingredient-row__head:focus-visible {
+  outline: 2px solid var(--tell-pill-accent, #759aef);
+  outline-offset: -2px;
+}
+
+.ingredient-row__label {
+  font-family: var(--font-avant);
+  font-size: clamp(14px, 1.4vw, 17px);
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  color: #000;
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ingredient-row__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.ingredient-row__weight {
+  font-family: var(--font-avant);
+  font-size: clamp(12px, 1.15vw, 14px);
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.7);
+  letter-spacing: -0.005em;
+}
+
+.ingredient-row__chevron {
+  width: 12px;
+  height: 12px;
+  color: rgba(0, 0, 0, 0.55);
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ingredient-row--open .ingredient-row__chevron {
+  transform: rotate(-180deg);
+}
+
+.ingredient-row__bar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.ingredient-row__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--tell-pill-accent, #759aef);
+  transition: width 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ingredient-row__points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 12px;
+  animation: ingredient-row-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ingredient-row__pill {
+  display: inline-block;
+  padding: 4px 10px 5px;
+  border-radius: var(--radius-pill);
+  background: #000;
+  color: #fff;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ingredient-row__pill--empty {
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(0, 0, 0, 0.7);
+  font-style: italic;
+}
