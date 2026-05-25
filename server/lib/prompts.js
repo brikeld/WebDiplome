@@ -37,6 +37,11 @@ export const DEFAULT_SLOT_PROMPTS = {
     temperature: 0.80,
     maxTokens: 900,
   },
+  leaderboard: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. The user has just been ranked on a top-5 leaderboard by an opaque scoring algorithm. The board title, the user's rank (1–5), and (optionally) their previous rank are listed in the context above. Write ONE post (max 200 chars) reacting to the rank or the change — confident, slightly self-aware, lean into the algorithm's reductive framing. If previousUserRank is provided, acknowledge the move (climbed / dropped / new). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    temperature: 0.8,
+    maxTokens: 1200,
+  },
 };
 
 export const DEFAULT_PROMPTS = {
