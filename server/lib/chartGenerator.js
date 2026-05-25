@@ -323,21 +323,25 @@ export function buildBrowserDomainsChart(data, persona = 'popularite') {
   const slice = extractBrowserSlice(data);
   const items = slice.topDomains.slice(0, 8);
   if (!items.length) return null;
-
-  const W = 600; const H = 280;
-  const ML = 140; const MR = 60; const MT = 44; const MB = 18;
-  const CW = W - ML - MR; const CH = H - MT - MB;
-  const N = items.length; const slotH = CH / N; const barH = Math.max(12, slotH - 8);
-  const maxVal = items[0].count;
-
-  const bars = items.map(({ domain, count }, i) => {
-    const bw = Math.round((count / maxVal) * CW);
-    const y = MT + i * slotH + (slotH - barH) / 2;
-    return hBar({ x: ML, y, w: bw, h: barH, palette, label: domain, value: count });
+  const { text, viz, bg } = palette;
+  const W = 640; const H = 220;
+  const BX = 48; const BW = W - 96; const BY = 72; const BH = 52;
+  const total = items.reduce((s, { count }) => s + count, 0);
+  const opacities = [1, 0.85, 0.7, 0.56, 0.44, 0.34, 0.26, 0.2];
+  let cx = BX;
+  const segments = items.map(({ domain, count }, i) => {
+    const sw = Math.round((count / total) * BW);
+    const pct = Math.round((count / total) * 100);
+    const div = i > 0 ? `<line x1="${cx}" y1="${BY}" x2="${cx}" y2="${BY + BH}" stroke="${bg}" stroke-width="2"/>` : '';
+    const seg = `<rect x="${cx}" y="${BY}" width="${sw}" height="${BH}" fill="${viz}" opacity="${opacities[i]}"/>`;
+    const domLabel = sw > 52 ? `<text x="${cx + sw / 2}" y="${BY - 8}" fill="${text}" font-size="9" font-weight="700" text-anchor="middle" font-family="'SF Mono',monospace">${esc(domain)}</text>` : '';
+    const pctLabel = sw > 28 ? `<text x="${cx + sw / 2}" y="${BY + BH + 18}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.6">${pct}%</text>` : '';
+    const result = div + seg + domLabel + pctLabel;
+    cx += sw;
+    return result;
   }).join('');
-
-  const sub = caption(W, H - 4, `${slice.totalVisits} total visits`, palette);
-  return { svg: svgWrap(W, H, 'Browser Top Domains', bars + sub, palette), w: W, h: H };
+  const sub = `<text x="${W / 2}" y="${H - 8}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.45">${slice.totalVisits} total visits</text>`;
+  return { svg: svgWrap(W, H, 'Browser Top Domains', segments + sub, palette), w: W, h: H };
 }
 
 export function buildLanguageChart(data, profile, persona = 'popularite') {
@@ -346,53 +350,63 @@ export function buildLanguageChart(data, profile, persona = 'popularite') {
     ? data.MACHINE_IDENTITY.languages
     : (profile?.systemLanguages ?? []);
   if (!langs.length) return null;
-
-  const W = 600; const H = 160;
-  const pillH = 28; const pillPad = 12; const gap = 10; const MT = 50;
-  let x = 20;
   const { text, viz } = palette;
-
-  const pills = langs.map((lang) => {
-    const textW = Math.max(60, String(lang).length * 8);
-    const pillW = textW + pillPad * 2;
-    const pill = `
-  <rect x="${x}" y="${MT}" width="${pillW}" height="${pillH}" fill="${viz}" rx="14" opacity="0.2"/>
-  <rect x="${x}" y="${MT}" width="${pillW}" height="${pillH}" fill="none" stroke="${viz}" stroke-width="1.5" rx="14"/>
-  <text x="${x + pillW / 2}" y="${MT + pillH / 2 + 5}" fill="${text}" font-size="12" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(lang)}</text>`;
-    x += pillW + gap;
-    return pill;
+  const W = 640; const H = 200;
+  const PAD = 48; const TY = 56; const TH = H - TY - PAD;
+  const opacities = [0.92, 0.65, 0.42, 0.28];
+  const total = langs.length;
+  const firstW = Math.round((W - PAD * 2) * 0.42);
+  const restW = total > 1
+    ? Math.round(((W - PAD * 2) - firstW - (total - 1) * 6) / (total - 1))
+    : 0;
+  let tx = PAD;
+  const tiles = langs.slice(0, 4).map((lang, i) => {
+    const tileW = i === 0 ? firstW : Math.max(60, restW);
+    const op = opacities[i] ?? 0.2;
+    const fs = i === 0 ? 40 : 28;
+    const tile = `
+  <rect x="${tx}" y="${TY}" width="${tileW}" height="${TH}" fill="${viz}" opacity="${op}" rx="2"/>
+  <text x="${tx + tileW / 2}" y="${TY + TH / 2 + fs * 0.36}" fill="${text}" font-size="${fs}" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace">${esc(String(lang))}</text>`;
+    tx += tileW + 6;
+    return tile;
   }).join('');
-
-  const sub = caption(W, H - 10, `${langs.length} system language${langs.length !== 1 ? 's' : ''} detected`, palette);
-  return { svg: svgWrap(W, H, 'Language Fingerprint', pills + sub, palette), w: W, h: H };
+  const sub = `<text x="${W / 2}" y="${H - 8}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.45">${total} system language${total !== 1 ? 's' : ''} detected</text>`;
+  return { svg: svgWrap(W, H, 'Language Fingerprint', tiles + sub, palette), w: W, h: H };
 }
 
 export function buildAIToolChart(data, _profile, persona = 'popularite') {
   const palette = chartPalette(persona);
   const slice = extractAIToolsSlice(data);
-  const tools = slice.tools;
-  if (!slice.installedCount) return null;
-
-  const W = 600; const H = 200;
-  const cols = 5; const colW = W / cols; const rowH = 50; const MT = 50;
-  const { text, viz, bg } = palette;
-
-  const cells = tools.map(({ name, installed, recentlyUsed }, i) => {
-    const col = i % cols; const row = Math.floor(i / cols);
-    const cx = col * colW + colW / 2;
-    const cy = MT + row * rowH;
-    const fillOpacity = !installed ? '0.05' : recentlyUsed ? '0.28' : '0.14';
-    const strokeW = installed ? '1.5' : '0.5';
-    const textOpacity = installed ? '1' : '0.45';
+  const tools = slice.tools.slice(0, 8);
+  if (!tools.length) return null;
+  const { text, viz } = palette;
+  const W = 640;
+  const PAD = 48; const TY = 40; const ROW_H = 30; const GAP = 4;
+  const H = TY + tools.length * (ROW_H + GAP) + 40;
+  const rows = tools.map(({ name, installed, recentlyUsed }, i) => {
+    const ry = TY + i * (ROW_H + GAP);
+    const rank = String(i + 1).padStart(2, '0');
+    const cy = ry + ROW_H * 0.68;
+    if (installed && recentlyUsed) {
+      return `
+  <rect x="${PAD}" y="${ry}" width="${W - PAD * 2}" height="${ROW_H}" fill="${viz}" opacity="0.9" rx="2"/>
+  <text x="${PAD + 14}" y="${cy}" fill="${text}" font-size="10" font-weight="700" font-family="'SF Mono',monospace" opacity="0.35">${rank}</text>
+  <text x="${PAD + 46}" y="${cy}" fill="${text}" font-size="12" font-weight="800" font-family="'SF Mono',monospace">${esc(name)}</text>
+  <text x="${W - PAD - 8}" y="${cy}" fill="${text}" font-size="9" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.5">this week</text>`;
+    } else if (installed) {
+      return `
+  <rect x="${PAD}" y="${ry}" width="${W - PAD * 2}" height="${ROW_H}" fill="${viz}" opacity="0.35" rx="2"/>
+  <rect x="${PAD}" y="${ry}" width="${W - PAD * 2}" height="${ROW_H}" fill="none" stroke="${text}" stroke-width="0.5" opacity="0.2" rx="2"/>
+  <text x="${PAD + 14}" y="${cy}" fill="${text}" font-size="10" font-weight="700" font-family="'SF Mono',monospace" opacity="0.35">${rank}</text>
+  <text x="${PAD + 46}" y="${cy}" fill="${text}" font-size="12" font-weight="600" font-family="'SF Mono',monospace">${esc(name)}</text>
+  <text x="${W - PAD - 8}" y="${cy}" fill="${text}" font-size="9" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.35">installed</text>`;
+    }
     return `
-  <rect x="${col * colW + 6}" y="${cy - 14}" width="${colW - 12}" height="36" fill="${installed ? viz : 'none'}" rx="6" opacity="${fillOpacity}"/>
-  <rect x="${col * colW + 6}" y="${cy - 14}" width="${colW - 12}" height="36" fill="none" stroke="${viz}" stroke-width="${strokeW}" rx="6" opacity="${installed ? '1' : '0.35'}"/>
-  <text x="${cx}" y="${cy + 10}" fill="${text}" font-size="10" font-weight="${installed ? 'bold' : 'normal'}" text-anchor="middle" font-family="'SF Mono',monospace" opacity="${textOpacity}">${esc(name)}</text>`;
+  <text x="${PAD + 14}" y="${cy}" fill="${text}" font-size="10" font-weight="700" font-family="'SF Mono',monospace" opacity="0.2">${rank}</text>
+  <text x="${PAD + 46}" y="${cy}" fill="${text}" font-size="12" font-family="'SF Mono',monospace" opacity="0.3">${esc(name)}</text>
+  <text x="${W - PAD - 8}" y="${cy}" fill="${text}" font-size="9" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.18">—</text>`;
   }).join('');
-
-  const H2 = MT + Math.ceil(tools.length / cols) * rowH + 36;
-  const legend = caption(W, H2 - 8, `${slice.installedCount} installed · bold = used this week`, palette);
-  return { svg: svgWrap(W, H2, 'AI Tool Exposure', cells + legend, palette), w: W, h: H2 };
+  return { svg: svgWrap(W, H, 'AI Tool Exposure', rows, palette), w: W, h: H };
 }
 
 export function buildDownloadsChart(data, _profile, persona = 'securite') {
@@ -430,51 +444,36 @@ export function buildDownloadsChart(data, _profile, persona = 'securite') {
 export function buildSecurityAppsChart(data, _profile, persona = 'securite') {
   const palette = chartPalette(persona);
   const slice = extractSecuritySlice(data);
-  const W = 600; const H = 240;
   const { text, viz, bg } = palette;
-
+  const W = 640; const H = 260;
   const settings = [
-    { label: 'SIP', value: slice.sip, ok: /enabled/i.test(slice.sip) },
-    { label: 'FileVault', value: slice.filevault, ok: /on|enabled/i.test(slice.filevault) },
-    { label: 'Gatekeeper', value: slice.gatekeeper, ok: /enabled/i.test(slice.gatekeeper) },
+    { label: 'SIP',         value: slice.sip,         ok: /enabled/i.test(slice.sip) },
+    { label: 'FileVault',   value: slice.filevault,   ok: /on|enabled/i.test(slice.filevault) },
+    { label: 'Gatekeeper',  value: slice.gatekeeper,  ok: /enabled/i.test(slice.gatekeeper) },
   ];
-  const colW = W / settings.length;
-
-  const settingBlocks = settings.map(({ label, value, ok }, i) => {
-    const cx = i * colW + colW / 2;
-    const fillOpacity = ok ? '0.22' : '0.06';
-    const strokeOpacity = ok ? '1' : '0.4';
+  const PAD = 48; const blockH = 80; const blockGap = 8;
+  const blockW = Math.round((W - PAD * 2 - blockGap * 2) / 3);
+  const blocks = settings.map(({ label, value, ok }, i) => {
+    const bx = PAD + i * (blockW + blockGap);
     return `
-  <text x="${cx}" y="58" fill="${text}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
-  <circle cx="${cx}" cy="88" r="14" fill="${ok ? viz : 'none'}" opacity="${fillOpacity}"/>
-  <circle cx="${cx}" cy="88" r="14" fill="none" stroke="${viz}" stroke-width="2" opacity="${strokeOpacity}"/>
-  <text x="${cx}" y="93" fill="${text}" font-size="11" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(value)}</text>`;
+  <rect x="${bx}" y="${PAD}" width="${blockW}" height="${blockH}" fill="${viz}" opacity="${ok ? '0.92' : '0.35'}" rx="2"/>
+  <text x="${bx + blockW / 2}" y="${PAD + 22}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.5">${esc(label)}</text>
+  <text x="${bx + blockW / 2}" y="${PAD + 58}" fill="${text}" font-size="16" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace">${esc(value)}</text>`;
   }).join('');
-
-  const dividers = [1, 2].map(i =>
-    `<line x1="${i * colW}" y1="44" x2="${i * colW}" y2="120" stroke="${viz}" stroke-width="1" opacity="0.25"/>`,
-  ).join('');
-
-  const appsY = 140;
-  const appLabels = slice.securityApps.length
-    ? slice.securityApps
-    : ['No security tools detected'];
-
-  let ax = 20;
-  const appPills = appLabels.map((name) => {
+  const pillY = PAD + blockH + 24;
+  const appLabels = slice.securityApps.length ? slice.securityApps : ['No security tools detected'];
+  let px = PAD;
+  const pills = appLabels.map(name => {
     const tw = Math.max(80, String(name).length * 7.5);
-    const pillOpacity = slice.securityApps.length ? '0.18' : '0.08';
     const pill = `
-  <rect x="${ax}" y="${appsY}" width="${tw}" height="24" fill="${viz}" rx="12" opacity="${pillOpacity}"/>
-  <rect x="${ax}" y="${appsY}" width="${tw}" height="24" fill="none" stroke="${viz}" stroke-width="1" rx="12"/>
-  <text x="${ax + tw / 2}" y="${appsY + 16}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace">${esc(name)}</text>`;
-    ax += tw + 8;
+  <rect x="${px}" y="${pillY}" width="${tw}" height="24" fill="${viz}" opacity="${slice.securityApps.length ? '0.2' : '0.08'}" rx="12"/>
+  <rect x="${px}" y="${pillY}" width="${tw}" height="24" fill="none" stroke="${viz}" stroke-width="1" opacity="0.5" rx="12"/>
+  <text x="${px + tw / 2}" y="${pillY + 16}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace">${esc(name)}</text>`;
+    px += tw + 8;
     return pill;
   }).join('');
-
-  const sub = caption(W, H - 6, 'Security posture · macOS system checks', palette);
-
-  return { svg: svgWrap(W, H, 'Security Status', dividers + settingBlocks + appPills + sub, palette), w: W, h: H };
+  const sub = `<text x="${W / 2}" y="${H - 8}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.4">macOS security posture</text>`;
+  return { svg: svgWrap(W, H, 'Security Status', blocks + pills + sub, palette), w: W, h: H };
 }
 
 export function buildFileHeatmapChart(data, persona = 'productivite') { return null; }
