@@ -1,0 +1,114 @@
+.leaderboard-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 28px;
+  border-radius: var(--radius-post-surface);
+  background: var(--card);
+  border: var(--capsule-shell-border-width) solid var(--border);
+}
+
+.leaderboard-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.leaderboard-block__title {
+  font-family: var(--font-avant);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.leaderboard-delta {
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--panel-muted);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.leaderboard-delta--new { background: var(--post-accent, var(--card)); }
+.leaderboard-delta--up  { background: var(--post-accent, var(--card)); }
+.leaderboard-delta--down { background: var(--card); opacity: 0.85; }
+
+.leaderboard-block__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leaderboard-row,
+.leaderboard-row--self {
+  display: grid;
+  grid-template-columns: 38px 36px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: calc(var(--radius-post-surface) / 2);
+  color: var(--ink);
+  font-family: var(--font-avant);
+}
+
+.leaderboard-row {
+  background: transparent;
+}
+
+.leaderboard-row--self {
+  background: var(--post-accent, var(--panel-muted));
+  border: 1px solid var(--border);
+}
+
+.lb-row__rank {
+  font-family: 'SF Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.lb-row__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--dot);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.lb-row__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.lb-row__avatar-initials {
+  font-family: 'SF Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.lb-row__name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.lb-row__handle {
+  font-family: var(--font-avant-book-oblique);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.2;
+}

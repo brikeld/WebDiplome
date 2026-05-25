@@ -1,0 +1,52 @@
+import './leaderboardBlock.css';
+
+function DeltaChip({ userRank, previousUserRank }) {
+  if (previousUserRank == null) {
+    return <span className="leaderboard-delta leaderboard-delta--new">NEW</span>;
+  }
+  if (previousUserRank === userRank) return null;
+  const isUp = userRank < previousUserRank;
+  return (
+    <span
+      className={`leaderboard-delta ${isUp ? 'leaderboard-delta--up' : 'leaderboard-delta--down'}`}
+    >
+      {isUp ? '▲' : '▼'} from #{previousUserRank}
+    </span>
+  );
+}
+
+function Row({ entry }) {
+  const cls = entry.isUser ? 'leaderboard-row--self' : 'leaderboard-row';
+  return (
+    <li className={cls}>
+      <span className="lb-row__rank">#{entry.rank}</span>
+      <span className="lb-row__avatar" aria-hidden>
+        {entry.avatarSrc
+          ? <img className="lb-row__avatar-img" src={entry.avatarSrc} alt="" />
+          : <span className="lb-row__avatar-initials">{entry.avatarInitials}</span>}
+      </span>
+      <span className="lb-row__name">{entry.name}</span>
+      <span className="lb-row__handle">{entry.handle}</span>
+    </li>
+  );
+}
+
+export default function LeaderboardBlock({ leaderboard, accentColor }) {
+  if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
+  const { title, entries, userRank, previousUserRank } = leaderboard;
+
+  return (
+    <div
+      className="post-attachment-block leaderboard-block"
+      style={{ '--post-accent': accentColor }}
+    >
+      <header className="leaderboard-block__head">
+        <h3 className="leaderboard-block__title">{title}</h3>
+        <DeltaChip userRank={userRank} previousUserRank={previousUserRank} />
+      </header>
+      <ul className="leaderboard-block__rows">
+        {entries.map((e) => <Row key={e.rank} entry={e} />)}
+      </ul>
+    </div>
+  );
+}
