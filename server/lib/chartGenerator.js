@@ -449,8 +449,8 @@ export function buildSecurityAppsChart(data, _profile, persona = 'securite') {
   return { svg: svgWrap(W, H, 'Security Status', dividers + settingBlocks + appPills + sub, palette), w: W, h: H };
 }
 
-export function buildFileHeatmapChart(data, persona) { return null; }
-export function buildAppRecencyChart(data, persona) { return null; }
+export function buildFileHeatmapChart(data, persona = 'productivite') { return null; }
+export function buildAppRecencyChart(data, persona = 'productivite') { return null; }
 
 // ─── Chart pool + picker ───────────────────────────────────────────────────
 
