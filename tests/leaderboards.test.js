@@ -8,6 +8,7 @@ import {
 } from '../server/lib/leaderboards.js';
 import { BOARDS } from '../server/lib/leaderboards.js';
 import { computeBoardStanding } from '../server/lib/leaderboards.js';
+import { pickBoardToPost } from '../server/lib/leaderboards.js';
 
 describe('decay(nowHour, peakHour)', () => {
   it('returns 1 at the peak hour', () => {
@@ -268,5 +269,99 @@ describe('computeBoardStanding', () => {
     const standing = computeBoardStanding(board, data, {}, nowMs);
     const user = standing.entries.find((e) => e.handle === '@—');
     expect(user).toBeTruthy();
+  });
+});
+
+describe('pickBoardToPost', () => {
+  const NOW = new Date('2026-05-25T11:00:00Z').getTime();
+  const data = {
+    MACHINE_IDENTITY: { installed_apps: ['Cursor', 'NordVPN'] },
+    PAST_HISTORY: {
+      app_usage_7days: [{ app: 'Cursor', last_used: '2026-05-25T10:00:00Z' }],
+      recent_files_7days: [],
+      browser_history: { chrome: [], safari: [] },
+      wifi_history: ['Home'],
+      recent_downloads: [],
+    },
+  };
+  const profile = { firstname: 'Brikeld', lastname: 'Hoxha', machineName: 'brikeld-mbp' };
+
+  it('returns a board choice when no prior leaderboard posts exist (first-ever appearance)', () => {
+    const result = pickBoardToPost(data, profile, [], NOW);
+    expect(result).not.toBeNull();
+    expect(result.board).toBeTruthy();
+    expect(result.standing.userRank).toBeGreaterThanOrEqual(1);
+    expect(result.prevRank).toBeNull();
+  });
+
+  it('skips boards whose userRank matches the most recent post for that board', () => {
+    // Build a "prior post" capturing the current rank for EVERY board, so no delta.
+    const priorPosts = BOARDS.map((b) => {
+      const s = computeBoardStanding(b, data, profile, NOW);
+      return {
+        createdAt: '2026-05-25T10:00:00Z',
+        leaderboard: { boardId: b.id, userRank: s.userRank, entries: s.entries },
+      };
+    });
+
+    const result = pickBoardToPost(data, profile, priorPosts, NOW);
+    expect(result).toBeNull();
+  });
+
+  it('first-appearance counts as max delta (priority order breaks ties)', () => {
+    // Prior posts cover the LAST 6 boards (locking them at their current rank); only
+    // the first board (most_productive) is "new" → it should be chosen.
+    const priorPosts = BOARDS.slice(1).map((b) => {
+      const s = computeBoardStanding(b, data, profile, NOW);
+      return {
+        createdAt: '2026-05-25T10:00:00Z',
+        leaderboard: { boardId: b.id, userRank: s.userRank, entries: s.entries },
+      };
+    });
+    const result = pickBoardToPost(data, profile, priorPosts, NOW);
+    expect(result).not.toBeNull();
+    expect(result.board.id).toBe('most_productive');
+    expect(result.prevRank).toBeNull();
+  });
+
+  it('ignores non-leaderboard posts when scanning prior state', () => {
+    const priorPosts = [
+      { createdAt: '2026-05-25T10:00:00Z', persona: 'productivite', content: 'normal post' },
+      { createdAt: '2026-05-25T09:00:00Z', persona: 'securite', content: 'another' },
+    ];
+    const result = pickBoardToPost(data, profile, priorPosts, NOW);
+    expect(result).not.toBeNull();
+    expect(result.prevRank).toBeNull();
+  });
+
+  it('uses the MOST RECENT leaderboard post per board (first match in array)', () => {
+    // posts/{id}.json is stored newest-first; the lookup must respect that ordering.
+    const board = BOARDS.find((b) => b.id === 'most_productive');
+    const currentStanding = computeBoardStanding(board, data, profile, NOW);
+
+    const priorPosts = [
+      // Newest → matches current rank → should suppress
+      {
+        createdAt: '2026-05-25T10:30:00Z',
+        leaderboard: { boardId: 'most_productive', userRank: currentStanding.userRank, entries: [] },
+      },
+      // Older → different rank → must NOT be considered
+      {
+        createdAt: '2026-05-24T10:00:00Z',
+        leaderboard: { boardId: 'most_productive', userRank: 5, entries: [] },
+      },
+    ];
+
+    // Lock all OTHER boards at current rank so only most_productive is in play.
+    const lockOthers = BOARDS.filter((b) => b.id !== 'most_productive').map((b) => {
+      const s = computeBoardStanding(b, data, profile, NOW);
+      return {
+        createdAt: '2026-05-25T10:00:00Z',
+        leaderboard: { boardId: b.id, userRank: s.userRank, entries: [] },
+      };
+    });
+
+    const result = pickBoardToPost(data, profile, [...priorPosts, ...lockOthers], NOW);
+    expect(result).toBeNull();
   });
 });

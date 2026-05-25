@@ -329,3 +329,53 @@ export const BOARDS = [
     },
   },
 ];
+
+// ─── Pick logic — diff current standings vs prior posts ───────────────────
+
+const FIRST_APPEARANCE_DELTA = 5;
+
+function priorRankByBoard(existingPosts) {
+  // posts/{id}.json is newest-first; first hit per board wins.
+  const out = {};
+  if (!Array.isArray(existingPosts)) return out;
+  for (const p of existingPosts) {
+    const lb = p?.leaderboard;
+    if (!lb || typeof lb.boardId !== 'string') continue;
+    if (Object.prototype.hasOwnProperty.call(out, lb.boardId)) continue;
+    const r = Number(lb.userRank);
+    out[lb.boardId] = Number.isFinite(r) ? r : null;
+  }
+  return out;
+}
+
+/**
+ * @returns {{ board, standing, prevRank: number|null } | null}
+ *   null when nothing has changed since the last leaderboard post.
+ */
+export function pickBoardToPost(dataJson, profile, existingPosts, nowMs) {
+  const priorByBoard = priorRankByBoard(existingPosts);
+
+  let best = null; // { board, standing, prevRank, delta, priority }
+  for (let i = 0; i < BOARDS.length; i++) {
+    const board = BOARDS[i];
+    const standing = computeBoardStanding(board, dataJson, profile, nowMs);
+    const prev = Object.prototype.hasOwnProperty.call(priorByBoard, board.id)
+      ? priorByBoard[board.id]
+      : null;
+    const delta = prev === null
+      ? FIRST_APPEARANCE_DELTA
+      : Math.abs((standing.userRank ?? 0) - prev);
+    if (delta === 0) continue;
+
+    if (
+      best === null
+      || delta > best.delta
+      || (delta === best.delta && i < best.priority)
+    ) {
+      best = { board, standing, prevRank: prev, delta, priority: i };
+    }
+  }
+
+  if (!best) return null;
+  return { board: best.board, standing: best.standing, prevRank: best.prevRank };
+}
