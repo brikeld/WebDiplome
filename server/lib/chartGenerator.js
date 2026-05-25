@@ -103,7 +103,7 @@ export function buildAppCategoryChart(appCategorySlice, persona = 'productivite'
   const N = items.length;
   const colW = Math.floor(CW / N);
   const barW = Math.max(24, colW - 20);
-  const maxVal = Math.max(...items.map(([, v]) => v));
+  const maxVal = Math.max(1, ...items.map(([, v]) => v));
   const baseY = MT + CH;
   const bars = items.map(([cat, count], i) => {
     const bh = Math.round((count / maxVal) * CH);
@@ -135,8 +135,8 @@ export function buildFileExtChart(recentFilesSlice, persona = 'productivite') {
     const cs = Math.max(8, Math.floor(fs * 0.65));
     return `
   <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${viz}" opacity="${op}" rx="2"/>
-  <text x="${x + w / 2}" y="${y + h / 2 + 2}" fill="${text}" font-size="${fs}" font-weight="800" text-anchor="middle" dominant-baseline="middle" font-family="'SF Mono',monospace">${esc(String(label || '(none)'))}</text>
-  <text x="${x + w / 2}" y="${y + h / 2 + fs + 4}" fill="${text}" font-size="${cs}" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.6">${count}</text>`;
+  <text x="${x + w / 2}" y="${y + h / 2}" fill="${text}" font-size="${fs}" font-weight="800" text-anchor="middle" dominant-baseline="middle" font-family="'SF Mono',monospace">${esc(String(label || '(none)'))}</text>
+  ${h >= fs * 2 + 8 ? `<text x="${x + w / 2}" y="${y + h / 2 + fs + 2}" fill="${text}" font-size="${cs}" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.6">${esc(String(count))}</text>` : ''}`;
   }).join('');
   return { svg: svgWrap(W, H, 'Recent File Types (7 days)', tiles, palette), w: W, h: H };
 }
@@ -207,7 +207,7 @@ export function buildStorageChart(data, profile, persona = 'productivite') {
   const used = slice.used || (profile?.storageUsed ?? '');
   const total = slice.total || (profile?.storageTotal ?? '');
   const free = slice.free || '';
-  const pct = slice.usePct || (() => {
+  const pct = slice.usePct != null ? slice.usePct : (() => {
     const u = parseFloat(used); const t = parseFloat(total);
     return t > 0 ? Math.round((u / t) * 100) : 0;
   })();
