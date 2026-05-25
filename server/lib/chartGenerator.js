@@ -143,25 +143,24 @@ export function buildFileExtChart(recentFilesSlice, persona = 'productivite') {
 
 export function buildWifiTimelineChart(wifiSlice, persona = 'securite') {
   const palette = chartPalette(persona);
-  const networks = (wifiSlice?.networks || []).slice(0, 20);
+  const networks = (wifiSlice?.networks || []).slice(0, 10);
   if (!networks.length) return null;
-
-  const W = 600; const H = 300;
-  const colW = W / 2; const itemH = 22; const MT = 44;
   const { text, viz } = palette;
-
-  const items = networks.map((name, i) => {
-    const col = i < 10 ? 0 : 1;
-    const row = i % 10;
-    const x = col * colW + 24;
-    const y = MT + row * itemH + 14;
+  const W = 640;
+  const PAD = 48; const TY = 40; const STRIP_H = 18; const GAP = 8;
+  const N = networks.length;
+  const H = TY + N * (STRIP_H + GAP) + 48;
+  const maxW = W - PAD * 2;
+  const strips = networks.map((name, i) => {
+    const sw = Math.round(maxW * Math.pow(0.87, i));
+    const op = Math.max(0.15, 1 - i * 0.09);
+    const sy = TY + i * (STRIP_H + GAP);
     return `
-  <circle cx="${x}" cy="${y - 4}" r="4" fill="${viz}"/>
-  <text x="${x + 11}" y="${y}" fill="${text}" font-size="11" font-family="'SF Mono',monospace">${esc(name)}</text>`;
+  <rect x="${PAD}" y="${sy}" width="${sw}" height="${STRIP_H}" fill="${viz}" opacity="${op.toFixed(2)}" rx="1"/>
+  <text x="${PAD + 10}" y="${sy + STRIP_H * 0.7}" fill="${text}" font-size="10" font-weight="${i === 0 ? '700' : '400'}" font-family="'SF Mono',monospace">${esc(name)}</text>`;
   }).join('');
-
-  const sub = caption(W, H - 6, `${networks.length} networks · most recent first`, palette);
-  return { svg: svgWrap(W, H, 'WiFi Network History', items + sub, palette), w: W, h: H };
+  const sub = `<text x="${W / 2}" y="${H - 10}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.4">${N} networks · most recent first</text>`;
+  return { svg: svgWrap(W, H, 'WiFi Network History', strips + sub, palette), w: W, h: H };
 }
 
 export function buildFileExtSlice(data) {
@@ -180,25 +179,37 @@ export function buildFileExtSlice(data) {
 export function buildMostUsedAppsChart(data, persona = 'productivite') {
   const palette = chartPalette(persona);
   const slice = extractMostUsedAppsSlice(data);
-  const apps = slice.apps.slice(0, 12);
+  const apps = slice.apps.slice(0, 10).filter(a => a.last_used);
   if (!apps.length) return null;
-
-  const W = 600; const H = Math.max(200, 44 + apps.length * 26 + 20);
-  const itemH = 22; const MT = 44; const ML = 160; const MR = 20;
-  const dotR = 5;
   const { text, viz } = palette;
-
-  const rows = apps.map(({ app, last_used }, i) => {
-    const y = MT + i * itemH + itemH / 2;
-    const dateStr = last_used ? String(last_used).slice(5, 10) : '';
-    return `
-  <circle cx="${ML - 14}" cy="${y}" r="${dotR}" fill="${viz}"/>
-  <text x="${ML}" y="${y + 4}" fill="${text}" font-size="11" font-family="'SF Mono',monospace">${esc(app)}</text>
-  <text x="${W - MR}" y="${y + 4}" fill="${text}" font-size="10" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.55">${esc(dateStr)}</text>`;
+  const W = 640; const H = 280;
+  const ML = 48; const MR = 48; const MT = 48; const MB = 56;
+  const CW = W - ML - MR;
+  const axisY = H - MB;
+  const now = Date.now();
+  const rangeMs = 7 * 24 * 60 * 60 * 1000;
+  const toX = (ds) => {
+    const frac = Math.max(0, Math.min(1, (new Date(ds).getTime() - (now - rangeMs)) / rangeMs));
+    return Math.round(ML + frac * CW);
+  };
+  const axis = `<line x1="${ML}" y1="${axisY}" x2="${W - MR}" y2="${axisY}" stroke="${text}" stroke-width="0.8" opacity="0.2"/>`;
+  const ticks = [{ f: 0, l: '7d ago' }, { f: 0.5, l: '3d' }, { f: 1, l: 'now' }].map(({ f, l }) => {
+    const tx = ML + f * CW;
+    return `<line x1="${tx}" y1="${axisY}" x2="${tx}" y2="${axisY + 6}" stroke="${text}" stroke-width="0.8" opacity="0.2"/>
+  <text x="${tx}" y="${axisY + 18}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.45">${esc(l)}</text>`;
   }).join('');
-
-  const sub = caption(W, H - 4, `${slice.count} apps tracked · sorted by recency`, palette);
-  return { svg: svgWrap(W, H, 'Recently Used Apps (7 days)', rows + sub, palette), w: W, h: H };
+  const rowY = [MT + 38, MT + 96];
+  const dots = apps.map((a, i) => {
+    const cx = toX(a.last_used);
+    const cy = rowY[i % 2];
+    const name = a.app.length > 13 ? a.app.slice(0, 12) + '…' : a.app;
+    return `
+  <line x1="${cx}" y1="${cy + 7}" x2="${cx}" y2="${axisY}" stroke="${text}" stroke-width="0.5" opacity="0.12" stroke-dasharray="3,3"/>
+  <circle cx="${cx}" cy="${cy}" r="6" fill="${viz}"/>
+  <text x="${cx}" y="${cy - 10}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.7">${esc(name)}</text>`;
+  }).join('');
+  const sub = `<text x="${W / 2}" y="${H - 6}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.38">${slice.count} apps tracked · last 7 days</text>`;
+  return { svg: svgWrap(W, H, 'Recently Used Apps (7 days)', axis + ticks + dots + sub, palette), w: W, h: H };
 }
 
 export function buildStorageChart(data, profile, persona = 'productivite') {
@@ -392,24 +403,27 @@ export function buildDownloadsChart(data, _profile, persona = 'securite') {
     })
     .slice(0, 8);
   if (!items.length) return null;
-
-  const W = 600; const H = 280;
-  const ML = 160; const MR = 80; const MT = 44; const MB = 18;
-  const CW = W - ML - MR; const CH = H - MT - MB;
-  const N = items.length; const slotH = CH / N; const barH = Math.max(12, slotH - 8);
-  const maxVal = Math.max(...items.map(d => d.size_kb));
-
-  const bars = items.map((d, i) => {
+  const { text, viz } = palette;
+  const W = 640;
+  const ML = 220; const MR = 100; const PAD_V = 48; const ROW_H = 26;
+  const H = PAD_V + items.length * ROW_H + 48;
+  const lineW = W - ML - MR;
+  const maxSize = Math.max(...items.map(d => d.size_kb));
+  const lollipops = items.map((d, i) => {
+    const name = String(d.name || '').slice(0, 22);
     const sizeLabel = d.size_kb >= 1024
       ? `${(d.size_kb / 1024).toFixed(1)} MB`
       : `${Math.round(d.size_kb)} KB`;
-    const bw = Math.max(4, Math.round((d.size_kb / maxVal) * CW));
-    const y = MT + i * slotH + (slotH - barH) / 2;
-    const name = String(d.name || '').slice(0, 22);
-    return hBar({ x: ML, y, w: bw, h: barH, palette, label: name, value: sizeLabel });
+    const lx = ML + Math.round((d.size_kb / maxSize) * lineW);
+    const ly = PAD_V + i * ROW_H + ROW_H / 2;
+    return `
+  <text x="${ML - 10}" y="${ly + 4}" fill="${text}" font-size="10" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.65">${esc(name)}</text>
+  <line x1="${ML}" y1="${ly}" x2="${lx - 6}" y2="${ly}" stroke="${viz}" stroke-width="1" opacity="0.5"/>
+  <circle cx="${lx}" cy="${ly}" r="5" fill="${viz}"/>
+  <text x="${lx + 10}" y="${ly + 4}" fill="${text}" font-size="10" font-weight="700" font-family="'SF Mono',monospace">${esc(sizeLabel)}</text>`;
   }).join('');
-
-  return { svg: svgWrap(W, H, 'Recent Downloads (by size)', bars, palette), w: W, h: H };
+  const sub = `<text x="${W / 2}" y="${H - 10}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.4">sorted by file size</text>`;
+  return { svg: svgWrap(W, H, 'Recent Downloads', lollipops + sub, palette), w: W, h: H };
 }
 
 export function buildSecurityAppsChart(data, _profile, persona = 'securite') {
