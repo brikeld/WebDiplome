@@ -247,7 +247,7 @@ export function buildBatteryHardwareChart(data, profile, persona = 'productivite
     || data?.MACHINE_IDENTITY?.machine_model || profile?.machineModel || '—';
   const cycles = bat.cycleCount ?? profile?.batteryCycles ?? '—';
   const condition = bat.condition || '—';
-  const { text, viz } = palette;
+  const { text } = palette;
   const W = 640; const H = 280;
   const mx = 320; const my = 153;
   const dividers = `
@@ -293,7 +293,7 @@ export function buildPersonaScoresChart(profile, persona = 'productivite') {
   const globalScore = profile?.globalScore
     ?? Math.round(items.reduce((s, { value }) => s + value, 0) / 3);
   const center = `
-  <text x="${cx}" y="${cy - 8}" fill="${text}" font-size="36" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace">${globalScore}</text>
+  <text x="${cx}" y="${cy - 8}" fill="${text}" font-size="36" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace">${esc(String(globalScore))}</text>
   <text x="${cx}" y="${cy + 14}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.5">global</text>`;
   const legendX = 400;
   const legend = items.map(({ label, value }, i) => {
