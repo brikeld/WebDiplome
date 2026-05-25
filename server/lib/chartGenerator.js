@@ -95,43 +95,50 @@ function treemapLayout(items, x, y, w, h, gap) {
 export function buildAppCategoryChart(appCategorySlice, persona = 'productivite') {
   const palette = chartPalette(persona);
   let items = (appCategorySlice?.byCategory || []).slice(0, 7);
-  if (!items.length) items = [['No category data', 1]];
-
-  const W = 600; const H = 280;
-  const ML = 120; const MR = 55; const MT = 44; const MB = 18;
+  if (!items.length) items = [['No data', 1]];
+  const { text, viz } = palette;
+  const W = 640; const H = 320;
+  const ML = 48; const MR = 48; const MT = 56; const MB = 60;
   const CW = W - ML - MR; const CH = H - MT - MB;
   const N = items.length;
-  const slotH = CH / N; const barH = Math.max(12, slotH - 8);
-  const maxVal = items[0][1];
-
+  const colW = Math.floor(CW / N);
+  const barW = Math.max(24, colW - 20);
+  const maxVal = Math.max(...items.map(([, v]) => v));
+  const baseY = MT + CH;
   const bars = items.map(([cat, count], i) => {
-    const bw = Math.round((count / maxVal) * CW);
-    const y = MT + i * slotH + (slotH - barH) / 2;
-    return hBar({ x: ML, y, w: bw, h: barH, palette, label: cat, value: count });
+    const bh = Math.round((count / maxVal) * CH);
+    const bx = ML + i * colW + Math.round((colW - barW) / 2);
+    const by = baseY - bh;
+    const label = cat.length > 10 ? cat.slice(0, 9) + '…' : cat;
+    return `
+  <rect x="${bx}" y="${by}" width="${barW}" height="${bh}" fill="${viz}" rx="2"/>
+  <text x="${bx + barW / 2}" y="${by - 7}" fill="${text}" font-size="11" font-weight="700" text-anchor="middle" font-family="'SF Mono',monospace">${esc(String(count))}</text>
+  <text x="${bx + barW / 2}" y="${baseY + 20}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>`;
   }).join('');
-
-  const sub = caption(W, H - 4, `${appCategorySlice?.totalInstalled || ''} apps installed`, palette);
-  return { svg: svgWrap(W, H, 'App Categories', bars + sub, palette), w: W, h: H };
+  const baseline = `<line x1="${ML}" y1="${baseY}" x2="${W - MR}" y2="${baseY}" stroke="${text}" stroke-width="0.8" opacity="0.15"/>`;
+  const sub = `<text x="${W / 2}" y="${H - 8}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.4">${esc(String(appCategorySlice?.totalInstalled || ''))} apps installed</text>`;
+  return { svg: svgWrap(W, H, 'App Categories', baseline + bars + sub, palette), w: W, h: H };
 }
 
 export function buildFileExtChart(recentFilesSlice, persona = 'productivite') {
   const palette = chartPalette(persona);
-  const items = (recentFilesSlice || []).slice(0, 7);
+  const items = (recentFilesSlice || []).slice(0, 8);
   if (!items.length) return null;
-
-  const W = 600; const H = 260;
-  const ML = 60; const MR = 55; const MT = 44; const MB = 18;
-  const CW = W - ML - MR; const CH = H - MT - MB;
-  const N = items.length; const slotH = CH / N; const barH = Math.max(12, slotH - 8);
-  const maxVal = items[0][1];
-
-  const bars = items.map(([ext, count], i) => {
-    const bw = Math.round((count / maxVal) * CW);
-    const y = MT + i * slotH + (slotH - barH) / 2;
-    return hBar({ x: ML, y, w: bw, h: barH, palette, label: ext || '(none)', value: count });
+  const { text, viz } = palette;
+  const W = 640; const H = 360;
+  const PAD = 48; const TY = 56; const GAP = 3;
+  const CW = W - PAD * 2; const CH = H - TY - PAD;
+  const opacities = [1, 0.88, 0.75, 0.63, 0.52, 0.42, 0.34, 0.27];
+  const tiles = treemapLayout(items, PAD, TY, CW, CH, GAP).map(({ x, y, w, h, label, count }, i) => {
+    const op = opacities[i] ?? 0.27;
+    const fs = Math.min(18, Math.max(9, Math.floor(w / 5)));
+    const cs = Math.max(8, Math.floor(fs * 0.65));
+    return `
+  <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${viz}" opacity="${op}" rx="2"/>
+  <text x="${x + w / 2}" y="${y + h / 2 + 2}" fill="${text}" font-size="${fs}" font-weight="800" text-anchor="middle" dominant-baseline="middle" font-family="'SF Mono',monospace">${esc(String(label || '(none)'))}</text>
+  <text x="${x + w / 2}" y="${y + h / 2 + fs + 4}" fill="${text}" font-size="${cs}" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.6">${count}</text>`;
   }).join('');
-
-  return { svg: svgWrap(W, H, 'Recent File Types (7 days)', bars, palette), w: W, h: H };
+  return { svg: svgWrap(W, H, 'Recent File Types (7 days)', tiles, palette), w: W, h: H };
 }
 
 export function buildWifiTimelineChart(wifiSlice, persona = 'securite') {
@@ -199,27 +206,34 @@ export function buildStorageChart(data, profile, persona = 'productivite') {
   const slice = extractStorageSlice(data);
   const used = slice.used || (profile?.storageUsed ?? '');
   const total = slice.total || (profile?.storageTotal ?? '');
+  const free = slice.free || '';
   const pct = slice.usePct || (() => {
     const u = parseFloat(used); const t = parseFloat(total);
     return t > 0 ? Math.round((u / t) * 100) : 0;
   })();
-  const free = slice.free || '';
-
-  const W = 600; const H = 180;
-  const barY = 70; const barH = 36; const ML = 30; const MR = 30;
-  const barW = W - ML - MR;
-  const fillW = Math.round((pct / 100) * barW);
-  const { text, viz, bg } = palette;
-
-  const body = `
-  <rect x="${ML}" y="${barY}" width="${barW}" height="${barH}" fill="${viz}" fill-opacity="0.12" stroke="${viz}" stroke-width="1.5" stroke-opacity="0.45" rx="4"/>
-  <rect x="${ML}" y="${barY}" width="${fillW}" height="${barH}" fill="${viz}" rx="4"/>
-  <text x="${ML + fillW / 2}" y="${barY + barH / 2 + 5}" fill="${text}" font-size="13" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${pct}%</text>
-  <text x="${ML}" y="${barY + barH + 20}" fill="${text}" font-size="11" font-family="'SF Mono',monospace" opacity="0.55">Used: ${esc(used)}</text>
-  <text x="${W / 2}" y="${barY + barH + 20}" fill="${text}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">Free: ${esc(free)}</text>
-  <text x="${W - MR}" y="${barY + barH + 20}" fill="${text}" font-size="11" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.55">Total: ${esc(total)}</text>`;
-
-  return { svg: svgWrap(W, H, 'Storage Usage', body, palette), w: W, h: H };
+  const { text, viz } = palette;
+  const W = 640; const H = 280;
+  const cx = 190; const cy = 140; const r = 90; const sw = 18;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - pct / 100);
+  const ring = `
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${text}" stroke-width="${sw}" opacity="0.1"/>
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${viz}" stroke-width="${sw}"
+    stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
+    stroke-linecap="butt" transform="rotate(-90 ${cx} ${cy})"/>
+  <text x="${cx}" y="${cy - 8}" fill="${text}" font-size="34" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace">${pct}%</text>
+  <text x="${cx}" y="${cy + 14}" fill="${text}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.5">used</text>`;
+  const statsX = 340;
+  const stats = `
+  <text x="${statsX}" y="100" fill="${text}" font-size="10" font-family="'SF Mono',monospace" opacity="0.5">Used</text>
+  <text x="${statsX}" y="122" fill="${text}" font-size="18" font-weight="800" font-family="'SF Mono',monospace">${esc(used)}</text>
+  <line x1="${statsX}" y1="132" x2="${W - 48}" y2="132" stroke="${text}" stroke-width="0.5" opacity="0.18"/>
+  <text x="${statsX}" y="152" fill="${text}" font-size="10" font-family="'SF Mono',monospace" opacity="0.5">Free</text>
+  <text x="${statsX}" y="174" fill="${text}" font-size="18" font-weight="800" font-family="'SF Mono',monospace">${esc(free)}</text>
+  <line x1="${statsX}" y1="184" x2="${W - 48}" y2="184" stroke="${text}" stroke-width="0.5" opacity="0.18"/>
+  <text x="${statsX}" y="204" fill="${text}" font-size="10" font-family="'SF Mono',monospace" opacity="0.5">Total</text>
+  <text x="${statsX}" y="226" fill="${text}" font-size="18" font-weight="800" font-family="'SF Mono',monospace">${esc(total)}</text>`;
+  return { svg: svgWrap(W, H, 'Storage Usage', ring + stats, palette), w: W, h: H };
 }
 
 export function buildBatteryHardwareChart(data, profile, persona = 'productivite') {
