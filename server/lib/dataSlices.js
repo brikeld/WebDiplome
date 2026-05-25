@@ -191,3 +191,26 @@ export function extractAIToolsSlice(data) {
   }));
   return { tools, installedCount: tools.filter(t => t.installed).length };
 }
+
+export function extractFileHeatmapSlice(data) {
+  const files = Array.isArray(data?.PAST_HISTORY?.recent_files_7days)
+    ? data.PAST_HISTORY.recent_files_7days : [];
+  const counts = new Array(24).fill(0);
+  for (const f of files) {
+    const d = f.date ? new Date(f.date) : null;
+    if (d && !isNaN(d.getTime())) counts[d.getHours()]++;
+  }
+  return { counts, total: files.length };
+}
+
+export function extractAppRecencySlice(data) {
+  const apps = Array.isArray(data?.PAST_HISTORY?.app_usage_7days)
+    ? data.PAST_HISTORY.app_usage_7days : [];
+  const now = Date.now();
+  return apps.slice(0, 8).map(({ app, last_used }) => {
+    const d = last_used ? new Date(last_used) : null;
+    const daysAgo = d && !isNaN(d.getTime())
+      ? Math.round((now - d.getTime()) / 86400000) : null;
+    return { app, daysAgo };
+  });
+}
