@@ -662,7 +662,7 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
  * @param {object[]}    opts.existingPosts         - current posts array (for recency guard)
  * @param {string|null} [opts.chartUploadDir]     - absolute dir to write chart PNG
  * @param {function}    [opts.onEachPost]
- * @returns {Promise<(object|null)[]>} three entries [text, asset, chart]; null = slot failed
+ * @returns {Promise<(object|null)[]>} four entries [text, asset, chart, leaderboard]; null = slot failed or (leaderboard) no rank change
  */
 export async function generatePersonaPosts({
   baseUrl,
@@ -692,7 +692,7 @@ export async function generatePersonaPosts({
 
   // leaderboardSlot may be null (no rank changed) → skipped silently.
   const slots = [textSlot, assetSlot, chartSlot, leaderboardSlot]
-    .map((s, i) => (s ? { ...s, _model: model, _slotIndex: i } : null));
+    .map((s) => (s ? { ...s, _model: model } : null));
 
   const results = new Array(slots.length).fill(null);
 
