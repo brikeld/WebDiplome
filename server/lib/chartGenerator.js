@@ -444,7 +444,7 @@ export function buildDownloadsChart(data, _profile, persona = 'securite') {
 export function buildSecurityAppsChart(data, _profile, persona = 'securite') {
   const palette = chartPalette(persona);
   const slice = extractSecuritySlice(data);
-  const { text, viz, bg } = palette;
+  const { text, viz } = palette;
   const W = 640; const H = 260;
   const settings = [
     { label: 'SIP',         value: slice.sip,         ok: /enabled/i.test(slice.sip) },
