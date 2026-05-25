@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import {
-  decay,
-  scoreCloneFor,
-  FAKE_CLONE_IDENTITY,
-  FAKE_CLONE_COUNT,
+  BOARDS,
   CLONE_DRIFT_BUCKET_MS,
+  computeBoardStanding,
+  decay,
+  FAKE_CLONE_COUNT,
+  FAKE_CLONE_IDENTITY,
+  pickBoardToPost,
+  scoreCloneFor,
 } from '../server/lib/leaderboards.js';
-import { BOARDS } from '../server/lib/leaderboards.js';
-import { computeBoardStanding } from '../server/lib/leaderboards.js';
-import { pickBoardToPost } from '../server/lib/leaderboards.js';
 
 describe('decay(nowHour, peakHour)', () => {
   it('returns 1 at the peak hour', () => {
@@ -363,5 +363,33 @@ describe('pickBoardToPost', () => {
 
     const result = pickBoardToPost(data, profile, [...priorPosts, ...lockOthers], NOW);
     expect(result).toBeNull();
+  });
+
+  it('picks the board with the LARGER rank delta when multiple boards changed', () => {
+    // Manufacture prior posts so most_productive shows delta=4 and every other
+    // board shows delta=1; the dispatch logic must pick most_productive even though
+    // priority ties would otherwise favor it on equal deltas.
+    const targetBoardId = 'most_productive';
+    const priorPosts = BOARDS.map((b) => {
+      const s = computeBoardStanding(b, data, profile, NOW);
+      if (b.id === targetBoardId) {
+        // Force a 4-position swap: if currentRank is 1, prior was 5; otherwise prior was 1.
+        const fakePrev = s.userRank === 1 ? 5 : 1;
+        return {
+          createdAt: '2026-05-25T10:00:00Z',
+          leaderboard: { boardId: b.id, userRank: fakePrev, entries: [] },
+        };
+      }
+      // For all others: store a prior rank exactly 1 away (or wrap 5→4)
+      const fakePrev = s.userRank === 5 ? 4 : s.userRank + 1;
+      return {
+        createdAt: '2026-05-25T10:00:00Z',
+        leaderboard: { boardId: b.id, userRank: fakePrev, entries: [] },
+      };
+    });
+
+    const result = pickBoardToPost(data, profile, priorPosts, NOW);
+    expect(result).not.toBeNull();
+    expect(result.board.id).toBe(targetBoardId);
   });
 });

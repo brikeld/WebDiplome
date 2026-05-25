@@ -332,6 +332,8 @@ export const BOARDS = [
 
 // ─── Pick logic — diff current standings vs prior posts ───────────────────
 
+// Must exceed FAKE_CLONE_COUNT to guarantee first-appearance always wins any
+// real rank-change delta. Currently: 5 > 4 ✓
 const FIRST_APPEARANCE_DELTA = 5;
 
 function priorRankByBoard(existingPosts) {
@@ -342,7 +344,7 @@ function priorRankByBoard(existingPosts) {
     const lb = p?.leaderboard;
     if (!lb || typeof lb.boardId !== 'string') continue;
     if (Object.prototype.hasOwnProperty.call(out, lb.boardId)) continue;
-    const r = Number(lb.userRank);
+    const r = lb.userRank == null ? NaN : Number(lb.userRank);
     out[lb.boardId] = Number.isFinite(r) ? r : null;
   }
   return out;
