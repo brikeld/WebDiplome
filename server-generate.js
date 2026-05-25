@@ -425,7 +425,7 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
     }
     const { newest, existing, profile, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
 
-    const bySlot = new Array(3).fill(null);
+    const bySlot = new Array(4).fill(null);
     const slotResults = await generatePersonaPosts({
       baseUrl,
       model,
