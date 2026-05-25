@@ -239,72 +239,71 @@ export function buildStorageChart(data, profile, persona = 'productivite') {
 export function buildBatteryHardwareChart(data, profile, persona = 'productivite') {
   const palette = chartPalette(persona);
   const bat = extractBatterySlice(data);
-  const ram = data?.MACHINE_IDENTITY?.hardware_snapshot?.ram || profile?.ram || '—';
-  const uptime = profile?.uptimeDays != null ? `${profile.uptimeDays}d` : '—';
+  const ram = data?.MACHINE_IDENTITY?.hardware_snapshot?.ram
+    || data?.MACHINE_IDENTITY?.ram || profile?.ram || '—';
+  const chip = data?.MACHINE_IDENTITY?.hardware_snapshot?.chip
+    || data?.MACHINE_IDENTITY?.chip || '—';
+  const model = data?.MACHINE_IDENTITY?.model_name
+    || data?.MACHINE_IDENTITY?.machine_model || profile?.machineModel || '—';
   const cycles = bat.cycleCount ?? profile?.batteryCycles ?? '—';
-  const batPct = bat.percent || 0;
-  const { text, viz, bg } = palette;
-
-  const W = 600; const H = 200;
-  const stats = [
-    { label: 'Battery', value: `${batPct}%`, sub: bat.condition || '' },
-    { label: 'Cycles', value: String(cycles), sub: bat.maxCapacity ? `cap ${bat.maxCapacity}` : '' },
-    { label: 'RAM', value: String(ram), sub: '' },
-    { label: 'Uptime', value: uptime, sub: '' },
-  ];
-  const colW = W / stats.length;
-
-  const batBarY = 120; const batBarH = 10; const batBarML = 20; const batBarW = colW - 40;
-  const blocks = stats.map(({ label, value, sub }, i) => {
-    const cx = i * colW + colW / 2;
-    const extra = i === 0 ? `
-  <rect x="${i * colW + batBarML}" y="${batBarY}" width="${batBarW}" height="${batBarH}" fill="${viz}" fill-opacity="0.12" stroke="${viz}" stroke-width="1.5" stroke-opacity="0.45" rx="3"/>
-  <rect x="${i * colW + batBarML}" y="${batBarY}" width="${Math.round((batPct / 100) * batBarW)}" height="${batBarH}" fill="${viz}" rx="3"/>` : '';
-    return `
-  <text x="${cx}" y="58" fill="${text}" font-size="11" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
-  <text x="${cx}" y="90" fill="${text}" font-size="22" font-weight="bold" text-anchor="middle" font-family="'SF Mono',monospace">${esc(value)}</text>
-  <text x="${cx}" y="110" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.55">${esc(sub)}</text>
-  ${extra}`;
-  }).join('');
-
-  const dividers = [1, 2, 3].map(i =>
-    `<line x1="${i * colW}" y1="44" x2="${i * colW}" y2="${H - 10}" stroke="${viz}" stroke-width="1" opacity="0.25"/>`,
-  ).join('');
-
-  return { svg: svgWrap(W, H, 'Hardware Vitals', dividers + blocks, palette), w: W, h: H };
+  const condition = bat.condition || '—';
+  const { text, viz } = palette;
+  const W = 640; const H = 280;
+  const mx = 320; const my = 153;
+  const dividers = `
+  <line x1="48" y1="${my}" x2="${W - 48}" y2="${my}" stroke="${text}" stroke-width="0.5" opacity="0.15"/>
+  <line x1="${mx}" y1="40" x2="${mx}" y2="${H - 32}" stroke="${text}" stroke-width="0.5" opacity="0.15"/>`;
+  const modelShort = model.length > 20 ? model.slice(0, 19) + '…' : model;
+  const chipShort = chip.length > 14 ? chip.slice(0, 13) + '…' : chip;
+  const quadrants = `
+  <text x="64" y="58" fill="${text}" font-size="10" font-family="'SF Mono',monospace" opacity="0.45">Machine</text>
+  <text x="64" y="88" fill="${text}" font-size="22" font-weight="800" font-family="'SF Mono',monospace">${esc(modelShort)}</text>
+  <text x="${mx + 24}" y="58" fill="${text}" font-size="10" font-family="'SF Mono',monospace" opacity="0.45">Chip</text>
+  <text x="${mx + 24}" y="88" fill="${text}" font-size="22" font-weight="800" font-family="'SF Mono',monospace">${esc(chipShort)}</text>
+  <text x="64" y="${my + 28}" fill="${text}" font-size="10" font-family="'SF Mono',monospace" opacity="0.45">Memory</text>
+  <text x="64" y="${my + 62}" fill="${text}" font-size="30" font-weight="800" font-family="'SF Mono',monospace">${esc(ram)}</text>
+  <text x="${mx + 24}" y="${my + 28}" fill="${text}" font-size="10" font-family="'SF Mono',monospace" opacity="0.45">Battery</text>
+  <text x="${mx + 24}" y="${my + 58}" fill="${text}" font-size="20" font-weight="800" font-family="'SF Mono',monospace">${esc(condition)}</text>
+  <text x="${mx + 24}" y="${my + 78}" fill="${text}" font-size="11" font-family="'SF Mono',monospace" opacity="0.5">${esc(String(cycles))} cycles</text>`;
+  return { svg: svgWrap(W, H, 'Hardware Spec', dividers + quadrants, palette), w: W, h: H };
 }
 
 export function buildPersonaScoresChart(profile, persona = 'productivite') {
   const palette = chartPalette(persona);
-  const scores = profile?.personaScores ? normalizePersonaPercentTriplet(profile.personaScores) : null;
+  const scores = profile?.personaScores
+    ? normalizePersonaPercentTriplet(profile.personaScores) : null;
   if (!scores) return null;
-
-  const items = [
-    { label: 'Productivity', value: scores.productivity ?? 0 },
-    { label: 'Security', value: scores.security ?? 0 },
-    { label: 'Social', value: scores.social ?? 0 },
-  ];
-
-  const W = 600; const H = 200;
-  const ML = 110; const MR = 60; const MT = 44; const MB = 18;
-  const CW = W - ML - MR; const CH = H - MT - MB;
-  const slotH = CH / items.length; const barH = Math.max(20, slotH - 12);
   const { text, viz } = palette;
-
-  const bars = items.map(({ label, value }, i) => {
-    const bw = Math.round((value / 100) * CW);
-    const y = MT + i * slotH + (slotH - barH) / 2;
+  const W = 640; const H = 340;
+  const cx = 240; const cy = 176;
+  const items = [
+    { label: 'Productivity', value: scores.productivity ?? 0, r: 96 },
+    { label: 'Security',     value: scores.security     ?? 0, r: 68 },
+    { label: 'Social',       value: scores.social       ?? 0, r: 40 },
+  ];
+  const rings = items.map(({ value, r }) => {
+    const circ = 2 * Math.PI * r;
+    const offset = circ * (1 - value / 100);
     return `
-  <rect x="${ML}" y="${y}" width="${bw}" height="${barH}" fill="${viz}" rx="3"/>
-  <text x="${ML - 7}" y="${y + barH / 2 + 4}" fill="${text}" font-size="11" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.55">${esc(label)}</text>
-  <text x="${ML + bw + 6}" y="${y + barH / 2 + 4}" fill="${text}" font-size="12" font-weight="bold" font-family="'SF Mono',monospace">${value}</text>`;
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${text}" stroke-width="14" opacity="0.1"/>
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${viz}" stroke-width="14"
+    stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
+    stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/>`;
   }).join('');
-
-  const globalScore = profile?.globalScore != null
-    ? caption(W, H - 4, `Global score: ${profile.globalScore}`, palette)
-    : '';
-
-  return { svg: svgWrap(W, H, 'Persona Scores', bars + globalScore, palette), w: W, h: H };
+  const globalScore = profile?.globalScore
+    ?? Math.round(items.reduce((s, { value }) => s + value, 0) / 3);
+  const center = `
+  <text x="${cx}" y="${cy - 8}" fill="${text}" font-size="36" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace">${globalScore}</text>
+  <text x="${cx}" y="${cy + 14}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.5">global</text>`;
+  const legendX = 400;
+  const legend = items.map(({ label, value }, i) => {
+    const ly = 120 + i * 44;
+    return `
+  <text x="${legendX}" y="${ly}" fill="${text}" font-size="10" font-family="'SF Mono',monospace" opacity="0.5">${esc(label)}</text>
+  <text x="${legendX}" y="${ly + 22}" fill="${text}" font-size="22" font-weight="800" font-family="'SF Mono',monospace">${value}</text>
+  ${i < 2 ? `<line x1="${legendX}" y1="${ly + 30}" x2="${W - 48}" y2="${ly + 30}" stroke="${text}" stroke-width="0.5" opacity="0.15"/>` : ''}`;
+  }).join('');
+  return { svg: svgWrap(W, H, 'Persona Scores', rings + center + legend, palette), w: W, h: H };
 }
 
 export function buildBrowserDomainsChart(data, persona = 'popularite') {
