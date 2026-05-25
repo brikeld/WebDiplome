@@ -17,14 +17,8 @@ export const FAKE_CLONE_IDENTITY = Object.freeze({
 
 export const FAKE_CLONE_COUNT = 4;
 
-/**
- * Clones re-roll their scores every ~10 minutes; keeps the demo lively.
- * 625_000 ms ≈ 10.4 min — chosen so the canonical test timestamp
- * (1_700_000_000_000) lands on an exact bucket boundary, which lets the
- * "does NOT change inside one bucket" and "changes after one bucket" tests
- * both pass deterministically.
- */
-export const CLONE_DRIFT_BUCKET_MS = 625_000;
+/** Clones re-roll their scores every 10 minutes; keeps the demo lively. */
+export const CLONE_DRIFT_BUCKET_MS = 10 * 60 * 1000;
 
 /**
  * Time-decay weight in [-1, 1].

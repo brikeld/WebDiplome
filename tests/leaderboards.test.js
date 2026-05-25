@@ -40,14 +40,14 @@ describe('FAKE_CLONE_IDENTITY + FAKE_CLONE_COUNT', () => {
 
 describe('scoreCloneFor', () => {
   it('is deterministic for the same boardId / cloneIdx / nowMs', () => {
-    const t = 1_700_000_000_000;
+    const t = 1_699_999_800_000;
     expect(scoreCloneFor('most_productive', 0, t)).toBe(
       scoreCloneFor('most_productive', 0, t),
     );
   });
 
   it('differs across cloneIdx for the same board / nowMs', () => {
-    const t = 1_700_000_000_000;
+    const t = 1_699_999_800_000;
     const a = scoreCloneFor('most_productive', 0, t);
     const b = scoreCloneFor('most_productive', 1, t);
     const c = scoreCloneFor('most_productive', 2, t);
@@ -56,7 +56,7 @@ describe('scoreCloneFor', () => {
   });
 
   it('changes when the 10-minute drift bucket advances', () => {
-    const t1 = 1_700_000_000_000;
+    const t1 = 1_699_999_800_000;
     const t2 = t1 + CLONE_DRIFT_BUCKET_MS;
     expect(scoreCloneFor('most_productive', 0, t1)).not.toBe(
       scoreCloneFor('most_productive', 0, t2),
@@ -64,7 +64,7 @@ describe('scoreCloneFor', () => {
   });
 
   it('does NOT change inside a single 10-minute bucket', () => {
-    const t1 = 1_700_000_000_000;
+    const t1 = 1_699_999_800_000;
     const t2 = t1 + CLONE_DRIFT_BUCKET_MS - 1;
     expect(scoreCloneFor('most_productive', 0, t1)).toBe(
       scoreCloneFor('most_productive', 0, t2),
