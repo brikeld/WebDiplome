@@ -24,6 +24,7 @@ import {
 } from './dataSlices.js';
 import { pickAndBuildChart } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
+import { pickBoardToPost } from './leaderboards.js';
 import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
 
@@ -521,6 +522,46 @@ function buildAssetSlot(baseUserPayload, assetAssignment) {
   return slot;
 }
 
+function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts, nowMs) {
+  const pick = pickBoardToPost(dataJson, profile, existingPosts, nowMs);
+  if (!pick) return null;
+
+  const { board, standing, prevRank } = pick;
+  const ctxLines = [
+    '[Leaderboard slot]',
+    `Board: ${board.title}`,
+    `Your rank: ${standing.userRank}${prevRank != null ? ` (was ${prevRank})` : ' (new appearance)'}`,
+    `Score signal hint: ${standing.hint}`,
+  ];
+  const ctx = ctxLines.join('\n');
+
+  return {
+    id: 'leaderboard',
+    persona: board.persona,
+    promptKey: 'leaderboard',
+    userPayload: `${ctx}\n\n---\n${baseUserPayload}`,
+    imageData: null,
+    docText: null,
+    docFilename: null,
+    attachedAsset: null,
+    leaderboard: {
+      boardId: board.id,
+      title: board.title,
+      userRank: standing.userRank,
+      previousUserRank: prevRank,
+      entries: standing.entries.map((e) => ({
+        rank: e.rank,
+        name: e.name,
+        handle: e.handle,
+        avatarSrc: e.avatarSrc,
+        avatarInitials: e.avatarInitials,
+        score: e.score,
+        isUser: e.isUser,
+      })),
+    },
+  };
+}
+
 // ─── Slot runner ───────────────────────────────────────────────────────────
 
 async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
@@ -600,6 +641,7 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
   }
   if (slot.textSliceType) post.textSliceType = slot.textSliceType;
   if (slot.chartType) post.chartType = slot.chartType;
+  if (slot.leaderboard) post.leaderboard = slot.leaderboard;
 
   return post;
 }
@@ -644,14 +686,20 @@ export async function generatePersonaPosts({
     Promise.resolve(buildTextSlot(dataJson, userPayload, existingPosts, SP, personaScores)),
   ]);
   const assetSlot = buildAssetSlot(userPayload, assetAssignment);
+  const leaderboardSlot = buildLeaderboardSlot(
+    dataJson, profile, userPayload, existingPosts, Date.now(),
+  );
 
-  const slots = [textSlot, assetSlot, chartSlot].map(s => ({ ...s, _model: model }));
+  // leaderboardSlot may be null (no rank changed) → skipped silently.
+  const slots = [textSlot, assetSlot, chartSlot, leaderboardSlot]
+    .map((s, i) => (s ? { ...s, _model: model, _slotIndex: i } : null));
 
   const results = new Array(slots.length).fill(null);
 
   await Promise.all(
-    slots.map((slot, index) =>
-      runSlot(slot, { baseUrl, timeoutMs, retries, SP })
+    slots.map((slot, index) => {
+      if (!slot) return Promise.resolve(null);
+      return runSlot(slot, { baseUrl, timeoutMs, retries, SP })
         .catch((err) => {
           console.error(`[personaPostGenerator] slot ${slot.id} failed:`, err?.message || err);
           return null;
@@ -667,8 +715,8 @@ export async function generatePersonaPosts({
             }
           }
           return post;
-        }),
-    ),
+        });
+    }),
   );
 
   return results;
