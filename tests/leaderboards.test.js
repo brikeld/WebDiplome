@@ -7,6 +7,7 @@ import {
   CLONE_DRIFT_BUCKET_MS,
 } from '../server/lib/leaderboards.js';
 import { BOARDS } from '../server/lib/leaderboards.js';
+import { computeBoardStanding } from '../server/lib/leaderboards.js';
 
 describe('decay(nowHour, peakHour)', () => {
   it('returns 1 at the peak hour', () => {
@@ -202,5 +203,71 @@ describe('scoreFn(dataJson, profile, nowMs) for every board', () => {
     const a = board.scoreFn(richData, profile, t11).score;
     const b = board.scoreFn(richData, profile, t23).score;
     expect(a).not.toBe(b);
+  });
+});
+
+describe('computeBoardStanding', () => {
+  const data = {
+    MACHINE_IDENTITY: { installed_apps: ['Cursor', 'Figma', 'NordVPN'] },
+    PAST_HISTORY: {
+      app_usage_7days: [
+        { app: 'Cursor', last_used: '2026-05-25T10:00:00Z' },
+        { app: 'Figma',  last_used: '2026-05-25T10:30:00Z' },
+      ],
+      recent_files_7days: [],
+      browser_history: { chrome: [], safari: [] },
+      wifi_history: ['Home'],
+      recent_downloads: [],
+    },
+  };
+  const profile = {
+    firstName: 'Brikeld',
+    lastName: 'Hoxha',
+    account: 'brikeld',
+    avatarUrl: '/uploads/profile.jpg',
+  };
+  const board = BOARDS.find((b) => b.id === 'most_productive');
+  const nowMs = new Date('2026-05-25T11:00:00Z').getTime();
+
+  it('returns 5 entries with ranks 1..5', () => {
+    const standing = computeBoardStanding(board, data, profile, nowMs);
+    expect(standing.entries).toHaveLength(5);
+    expect(standing.entries.map((e) => e.rank)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('userRank points to the real user (matched by handle/displayName)', () => {
+    const standing = computeBoardStanding(board, data, profile, nowMs);
+    const userEntry = standing.entries.find((e) => e.rank === standing.userRank);
+    expect(userEntry.name).toBe('Brikeld Hoxha');
+    expect(userEntry.handle).toBe('@brikeld');
+  });
+
+  it('returns the hint string emitted by the board scoreFn', () => {
+    const standing = computeBoardStanding(board, data, profile, nowMs);
+    expect(typeof standing.hint).toBe('string');
+    expect(standing.hint.length).toBeGreaterThan(0);
+  });
+
+  it('the 4 non-user entries all render as Alex Johnson', () => {
+    const standing = computeBoardStanding(board, data, profile, nowMs);
+    const clones = standing.entries.filter((e) => e.name === 'Alex Johnson');
+    expect(clones).toHaveLength(4);
+    for (const c of clones) {
+      expect(c.handle).toBe('@AlexLaptop');
+      expect(c.avatarSrc).toBe('/imgs/AlexP.png');
+    }
+  });
+
+  it('sorts strictly by score desc (ties broken by stable order)', () => {
+    const standing = computeBoardStanding(board, data, profile, nowMs);
+    for (let i = 1; i < standing.entries.length; i++) {
+      expect(standing.entries[i - 1].score).toBeGreaterThanOrEqual(standing.entries[i].score);
+    }
+  });
+
+  it('falls back to a default display name when profile lacks names', () => {
+    const standing = computeBoardStanding(board, data, {}, nowMs);
+    const user = standing.entries.find((e) => e.handle === '@you');
+    expect(user).toBeTruthy();
   });
 });

@@ -47,6 +47,68 @@ export function scoreCloneFor(boardId, cloneIdx, nowMs) {
   return Math.round((f * 70 - 35 + 40) * 100) / 100;
 }
 
+// ─── Standing assembly ────────────────────────────────────────────────────
+
+function realUserIdentity(profile) {
+  const first = String(profile?.firstName ?? '').trim();
+  const last = String(profile?.lastName ?? '').trim();
+  const account = String(profile?.account ?? '').trim();
+  const displayName = [first, last].filter(Boolean).join(' ') || 'You';
+  const handle = account ? `@${account}` : '@you';
+  const initials = [first, last]
+    .filter(Boolean)
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'YO';
+  return {
+    displayName,
+    handle,
+    avatarSrc: profile?.avatarUrl ?? null,
+    avatarInitials: initials,
+  };
+}
+
+/**
+ * @returns {{ entries: Array<{ rank, name, handle, avatarSrc, avatarInitials, score, isUser }>,
+ *             userRank: number,
+ *             hint: string }}
+ */
+export function computeBoardStanding(board, dataJson, profile, nowMs) {
+  const userIdent = realUserIdentity(profile);
+  const userResult = board.scoreFn(dataJson, profile, nowMs);
+
+  const rows = [];
+
+  rows.push({
+    name: userIdent.displayName,
+    handle: userIdent.handle,
+    avatarSrc: userIdent.avatarSrc,
+    avatarInitials: userIdent.avatarInitials,
+    score: Number(userResult.score) || 0,
+    isUser: true,
+  });
+
+  for (let i = 0; i < FAKE_CLONE_COUNT; i++) {
+    rows.push({
+      name: FAKE_CLONE_IDENTITY.displayName,
+      handle: FAKE_CLONE_IDENTITY.handle,
+      avatarSrc: FAKE_CLONE_IDENTITY.avatarSrc,
+      avatarInitials: FAKE_CLONE_IDENTITY.avatarInitials,
+      score: scoreCloneFor(board.id, i, nowMs),
+      isUser: false,
+    });
+  }
+
+  // Stable sort by score desc; preserves insertion order on ties so user beats clones at parity.
+  rows.sort((a, b) => b.score - a.score);
+
+  const entries = rows.map((r, i) => ({ rank: i + 1, ...r }));
+  const userRank = entries.find((e) => e.isUser)?.rank ?? null;
+
+  return { entries, userRank, hint: userResult.hint };
+}
+
 // ─── App categories used by scoring (mirrors dataSlices.js sets) ───────────
 
 const WORK_APPS = new Set([
