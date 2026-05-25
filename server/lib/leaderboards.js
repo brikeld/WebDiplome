@@ -43,6 +43,6 @@ function seededFloat(seedStr) {
 export function scoreCloneFor(boardId, cloneIdx, nowMs) {
   const bucket = Math.floor(nowMs / CLONE_DRIFT_BUCKET_MS);
   const f = seededFloat(`${boardId}|${cloneIdx}|${bucket}`);
-  // Centered around 40 with ±35 swing; gives a -5..75 envelope shared across boards.
+  // Centered around 40 with ±35 swing; gives a 5..75 envelope shared across boards.
   return Math.round((f * 70 - 35 + 40) * 100) / 100;
 }

@@ -31,6 +31,7 @@ describe('FAKE_CLONE_IDENTITY + FAKE_CLONE_COUNT', () => {
     expect(FAKE_CLONE_IDENTITY.displayName).toBe('Alex Johnson');
     expect(FAKE_CLONE_IDENTITY.handle).toBe('@AlexLaptop');
     expect(FAKE_CLONE_IDENTITY.avatarSrc).toBe('/imgs/AlexP.png');
+    expect(FAKE_CLONE_IDENTITY.avatarInitials).toBe('AJ');
   });
 
   it('exposes 4 clones', () => {
