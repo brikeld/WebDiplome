@@ -181,9 +181,13 @@ describe('Chart builders — smoke tests', () => {
   it('buildSecurityAppsChart returns valid svg', () => {
     expectChart(buildSecurityAppsChart(mockData, null, 'securite'));
   });
-  it.todo('buildFileHeatmapChart returns valid svg');
+  it('buildFileHeatmapChart returns valid svg', () => {
+    expectChart(buildFileHeatmapChart(mockData, 'productivite'));
+  });
   it('buildFileHeatmapChart returns null for no file data', () => {
     expect(buildFileHeatmapChart({}, 'productivite')).toBeNull();
   });
-  it.todo('buildAppRecencyChart returns valid svg');
+  it('buildAppRecencyChart returns valid svg', () => {
+    expectChart(buildAppRecencyChart(mockData, 'productivite'));
+  });
 });

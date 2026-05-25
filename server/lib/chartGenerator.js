@@ -7,6 +7,8 @@ import {
   extractBatterySlice,
   extractSecuritySlice,
   extractAIToolsSlice,
+  extractFileHeatmapSlice,
+  extractAppRecencySlice,
 } from './dataSlices.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
 
@@ -476,8 +478,75 @@ export function buildSecurityAppsChart(data, _profile, persona = 'securite') {
   return { svg: svgWrap(W, H, 'Security Status', blocks + pills + sub, palette), w: W, h: H };
 }
 
-export function buildFileHeatmapChart(data, persona = 'productivite') { return null; }
-export function buildAppRecencyChart(data, persona = 'productivite') { return null; }
+export function buildFileHeatmapChart(data, persona = 'productivite') {
+  const palette = chartPalette(persona);
+  const slice = extractFileHeatmapSlice(data);
+  if (!slice || !slice.total) return null;
+  const { text, viz } = palette;
+  const counts = slice.counts;
+  const W = 640; const H = 280;
+  const ML = 48; const MR = 48; const MT = 56; const MB = 52;
+  const CW = W - ML - MR; const CH = H - MT - MB;
+  const colW = Math.floor(CW / 24);
+  const barW = Math.max(4, colW - 2);
+  const maxVal = Math.max(...counts, 1);
+  const baseY = MT + CH;
+  const bars = counts.map((count, h) => {
+    const bh = count > 0 ? Math.max(4, Math.round((count / maxVal) * CH)) : 2;
+    const bx = ML + h * colW + Math.round((colW - barW) / 2);
+    const op = count > 0 ? Math.max(0.25, count / maxVal).toFixed(2) : '0.08';
+    return `<rect x="${bx}" y="${baseY - bh}" width="${barW}" height="${bh}" fill="${viz}" opacity="${op}" rx="1"/>`;
+  }).join('');
+  const baseline = `<line x1="${ML}" y1="${baseY}" x2="${W - MR}" y2="${baseY}" stroke="${text}" stroke-width="0.8" opacity="0.15"/>`;
+  const tickHours = [0, 6, 12, 18, 23];
+  const ticks = tickHours.map(h => {
+    const tx = ML + h * colW + barW / 2;
+    const label = h === 0 ? '12am' : h === 12 ? '12pm' : h > 12 ? `${h - 12}pm` : `${h}am`;
+    return `<text x="${tx}" y="${baseY + 18}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.45">${label}</text>`;
+  }).join('');
+  const peakH = counts.indexOf(Math.max(...counts));
+  const peakBH = Math.max(4, Math.round((counts[peakH] / maxVal) * CH));
+  const peakX = ML + peakH * colW + barW / 2;
+  const peakLabel = counts[peakH] > 0
+    ? `<text x="${peakX}" y="${baseY - peakBH - 8}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.7">peak</text>`
+    : '';
+  const sub = `<text x="${W / 2}" y="${H - 6}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.38">${slice.total} files · last 7 days</text>`;
+  return { svg: svgWrap(W, H, 'File Creation by Hour', baseline + bars + ticks + peakLabel + sub, palette), w: W, h: H };
+}
+
+export function buildAppRecencyChart(data, persona = 'productivite') {
+  const palette = chartPalette(persona);
+  const apps = extractAppRecencySlice(data);
+  if (apps.filter(a => a.daysAgo !== null).length < 3) return null;
+  const { text, viz } = palette;
+  const W = 640;
+  const ML = 168; const MR = 40; const PAD_V = 40; const ROW_H = 36;
+  const H = PAD_V + apps.length * ROW_H + 56;
+  const COLS = 7;
+  const colW = Math.floor((W - ML - MR) / COLS);
+  const gridX = ML;
+  const dayLabels = Array.from({ length: 7 }, (_, i) => {
+    const dcx = gridX + i * colW + colW / 2;
+    const label = i === 0 ? 'today' : `${i}d`;
+    return `<text x="${dcx}" y="${PAD_V + 14}" fill="${text}" font-size="8" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.45">${label}</text>`;
+  }).join('');
+  const rows = apps.map(({ app, daysAgo }, ai) => {
+    const cy = PAD_V + 28 + ai * ROW_H + ROW_H / 2 - 4;
+    const name = String(app || '');
+    const displayName = name.length > 17 ? name.slice(0, 16) + '…' : name;
+    const label = `<text x="${ML - 10}" y="${cy + 4}" fill="${text}" font-size="10" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.7">${esc(displayName)}</text>`;
+    const circles = Array.from({ length: 7 }, (_, d) => {
+      const dcx = gridX + d * colW + colW / 2;
+      const active = daysAgo !== null && Math.round(daysAgo) === d;
+      return active
+        ? `<circle cx="${dcx}" cy="${cy}" r="7" fill="${viz}"/>`
+        : `<circle cx="${dcx}" cy="${cy}" r="6" fill="none" stroke="${viz}" stroke-width="1" opacity="0.2"/>`;
+    }).join('');
+    return label + circles;
+  }).join('');
+  const sub = `<text x="${W / 2}" y="${H - 10}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.38">${apps.length} apps · last used day</text>`;
+  return { svg: svgWrap(W, H, 'App Activity This Week', dayLabels + rows + sub, palette), w: W, h: H };
+}
 
 // ─── Chart pool + picker ───────────────────────────────────────────────────
 
@@ -563,6 +632,16 @@ const CHART_POOL = [
     id: 'security_apps',
     persona: 'securite',
     build: (data, _profile, persona) => buildSecurityAppsChart(data, _profile, persona),
+  },
+  {
+    id: 'file_heatmap',
+    persona: 'productivite',
+    build: (data, _profile, persona) => buildFileHeatmapChart(data, persona),
+  },
+  {
+    id: 'app_recency',
+    persona: 'productivite',
+    build: (data, _profile, persona) => buildAppRecencyChart(data, persona),
   },
 ];
 
