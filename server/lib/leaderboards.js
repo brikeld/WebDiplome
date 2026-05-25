@@ -65,14 +65,12 @@ const ENTERTAINMENT_APPS = new Set([
 const SOCIAL_APPS = new Set([
   'Discord','WhatsApp','Microsoft Teams','Slack','Telegram','Skype','Messenger','Signal',
 ]);
-const COMMS_APPS = new Set([
-  'Discord','WhatsApp','Microsoft Teams','Slack','Telegram','Skype','Messenger','Signal','Mail',
-]);
+const COMMS_APPS = new Set([...SOCIAL_APPS, 'Mail']);
 const VPN_APPS = new Set([
   'NordVPN','GlobalProtect','ProtonVPN','Little Snitch','Mullvad','ExpressVPN','Wireguard',
 ]);
 const TORRENT_APPS = new Set([
-  'qbittorrent','uTorrent','Transmission','BitTorrent',
+  'qBittorrent','qbittorrent','uTorrent','Transmission','BitTorrent',
 ]);
 const HEALTH_APPS = new Set([
   'Health','Strava','Apple Fitness','Sleep Cycle','MyFitnessPal','Headspace','Calm',
@@ -112,6 +110,7 @@ function safeWifi(data) {
 }
 
 function safeBrowserUrls(data) {
+  // Chrome + Safari only — add Firefox/Edge if the collector ever emits them.
   const bh = data?.PAST_HISTORY?.browser_history || {};
   const all = [
     ...(Array.isArray(bh.chrome) ? bh.chrome : []),
@@ -138,6 +137,11 @@ function hourOf(nowMs) {
 
 // ─── BOARDS ────────────────────────────────────────────────────────────────
 
+/**
+ * @type {Array<{ id: string, title: string, persona: 'productivite'|'securite'|'popularite', peakHour: number, scoreFn: (data, profile, nowMs) => { score: number, hint: string } }>}
+ * Score is unbounded and may be negative (e.g. entertainment-only user on most_productive).
+ * Array order is the priority tiebreaker used by pickBoardToPost when two boards have equal rank deltas.
+ */
 export const BOARDS = [
   {
     id: 'most_productive',
