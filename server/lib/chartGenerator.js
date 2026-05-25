@@ -202,11 +202,12 @@ export function buildMostUsedAppsChart(data, persona = 'productivite') {
   const dots = apps.map((a, i) => {
     const cx = toX(a.last_used);
     const cy = rowY[i % 2];
-    const name = a.app.length > 13 ? a.app.slice(0, 12) + '…' : a.app;
+    const name = String(a.app || '');
+    const displayName = name.length > 13 ? name.slice(0, 12) + '…' : name;
     return `
   <line x1="${cx}" y1="${cy + 7}" x2="${cx}" y2="${axisY}" stroke="${text}" stroke-width="0.5" opacity="0.12" stroke-dasharray="3,3"/>
   <circle cx="${cx}" cy="${cy}" r="6" fill="${viz}"/>
-  <text x="${cx}" y="${cy - 10}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.7">${esc(name)}</text>`;
+  <text x="${cx}" y="${cy - 10}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.7">${esc(displayName)}</text>`;
   }).join('');
   const sub = `<text x="${W / 2}" y="${H - 6}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.38">${slice.count} apps tracked · last 7 days</text>`;
   return { svg: svgWrap(W, H, 'Recently Used Apps (7 days)', axis + ticks + dots + sub, palette), w: W, h: H };
@@ -414,7 +415,7 @@ export function buildDownloadsChart(data, _profile, persona = 'securite') {
     const sizeLabel = d.size_kb >= 1024
       ? `${(d.size_kb / 1024).toFixed(1)} MB`
       : `${Math.round(d.size_kb)} KB`;
-    const lx = ML + Math.round((d.size_kb / maxSize) * lineW);
+    const lx = Math.max(ML + 8, ML + Math.round((d.size_kb / maxSize) * lineW));
     const ly = PAD_V + i * ROW_H + ROW_H / 2;
     return `
   <text x="${ML - 10}" y="${ly + 4}" fill="${text}" font-size="10" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.65">${esc(name)}</text>
