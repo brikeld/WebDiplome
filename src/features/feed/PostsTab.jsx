@@ -6,6 +6,7 @@ import {
   displayNameFromProfile,
   initialsFromProfile,
   machineHandleFromProfile,
+  resolveDominantPersonaKey,
 } from '@/lib/profileUtils.js';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 
@@ -62,6 +63,7 @@ export default function PostsTab({
   hideInteractions = false,
   highlightedPostId = null,
   onHighlightPost,
+  personaBadgePersona = null,
 }) {
   const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
   const { isHidden } = useLiveScoring();
@@ -72,6 +74,7 @@ export default function PostsTab({
     const displayName = displayNameFromProfile(profile);
     const avatarInitials = initialsFromProfile(profile);
     const handle = machineHandleFromProfile(profile);
+    const resolvedPersonaBadgePersona = personaBadgePersona ?? resolveDominantPersonaKey(profile);
     const avatarSrc =
       profile?.wallpaperBase64 ??
       profile?.wallpaper_base64 ??
@@ -100,6 +103,7 @@ export default function PostsTab({
       handle,
       avatarInitials,
       avatarSrc,
+      personaBadgePersona: resolvedPersonaBadgePersona,
       createdAt:
         p?.createdAt ??
         p?.created_at ??
@@ -113,6 +117,7 @@ export default function PostsTab({
       inferenceChain: Array.isArray(p.inferenceChain) ? p.inferenceChain : null,
       ingredients: Array.isArray(p.ingredients) ? p.ingredients : null,
       highlights: Array.isArray(p.highlights) ? p.highlights : null,
+      leaderboard: (p.leaderboard && Array.isArray(p.leaderboard.entries)) ? p.leaderboard : null,
       _feedEnter: !!p._feedEnter,
       _feedKey: p._feedKey ?? null,
       _feedRevealSeq: typeof p._feedRevealSeq === 'number' ? p._feedRevealSeq : 0,
@@ -126,7 +131,7 @@ export default function PostsTab({
       if (cmp !== 0) return cmp;
       return (b._feedRevealSeq ?? 0) - (a._feedRevealSeq ?? 0);
     });
-  }, [profile]);
+  }, [personaBadgePersona, profile]);
 
   const list = (
     <div
