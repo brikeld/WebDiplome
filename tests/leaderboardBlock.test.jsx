@@ -67,4 +67,31 @@ describe('<LeaderboardBlock>', () => {
     expect(renderToStaticMarkup(<LeaderboardBlock leaderboard={null} accentColor="#abc" />)).toBe('');
     expect(renderToStaticMarkup(<LeaderboardBlock leaderboard={{ entries: 'not an array' }} accentColor="#abc" />)).toBe('');
   });
+
+  it('zero-pads the rank display (01..05)', () => {
+    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    for (const rank of ['01', '02', '03', '04', '05']) {
+      expect(html).toContain(`>${rank}<`);
+    }
+    // The bare digits 1..5 should NOT appear as the rank label — they're zero-padded.
+    expect(html).not.toMatch(/>1</);
+    expect(html).not.toMatch(/>5</);
+  });
+
+  it('renders rank-derived bar widths (100%, 80%, 60%, 40%, 20%)', () => {
+    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    for (const pct of ['100%', '80%', '60%', '40%', '20%']) {
+      // Inline style on the bar fill: width:<pct>
+      expect(html).toMatch(new RegExp(`width:\\s*${pct.replace('%', '\\%')}`));
+    }
+  });
+
+  it('user row contains a bar fill (highlighting handled in CSS, not markup)', () => {
+    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    // The user row keeps both `leaderboard-row` and `leaderboard-row--self`; its bar-fill
+    // div lives inside that row. We verify the row contains a bar-fill element.
+    const selfRowMatch = html.match(/<li[^>]*leaderboard-row--self[^>]*>([\s\S]*?)<\/li>/);
+    expect(selfRowMatch).not.toBeNull();
+    expect(selfRowMatch[1]).toContain('leaderboard-row__bar-fill');
+  });
 });
