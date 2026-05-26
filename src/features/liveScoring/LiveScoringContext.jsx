@@ -8,7 +8,10 @@ import {
   applyHide,
   applyReveal,
   applyCommentBoost,
+  applyLeaderboardSelfHide,
+  applyLeaderboardSelfReveal,
   isPostHidden,
+  isLeaderboardSelfHidden,
   dominantPersonaFromAdjustedScores,
 } from './scoringLogic.js';
 import { syncScoreAdjustment } from './scoreSync.js';
@@ -59,6 +62,21 @@ function scoringReducer(state, action) {
         action.persona,
         action.plusValue,
       );
+      if (newRecords === state.records) return state;
+      return { ...state, records: newRecords };
+    }
+    case 'HIDE_LEADERBOARD_SELF': {
+      const newRecords = applyLeaderboardSelfHide(
+        state.records,
+        action.boardId,
+        action.persona,
+        action.systemDeltaPct,
+      );
+      if (newRecords === state.records) return state;
+      return { ...state, records: newRecords };
+    }
+    case 'REVEAL_LEADERBOARD_SELF': {
+      const newRecords = applyLeaderboardSelfReveal(state.records, action.boardId);
       if (newRecords === state.records) return state;
       return { ...state, records: newRecords };
     }
@@ -244,6 +262,50 @@ export function LiveScoringProvider({ profile, children }) {
     [state.records, pushAnimationEvent],
   );
 
+  const hideLeaderboardSelf = useCallback(
+    (post, sourcePillRect) => {
+      const boardId = post?.leaderboard?.boardId;
+      if (!boardId || isLeaderboardSelfHidden(state.records, boardId)) return;
+      pushAnimationEvent({
+        id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
+        type: 'hide',
+        persona: String(post.leaderboard.persona ?? post.persona ?? '').toLowerCase(),
+        sourcePillRect,
+        onCommit: () => {
+          dispatch({
+            type: 'HIDE_LEADERBOARD_SELF',
+            boardId,
+            persona: post.leaderboard.persona ?? post.persona,
+            systemDeltaPct: post.systemDeltaPct ?? 1,
+          });
+        },
+      });
+    },
+    [state.records, pushAnimationEvent],
+  );
+
+  const revealLeaderboardSelf = useCallback(
+    (post, sourcePillRect) => {
+      const boardId = post?.leaderboard?.boardId;
+      if (!boardId || !isLeaderboardSelfHidden(state.records, boardId)) return;
+      pushAnimationEvent({
+        id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
+        type: 'reveal',
+        persona: String(post.leaderboard.persona ?? post.persona ?? '').toLowerCase(),
+        sourcePillRect,
+        onCommit: () => {
+          dispatch({ type: 'REVEAL_LEADERBOARD_SELF', boardId });
+        },
+      });
+    },
+    [state.records, pushAnimationEvent],
+  );
+
+  const isLeaderboardSelfHiddenForBoard = useCallback(
+    (boardId) => isLeaderboardSelfHidden(state.records, boardId),
+    [state.records],
+  );
+
   const isHidden = useCallback(
     (postKey) => {
       const key = String(postKey);
@@ -262,6 +324,9 @@ export function LiveScoringProvider({ profile, children }) {
       dominantPersona,
       hidePost,
       revealPost,
+      hideLeaderboardSelf,
+      revealLeaderboardSelf,
+      isLeaderboardSelfHidden: isLeaderboardSelfHiddenForBoard,
       boostFromComment,
       isHidden,
       subscribeAnimations,
@@ -276,6 +341,9 @@ export function LiveScoringProvider({ profile, children }) {
       dominantPersona,
       hidePost,
       revealPost,
+      hideLeaderboardSelf,
+      revealLeaderboardSelf,
+      isLeaderboardSelfHiddenForBoard,
       boostFromComment,
       isHidden,
       subscribeAnimations,
