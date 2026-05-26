@@ -50,6 +50,8 @@ function Row({ entry, hidden }) {
 }
 
 export default function LeaderboardBlock({ leaderboard, accentColor }) {
+  const { isLeaderboardSelfHidden } = useLiveScoring();
+  const reactId = useId();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
   const {
     title,
@@ -59,9 +61,7 @@ export default function LeaderboardBlock({ leaderboard, accentColor }) {
     boardId,
     cloneHidden = [false, false, false, false],
   } = leaderboard;
-  const { isLeaderboardSelfHidden } = useLiveScoring();
   const selfHidden = isLeaderboardSelfHidden(boardId);
-  const reactId = useId();
   const titleId = `leaderboard-title-${boardId}-${reactId}`;
 
   // Map each entry to its "is this row hidden?" flag.
