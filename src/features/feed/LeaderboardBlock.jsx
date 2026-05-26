@@ -17,16 +17,22 @@ function DeltaChip({ userRank, previousUserRank }) {
 
 function Row({ entry }) {
   const cls = `leaderboard-row${entry.isUser ? ' leaderboard-row--self' : ''}`;
+  const widthPct = ((6 - entry.rank) / 5) * 100;
   return (
-    <li className={cls}>
-      <span className="leaderboard-row__rank">#{entry.rank}</span>
-      <span className="leaderboard-row__avatar" aria-hidden>
-        {entry.avatarSrc
-          ? <img className="leaderboard-row__avatar-img" src={entry.avatarSrc} alt="" />
-          : <span className="leaderboard-row__avatar-initials">{entry.avatarInitials}</span>}
-      </span>
-      <span className="leaderboard-row__name">{entry.name}</span>
-      <span className="leaderboard-row__handle">{entry.handle}</span>
+    <li className={cls} aria-label={`#${entry.rank}`}>
+      <div className="leaderboard-row__header">
+        <span className="leaderboard-row__rank">{String(entry.rank).padStart(2, '0')}</span>
+        <span className="leaderboard-row__avatar" aria-hidden>
+          {entry.avatarSrc
+            ? <img className="leaderboard-row__avatar-img" src={entry.avatarSrc} alt="" />
+            : <span className="leaderboard-row__avatar-initials">{entry.avatarInitials}</span>}
+        </span>
+        <span className="leaderboard-row__name">{entry.name}</span>
+        <span className="leaderboard-row__handle">{entry.handle}</span>
+      </div>
+      <div className="leaderboard-row__bar-track">
+        <div className="leaderboard-row__bar-fill" style={{ width: `${widthPct}%` }} />
+      </div>
     </li>
   );
 }
