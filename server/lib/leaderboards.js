@@ -104,6 +104,21 @@ export function computeBoardStanding(board, dataJson, profile, nowMs) {
   return { entries, userRank, hint: userResult.hint };
 }
 
+export function computeAllBoardStandings(dataJson, profile, nowMs = Date.now()) {
+  return BOARDS.map((board) => {
+    const standing = computeBoardStanding(board, dataJson, profile, nowMs);
+    return {
+      boardId: board.id,
+      title: board.title,
+      persona: board.persona,
+      peakHour: board.peakHour,
+      entries: standing.entries,
+      userRank: standing.userRank,
+      hint: standing.hint,
+    };
+  });
+}
+
 // ─── App categories used by scoring (mirrors dataSlices.js sets) ───────────
 
 const WORK_APPS = new Set([

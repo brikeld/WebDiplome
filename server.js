@@ -6,7 +6,10 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import crypto from 'crypto';
 import { normalizeAttachedAsset, translateLegacyImage } from './server/lib/attachedAsset.js';
-import { normalizePersonaPercentTriplet } from './server/lib/personaScores.js';
+import {
+  mergeStaticProfileFields,
+  normalizeProfilePayload,
+} from './server/lib/profileNormalization.js';
 import {
   getHarvestStatus,
   requestHarvest,
@@ -51,39 +54,6 @@ const normalizePost = (p) => {
   delete out.attached_asset;
   return out;
 };
-
-/** Merge camelCase + snake_case for summary fields; stored JSON uses camelCase. */
-function normalizeProfilePayload(body) {
-  const out = { ...body };
-  if (
-    body.profileSummary !== undefined ||
-    body.profile_summary !== undefined
-  ) {
-    out.profileSummary = body.profileSummary ?? body.profile_summary;
-  }
-  if (
-    body.userDescription !== undefined ||
-    body.user_description !== undefined
-  ) {
-    out.userDescription = body.userDescription ?? body.user_description;
-  }
-  delete out.profile_summary;
-  delete out.user_description;
-
-  // Normalize posts key too (some clients send snake_case).
-  if (body.personaPosts !== undefined || body.persona_posts !== undefined) {
-    out.personaPosts = body.personaPosts ?? body.persona_posts;
-  }
-  delete out.persona_posts;
-
-  if (body.personaScores !== undefined || body.persona_scores !== undefined) {
-    const raw = body.personaScores ?? body.persona_scores;
-    out.personaScores = normalizePersonaPercentTriplet(raw);
-  }
-  delete out.persona_scores;
-
-  return out;
-}
 
 const app = express();
 app.use(cors());
@@ -185,7 +155,17 @@ app.post('/api/profile', async (req, res) => {
         }),
     );
 
-    const toStore = normalizeProfilePayload(body);
+    let existingProfile = null;
+    try {
+      existingProfile = JSON.parse(await fs.readFile(filepath, 'utf8'));
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+
+    const toStore = mergeStaticProfileFields(
+      normalizeProfilePayload(body),
+      existingProfile,
+    );
     const { personaPosts } = toStore;
     delete toStore.personaPosts;
     delete toStore.persona_posts;

@@ -33,6 +33,14 @@ function deltaMod(delta) {
   return n > 0 ? 'up' : 'down';
 }
 
+function deltaOutcome(delta, label) {
+  const n = Number(delta);
+  const suffix = label ? ` in ${label}` : '';
+  if (!Number.isFinite(n) || n === 0) return `ur score${suffix} has stayed the same`;
+  if (n > 0) return `ur score${suffix} has improved`;
+  return `ur score${suffix} has decreased`;
+}
+
 function formatScore(score) {
   const n = Number(score);
   if (!Number.isFinite(n)) return null;
@@ -61,6 +69,9 @@ export default function PersonaDeltaSummary({ deltas, scores }) {
                 className={`persona-delta-card__delta persona-delta-card__delta--${deltaMod(delta)}`}
               >
                 {formatDelta(delta)}
+              </span>
+              <span className="persona-delta-card__outcome">
+                {deltaOutcome(delta, label)}
               </span>
               {score != null ? (
                 <span className="persona-delta-card__score">{score}% current</span>

@@ -2,7 +2,7 @@
 export const PROFILE_TABS = [
   { id: 'posts', label: 'Posts', paneLabel: 'posts' },
   { id: 'profile', label: 'Profile', paneLabel: 'profile' },
-  { id: 'leaderboards', label: 'Rankings', paneLabel: 'rankings' },
+  { id: 'leaderboards', label: 'Leaderboards', paneLabel: 'leaderboards' },
 ];
 
 export function profilePaneLabel(tabId) {

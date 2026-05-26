@@ -15,6 +15,7 @@ import { loadPrompts } from './server/lib/prompts.js';
 import { extractDocText } from './server/lib/docText.js';
 import { readPostsForId, appendPersonaPosts } from './server/lib/postsStore.js';
 import { generateCommentSuggestions } from './server/lib/commentSuggestions.js';
+import { computeAllBoardStandings } from './server/lib/leaderboards.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
@@ -323,9 +324,52 @@ async function prepareGenerationContext() {
   };
 }
 
+async function prepareLeaderboardContext() {
+  const newest = await getNewestProfileIdAndPath(PROFILES_DIR);
+  if (!newest) return { error: 'No profile found', status: 400 };
+
+  let profile;
+  try {
+    profile = await readProfileJson(newest.filepath);
+  } catch (e) {
+    console.error('[leaderboards] profile read failed:', e?.message || e);
+    return { error: 'Failed to read profile', status: 500 };
+  }
+
+  const electronData = await readJsonOrNull(ELECTRON_DATA_JSON);
+  return { newest, profile, electronData };
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
+
+// GET /api/leaderboards — current user standings for every board, not just posted boards
+app.get('/api/leaderboards', async (_req, res) => {
+  try {
+    const ctx = await prepareLeaderboardContext();
+    if (ctx.error) {
+      return res.status(ctx.status || 500).json({ success: false, error: ctx.error });
+    }
+
+    const standings = computeAllBoardStandings(
+      ctx.electronData,
+      ctx.profile,
+      Date.now(),
+    );
+    return res.json({
+      success: true,
+      profileId: ctx.newest.id,
+      leaderboards: standings,
+    });
+  } catch (err) {
+    console.error('[leaderboards] failed:', err?.message || err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message ? String(err.message) : 'Leaderboard calculation failed',
+    });
+  }
+});
 
 // POST /api/profile/generate-summary — LM bio; persists profileSummary + userDescription
 app.post('/api/profile/generate-summary', async (_req, res) => {

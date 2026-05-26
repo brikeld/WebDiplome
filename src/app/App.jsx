@@ -16,7 +16,6 @@ import GeneratingContentLabel from '@/features/harvest/GeneratingContentLabel.js
 import {
   DASHBOARD_UPDATE_INTERVAL_MS,
   formatDashboardCountdown,
-  getDashboardTimerRingModel,
 } from '@/features/harvest/dashboardUpdateFlow.js';
 import '@/features/harvest/harvest.css';
 import TellMeMorePill from '@/features/inferenceChain/TellMeMorePill.jsx';
@@ -213,10 +212,6 @@ function AppInner({
   const personaToggleLabel =
     personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
   const updateTimerLabel = formatDashboardCountdown(updateRemainingMs);
-  const updateTimerRings = getDashboardTimerRingModel(
-    updateRemainingMs,
-    DASHBOARD_UPDATE_INTERVAL_MS,
-  );
 
   useEffect(() => {
     const tick = () => {
@@ -358,6 +353,7 @@ function AppInner({
             onTabChange={setActiveTab}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
             isGeneratingPosts={postGen.phase === 'generating'}
+            generateApiOrigin={GENERATE_API_ORIGIN}
           />
         )}
 
@@ -566,32 +562,12 @@ function AppInner({
                     disabled={postGen.loading || !profile}
                     onClick={handleGeneratePersonaPosts}
                   >
-                    <span className="dashboard-update-label">next update</span>
                     <span
                       className="dashboard-update-timer"
                       aria-label={`Next update in ${updateTimerLabel}`}
                     >
-                      <span className="dashboard-update-copy">
-                        <span className="dashboard-update-time">{updateTimerLabel}</span>
-                        <span className="dashboard-update-caption">
-                          next collection window
-                        </span>
-                      </span>
-                      <span
-                        className="dashboard-update-orbit"
-                        style={{
-                          '--timer-outer-deg': `${updateTimerRings.outer}deg`,
-                          '--timer-middle-deg': `${updateTimerRings.middle}deg`,
-                          '--timer-inner-deg': `${updateTimerRings.inner}deg`,
-                        }}
-                        aria-hidden
-                      >
-                        <span className="dashboard-update-orbit-ring dashboard-update-orbit-ring--outer" />
-                        <span className="dashboard-update-orbit-ring dashboard-update-orbit-ring--middle" />
-                        <span className="dashboard-update-orbit-ring dashboard-update-orbit-ring--inner" />
-                        <span className="dashboard-update-orbit-core" />
-                        <span className="dashboard-update-orbit-dot" />
-                      </span>
+                      <span className="dashboard-update-label">Next update in :</span>
+                      <span className="dashboard-update-time">{updateTimerLabel}</span>
                     </span>
                     {postGen.error ? (
                       <span className="generate-posts-error" role="alert">

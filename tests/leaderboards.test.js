@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   BOARDS,
   CLONE_DRIFT_BUCKET_MS,
+  computeAllBoardStandings,
   computeBoardStanding,
   decay,
   FAKE_CLONE_COUNT,
@@ -269,6 +270,38 @@ describe('computeBoardStanding', () => {
     const standing = computeBoardStanding(board, data, {}, nowMs);
     const user = standing.entries.find((e) => e.handle === '@—');
     expect(user).toBeTruthy();
+  });
+});
+
+describe('computeAllBoardStandings', () => {
+  const data = {
+    MACHINE_IDENTITY: { installed_apps: ['Cursor', 'Figma', 'NordVPN'] },
+    PAST_HISTORY: {
+      app_usage_7days: [
+        { app: 'Cursor', last_used: '2026-05-25T10:00:00Z' },
+        { app: 'Figma', last_used: '2026-05-25T10:30:00Z' },
+      ],
+      recent_files_7days: [],
+      browser_history: { chrome: [], safari: [] },
+      wifi_history: ['Home'],
+      recent_downloads: [],
+    },
+  };
+  const profile = { firstname: 'Brikeld', lastname: 'Hoxha', machineName: 'brikeld-mbp' };
+  const nowMs = new Date('2026-05-25T11:00:00Z').getTime();
+
+  it('returns one standing for every board, even when no leaderboard post exists', () => {
+    const standings = computeAllBoardStandings(data, profile, nowMs);
+
+    expect(standings).toHaveLength(BOARDS.length);
+    expect(standings.map((s) => s.boardId)).toEqual(BOARDS.map((b) => b.id));
+    for (const standing of standings) {
+      expect(standing.title).toBeTruthy();
+      expect(standing.persona).toMatch(/productivite|securite|popularite/);
+      expect(standing.entries).toHaveLength(5);
+      expect(standing.userRank).toBeGreaterThanOrEqual(1);
+      expect(standing.userRank).toBeLessThanOrEqual(5);
+    }
   });
 });
 

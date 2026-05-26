@@ -50,12 +50,12 @@ WebDiplome is the **web-facing half** of a two-repo project. It's a Vite + React
 The two servers are intentionally split (different concerns, different port). Both live at the repo root, not under `server/`.
 
 **`server.js` (port 3001) — profile + media store**
-- `POST /api/profile` — writes `profiles/{firstname}-{lastname}.json`. **Destructive:** deletes all existing profile and post files before writing. The system is intentionally single-profile.
+- `POST /api/profile` — writes `profiles/{firstname}-{lastname}.json`. The system is intentionally single-profile: other profile/post files are removed, while same-profile generated posts are preserved when harvest updates omit `personaPosts`.
 - `GET /api/profiles` — returns all profiles, newest-first by mtime, with `personaPosts` re-hydrated from `posts/{id}.json`.
 - `GET /api/profile/:id` — single profile, also re-hydrates posts.
 - `POST /api/upload` — content-addressed image dedup: hashes the uploaded buffer (SHA-256), renames to `{hash}{ext}` in `public/uploads/`. Subsequent uploads of the same content reuse the canonical name.
 - `personaPosts` are stripped from the profile JSON on write and stored in a sibling `posts/{id}.json` to keep the profile file small (the wallpaper base64 alone is ~30k tokens).
-- `normalizeProfilePayload()` merges camelCase + snake_case keys; stored JSON is camelCase only.
+- `server/lib/profileNormalization.js` merges camelCase + snake_case keys; stored JSON is camelCase only. It also preserves cached static fields (`machineName`, `machineModel`, `hardwareChip`, `ram`, `systemLanguages`, `wallpaperBase64`) when a delta harvest omits them.
 
 **`server-generate.js` (port 3010) — LM Studio post generation**
 - `POST /api/posts/generate` — generates three new persona posts (one per persona) and prepends them to `posts/{id}.json` for the newest profile.
@@ -124,8 +124,9 @@ Concretely:
 
 ## Conventions Worth Knowing
 
-- **Single-profile semantics.** `POST /api/profile` wipes prior profiles/posts. Don't add multi-profile logic without changing both servers and the polling loop in `App.jsx`.
+- **Single-profile semantics.** `POST /api/profile` removes other users' profile/post files, but same-profile generated posts survive harvest updates unless the client explicitly replaces `personaPosts`. Don't add multi-profile logic without changing both servers and the polling loop in `App.jsx`.
 - **Persona key locale.** Posts and prompts are French (`productivite`/`securite`/`popularite`); UI/state are English. Use `PERSONA_ALIASES` for any cross-boundary comparison.
+- **Static hardware cache.** Delta harvests may omit fields that rarely change, such as machine name, chip, RAM, languages, and wallpaper. Keep those cached on the stored profile via `mergeStaticProfileFields()`, and make graph/chart builders read fresh `MACHINE_IDENTITY` first, then profile fallbacks.
 - **Assets are content-addressed.** `attachedAsset` is the canonical attachment field (`kind=image|document`), keyed by SHA-256 filename. Never trust original names; dedupe always uses hash+extension. `scripts/dedupe-uploads.js` reconciles `public/uploads/` if something gets out of sync.
 - **Legacy compatibility is read-time only.** `server.js` translates old `attachedImage` payloads to `attachedAsset` when loading posts; new writes should emit `attachedAsset` only.
 - **`server.js` and `server-generate.js` share no in-process state** — they communicate only via the filesystem (`profiles/`, `posts/`, `public/uploads/`). When debugging "why didn't my new post show up?", the answer is usually that one server wrote a file the other server hasn't re-read yet (the UI re-polls every 30s).

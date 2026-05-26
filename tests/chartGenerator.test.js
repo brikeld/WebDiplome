@@ -153,6 +153,24 @@ describe('Chart builders — smoke tests', () => {
   it('buildBatteryHardwareChart returns valid svg', () => {
     expectChart(buildBatteryHardwareChart(mockData, mockProfile, 'productivite'));
   });
+  it('buildBatteryHardwareChart falls back to cached static profile hardware', () => {
+    const result = buildBatteryHardwareChart(
+      { MACHINE_IDENTITY: { battery: { cycle_count: 243, condition: 'Normal' } } },
+      {
+        machineName: 'Brikeld’s MacBook Pro',
+        hardware_chip: 'Apple M3 Max',
+        ram: '36 GB',
+        batteryCycles: 243,
+      },
+      'productivite',
+    );
+
+    expectChart(result);
+    expect(result.svg).toContain('Brikeld’s MacBook');
+    expect(result.svg).toContain('Apple M3 Max');
+    expect(result.svg).toContain('36 GB');
+    expect(result.svg).not.toContain('>—<');
+  });
   it('buildPersonaScoresChart returns valid svg', () => {
     expectChart(buildPersonaScoresChart(mockProfile, 'securite'));
   });

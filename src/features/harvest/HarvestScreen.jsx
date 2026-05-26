@@ -30,7 +30,7 @@ export default function HarvestScreen({ progress, error }) {
       aria-busy={!error}
     >
       <div className="harvest-panel__head">
-        <span className="harvest-panel__label">data harvesting</span>
+        <span className="harvest-panel__label">Data harvesting</span>
         <span className="harvest-panel__step">
           {step > 0 ? `step ${step}/4` : 'step 0/4'}
         </span>

@@ -15,6 +15,7 @@ export default function ProfileView({
   mainScoreEntryReplayKey,
   isGeneratingPosts,
   personaBadgePersona = null,
+  generateApiOrigin,
 }) {
   const handleLabel = machineHandleFromProfile(profile);
 
@@ -40,7 +41,12 @@ export default function ProfileView({
                   personaBadgePersona={personaBadgePersona}
                 />
               )}
-              {activeTab === 'leaderboards' && <LeaderboardsTab />}
+              {activeTab === 'leaderboards' && (
+                <LeaderboardsTab
+                  profile={profile}
+                  generateApiOrigin={generateApiOrigin}
+                />
+              )}
             </div>
           </div>
         </ScrollArea>

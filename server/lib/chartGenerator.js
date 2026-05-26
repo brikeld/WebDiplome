@@ -39,6 +39,16 @@ function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function firstValue(...values) {
+  for (const value of values) {
+    if (value == null) continue;
+    if (typeof value === 'string' && value.trim() === '') continue;
+    if (Array.isArray(value) && value.length === 0) continue;
+    return value;
+  }
+  return null;
+}
+
 function svgWrap(W, H, title, body, palette) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
   <rect width="${W}" height="${H}" fill="${palette.bg}" rx="0"/>
@@ -253,12 +263,28 @@ export function buildStorageChart(data, profile, persona = 'productivite') {
 export function buildBatteryHardwareChart(data, profile, persona = 'productivite') {
   const palette = chartPalette(persona);
   const bat = extractBatterySlice(data);
-  const ram = data?.MACHINE_IDENTITY?.hardware_snapshot?.ram
-    || data?.MACHINE_IDENTITY?.ram || profile?.ram || '—';
-  const chip = data?.MACHINE_IDENTITY?.hardware_snapshot?.chip
-    || data?.MACHINE_IDENTITY?.chip || '—';
-  const model = data?.MACHINE_IDENTITY?.model_name
-    || data?.MACHINE_IDENTITY?.machine_model || profile?.machineModel || '—';
+  const ram = firstValue(
+    data?.MACHINE_IDENTITY?.hardware_snapshot?.ram,
+    data?.MACHINE_IDENTITY?.ram,
+    profile?.ram,
+    '—',
+  );
+  const chip = firstValue(
+    data?.MACHINE_IDENTITY?.hardware_snapshot?.chip,
+    data?.MACHINE_IDENTITY?.chip,
+    profile?.hardwareChip,
+    profile?.hardware_chip,
+    '—',
+  );
+  const model = firstValue(
+    data?.MACHINE_IDENTITY?.model_name,
+    data?.MACHINE_IDENTITY?.machine_model,
+    profile?.machineModel,
+    profile?.machine_model,
+    profile?.machineName,
+    profile?.machine_name,
+    '—',
+  );
   const cycles = bat.cycleCount ?? profile?.batteryCycles ?? '—';
   const condition = bat.condition || '—';
   const { text } = palette;
