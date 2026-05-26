@@ -1,11 +1,13 @@
 import { lazy, Suspense, useRef } from 'react';
 import PostImage from './PostImage.jsx';
 import PostDocument from './PostDocument.jsx';
+import LeaderboardBlock from './LeaderboardBlock.jsx';
 import { isPdfDocumentAsset } from '@/lib/attachmentKind.js';
 import { shouldApplyPostImageFx } from '@/lib/shouldApplyPostImageFx.js';
 import CommentsToggle from '@/features/commenting/CommentsToggle.jsx';
 import CommentsCapsule from '@/features/commenting/CommentsCapsule.jsx';
 import { DEMO_OTHER_COMMENTER } from '@/lib/demoCommentIdentity.js';
+import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 
 const PostPdfCarousel = lazy(() => import('./PostPdfCarousel.jsx'));
 
@@ -30,11 +32,13 @@ export default function PostCard({
     handle,
     avatarInitials,
     avatarSrc,
+    personaBadgePersona,
     createdAt,
     systemDeltaPct = 1,
     persona,
     attachedAsset,
     chartType,
+    leaderboard,
   } = post;
 
   const applyImageFx = shouldApplyPostImageFx({ chartType });
@@ -90,6 +94,7 @@ export default function PostCard({
           <div className="post-card-head">
             <div className="post-avatar" aria-hidden>
               {avatarSrc ? <img className="post-avatar-img" src={avatarSrc} alt="" /> : avatarInitials}
+              <PersonaBadge persona={personaBadgePersona ?? persona} />
             </div>
             <div className="post-card-lead">
               <p className="post-lead">{content}</p>
@@ -132,6 +137,10 @@ export default function PostCard({
           )
         ) : null}
 
+        {leaderboard ? (
+          <LeaderboardBlock leaderboard={leaderboard} accentColor={noteColor} />
+        ) : null}
+
         {showCommentsCapsule ? (
           <CommentsCapsule
             post={post}
@@ -144,10 +153,12 @@ export default function PostCard({
             handle={handle}
             avatarSrc={avatarSrc}
             avatarInitials={avatarInitials}
+            personaBadgePersona={personaBadgePersona ?? persona}
             commenterDisplayName={DEMO_OTHER_COMMENTER.displayName}
             commenterHandle={DEMO_OTHER_COMMENTER.handle}
             commenterAvatarSrc={DEMO_OTHER_COMMENTER.avatarSrc}
             commenterAvatarInitials={DEMO_OTHER_COMMENTER.avatarInitials}
+            commenterPersonaBadgePersona={DEMO_OTHER_COMMENTER.personaBadgePersona}
           />
         ) : null}
       </div>
