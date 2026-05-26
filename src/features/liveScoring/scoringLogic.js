@@ -130,6 +130,55 @@ export function applyCommentBoost(records, recordKey, persona, plusValue) {
 }
 
 /**
+ * Record key for a self-hidden row on a leaderboard post. The 'leaderboard-self|'
+ * prefix guarantees no collision with `normalizePostHideKey` output (a numeric
+ * epoch string).
+ */
+export function leaderboardSelfKey(boardId) {
+  return `leaderboard-self|${boardId}`;
+}
+
+/**
+ * Hides the user's row on a single leaderboard. Reuses the record shape from
+ * applyHide so computeLiveAdjustments treats it identically (debit then 50%
+ * restorable on reveal).
+ */
+export function applyLeaderboardSelfHide(records, boardId, persona, systemDeltaPct) {
+  const key = leaderboardSelfKey(boardId);
+  if (records[key] && (records[key].restorable ?? 0) > 0) return records;
+  return {
+    ...records,
+    [key]: {
+      persona: String(persona).toLowerCase(),
+      delta: -Math.abs(systemDeltaPct),
+      restorable: Math.abs(systemDeltaPct) * 0.5,
+      source: 'leaderboard-self',
+    },
+  };
+}
+
+export function applyLeaderboardSelfReveal(records, boardId) {
+  const key = leaderboardSelfKey(boardId);
+  const rec = records[key];
+  if (!rec) return records;
+  const restored = rec.restorable ?? 0;
+  if (restored === 0) {
+    const next = { ...records };
+    delete next[key];
+    return next;
+  }
+  return {
+    ...records,
+    [key]: { ...rec, delta: rec.delta + restored, restorable: 0 },
+  };
+}
+
+export function isLeaderboardSelfHidden(records, boardId) {
+  const rec = records[leaderboardSelfKey(boardId)];
+  return rec != null && (rec.restorable ?? 0) > 0;
+}
+
+/**
  * Returns UI persona key ('productivity' | 'security' | 'popularity')
  * for the highest-scoring axis.
  */
