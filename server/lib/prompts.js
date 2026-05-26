@@ -42,6 +42,11 @@ export const DEFAULT_SLOT_PROMPTS = {
     temperature: 0.80,
     maxTokens: 1200,
   },
+  leaderboard_rationales: {
+    system: `You write very short rationales for a satirical surveillance leaderboard. You will be given a board title, the board's scoring rule in plain English, and 5 entries with rank + score + isUser + hidden. For the ONE entry marked "isUser":true, use the provided real signal hint to ground the rationale. For each clone (isUser:false), you may invent a short personality line, BUT the "signal" field for clones must ONLY restate "score N · yours M" (where N is the clone's score and M is the user's score) — never invent app counts, file counts, or any other fabricated data. For any entry marked "hidden":true, emit phrase:null and signal:null. Phrases are lower-case, max 90 chars, no hashtags, no emojis. Return ONLY valid JSON: {"rationales":[{"rank":1,"phrase":"...","signal":"..."}, ...]} with exactly 5 entries, one per rank, in ascending rank order. /no_think`,
+    temperature: 0.6,
+    maxTokens: 600,
+  },
 };
 
 export const DEFAULT_PROMPTS = {
@@ -74,6 +79,77 @@ export const DEFAULT_PROMPTS = {
       'You write a profile bio AS the person in the JSON — first person, English only, one complete sentence (max 120 characters). Read user + profile; use profile.SCORING_DATA.PERSONA_SCORES.dominant_persona (productivite | securite | popularite).\n\nMatch the voice of their social posts:\n- productivite: workflow-obsessed, dry wit or quiet pride about how they work — not a résumé or app inventory\n- popularite: online-life energy, playful or self-deprecating — one specific habit, not a catalog of apps\n- securite: honest about their digital footprint, lightly anxious or relieved — not corporate security jargon\n\nGround it in ONE vivid detail from the data (a tool, a pattern, a vibe). Never list stacks like "Adobe, Blender, Claude, Ollama". No hashtags. No moralizing. End with . ! or ? — never "..." or "…".\nReturn ONLY valid JSON: {"description":"..."}. No markdown, no line breaks in the string. /no_think',
     temperature: 1,
     maxTokens: 900,
+  },
+};
+
+/**
+ * Per-board fallback rationales used when the LM Studio rationales call fails
+ * or returns malformed JSON. selfPhrase is used for the user; clonePhrases[] is
+ * cycled by clone index. Signals are filled in at runtime ("score N · yours M").
+ */
+export const RATIONALE_TEMPLATES = {
+  most_productive: {
+    selfPhrase: 'shipping more than you sleep',
+    clonePhrases: [
+      'quietly outproducing the room',
+      'mostly creative tools today',
+      'late-night work bursts',
+      'one big push, then silence',
+    ],
+  },
+  closest_to_burnout: {
+    selfPhrase: 'editing files past midnight again',
+    clonePhrases: [
+      'no social apps in days',
+      'work app open all weekend',
+      'back-to-back since dawn',
+      'inbox at 1am energy',
+    ],
+  },
+  most_likely_change_jobs: {
+    selfPhrase: 'tab open on a job board',
+    clonePhrases: [
+      'glassdoor-curious this week',
+      'low file output, high comms',
+      'recruiter dm season',
+      'updating the resume quietly',
+    ],
+  },
+  ignoring_health: {
+    selfPhrase: 'no health app installed and it shows',
+    clonePhrases: [
+      'café wifi, late-night files',
+      'screen time off the chart',
+      'fitness app last opened: never',
+      'snack runs as cardio',
+    ],
+  },
+  most_secure: {
+    selfPhrase: 'vpn on, torrents off',
+    clonePhrases: [
+      'fewest networks joined',
+      'paranoid in a good way',
+      'firewall hobbyist energy',
+      'never on public wifi',
+    ],
+  },
+  most_socially_isolated: {
+    selfPhrase: 'one wifi network, zero pings',
+    clonePhrases: [
+      'social apps untouched today',
+      'lone wolf signal',
+      'one chat tab, all week',
+      'group chats on mute',
+    ],
+  },
+  most_likely_ghost: {
+    selfPhrase: 'reads but doesn\u2019t reply',
+    clonePhrases: [
+      'comms app open, no sends',
+      'last seen yesterday',
+      'half-typed messages everywhere',
+      'inbox at 0, replies at 0',
+    ],
   },
 };
 
