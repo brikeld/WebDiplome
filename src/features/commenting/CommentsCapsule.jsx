@@ -177,6 +177,7 @@ export default function CommentsCapsule({
       }}
     >
       <div className="commenting-thread">
+        {isOpen ? <h3 className="commenting-thread-title">Comments</h3> : null}
         <div className="commenting-thread-comments-row">
           {isOpen ? (
             <div className="commenting-thread-spine" aria-hidden>

@@ -19,7 +19,10 @@ function SuggestionOption({ suggestion, loading, onPick }) {
       aria-label={loading ? 'Generating comment option' : `Use comment: ${suggestion?.content}`}
     >
       {loading ? (
-        <span className="commenting-suggestion-option-spinner" aria-hidden />
+        <span className="commenting-suggestion-option-loading" aria-hidden>
+          <span className="commenting-suggestion-option-spinner" />
+          <span className="commenting-suggestion-option-loading-text">Generating</span>
+        </span>
       ) : (
         <>
           <span className="commenting-suggestion-option-text">{suggestion.content}</span>

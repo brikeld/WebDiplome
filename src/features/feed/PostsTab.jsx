@@ -177,9 +177,7 @@ export default function PostsTab({
                       return next;
                     })
             }
-            isHidden={
-              hideInteractions ? false : isHidden(normalizePostHideKey(p.createdAt))
-            }
+            isHidden={isHidden(normalizePostHideKey(p.createdAt))}
             isHighlightable={!hideInteractions}
             isHighlighted={!hideInteractions && highlightedPostId !== null && highlightedPostId === p.id}
             onHighlight={() => onHighlightPost?.(p)}

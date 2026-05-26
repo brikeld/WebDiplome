@@ -41,7 +41,7 @@ describe('<PostCard> with leaderboard post', () => {
   it('renders the leaderboard block when post.leaderboard is set', () => {
     const html = renderWithProvider(<PostCard post={leaderboardPost} />);
     expect(html).toContain('leaderboard-block');
-    expect(html).toContain('Top 5 Most Productive');
+    expect(html).toContain('TOP 5 - MOST PRODUCTIVE');
   });
 
   it('does not break for a normal (non-leaderboard) post', () => {

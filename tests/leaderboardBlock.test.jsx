@@ -28,7 +28,7 @@ const sample = {
 describe('<LeaderboardBlock>', () => {
   it('renders the board title', () => {
     const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
-    expect(html).toContain('Top 5 Most Productive');
+    expect(html).toContain('TOP 5 - MOST PRODUCTIVE');
   });
 
   it('renders 5 rows in rank order', () => {

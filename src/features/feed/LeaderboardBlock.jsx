@@ -17,6 +17,13 @@ function DeltaChip({ userRank, previousUserRank }) {
   );
 }
 
+function formatLeaderboardTitle(title) {
+  const text = String(title ?? '').trim();
+  const match = text.match(/^top\s+5\s+(.+)$/i);
+  if (match) return `TOP 5 - ${match[1].toUpperCase()}`;
+  return text.toUpperCase();
+}
+
 function Row({ entry, hidden }) {
   const cls = [
     'leaderboard-row',
@@ -80,7 +87,7 @@ export default function LeaderboardBlock({ leaderboard, accentColor }) {
       style={{ '--post-accent': accentColor }}
     >
       <header className="leaderboard-block__head">
-        <h3 id={titleId} className="leaderboard-block__title">{title}</h3>
+        <h3 id={titleId} className="leaderboard-block__title">{formatLeaderboardTitle(title)}</h3>
         <DeltaChip userRank={userRank} previousUserRank={previousUserRank} />
       </header>
       <ul

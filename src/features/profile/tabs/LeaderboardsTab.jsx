@@ -24,8 +24,27 @@ function formatScore(score) {
   return Math.round(n).toString();
 }
 
+function ordinalSuffix(rank) {
+  const n = Number(rank);
+  if (!Number.isFinite(n)) return '';
+  const v = Math.abs(Math.trunc(n)) % 100;
+  if (v >= 11 && v <= 13) return 'th';
+  switch (v % 10) {
+    case 1:
+      return 'st';
+    case 2:
+      return 'nd';
+    case 3:
+      return 'rd';
+    default:
+      return 'th';
+  }
+}
+
 function LeaderboardCard({ board }) {
   const others = (board.entries || []).filter((entry) => !entry.isUser);
+  const rank = Number(board.userRank);
+  const hasRank = Number.isFinite(rank);
 
   return (
     <article className="profile-leaderboard-card">
@@ -34,7 +53,10 @@ function LeaderboardCard({ board }) {
           <p className="profile-leaderboard-card__eyebrow">leaderboards</p>
           <h3 className="profile-leaderboard-card__title">{board.title}</h3>
         </div>
-        <span className="profile-leaderboard-card__rank">#{board.userRank}</span>
+        <span className="profile-leaderboard-card__rank">
+          {hasRank ? Math.trunc(rank) : '—'}
+          {hasRank ? <sup>{ordinalSuffix(rank)}</sup> : null}
+        </span>
       </header>
 
       <ol className="profile-leaderboard-card__rows" aria-label={`${board.title} standings`}>

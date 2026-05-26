@@ -6,6 +6,8 @@ import {
   initialsFromProfile,
   machineHandleFromProfile,
   profileBioText,
+  profilePostCount,
+  profileRankingCount,
 } from '@/lib/profileUtils.js';
 
 export default function ProfileHeader({
@@ -13,6 +15,7 @@ export default function ProfileHeader({
   personaColor = 'var(--prod)',
   personaBadgePersona = null,
   mainScoreEntryReplayKey = 0,
+  onNavigateTab,
 }) {
   const name = displayNameFromProfile(profile ?? {});
   const initials = initialsFromProfile(profile ?? {});
@@ -25,10 +28,12 @@ export default function ProfileHeader({
     null;
   const handle = machineHandleFromProfile(profile ?? {});
   const centerScore = getCenterDisplayScore(profile ?? {});
-  const followers = profile?.followers ?? profile?.followerCount ?? 0;
-  const following = profile?.following ?? profile?.followingCount ?? 0;
+  const postCount = profilePostCount(profile ?? {});
+  const rankingCount = profileRankingCount(profile ?? {});
 
   const bio = profileBioText(profile ?? {});
+  const postLabel = `${postCount} ${postCount === 1 ? 'post' : 'posts'}`;
+  const rankingLabel = `${rankingCount} ${rankingCount === 1 ? 'ranking' : 'rankings'}`;
 
   const profilePhoto = (
     <div className="profile-ring-avatar" aria-hidden>
@@ -37,7 +42,6 @@ export default function ProfileHeader({
       ) : (
         <span className="profile-cap-avatar-initials">{initials}</span>
       )}
-      <PersonaBadge persona={personaBadgePersona} profile={profile ?? {}} />
     </div>
   );
 
@@ -50,36 +54,45 @@ export default function ProfileHeader({
               <div className="profile-name-handle-stack">
                 <div className="profile-name-row">
                   <div className="profile-name-lg">{name}</div>
+                  <span className="profile-hero-badge-slot">
+                    <PersonaBadge
+                      persona={personaBadgePersona}
+                      profile={profile ?? {}}
+                      className="profile-hero-persona-badge"
+                    />
+                  </span>
                 </div>
                 <div className="profile-handle-row">
                   <div className="profile-handle-lg">{handle}</div>
-                  <button
-                    type="button"
-                    className="profile-connect-btn"
-                    style={{
-                      color: personaColor,
-                    }}
-                  >
-                    connect
-                  </button>
                 </div>
               </div>
               <div className="profile-follow-row">
-                <span className="profile-follow-item">
+                <button
+                  type="button"
+                  className="profile-follow-item profile-follow-item--button"
+                  aria-label={`View ${postLabel}`}
+                  data-profile-tab-target="posts"
+                  onClick={() => onNavigateTab?.('posts')}
+                >
                   <svg className="profile-follow-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                    <path d="M9 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm-7 9a7 7 0 0 1 14 0H2z"/>
-                    <path d="M13 6a3 3 0 1 0 6 0 3 3 0 0 0-6 0zm1 9a7 7 0 0 0-2-4.9A5 5 0 0 1 19 15h-5z"/>
+                    <path d="M4 3.5A1.5 1.5 0 0 1 5.5 2h9A1.5 1.5 0 0 1 16 3.5v13a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 4 16.5v-13Zm3 2a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H7Zm0 4a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H7Zm0 4a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H7Z"/>
                   </svg>
-                  <span className="profile-follow-num">{followers}</span>
-                </span>
-                <span className="profile-follow-item">
+                  <span className="profile-follow-num">{postCount}</span>
+                </button>
+                <button
+                  type="button"
+                  className="profile-follow-item profile-follow-item--button"
+                  aria-label={`View ${rankingLabel}`}
+                  data-profile-tab-target="leaderboards"
+                  onClick={() => onNavigateTab?.('leaderboards')}
+                >
                   <svg className="profile-follow-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                    <path d="M10 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4.42 0-8 2.02-8 4.5V17h16v-1.5c0-2.48-3.58-4.5-8-4.5z"/>
+                    <path d="M5 3h10v2h2a1 1 0 0 1 1 1v1.25A4.75 4.75 0 0 1 13.25 12H13a4.05 4.05 0 0 1-2 1.84V16h3a1 1 0 1 1 0 2H6a1 1 0 1 1 0-2h3v-2.16A4.05 4.05 0 0 1 7 12h-.25A4.75 4.75 0 0 1 2 7.25V6a1 1 0 0 1 1-1h2V3Zm0 4H4v.25A2.75 2.75 0 0 0 5.95 9.88 7.73 7.73 0 0 1 5 7V7Zm11 0h-1a7.73 7.73 0 0 1-.95 2.88A2.75 2.75 0 0 0 16 7.25V7Z"/>
                   </svg>
-                  <span className="profile-follow-num">{following}</span>
-                </span>
+                  <span className="profile-follow-num">{rankingCount}</span>
+                </button>
               </div>
-              <p className="profile-bio">{bio || '—'}</p>
+              <p className="profile-bio">{bio ? `"${bio}"` : '—'}</p>
             </div>
 
             <div

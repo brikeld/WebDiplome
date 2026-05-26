@@ -138,6 +138,34 @@ export function profileBioText(p) {
   return pick(summary) || pick(desc);
 }
 
+function profilePosts(profile) {
+  if (Array.isArray(profile?.personaPosts)) return profile.personaPosts;
+  if (Array.isArray(profile?.persona_posts)) return profile.persona_posts;
+  return [];
+}
+
+export function profilePostCount(profile) {
+  return profilePosts(profile).length;
+}
+
+export function profileRankingCount(profile) {
+  const boardIds = new Set();
+
+  profilePosts(profile).forEach((post, index) => {
+    const board = post?.leaderboard;
+    if (!board || typeof board !== 'object') return;
+
+    const rank = Number(board.userRank ?? board.user_rank);
+    const hasUserRank = Number.isFinite(rank);
+    const hasUserEntry = Array.isArray(board.entries) && board.entries.some((entry) => entry?.isUser);
+    if (!hasUserRank && !hasUserEntry) return;
+
+    boardIds.add(String(board.boardId ?? board.board_id ?? `leaderboard-${index}`));
+  });
+
+  return boardIds.size;
+}
+
 export function getGlobalScore(p) {
   if (p?.globalScore != null && Number.isFinite(Number(p.globalScore))) return Number(p.globalScore);
   if (p?.score != null && Number.isFinite(Number(p.score))) return Number(p.score);

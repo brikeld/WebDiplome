@@ -1,11 +1,21 @@
 .leaderboard-block {
+  --leaderboard-ink: var(--post-accent);
+  --leaderboard-muted: color-mix(in srgb, var(--post-accent) 58%, transparent);
+  --leaderboard-track: color-mix(in srgb, var(--post-accent) 14%, transparent);
+  --leaderboard-fill: color-mix(in srgb, var(--post-accent) 58%, transparent);
   display: flex;
   flex-direction: column;
   gap: 18px;
   padding: 28px 32px;
   border-radius: 0 0 var(--radius-post-surface) var(--radius-post-surface);
-  background: var(--post-accent);
-  color: var(--ink);
+  background: #000;
+  color: var(--leaderboard-ink);
+  border-top: 1px solid #000;
+}
+
+.post-card--has-leaderboard.post-card--comments-open .leaderboard-block {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .leaderboard-block__head {
@@ -18,11 +28,11 @@
 .leaderboard-block__title {
   font-family: var(--font-avant);
   font-weight: 700;
-  font-size: 18px;
-  line-height: 1.25;
+  font-size: var(--post-body-size);
+  line-height: var(--post-body-line);
   letter-spacing: 0;
   text-transform: none;
-  color: var(--ink);
+  color: var(--leaderboard-ink);
   margin: 0;
 }
 
@@ -32,14 +42,14 @@
   letter-spacing: 0.04em;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--ink);
+  border: 1px solid var(--leaderboard-ink);
+  background: transparent;
+  color: var(--leaderboard-ink);
   white-space: nowrap;
 }
 .leaderboard-delta--new,
-.leaderboard-delta--up { background: var(--ink); color: #fff; }
-.leaderboard-delta--down { background: rgba(255, 255, 255, 0.55); opacity: 0.85; }
+.leaderboard-delta--up { background: var(--leaderboard-ink); color: #000; }
+.leaderboard-delta--down { opacity: 0.85; }
 
 .leaderboard-block__rows {
   list-style: none;
@@ -56,7 +66,7 @@
   gap: 8px;
   padding: 0;
   background: transparent;
-  color: var(--ink);
+  color: var(--leaderboard-ink);
   font-family: var(--font-avant);
 }
 
@@ -72,7 +82,7 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  opacity: 0.55;
+  color: var(--leaderboard-muted);
 }
 
 .leaderboard-row__avatar {
@@ -80,7 +90,7 @@
   height: 28px;
   border-radius: 50%;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--leaderboard-track);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -95,39 +105,38 @@
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 10px;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--leaderboard-ink);
 }
 
 .leaderboard-row__name {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--ink);
+  color: var(--leaderboard-ink);
 }
 
 .leaderboard-row__handle {
   font-family: var(--font-avant-book-oblique);
   font-size: 11px;
-  color: var(--ink);
-  opacity: 0.55;
+  color: var(--leaderboard-ink);
   line-height: 1.2;
 }
 
 .leaderboard-row__bar-track {
   height: 14px;
   border-radius: 7px;
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--leaderboard-track);
   overflow: hidden;
 }
 
 .leaderboard-row__bar-fill {
   height: 100%;
   border-radius: 7px;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--leaderboard-fill);
 }
 
 .leaderboard-row--self .leaderboard-row__bar-fill {
-  background: var(--ink);
+  background: var(--leaderboard-ink);
 }
 
 .leaderboard-row--self .leaderboard-row__name {
@@ -137,19 +146,19 @@
 /* Hidden-row variant — applies to self-hidden user OR seeded-hidden clones. */
 .leaderboard-row--hidden .leaderboard-row__name {
   font-weight: 500;
-  opacity: 0.55;
+  color: var(--leaderboard-muted);
   font-style: italic;
 }
 .leaderboard-row--hidden .leaderboard-row__handle {
   display: none;
 }
 .leaderboard-row--hidden .leaderboard-row__avatar {
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--leaderboard-track);
 }
 .leaderboard-row--hidden .leaderboard-row__avatar-img,
 .leaderboard-row--hidden .leaderboard-row__avatar-initials {
   display: none;
 }
 .leaderboard-row--hidden .leaderboard-row__bar-fill {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--leaderboard-track);
 }

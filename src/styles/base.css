@@ -465,19 +465,26 @@ body {
 .project-name {
   position: fixed;
   left: 18px;
-  bottom: 18px;
+  top: 18px;
+  bottom: auto;
   z-index: 70;
   width: auto;
+  min-height: 32px;
   margin: 0;
-  padding: 0;
+  padding: 7px 12px 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-avant);
-  font-size: clamp(20px, 2.8vw, 34px);
+  font-size: clamp(16px, 2vw, 24px);
   font-weight: 700;
   letter-spacing: 0.01em;
-  line-height: 1.15;
-  color: var(--persona-accent, var(--ink));
-  background: transparent;
+  line-height: 1;
+  color: var(--persona-accent, var(--card, #fff));
+  background: #000;
   border: none;
+  border-radius: var(--radius-pill);
+  box-sizing: border-box;
 }
 
 .icon-rail {
@@ -489,14 +496,14 @@ body {
   padding: 14px 10px;
   min-height: 11.5rem;
   border-radius: var(--radius-pill);
-  border: none;
-  background: var(--persona-accent, #759aef);
+  border: 3px solid var(--persona-accent, #759aef);
+  background: transparent;
   box-sizing: border-box;
 }
 
 .rail-btn {
   appearance: none;
-  border: none;
+  border: 2px solid transparent;
   background: transparent;
   font-family: var(--font-sans);
   font-size: 46px;
@@ -514,7 +521,7 @@ body {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-  transition: background 0.15s, color 0.15s, transform 0.15s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s;
 }
 
 .rail-btn__glyph {
@@ -531,19 +538,21 @@ body {
   width: 3.5rem;
   height: 3.5rem;
   border-radius: 14px;
+  border-color: var(--persona-accent, #759aef);
   opacity: 1;
-  color: var(--persona-accent, #759aef);
-  background: var(--card, #fff);
+  color: #fff;
+  background: var(--persona-accent, #759aef);
   outline: none;
 }
 .rail-btn.is-active:hover {
   opacity: 1;
-  color: var(--persona-accent, #759aef);
+  color: #fff;
+  background: var(--persona-accent, #759aef);
 }
 .rail-btn:hover:not(.is-active) {
   opacity: 1;
-  background: color-mix(in srgb, #000 12%, transparent);
-  color: #000;
+  background: color-mix(in srgb, var(--persona-accent, #759aef) 8%, transparent);
+  color: var(--persona-accent, #759aef);
 }
 .rail-btn:active {
   transform: translateY(1px);
@@ -897,10 +906,15 @@ body {
   margin: 0;
 }
 
+.post-card--has-leaderboard .post-card-bubble {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 .post-card--has-attachment .post-attachment-block,
 .post-card--has-attachment .post-image-plain,
 .post-card--has-attachment .post-pdf-carousel {
-  border: none;
+  border-top: 1px solid #000;
   margin: 0;
   box-sizing: border-box;
 }
@@ -1146,7 +1160,7 @@ body {
   border-radius: var(--radius-pill);
   background: var(--card, #fff);
   border: none;
-  color: rgb(0 0 0 / 47%);
+  color: #000;
   font-family: var(--font-sans);
   font-size: var(--post-name-size);
   font-weight: var(--post-name-weight);
@@ -1565,8 +1579,8 @@ body {
   position: absolute;
   left: 8px;
   right: 8px;
-  top: 20px;
-  bottom: 20px;
+  top: 58px;
+  bottom: 58px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1826,8 +1840,8 @@ body {
 
 .dashboard-hide-pill--nudge .dashboard-hide-pill__icon {
   position: absolute;
-  right: 20%;
-  top: 50%;
+  right: 18%;
+  top: 64%;
   transform: translateY(-50%);
   z-index: 3;
   opacity: 1;
@@ -2315,7 +2329,7 @@ body {
 }
 
 .profile-leaderboard-card__eyebrow {
-  margin: 0 0 5px;
+  margin: 0 0 12px;
   color: #000;
   font-size: 12px;
   font-weight: 800;
@@ -2345,6 +2359,13 @@ body {
   font-weight: 900;
   line-height: 1;
   text-align: center;
+}
+
+.profile-leaderboard-card__rank sup {
+  margin-left: 1px;
+  font-size: 0.48em;
+  line-height: 0;
+  vertical-align: super;
 }
 
 .profile-leaderboard-card__rows {

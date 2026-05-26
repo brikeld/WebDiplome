@@ -63,6 +63,7 @@ export default function ProfileView({
             personaColor={personaColor}
             personaBadgePersona={personaBadgePersona}
             mainScoreEntryReplayKey={mainScoreEntryReplayKey}
+            onNavigateTab={onTabChange}
           />
           <TabBar
             variant="rail"
