@@ -26,6 +26,11 @@ import { pickAndBuildChart } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
 import { pickBoardToPost, cloneHiddenForBoard } from './leaderboards.js';
 import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
+import {
+  parseRationalesResponse,
+  buildRationalesPayload,
+  fallbackRationales,
+} from './leaderboardRationales.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
 
 /** Slot index for the asset slot (image or document from disk). */
@@ -545,6 +550,7 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
     docText: null,
     docFilename: null,
     attachedAsset: null,
+    leaderboardContext: { board, standing, cloneHidden },
     leaderboard: {
       boardId: board.id,
       title: board.title,
@@ -644,6 +650,31 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
   }
   if (slot.textSliceType) post.textSliceType = slot.textSliceType;
   if (slot.chartType) post.chartType = slot.chartType;
+  if (slot.leaderboard && slot.leaderboardContext) {
+    const { board, standing, cloneHidden } = slot.leaderboardContext;
+    const ratPromptCfg = SP.leaderboard_rationales ?? null;
+    let rationales = null;
+    if (ratPromptCfg) {
+      try {
+        const ratBody = buildChatBody({
+          model: slot._model,
+          systemPrompt: ratPromptCfg.system,
+          userPayload: buildRationalesPayload(board, standing, cloneHidden),
+          imageData: null,
+          docText: null,
+          docFilename: null,
+          temperature: ratPromptCfg.temperature,
+          maxTokens: ratPromptCfg.maxTokens,
+        });
+        const ratResp = await lmChatCompletion({ baseUrl, timeoutMs, retries, body: ratBody });
+        rationales = parseRationalesResponse(extractChoiceText(ratResp));
+      } catch {
+        rationales = null;
+      }
+    }
+    if (!rationales) rationales = fallbackRationales(board, standing, cloneHidden);
+    slot.leaderboard.rationales = rationales;
+  }
   if (slot.leaderboard) post.leaderboard = slot.leaderboard;
 
   return post;
