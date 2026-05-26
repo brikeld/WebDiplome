@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatDashboardCountdown,
+  getDashboardControlLayout,
   getDashboardTimerRingModel,
 } from '../src/features/harvest/dashboardUpdateFlow.js';
 
@@ -34,6 +35,21 @@ describe('dashboard update flow timer', () => {
       outer: 55,
       middle: 30,
       inner: 5,
+    });
+  });
+
+  it('keeps update states in the top update slot after removing ranking', () => {
+    expect(getDashboardControlLayout({ harvestPhase: 'idle', postPhase: 'idle' })).toEqual({
+      actionSlot: 'timer',
+    });
+    expect(getDashboardControlLayout({ harvestPhase: 'harvesting', postPhase: 'idle' })).toEqual({
+      actionSlot: 'harvest',
+    });
+    expect(getDashboardControlLayout({ harvestPhase: 'idle', postPhase: 'generating' })).toEqual({
+      actionSlot: 'generating',
+    });
+    expect(getDashboardControlLayout({ harvestPhase: 'idle', postPhase: 'deltas' })).toEqual({
+      actionSlot: 'deltas',
     });
   });
 });

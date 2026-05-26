@@ -133,7 +133,7 @@ export default function InferenceChainPanel({ post, personaLabel, onClose }) {
         />
       ) : null}
 
-      {(validChain || hasIngredients) ? (
+      {(validChain && hasIngredients) ? (
         <div className="inference-panel__toggle" role="tablist" aria-label="Analysis view">
           <button
             type="button"
@@ -141,7 +141,6 @@ export default function InferenceChainPanel({ post, personaLabel, onClose }) {
             aria-selected={view === 'ingredients'}
             className={`inference-panel__toggle-btn${view === 'ingredients' ? ' is-active' : ''}`}
             onClick={() => handleSetView('ingredients')}
-            disabled={!hasIngredients}
           >
             Ingredients
           </button>
@@ -151,7 +150,6 @@ export default function InferenceChainPanel({ post, personaLabel, onClose }) {
             aria-selected={view === 'chain'}
             className={`inference-panel__toggle-btn${view === 'chain' ? ' is-active' : ''}`}
             onClick={() => handleSetView('chain')}
-            disabled={!validChain}
           >
             Inference Chain
           </button>

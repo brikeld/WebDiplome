@@ -189,6 +189,38 @@
   opacity: 0.78;
 }
 
+.dashboard-timer-card--action-status .harvest-panel {
+  grid-template-rows: auto auto;
+  gap: 7px;
+  padding: 8px 10px;
+}
+
+.dashboard-timer-card--action-status .harvest-panel__head {
+  gap: 6px;
+}
+
+.dashboard-timer-card--action-status .harvest-panel__label,
+.dashboard-timer-card--action-status .harvest-panel__step {
+  font-size: clamp(10px, 0.95vw, 13px);
+}
+
+.dashboard-timer-card--action-status .harvest-panel__progress-row {
+  gap: 8px;
+}
+
+.dashboard-timer-card--action-status .harvest-panel__track {
+  height: 9px;
+}
+
+.dashboard-timer-card--action-status .harvest-panel__percent {
+  font-size: clamp(15px, 1.45vw, 20px);
+}
+
+.dashboard-timer-card--action-status .harvest-panel__status,
+.dashboard-timer-card--action-status .harvest-panel__body {
+  display: none;
+}
+
 .persona-delta-summary {
   display: flex;
   align-items: stretch;
@@ -313,6 +345,74 @@
   line-height: 0.95;
   text-transform: none;
   overflow-wrap: anywhere;
+}
+
+.dashboard-timer-card--action-status .persona-delta-summary {
+  padding: 7px;
+}
+
+.dashboard-timer-card--action-status .persona-delta-summary__grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
+  gap: 5px;
+}
+
+.dashboard-timer-card--action-status .persona-delta-card {
+  border-width: 1px;
+  border-radius: 13px;
+  padding: 6px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 3px;
+}
+
+.dashboard-timer-card--action-status .persona-delta-card--main {
+  grid-row: auto;
+}
+
+.dashboard-timer-card--action-status .persona-delta-card__label {
+  font-size: clamp(8px, 0.75vw, 10px);
+}
+
+.dashboard-timer-card--action-status .persona-delta-card__delta {
+  font-size: clamp(18px, 1.9vw, 26px);
+}
+
+.dashboard-timer-card--action-status .persona-delta-card__outcome {
+  display: none;
+}
+
+.dashboard-timer-card--action-status .persona-delta-card__score {
+  font-size: clamp(7px, 0.7vw, 9px);
+}
+
+.dashboard-timer-card--action-status .generating-content-block {
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+.dashboard-timer-card--action-status .generating-content-rail {
+  gap: 4px;
+}
+
+.dashboard-timer-card--action-status .generating-content-rail span {
+  border-radius: 5px;
+}
+
+.dashboard-timer-card--action-status .generating-content-copy {
+  gap: 6px;
+}
+
+.dashboard-timer-card--action-status .generating-content-tag {
+  min-height: 24px;
+  padding: 4px 8px 5px;
+  border-width: 1px;
+  border-radius: 6px;
+  font-size: clamp(10px, 0.95vw, 13px);
+}
+
+.dashboard-timer-card--action-status .generating-content-text {
+  font-size: clamp(14px, 1.45vw, 20px);
 }
 
 @keyframes generating-content-fade {

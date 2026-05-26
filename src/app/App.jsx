@@ -16,6 +16,7 @@ import GeneratingContentLabel from '@/features/harvest/GeneratingContentLabel.js
 import {
   DASHBOARD_UPDATE_INTERVAL_MS,
   formatDashboardCountdown,
+  getDashboardControlLayout,
 } from '@/features/harvest/dashboardUpdateFlow.js';
 import '@/features/harvest/harvest.css';
 import TellMeMorePill from '@/features/inferenceChain/TellMeMorePill.jsx';
@@ -292,15 +293,11 @@ function AppInner({
     setConfirmingHide(false);
   };
 
-  const handleDashboardRanking = () => {
-    setMainView('profile');
-    setActiveTab('leaderboards');
-  };
-
-  const dashboardBusy =
-    harvestPhase === 'harvesting' ||
-    postGen.phase === 'deltas' ||
-    postGen.phase === 'generating';
+  const dashboardLayout = getDashboardControlLayout({
+    harvestPhase,
+    postPhase: postGen.phase,
+  });
+  const dashboardBusy = dashboardLayout.actionSlot !== 'timer';
 
   return (
     <div
@@ -519,64 +516,55 @@ function AppInner({
                         </span>
                       )}
                     </button>
-                    <button
-                      type="button"
-                      className="dashboard-action-pill"
-                      onClick={handleDashboardRanking}
-                    >
-                      RANKING
-                    </button>
+                    {dashboardLayout.actionSlot === 'harvest' ? (
+                      <div
+                        className="dashboard-timer-card dashboard-timer-card--update dashboard-timer-card--action-update dashboard-timer-card--action-status dashboard-timer-card--harvest"
+                        aria-busy="true"
+                      >
+                        <HarvestScreen progress={harvestProgress} error={harvestError} />
+                      </div>
+                    ) : dashboardLayout.actionSlot === 'deltas' ? (
+                      <div
+                        className="dashboard-timer-card dashboard-timer-card--update dashboard-timer-card--action-update dashboard-timer-card--action-status dashboard-timer-card--analysis"
+                        aria-live="polite"
+                      >
+                        <PersonaDeltaSummary
+                          deltas={personaDeltas}
+                          scores={adjustedScores}
+                        />
+                      </div>
+                    ) : dashboardLayout.actionSlot === 'generating' ? (
+                      <div
+                        className="dashboard-timer-card dashboard-timer-card--update dashboard-timer-card--action-update dashboard-timer-card--action-status dashboard-timer-card--generating"
+                        aria-busy="true"
+                      >
+                        <GeneratingContentLabel />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="dashboard-timer-card dashboard-timer-card--update dashboard-timer-card--action-update"
+                        disabled={postGen.loading || !profile}
+                        onClick={handleGeneratePersonaPosts}
+                      >
+                        <span
+                          className="dashboard-update-timer"
+                          aria-label={`Next update in ${updateTimerLabel}`}
+                        >
+                          <span className="dashboard-update-label">Next update in :</span>
+                          <span className="dashboard-update-time">{updateTimerLabel}</span>
+                        </span>
+                        {postGen.error ? (
+                          <span className="generate-posts-error" role="alert">
+                            {postGen.error}
+                          </span>
+                        ) : null}
+                      </button>
+                    )}
                   </div>
                 );
               })()}
 
-              <div className="dashboard-primary-row">
-                {harvestPhase === 'harvesting' ? (
-                  <div
-                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide dashboard-timer-card--status dashboard-timer-card--harvest"
-                    aria-busy="true"
-                  >
-                    <HarvestScreen progress={harvestProgress} error={harvestError} />
-                  </div>
-                ) : postGen.phase === 'deltas' ? (
-                  <div
-                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide dashboard-timer-card--status dashboard-timer-card--analysis"
-                    aria-live="polite"
-                  >
-                    <PersonaDeltaSummary
-                      deltas={personaDeltas}
-                      scores={adjustedScores}
-                    />
-                  </div>
-                ) : postGen.phase === 'generating' ? (
-                  <div
-                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide dashboard-timer-card--status dashboard-timer-card--generating"
-                    aria-busy="true"
-                  >
-                    <GeneratingContentLabel />
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide dashboard-timer-card--update"
-                    disabled={postGen.loading || !profile}
-                    onClick={handleGeneratePersonaPosts}
-                  >
-                    <span
-                      className="dashboard-update-timer"
-                      aria-label={`Next update in ${updateTimerLabel}`}
-                    >
-                      <span className="dashboard-update-label">Next update in :</span>
-                      <span className="dashboard-update-time">{updateTimerLabel}</span>
-                    </span>
-                    {postGen.error ? (
-                      <span className="generate-posts-error" role="alert">
-                        {postGen.error}
-                      </span>
-                    ) : null}
-                  </button>
-                )}
-              </div>
               <div className="dashboard-tell-row">
                 <TellMeMorePill
                   highlightedPost={highlightedPost}
@@ -997,6 +985,33 @@ export default function App() {
       schedulePersonaDeltasClearAfterGenerate();
     }
   }, [profile, reloadProfileFromApi, schedulePersonaDeltasClearAfterGenerate]);
+
+  // Keep a stable ref so the auto-trigger effect below doesn't re-run when
+  // runBioAndPostGeneration re-memoizes (it has `profile` in its deps).
+  const runBioAndPostGenerationRef = useRef(runBioAndPostGeneration);
+  useEffect(() => {
+    runBioAndPostGenerationRef.current = runBioAndPostGeneration;
+  }, [runBioAndPostGeneration]);
+
+  // Track which profile ID has already had auto-generation triggered so we
+  // never fire twice for the same profile (even if posts get cleared later).
+  const autoPostGenProfileIdRef = useRef(null);
+
+  // Auto-trigger the first-time post generation: when Electron syncs a new
+  // profile that has a bio but no posts yet, kick off the streaming reveal
+  // flow here so posts arrive with animation and inference-chain data intact.
+  useEffect(() => {
+    if (!profile || postGen.loading || harvestPhase !== 'idle') return;
+    const profileId = [profile.firstname, profile.lastname]
+      .filter(Boolean).join('-').toLowerCase();
+    if (!profileId || autoPostGenProfileIdRef.current === profileId) return;
+    const hasBio = String(profile.profileSummary || profile.userDescription || '').trim().length > 0;
+    const hasPosts = Array.isArray(profile.personaPosts) && profile.personaPosts.length > 0;
+    if (!hasBio || hasPosts) return;
+    autoPostGenProfileIdRef.current = profileId;
+    setPostGen({ loading: true, phase: 'generating', error: null });
+    runBioAndPostGenerationRef.current(profile);
+  }, [profile, postGen.loading, harvestPhase]);
 
   const handleGeneratePersonaPosts = async () => {
     if (postGen.loading || harvestPhase === 'harvesting' || !profile) return;

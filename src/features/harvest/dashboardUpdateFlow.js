@@ -25,3 +25,16 @@ export function getDashboardTimerRingModel(
     inner: Math.round(5 + progress * 180),
   };
 }
+
+export function getDashboardControlLayout({ harvestPhase, postPhase } = {}) {
+  if (harvestPhase === 'harvesting') {
+    return { actionSlot: 'harvest' };
+  }
+  if (postPhase === 'deltas') {
+    return { actionSlot: 'deltas' };
+  }
+  if (postPhase === 'generating') {
+    return { actionSlot: 'generating' };
+  }
+  return { actionSlot: 'timer' };
+}
