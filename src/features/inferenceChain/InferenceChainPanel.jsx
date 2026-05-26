@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react';
 import { StepRow, InferStepRow } from './inferenceChainSteps.jsx';
 import IngredientsView from './IngredientsView.jsx';
 import PostTextHighlights from './PostTextHighlights.jsx';
+import LeaderboardRationaleView from './LeaderboardRationaleView.jsx';
 
 function findStep(chain, step) {
   return Array.isArray(chain) ? chain.find((s) => s && s.step === step) ?? null : null;
@@ -58,6 +59,8 @@ export default function InferenceChainPanel({ post, personaLabel, onClose }) {
   const highlights = Array.isArray(post?.highlights) ? post.highlights : null;
   const validChain = isValidChain(chain);
   const hasIngredients = !!(ingredients && ingredients.length);
+  const leaderboard = post?.leaderboard ?? null;
+  const isLeaderboardPost = Boolean(leaderboard && Array.isArray(leaderboard.entries));
 
   // Default to Inference Chain when present; otherwise Ingredients.
   const [view, setView] = useState(validChain ? 'chain' : 'ingredients');
@@ -109,7 +112,9 @@ export default function InferenceChainPanel({ post, personaLabel, onClose }) {
       <header className="inference-panel__head">
         <div className="inference-panel__title-group">
           <span className="inference-panel__kicker">
-            {personaLabel ? `${personaLabel.toLowerCase()} persona` : 'inference chain'}
+            {isLeaderboardPost
+              ? `${(leaderboard.persona ?? '').toLowerCase()} leaderboard`
+              : personaLabel ? `${personaLabel.toLowerCase()} persona` : 'inference chain'}
           </span>
           <h3 className="inference-panel__title">How the system reached this post</h3>
         </div>
@@ -133,7 +138,7 @@ export default function InferenceChainPanel({ post, personaLabel, onClose }) {
         />
       ) : null}
 
-      {(validChain && hasIngredients) ? (
+      {isLeaderboardPost ? null : ((validChain && hasIngredients) ? (
         <div className="inference-panel__toggle" role="tablist" aria-label="Analysis view">
           <button
             type="button"
@@ -154,10 +159,12 @@ export default function InferenceChainPanel({ post, personaLabel, onClose }) {
             Inference Chain
           </button>
         </div>
-      ) : null}
+      ) : null)}
 
       <div className="inference-panel__body">
-        {view === 'chain' && validChain ? (
+        {isLeaderboardPost ? (
+          <LeaderboardRationaleView leaderboard={leaderboard} />
+        ) : view === 'chain' && validChain ? (
           <ol className="inference-panel__steps" aria-label="Inference steps">
             <StepRow
               step="data"

@@ -992,3 +992,100 @@
   color: rgba(0, 0, 0, 0.7);
   font-style: italic;
 }
+
+.leaderboard-rationales {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.leaderboard-rationale-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+.leaderboard-rationale-row:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-rationale-row__head {
+  display: grid;
+  grid-template-columns: 28px 24px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.leaderboard-rationale-row__rank {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.55;
+}
+
+.leaderboard-rationale-row__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.leaderboard-rationale-row__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.leaderboard-rationale-row__initials {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.leaderboard-rationale-row__name {
+  font-family: var(--font-avant);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.leaderboard-rationale-row.is-self .leaderboard-rationale-row__name {
+  font-weight: 700;
+}
+
+.leaderboard-rationale-row.is-hidden .leaderboard-rationale-row__name {
+  font-style: italic;
+  opacity: 0.55;
+  font-weight: 500;
+}
+
+.leaderboard-rationale-row__phrase {
+  font-family: var(--font-avant);
+  font-size: 14px;
+  margin: 4px 0 0 38px;
+  line-height: 1.35;
+}
+
+.leaderboard-rationale-row__signal {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  opacity: 0.65;
+  margin: 0 0 0 38px;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-pill);
+  align-self: flex-start;
+}
+
+.leaderboard-rationale-row__hidden {
+  font-family: var(--font-avant-book-oblique);
+  font-size: 12px;
+  opacity: 0.55;
+  margin: 4px 0 0 38px;
+}
