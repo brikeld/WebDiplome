@@ -24,7 +24,7 @@ import {
 } from './dataSlices.js';
 import { pickAndBuildChart } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
-import { pickBoardToPost } from './leaderboards.js';
+import { pickBoardToPost, cloneHiddenForBoard } from './leaderboards.js';
 import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
 
@@ -527,6 +527,7 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
   if (!pick) return null;
 
   const { board, standing, prevRank } = pick;
+  const cloneHidden = cloneHiddenForBoard(board.id);
   const ctxLines = [
     '[Leaderboard slot]',
     `Board: ${board.title}`,
@@ -547,6 +548,8 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
     leaderboard: {
       boardId: board.id,
       title: board.title,
+      persona: board.persona,
+      cloneHidden,
       userRank: standing.userRank,
       previousUserRank: prevRank,
       entries: standing.entries.map((e) => ({
