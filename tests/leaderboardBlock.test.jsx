@@ -24,8 +24,9 @@ describe('<LeaderboardBlock>', () => {
 
   it('renders 5 rows in rank order', () => {
     const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
-    const rowMatches = html.match(/leaderboard-row/g) || [];
-    expect(rowMatches.length).toBe(5);
+    // Count `<li class="leaderboard-row...">` openings only — not child classes like leaderboard-row__rank.
+    const rowOpenings = html.match(/<li class="leaderboard-row(?:--self|"| )/g) || [];
+    expect(rowOpenings.length).toBe(5);
     // #1 appears before #5
     expect(html.indexOf('#1')).toBeLessThan(html.indexOf('#5'));
   });

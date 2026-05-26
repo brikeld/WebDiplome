@@ -16,17 +16,17 @@ function DeltaChip({ userRank, previousUserRank }) {
 }
 
 function Row({ entry }) {
-  const cls = entry.isUser ? 'leaderboard-row--self' : 'leaderboard-row';
+  const cls = `leaderboard-row${entry.isUser ? ' leaderboard-row--self' : ''}`;
   return (
     <li className={cls}>
-      <span className="lb-row__rank">#{entry.rank}</span>
-      <span className="lb-row__avatar" aria-hidden>
+      <span className="leaderboard-row__rank">#{entry.rank}</span>
+      <span className="leaderboard-row__avatar" aria-hidden>
         {entry.avatarSrc
-          ? <img className="lb-row__avatar-img" src={entry.avatarSrc} alt="" />
-          : <span className="lb-row__avatar-initials">{entry.avatarInitials}</span>}
+          ? <img className="leaderboard-row__avatar-img" src={entry.avatarSrc} alt="" />
+          : <span className="leaderboard-row__avatar-initials">{entry.avatarInitials}</span>}
       </span>
-      <span className="lb-row__name">{entry.name}</span>
-      <span className="lb-row__handle">{entry.handle}</span>
+      <span className="leaderboard-row__name">{entry.name}</span>
+      <span className="leaderboard-row__handle">{entry.handle}</span>
     </li>
   );
 }

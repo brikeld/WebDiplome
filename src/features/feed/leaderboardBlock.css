@@ -69,14 +69,14 @@
   border: 1px solid var(--border);
 }
 
-.lb-row__rank {
+.leaderboard-row__rank {
   font-family: 'SF Mono', monospace;
   font-size: 13px;
   font-weight: 600;
   text-align: left;
 }
 
-.lb-row__avatar {
+.leaderboard-row__avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -86,27 +86,27 @@
   align-items: center;
   justify-content: center;
 }
-.lb-row__avatar-img {
+.leaderboard-row__avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-.lb-row__avatar-initials {
+.leaderboard-row__avatar-initials {
   font-family: 'SF Mono', monospace;
   font-size: 12px;
   font-weight: 600;
   color: var(--ink);
 }
 
-.lb-row__name {
+.leaderboard-row__name {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
   color: var(--ink);
 }
 
-.lb-row__handle {
+.leaderboard-row__handle {
   font-family: var(--font-avant-book-oblique);
   font-size: 11px;
   color: var(--muted);
