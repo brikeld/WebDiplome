@@ -198,8 +198,16 @@ function AppInner({
   profileScoreReplayNonce,
   handleGeneratePersonaPosts,
 }) {
-  const { adjustedScores, dominantPersona: liveDominantPersona, hidePost, revealPost, isHidden } =
-    useLiveScoring();
+  const {
+    adjustedScores,
+    dominantPersona: liveDominantPersona,
+    hidePost,
+    revealPost,
+    hideLeaderboardSelf,
+    revealLeaderboardSelf,
+    isLeaderboardSelfHidden,
+    isHidden,
+  } = useLiveScoring();
   const [confirmingHide, setConfirmingHide] = useState(false);
   const [highlightedPost, setHighlightedPost] = useState(null);
   const [selectionPulseFlip, setSelectionPulseFlip] = useState(false);
@@ -248,7 +256,9 @@ function AppInner({
   }, [highlightedPost?.id]);
 
   const highlightedPostIsHidden = highlightedPost
-    ? isHidden(normalizePostHideKey(highlightedPost.createdAt))
+    ? (highlightedPost.leaderboard
+        ? isLeaderboardSelfHidden(highlightedPost.leaderboard.boardId)
+        : isHidden(normalizePostHideKey(highlightedPost.createdAt)))
     : false;
 
   const highlightedPostPersonaLabel = highlightedPost
@@ -264,11 +274,21 @@ function AppInner({
   const handleDashboardHide = () => {
     if (!profile) return;
     if (highlightedPost) {
+      const isLeaderboard = Boolean(highlightedPost.leaderboard);
       if (highlightedPostIsHidden) {
-        revealPost(highlightedPost, getHighlightedPostRect());
+        if (isLeaderboard) {
+          revealLeaderboardSelf(highlightedPost, getHighlightedPostRect());
+        } else {
+          revealPost(highlightedPost, getHighlightedPostRect());
+        }
         setHighlightedPost(null);
         setConfirmingHide(false);
       } else {
+        // Encode "only hide a leaderboard if user is in it" — userRank null means not present.
+        if (isLeaderboard && highlightedPost.leaderboard.userRank == null) {
+          setConfirmingHide(false);
+          return;
+        }
         setConfirmingHide(true);
         setHideNudge(false);
       }
@@ -281,9 +301,11 @@ function AppInner({
 
   const handleConfirmHide = () => {
     if (highlightedPost) {
-      // Arc the particle from the highlighted feed card (left) to the ring (right),
-      // matching the visual arc used by comment boosts.
-      hidePost(highlightedPost, getHighlightedPostRect());
+      if (highlightedPost.leaderboard) {
+        hideLeaderboardSelf(highlightedPost, getHighlightedPostRect());
+      } else {
+        hidePost(highlightedPost, getHighlightedPostRect());
+      }
     }
     setConfirmingHide(false);
     setHighlightedPost(null);
