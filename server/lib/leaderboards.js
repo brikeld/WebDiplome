@@ -47,6 +47,19 @@ export function scoreCloneFor(boardId, cloneIdx, nowMs) {
   return Math.round((f * 70 - 35 + 40) * 100) / 100;
 }
 
+/**
+ * Deterministic "which clones have hidden their position" mask for a board.
+ * Stable across reloads — uses the same seededFloat primitive as scoreCloneFor,
+ * but does NOT include the drift bucket (hidden state shouldn't change every 10 min).
+ */
+export function cloneHiddenForBoard(boardId) {
+  const mask = new Array(FAKE_CLONE_COUNT);
+  for (let i = 0; i < FAKE_CLONE_COUNT; i++) {
+    mask[i] = seededFloat(`hidden|${boardId}|${i}`) > 0.75;
+  }
+  return mask;
+}
+
 // ─── Standing assembly ────────────────────────────────────────────────────
 
 function realUserIdentity(profile) {
