@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import PostCard from '../src/features/feed/PostCard.jsx';
+import { LiveScoringProvider } from '../src/features/liveScoring/LiveScoringContext.jsx';
+
+function renderWithProvider(node) {
+  return renderToStaticMarkup(
+    <LiveScoringProvider profile={{ firstname: 'Test', lastname: 'User' }}>
+      {node}
+    </LiveScoringProvider>
+  );
+}
 
 const leaderboardPost = {
   id: 'p1',
@@ -30,13 +39,13 @@ const leaderboardPost = {
 
 describe('<PostCard> with leaderboard post', () => {
   it('renders the leaderboard block when post.leaderboard is set', () => {
-    const html = renderToStaticMarkup(<PostCard post={leaderboardPost} />);
+    const html = renderWithProvider(<PostCard post={leaderboardPost} />);
     expect(html).toContain('leaderboard-block');
     expect(html).toContain('Top 5 Most Productive');
   });
 
   it('does not break for a normal (non-leaderboard) post', () => {
-    const html = renderToStaticMarkup(<PostCard post={{ ...leaderboardPost, leaderboard: undefined }} />);
+    const html = renderWithProvider(<PostCard post={{ ...leaderboardPost, leaderboard: undefined }} />);
     expect(html).not.toContain('leaderboard-block');
   });
 });

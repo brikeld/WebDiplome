@@ -1,27 +1,27 @@
 .leaderboard-block {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 22px 28px;
-  border-radius: var(--radius-post-surface);
+  gap: 18px;
+  padding: 28px 32px;
+  border-radius: 0 0 var(--radius-post-surface) var(--radius-post-surface);
   background: var(--post-accent);
-  border: var(--capsule-shell-border-width) solid var(--border);
   color: var(--ink);
 }
 
 .leaderboard-block__head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .leaderboard-block__title {
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: var(--font-avant);
   font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-size: 18px;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink);
   margin: 0;
 }
@@ -47,13 +47,13 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .leaderboard-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   padding: 0;
   background: transparent;
   color: var(--ink);
@@ -62,7 +62,7 @@
 
 .leaderboard-row__header {
   display: grid;
-  grid-template-columns: 32px 24px 1fr auto;
+  grid-template-columns: 32px 28px 1fr auto;
   align-items: center;
   gap: 10px;
 }
@@ -76,8 +76,8 @@
 }
 
 .leaderboard-row__avatar {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.12);
@@ -114,15 +114,15 @@
 }
 
 .leaderboard-row__bar-track {
-  height: 10px;
-  border-radius: 5px;
+  height: 14px;
+  border-radius: 7px;
   background: rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
 .leaderboard-row__bar-fill {
   height: 100%;
-  border-radius: 5px;
+  border-radius: 7px;
   background: rgba(0, 0, 0, 0.55);
 }
 
@@ -132,4 +132,24 @@
 
 .leaderboard-row--self .leaderboard-row__name {
   font-weight: 700;
+}
+
+/* Hidden-row variant — applies to self-hidden user OR seeded-hidden clones. */
+.leaderboard-row--hidden .leaderboard-row__name {
+  font-weight: 500;
+  opacity: 0.55;
+  font-style: italic;
+}
+.leaderboard-row--hidden .leaderboard-row__handle {
+  display: none;
+}
+.leaderboard-row--hidden .leaderboard-row__avatar {
+  background: rgba(0, 0, 0, 0.18);
+}
+.leaderboard-row--hidden .leaderboard-row__avatar-img,
+.leaderboard-row--hidden .leaderboard-row__avatar-initials {
+  display: none;
+}
+.leaderboard-row--hidden .leaderboard-row__bar-fill {
+  background: rgba(0, 0, 0, 0.25);
 }

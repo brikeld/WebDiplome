@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import LeaderboardBlock from '../src/features/feed/LeaderboardBlock.jsx';
+import { LiveScoringProvider } from '../src/features/liveScoring/LiveScoringContext.jsx';
+
+function renderWithProvider(node) {
+  return renderToStaticMarkup(
+    <LiveScoringProvider profile={{ firstname: 'Test', lastname: 'User' }}>
+      {node}
+    </LiveScoringProvider>
+  );
+}
 
 const sample = {
   boardId: 'most_productive',
@@ -18,12 +27,12 @@ const sample = {
 
 describe('<LeaderboardBlock>', () => {
   it('renders the board title', () => {
-    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     expect(html).toContain('Top 5 Most Productive');
   });
 
   it('renders 5 rows in rank order', () => {
-    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     // Count `<li class="leaderboard-row...">` openings only — not child classes like leaderboard-row__rank.
     const rowOpenings = html.match(/<li class="leaderboard-row(?:--self|"| )/g) || [];
     expect(rowOpenings.length).toBe(5);
@@ -32,25 +41,25 @@ describe('<LeaderboardBlock>', () => {
   });
 
   it('marks the user row with --self', () => {
-    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     expect(html).toContain('leaderboard-row--self');
   });
 
   it('renders a delta chip "▲ from #2" when previousUserRank > userRank', () => {
-    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     expect(html).toContain('from #2');
     expect(html).toContain('▲');
   });
 
   it('renders "NEW" chip when previousUserRank is null', () => {
-    const html = renderToStaticMarkup(
+    const html = renderWithProvider(
       <LeaderboardBlock leaderboard={{ ...sample, previousUserRank: null }} accentColor="#abc" />,
     );
     expect(html).toContain('NEW');
   });
 
   it('does NOT render any score number anywhere', () => {
-    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     // Scores in sample: 87, 81, 74, 68, 61 — none must appear in markup
     for (const score of ['87', '81', '74', '68', '61']) {
       expect(html).not.toContain(`>${score}<`);
@@ -58,18 +67,18 @@ describe('<LeaderboardBlock>', () => {
   });
 
   it('renders all 4 Alex Johnson rows literally identical', () => {
-    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     const alexMatches = html.match(/Alex Johnson/g) || [];
     expect(alexMatches.length).toBe(4);
   });
 
   it('renders nothing when leaderboard is null or malformed', () => {
-    expect(renderToStaticMarkup(<LeaderboardBlock leaderboard={null} accentColor="#abc" />)).toBe('');
-    expect(renderToStaticMarkup(<LeaderboardBlock leaderboard={{ entries: 'not an array' }} accentColor="#abc" />)).toBe('');
+    expect(renderWithProvider(<LeaderboardBlock leaderboard={null} accentColor="#abc" />)).toBe('');
+    expect(renderWithProvider(<LeaderboardBlock leaderboard={{ entries: 'not an array' }} accentColor="#abc" />)).toBe('');
   });
 
   it('zero-pads the rank display (01..05)', () => {
-    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     for (const rank of ['01', '02', '03', '04', '05']) {
       expect(html).toContain(`>${rank}<`);
     }
@@ -79,7 +88,7 @@ describe('<LeaderboardBlock>', () => {
   });
 
   it('renders rank-derived bar widths (100%, 80%, 60%, 40%, 20%)', () => {
-    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     for (const pct of ['100%', '80%', '60%', '40%', '20%']) {
       // Inline style on the bar fill: width:<pct>
       expect(html).toMatch(new RegExp(`width:\\s*${pct.replace('%', '\\%')}`));
@@ -87,7 +96,7 @@ describe('<LeaderboardBlock>', () => {
   });
 
   it('user row contains a bar fill (highlighting handled in CSS, not markup)', () => {
-    const html = renderToStaticMarkup(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
+    const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     // The user row keeps both `leaderboard-row` and `leaderboard-row--self`; its bar-fill
     // div lives inside that row. We verify the row contains a bar-fill element.
     const selfRowMatch = html.match(/<li[^>]*leaderboard-row--self[^>]*>([\s\S]*?)<\/li>/);
