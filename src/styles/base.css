@@ -2394,6 +2394,29 @@ body {
   opacity: 0.8;
 }
 
+.profile-leaderboards-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.profile-leaderboards-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-leaderboards-section__title {
+  font-family: var(--font-avant);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--persona-accent);
+  color: var(--ink);
+}
+
 @media (max-width: 900px) {
   .profile-leaderboards-grid {
     grid-template-columns: 1fr;

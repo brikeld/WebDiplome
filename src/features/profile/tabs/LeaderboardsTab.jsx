@@ -1,8 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const DEFAULT_GENERATE_API_ORIGIN =
   (import.meta?.env?.VITE_GENERATE_API_ORIGIN && String(import.meta.env.VITE_GENERATE_API_ORIGIN)) ||
   'http://localhost:3010';
+
+const PERSONA_COLORS = {
+  productivite: '#D8D8D8',
+  securite: '#759AEF',
+  popularite: '#CCF847',
+};
+
+const PERSONA_SECTION_ORDER = ['productivite', 'securite', 'popularite'];
+
+const PERSONA_SECTION_LABEL = {
+  productivite: 'PRODUCTIVITY LEADERBOARDS',
+  securite: 'SECURITY LEADERBOARDS',
+  popularite: 'POPULARITY LEADERBOARDS',
+};
 
 function formatScore(score) {
   const n = Number(score);
@@ -75,11 +89,37 @@ export default function LeaderboardsTab({
     return () => controller.abort();
   }, [generateApiOrigin, profile]);
 
+  const grouped = useMemo(() => {
+    const out = { productivite: [], securite: [], popularite: [] };
+    for (const b of leaderboards) {
+      const key = out[b.persona] ? b.persona : 'productivite';
+      out[key].push(b);
+    }
+    return out;
+  }, [leaderboards]);
+
   return (
-    <div className="profile-leaderboards-grid">
-      {leaderboards.map((board) => (
-        <LeaderboardCard key={board.boardId} board={board} />
-      ))}
+    <div className="profile-leaderboards-stack">
+      {PERSONA_SECTION_ORDER.map((personaKey) => {
+        const boards = grouped[personaKey];
+        if (!boards || boards.length === 0) return null;
+        return (
+          <section
+            key={personaKey}
+            className={`profile-leaderboards-section profile-leaderboards-section--${personaKey}`}
+            style={{ '--persona-accent': PERSONA_COLORS[personaKey] }}
+          >
+            <h2 className="profile-leaderboards-section__title">
+              {PERSONA_SECTION_LABEL[personaKey]}
+            </h2>
+            <div className="profile-leaderboards-grid">
+              {boards.map((board) => (
+                <LeaderboardCard key={board.boardId} board={board} />
+              ))}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }
