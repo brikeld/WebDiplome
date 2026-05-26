@@ -62,4 +62,9 @@ describe('<LeaderboardBlock>', () => {
     const alexMatches = html.match(/Alex Johnson/g) || [];
     expect(alexMatches.length).toBe(4);
   });
+
+  it('renders nothing when leaderboard is null or malformed', () => {
+    expect(renderToStaticMarkup(<LeaderboardBlock leaderboard={null} accentColor="#abc" />)).toBe('');
+    expect(renderToStaticMarkup(<LeaderboardBlock leaderboard={{ entries: 'not an array' }} accentColor="#abc" />)).toBe('');
+  });
 });

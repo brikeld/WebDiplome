@@ -25,7 +25,7 @@
 }
 
 .leaderboard-delta {
-  font-family: 'SF Mono', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 11px;
   letter-spacing: 0.04em;
   padding: 4px 10px;
@@ -70,7 +70,7 @@
 }
 
 .leaderboard-row__rank {
-  font-family: 'SF Mono', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 13px;
   font-weight: 600;
   text-align: left;
@@ -93,7 +93,7 @@
   display: block;
 }
 .leaderboard-row__avatar-initials {
-  font-family: 'SF Mono', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 12px;
   font-weight: 600;
   color: var(--ink);

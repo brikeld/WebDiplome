@@ -33,18 +33,21 @@ function Row({ entry }) {
 
 export default function LeaderboardBlock({ leaderboard, accentColor }) {
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
-  const { title, entries, userRank, previousUserRank } = leaderboard;
+  const { title, entries, userRank, previousUserRank, boardId } = leaderboard;
 
   return (
     <div
-      className="post-attachment-block leaderboard-block"
+      className="leaderboard-block"
       style={{ '--post-accent': accentColor }}
     >
       <header className="leaderboard-block__head">
-        <h3 className="leaderboard-block__title">{title}</h3>
+        <h3 id={`leaderboard-title-${boardId}`} className="leaderboard-block__title">{title}</h3>
         <DeltaChip userRank={userRank} previousUserRank={previousUserRank} />
       </header>
-      <ul className="leaderboard-block__rows">
+      <ul
+        className="leaderboard-block__rows"
+        aria-labelledby={`leaderboard-title-${boardId}`}
+      >
         {entries.map((e) => <Row key={e.rank} entry={e} />)}
       </ul>
     </div>
