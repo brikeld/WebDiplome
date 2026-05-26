@@ -27,8 +27,8 @@ describe('<LeaderboardBlock>', () => {
     // Count `<li class="leaderboard-row...">` openings only — not child classes like leaderboard-row__rank.
     const rowOpenings = html.match(/<li class="leaderboard-row(?:--self|"| )/g) || [];
     expect(rowOpenings.length).toBe(5);
-    // #1 appears before #5
-    expect(html.indexOf('#1')).toBeLessThan(html.indexOf('#5'));
+    // #01 row appears before #05 row (zero-padded ranks)
+    expect(html.indexOf('>01<')).toBeLessThan(html.indexOf('>05<'));
   });
 
   it('marks the user row with --self', () => {

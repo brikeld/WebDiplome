@@ -19,7 +19,7 @@ function Row({ entry }) {
   const cls = `leaderboard-row${entry.isUser ? ' leaderboard-row--self' : ''}`;
   const widthPct = ((6 - entry.rank) / 5) * 100;
   return (
-    <li className={cls} aria-label={`#${entry.rank}`}>
+    <li className={cls}>
       <div className="leaderboard-row__header">
         <span className="leaderboard-row__rank">{String(entry.rank).padStart(2, '0')}</span>
         <span className="leaderboard-row__avatar" aria-hidden>
