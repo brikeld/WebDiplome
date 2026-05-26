@@ -17,6 +17,7 @@ function DeltaChip({ userRank, previousUserRank }) {
 
 function Row({ entry }) {
   const cls = `leaderboard-row${entry.isUser ? ' leaderboard-row--self' : ''}`;
+  // Assumes 5-entry board: rank 1 → 100%, rank 5 → 20%. Out-of-range ranks would underflow or overflow.
   const widthPct = ((6 - entry.rank) / 5) * 100;
   return (
     <li className={cls}>
