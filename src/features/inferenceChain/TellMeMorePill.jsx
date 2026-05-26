@@ -76,6 +76,7 @@ function CursorIcon(props) {
 
 export default function TellMeMorePill({
   highlightedPost,
+  selectionPulseFlip = false,
   expanded,
   onExpand,
   onCollapse,
@@ -127,6 +128,9 @@ export default function TellMeMorePill({
   let stateModifier = 'tell-more-pill--normal';
   if (nudging) stateModifier = 'tell-more-pill--nudge';
   else if (highlightedPost) stateModifier = 'tell-more-pill--armed';
+  const selectionPulseClass = highlightedPost
+    ? ` tell-more-pill--select-pulse-${selectionPulseFlip ? 'b' : 'a'}`
+    : '';
 
   const handleClick = () => {
     if (disabled) return;
@@ -141,7 +145,7 @@ export default function TellMeMorePill({
   return (
     <button
       type="button"
-      className={`tell-more-pill ${stateModifier}`}
+      className={`tell-more-pill ${stateModifier}${selectionPulseClass}`}
       style={pillStyle}
       onClick={handleClick}
       disabled={disabled}
@@ -152,7 +156,7 @@ export default function TellMeMorePill({
           : 'Tell me more — select a post first'
       }
     >
-      <GhostPostBg />
+      {nudging ? <GhostPostBg /> : null}
       <span className="tell-more-pill__icon">
         {nudging ? (
           <CursorIcon width="56" height="56" />
@@ -160,7 +164,6 @@ export default function TellMeMorePill({
           <MagnifierIcon width="56" height="56" />
         )}
       </span>
-      <span className="tell-more-pill__label">tell me more</span>
       {nudging ? (
         <span className="tell-more-pill__nudge-capsule">Select a post first</span>
       ) : null}

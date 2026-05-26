@@ -38,6 +38,7 @@ export default function SuggestionRow({
   suggestionsError = null,
   avatarSrc,
   avatarInitials,
+  personaBadgePersona,
   picked = null,
   userCommentRef,
   postId,
@@ -69,6 +70,7 @@ export default function SuggestionRow({
           displayName={displayName}
           avatarSrc={avatarSrc}
           avatarInitials={avatarInitials}
+          personaBadgePersona={personaBadgePersona}
           metaLeft={mockCommentTimeAgo(postId, picked.persona, 3)}
           metaCenter={commentMetaCenterLine(postId, picked.persona)}
         />

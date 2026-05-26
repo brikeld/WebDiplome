@@ -52,31 +52,29 @@
   outline-offset: 3px;
 }
 
-/* Ghost post skeleton — same construction as the hide pill */
+/* Nudge-only ghost post skeleton */
 .tell-more-pill__bg-post {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 18px;
-  bottom: 18px;
+  left: 50%;
+  right: auto;
+  top: 40px;
+  bottom: 40px;
+  width: min(82%, 580px);
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 15px;
+  gap: 12px;
+  padding: 0 28px;
   box-sizing: border-box;
   border-radius: calc(var(--tell-pill-radius) - 10px);
-  background: color-mix(in srgb, var(--tell-pill-accent, #ffffff) 28%, transparent);
-  filter: blur(1.2px);
+  background: color-mix(in srgb, var(--tell-pill-accent, #ffffff) 32%, transparent);
+  filter: none;
   pointer-events: none;
-  transition:
-    filter 280ms ease,
-    background-color 280ms ease,
-    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .tell-more-pill__avatar {
-  width: 32%;
-  max-width: 80px;
+  width: 42%;
+  max-width: 124px;
   aspect-ratio: 1 / 1;
   flex-shrink: 0;
   border-radius: 10px;
@@ -88,17 +86,18 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 7px;
+  gap: 8px;
 }
 
 .tell-more-pill__line {
-  height: 8px;
+  width: 76%;
+  height: 9px;
   border-radius: 5px;
   background: color-mix(in srgb, var(--tell-pill-accent, #759aef) 55%, transparent);
 }
 
-.tell-more-pill__line--short { width: 70%; }
-.tell-more-pill__line--tiny  { width: 45%; height: 6px; }
+.tell-more-pill__line--short { width: 54%; }
+.tell-more-pill__line--tiny  { width: 34%; height: 7px; }
 
 /* Foreground icon */
 .tell-more-pill__icon {
@@ -116,8 +115,8 @@
 }
 
 .tell-more-pill__icon svg {
-  width: clamp(54px, 6.8vw, 92px);
-  height: clamp(54px, 6.8vw, 92px);
+  width: clamp(60px, 7.2vw, 100px);
+  height: clamp(60px, 7.2vw, 100px);
   display: block;
 }
 
@@ -140,21 +139,25 @@
   transform: scale(0.94);
 }
 
+.tell-more-pill--normal {
+  background: var(--card, #fff);
+}
+
 /* ── State 2: armed — a post is highlighted ── */
 @keyframes tell-pill-armed-glow {
   0%, 100% {
     box-shadow:
       0 0 0 0 transparent,
-      0 0 22px 4px color-mix(in srgb, var(--tell-pill-accent, #759aef) 75%, transparent),
-      0 0 44px 12px color-mix(in srgb, var(--tell-pill-accent, #759aef) 45%, transparent),
-      0 0 72px 24px color-mix(in srgb, var(--tell-pill-accent, #759aef) 22%, transparent);
+      0 0 22px 4px rgb(255 255 255 / 0.82),
+      0 0 44px 12px rgb(255 255 255 / 0.5),
+      0 0 72px 24px rgb(255 255 255 / 0.24);
   }
   50% {
     box-shadow:
       0 0 0 0 transparent,
-      0 0 32px 8px color-mix(in srgb, var(--tell-pill-accent, #759aef) 90%, transparent),
-      0 0 60px 18px color-mix(in srgb, var(--tell-pill-accent, #759aef) 55%, transparent),
-      0 0 96px 32px color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, transparent);
+      0 0 32px 8px rgb(255 255 255 / 0.95),
+      0 0 60px 18px rgb(255 255 255 / 0.62),
+      0 0 96px 32px rgb(255 255 255 / 0.32);
   }
 }
 
@@ -165,6 +168,8 @@
 }
 
 .tell-more-pill--armed {
+  --tell-pill-radius: calc(var(--radius-pill) + 18px);
+  --tell-pill-border: 3px;
   animation: tell-pill-armed-glow 1.6s ease-in-out infinite;
 }
 
@@ -176,6 +181,48 @@
 
 .tell-more-pill--armed .tell-more-pill__label {
   opacity: 1;
+}
+
+@keyframes tell-pill-select-morph-a {
+  0% {
+    border-radius: var(--radius-pill);
+    transform: scale(0.985);
+  }
+  60% {
+    border-radius: calc(var(--radius-pill) + 20px);
+    transform: scale(1.01);
+  }
+  100% {
+    border-radius: var(--tell-pill-radius);
+    transform: scale(1);
+  }
+}
+
+@keyframes tell-pill-select-morph-b {
+  0% {
+    border-radius: var(--radius-pill);
+    transform: scale(0.985);
+  }
+  60% {
+    border-radius: calc(var(--radius-pill) + 20px);
+    transform: scale(1.01);
+  }
+  100% {
+    border-radius: var(--tell-pill-radius);
+    transform: scale(1);
+  }
+}
+
+.tell-more-pill--armed.tell-more-pill--select-pulse-a {
+  animation:
+    tell-pill-select-morph-a 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    tell-pill-armed-glow 1.6s ease-in-out infinite;
+}
+
+.tell-more-pill--armed.tell-more-pill--select-pulse-b {
+  animation:
+    tell-pill-select-morph-b 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    tell-pill-armed-glow 1.6s ease-in-out infinite;
 }
 
 /* ── State 3: nudge — clicked with no post selected ── */
@@ -198,6 +245,7 @@
 }
 
 .tell-more-pill--nudge {
+  background: var(--card, #fff);
   animation: tell-pill-error-wiggle 460ms ease-in-out 1;
   transition:
     background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
@@ -207,15 +255,10 @@
     box-shadow 280ms ease;
 }
 
-.tell-more-pill--nudge .tell-more-pill__avatar,
-.tell-more-pill--nudge .tell-more-pill__line {
-  background: color-mix(in srgb, var(--tell-pill-accent, #759aef) 70%, transparent);
-}
-
 .tell-more-pill--nudge .tell-more-pill__icon {
   position: absolute;
-  right: 20%;
-  top: 50%;
+  right: 17%;
+  top: 58%;
   transform: translateY(-50%);
   z-index: 3;
   opacity: 1;
@@ -224,19 +267,18 @@
 }
 
 .tell-more-pill--nudge .tell-more-pill__icon svg {
-  width: clamp(38px, 4.6vw, 60px);
-  height: clamp(38px, 4.6vw, 60px);
+  width: clamp(44px, 5.2vw, 68px);
+  height: clamp(44px, 5.2vw, 68px);
 }
 
 .tell-more-pill--nudge .tell-more-pill__label {
-  opacity: 0;
+  display: none;
 }
 
 .tell-more-pill__nudge-capsule {
   position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 11%;
+  top: calc(78%);
   z-index: 4;
   display: inline-block;
   padding: 5px 14px 6px;

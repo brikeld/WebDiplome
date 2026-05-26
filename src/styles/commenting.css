@@ -255,6 +255,7 @@
 }
 
 .commenting-comment-avatar {
+  position: relative;
   grid-column: 1;
   grid-row: 1 / -1;
   width: var(--comment-avatar-size);
@@ -269,7 +270,7 @@
   color: var(--comment-accent);
   border: none;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -287,6 +288,13 @@
   border-radius: var(--radius-comment-surface);
   object-fit: cover;
   display: block;
+}
+
+.commenting-comment-avatar .persona-badge {
+  --persona-badge-size: calc(var(--comment-avatar-size) * 0.24);
+  --persona-badge-border: max(2px, calc(var(--comment-avatar-size) * 0.03));
+  right: calc(var(--comment-avatar-size) * -0.035);
+  bottom: calc(var(--comment-avatar-size) * -0.035);
 }
 
 .commenting-comment-lead {

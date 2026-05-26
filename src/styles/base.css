@@ -26,7 +26,7 @@
   /* White shell (feed + profile content): stroke width.
      Edit THIS value to test (e.g. 20px). Do NOT use `var(--capsule-shell-border-width, 20px)` —
      the fallback is ignored whenever the variable is defined (common mistake). */
-  --capsule-shell-border-width: 2px;
+  --capsule-shell-border-width: 3px;
   /* Post type (Figma diploma-FILE, node 212:1262): Demi = body, name, meta; Book Oblique = @ handle */
   --post-bubble-h: 12.5rem;
   --post-body-size: 26px;
@@ -42,6 +42,34 @@
   /* Legacy aliases */
   --post-font-primary: var(--post-body-size);
   --post-font-secondary: var(--post-handle-size);
+}
+
+.persona-badge {
+  --persona-badge-size: 24px;
+  --persona-badge-border: 3px;
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  z-index: 8;
+  width: var(--persona-badge-size);
+  height: var(--persona-badge-size);
+  border-radius: 50%;
+  border: var(--persona-badge-border) solid #fff;
+  background: var(--persona-badge-color, var(--persona-accent, #d8d8d8));
+  color: #000;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+  font-family: var(--font-sans);
+  font-size: calc(var(--persona-badge-size) * 0.45);
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.persona-badge__glyph {
+  transform: translateY(0.02em);
 }
 
 html, body {
@@ -65,7 +93,7 @@ body::-webkit-scrollbar {
 }
 
 body {
-  background: var(--bg);
+  background: var(--card, #fff);
   color: var(--ink);
   font-family: var(--font-sans);
   font-weight: 600;
@@ -195,7 +223,7 @@ body {
   background: transparent;
 }
 
-/* Dashboard shell — white capsule, persona accent stroke (Figma) */
+/* Dashboard shell */
 .dashboard-capsule {
   flex: 1 1 0;
   min-height: 0;
@@ -360,6 +388,8 @@ body {
 
 .dashboard-ring-card--dominant {
   outline: none;
+  background: #000;
+  color: var(--ring-accent, #759aef);
 }
 
 .dashboard-ring-card:focus-visible {
@@ -420,6 +450,18 @@ body {
   color: rgba(0, 0, 0, 0.45);
 }
 
+.dashboard-ring-card--dominant .dashboard-ring-delta--flat {
+  color: color-mix(in srgb, var(--ring-accent, #759aef) 72%, transparent);
+}
+
+.dashboard-ring-card--dominant .dashboard-ring-svg circle:first-child {
+  stroke: rgba(255, 255, 255, 0.2);
+}
+
+.dashboard-ring-card--dominant .dashboard-ring-svg circle:last-child {
+  stroke: var(--ring-accent, #759aef);
+}
+
 .project-name {
   position: fixed;
   left: 18px;
@@ -433,7 +475,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.15;
-  color: var(--ink);
+  color: var(--persona-accent, var(--ink));
   background: transparent;
   border: none;
 }
@@ -447,8 +489,8 @@ body {
   padding: 14px 10px;
   min-height: 11.5rem;
   border-radius: var(--radius-pill);
-  border: 2px solid var(--persona-accent, var(--ink));
-  background: var(--card, #fff);
+  border: none;
+  background: var(--persona-accent, #759aef);
   box-sizing: border-box;
 }
 
@@ -467,13 +509,22 @@ body {
   min-width: 3.5rem;
   min-height: 3.5rem;
   border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   padding: 0;
   margin: 0;
   box-sizing: border-box;
   transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.rail-btn__glyph {
+  display: block;
+  line-height: 1;
+}
+
+.rail-btn--profile .rail-btn__glyph {
+  /* Optical centering for the profile glyph inside the selected rect. */
+  transform: translate(-0.02em, -0.01em);
 }
 
 .rail-btn.is-active {
@@ -481,17 +532,17 @@ body {
   height: 3.5rem;
   border-radius: 14px;
   opacity: 1;
-  color: #000;
-  background: var(--persona-accent, #759aef);
+  color: var(--persona-accent, #759aef);
+  background: var(--card, #fff);
   outline: none;
 }
 .rail-btn.is-active:hover {
   opacity: 1;
-  color: #000;
+  color: var(--persona-accent, #759aef);
 }
 .rail-btn:hover:not(.is-active) {
   opacity: 1;
-  background: color-mix(in srgb, var(--persona-accent, #759aef) 18%, transparent);
+  background: color-mix(in srgb, #000 12%, transparent);
   color: #000;
 }
 .rail-btn:active {
@@ -519,6 +570,7 @@ body {
 .page-outer.view-home,
 .page-outer.view-profile {
   height: 100vh;
+  background-color: var(--card, #fff);
   /* Avoid overflow-x: visible + overflow-y: hidden (x resolves to auto and can
      still clip). Full visible lets the widened capsule paint; height + inner
      flex chains keep layout bounded. */
@@ -603,6 +655,11 @@ body {
   overflow-x: hidden;
   scrollbar-width: none;
   width: 100%;
+}
+
+.view-home .posts-capsule,
+.view-profile .profile-content-capsule {
+  border-color: var(--persona-accent, #759aef);
 }
 
 .view-home .posts-capsule::-webkit-scrollbar,
@@ -1256,7 +1313,7 @@ body {
   color: var(--post-accent);
   border: none;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1274,6 +1331,27 @@ body {
   border-radius: var(--radius-post-surface);
   object-fit: cover;
   display: block;
+}
+
+.post-avatar .persona-badge {
+  --persona-badge-size: calc(var(--post-avatar-size) * 0.22);
+  --persona-badge-border: max(3px, calc(var(--post-avatar-size) * 0.025));
+  right: calc(var(--post-avatar-size) * -0.035);
+  bottom: calc(var(--post-avatar-size) * -0.035);
+}
+
+.landing-preview-cap-avatar,
+.landing-preview-post-avatar {
+  position: relative;
+  overflow: visible;
+}
+
+.landing-preview-cap-avatar .persona-badge,
+.landing-preview-post-avatar .persona-badge {
+  --persona-badge-size: 22px;
+  --persona-badge-border: 3px;
+  right: -5px;
+  bottom: -5px;
 }
 
 .post-attachment {
@@ -1397,9 +1475,9 @@ body {
 
 .dashboard-action-pill {
   appearance: none;
-  border: none;
+  border: 2px solid #000;
   border-radius: var(--radius-pill);
-  background: var(--persona-accent, #759aef);
+  background: var(--card, #fff);
   color: #000;
   padding: 8px 12px;
   font-family: var(--font-avant);
@@ -1504,6 +1582,11 @@ body {
     border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.dashboard-hide-pill--armed .dashboard-hide-pill__bg-post,
+.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__bg-post {
+  border-radius: calc(var(--hide-pill-radius) - 18px);
+}
+
 .dashboard-hide-pill__avatar {
   width: 38%;
   max-width: 90px;
@@ -1560,22 +1643,26 @@ body {
   transform: scale(0.94);
 }
 
+.dashboard-hide-pill--normal {
+  background: var(--card, #fff);
+}
+
 /* ── STATE 2: armed (unhidden post highlighted) ──
    Stronger glow + larger radius + icon pops to 100% with a small scale-up. */
 @keyframes hide-pill-armed-glow {
   0%, 100% {
     box-shadow:
       0 0 0 0 transparent,
-      0 0 22px 4px color-mix(in srgb, var(--hide-pill-accent, #759aef) 75%, transparent),
-      0 0 44px 12px color-mix(in srgb, var(--hide-pill-accent, #759aef) 45%, transparent),
-      0 0 72px 24px color-mix(in srgb, var(--hide-pill-accent, #759aef) 22%, transparent);
+      0 0 22px 4px rgb(255 255 255 / 0.82),
+      0 0 44px 12px rgb(255 255 255 / 0.5),
+      0 0 72px 24px rgb(255 255 255 / 0.24);
   }
   50% {
     box-shadow:
       0 0 0 0 transparent,
-      0 0 32px 8px color-mix(in srgb, var(--hide-pill-accent, #759aef) 90%, transparent),
-      0 0 60px 18px color-mix(in srgb, var(--hide-pill-accent, #759aef) 55%, transparent),
-      0 0 96px 32px color-mix(in srgb, var(--hide-pill-accent, #759aef) 28%, transparent);
+      0 0 32px 8px rgb(255 255 255 / 0.95),
+      0 0 60px 18px rgb(255 255 255 / 0.62),
+      0 0 96px 32px rgb(255 255 255 / 0.32);
   }
 }
 
@@ -1603,15 +1690,15 @@ body {
 @keyframes hide-pill-hidden-glow {
   0%, 100% {
     box-shadow:
-      0 0 22px 4px color-mix(in srgb, var(--hide-pill-accent, #759aef) 75%, transparent),
-      0 0 44px 12px color-mix(in srgb, var(--hide-pill-accent, #759aef) 42%, transparent),
-      0 0 72px 24px color-mix(in srgb, var(--hide-pill-accent, #759aef) 20%, transparent);
+      0 0 22px 4px rgb(255 255 255 / 0.82),
+      0 0 44px 12px rgb(255 255 255 / 0.5),
+      0 0 72px 24px rgb(255 255 255 / 0.24);
   }
   50% {
     box-shadow:
-      0 0 32px 8px color-mix(in srgb, var(--hide-pill-accent, #759aef) 92%, transparent),
-      0 0 60px 18px color-mix(in srgb, var(--hide-pill-accent, #759aef) 55%, transparent),
-      0 0 96px 32px color-mix(in srgb, var(--hide-pill-accent, #759aef) 28%, transparent);
+      0 0 32px 8px rgb(255 255 255 / 0.95),
+      0 0 60px 18px rgb(255 255 255 / 0.62),
+      0 0 96px 32px rgb(255 255 255 / 0.32);
   }
 }
 
@@ -1643,6 +1730,60 @@ body {
   animation: hide-pill-icon-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+@keyframes hide-pill-select-morph-a {
+  0% {
+    border-radius: var(--radius-pill);
+    transform: scale(0.985);
+  }
+  60% {
+    border-radius: calc(var(--radius-pill) + 20px);
+    transform: scale(1.01);
+  }
+  100% {
+    border-radius: var(--hide-pill-radius);
+    transform: scale(1);
+  }
+}
+
+@keyframes hide-pill-select-morph-b {
+  0% {
+    border-radius: var(--radius-pill);
+    transform: scale(0.985);
+  }
+  60% {
+    border-radius: calc(var(--radius-pill) + 20px);
+    transform: scale(1.01);
+  }
+  100% {
+    border-radius: var(--hide-pill-radius);
+    transform: scale(1);
+  }
+}
+
+.dashboard-hide-pill--armed.dashboard-hide-pill--select-pulse-a {
+  animation:
+    hide-pill-select-morph-a 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    hide-pill-armed-glow 1.6s ease-in-out infinite;
+}
+
+.dashboard-hide-pill--armed.dashboard-hide-pill--select-pulse-b {
+  animation:
+    hide-pill-select-morph-b 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    hide-pill-armed-glow 1.6s ease-in-out infinite;
+}
+
+.dashboard-hide-pill--armed-hidden.dashboard-hide-pill--select-pulse-a {
+  animation:
+    hide-pill-select-morph-a 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    hide-pill-hidden-glow 1.6s ease-in-out infinite;
+}
+
+.dashboard-hide-pill--armed-hidden.dashboard-hide-pill--select-pulse-b {
+  animation:
+    hide-pill-select-morph-b 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    hide-pill-hidden-glow 1.6s ease-in-out infinite;
+}
+
 /* ── STATE 5: nudge ("Select a post first") ── */
 @keyframes hide-pill-error-wiggle {
   0%, 100% { transform: translateX(0) rotate(0deg); }
@@ -1663,6 +1804,7 @@ body {
 }
 
 .dashboard-hide-pill--nudge {
+  background: var(--card, #fff);
   animation: hide-pill-error-wiggle 460ms ease-in-out 1;
   /* Keep color/radius tweens; let the wiggle own transform */
   transition:
@@ -1671,6 +1813,10 @@ body {
     border-width 200ms ease,
     border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 280ms ease;
+}
+
+.dashboard-hide-pill--nudge .dashboard-hide-pill__bg-post {
+  filter: none;
 }
 
 .dashboard-hide-pill--nudge .dashboard-hide-pill__avatar,
@@ -1930,9 +2076,9 @@ body {
 
 .dashboard-timer-card {
   appearance: none;
-  border: none;
+  border: 2px solid #000;
   border-radius: var(--radius-post-surface);
-  background: var(--persona-accent, #759aef);
+  background: var(--card, #fff);
   color: #000;
   font-family: var(--font-avant);
   font-weight: 700;
@@ -1968,6 +2114,147 @@ body {
   cursor: not-allowed;
 }
 
+.dashboard-timer-card--update {
+  position: relative;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: clamp(10px, 1.4vh, 16px);
+  padding: clamp(14px, 1.8vh, 20px);
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, transparent 0 49.4%, rgba(0, 0, 0, 0.06) 49.4% 50.6%, transparent 50.6%),
+    linear-gradient(0deg, transparent 0 49.4%, rgba(0, 0, 0, 0.06) 49.4% 50.6%, transparent 50.6%),
+    var(--card, #fff);
+}
+
+.dashboard-update-label {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  width: fit-content;
+  padding: 5px 10px 6px;
+  border: 2px solid #000;
+  border-radius: 7px;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+}
+
+.dashboard-update-timer {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(78px, clamp(84px, 7.2vw, 108px));
+  align-items: center;
+  gap: clamp(8px, 1.2vw, 14px);
+}
+
+.dashboard-update-copy {
+  display: grid;
+  align-content: end;
+  gap: clamp(8px, 1vh, 11px);
+  min-width: 0;
+}
+
+.dashboard-update-time {
+  font-family: var(--font-avant);
+  font-size: clamp(40px, 4.6vw, 58px);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.8;
+  color: #000;
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+}
+
+.dashboard-update-caption {
+  max-width: 8.6rem;
+  color: #000;
+  font-size: clamp(10px, 0.95vw, 12px);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.dashboard-update-orbit {
+  position: relative;
+  justify-self: end;
+  width: clamp(84px, 7.2vw, 108px);
+  aspect-ratio: 1;
+}
+
+.dashboard-update-orbit-ring {
+  --timer-ring-deg: 180deg;
+  --timer-ring-stroke: 6px;
+  position: absolute;
+  inset: var(--timer-ring-inset, 0);
+  border-radius: 50%;
+  border: var(--timer-ring-stroke) solid #000;
+  background: conic-gradient(
+    from var(--timer-ring-from, -70deg),
+    #000 0 var(--timer-ring-deg),
+    color-mix(in srgb, var(--persona-accent, #759aef) 20%, #fff) var(--timer-ring-deg) 360deg
+  );
+  -webkit-mask: radial-gradient(
+    circle,
+    transparent 0 calc(50% - var(--timer-ring-stroke)),
+    #000 calc(50% - var(--timer-ring-stroke) + 1px)
+  );
+  mask: radial-gradient(
+    circle,
+    transparent 0 calc(50% - var(--timer-ring-stroke)),
+    #000 calc(50% - var(--timer-ring-stroke) + 1px)
+  );
+}
+
+.dashboard-update-orbit-ring--outer {
+  --timer-ring-inset: 0;
+  --timer-ring-stroke: clamp(7px, 0.7vw, 9px);
+  --timer-ring-deg: var(--timer-outer-deg, 355deg);
+  --timer-ring-from: -70deg;
+}
+
+.dashboard-update-orbit-ring--middle {
+  --timer-ring-inset: 17%;
+  --timer-ring-stroke: clamp(6px, 0.62vw, 8px);
+  --timer-ring-deg: var(--timer-middle-deg, 270deg);
+  --timer-ring-from: 28deg;
+}
+
+.dashboard-update-orbit-ring--inner {
+  --timer-ring-inset: 34%;
+  --timer-ring-stroke: clamp(5px, 0.55vw, 7px);
+  --timer-ring-deg: var(--timer-inner-deg, 185deg);
+  --timer-ring-from: 160deg;
+}
+
+.dashboard-update-orbit-core {
+  position: absolute;
+  inset: 42%;
+  border-radius: 50%;
+  border: 2px solid #000;
+  background: var(--persona-accent, #759aef);
+}
+
+.dashboard-update-orbit-dot {
+  position: absolute;
+  top: 17%;
+  right: 7%;
+  width: 12%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid #000;
+  background: var(--pop, #ccf847);
+}
+
 .dashboard-timer-card--harvest,
 .dashboard-timer-card--analysis,
 .dashboard-timer-card--generating {
@@ -1976,6 +2263,7 @@ body {
   padding: 0;
   min-height: 0;
   overflow: hidden;
+  border-radius: 22px;
 }
 
 /* Fills persona-side-panel height: small HIDE/RANKING row, two tall full-width rows, persona rings. */
@@ -1984,6 +2272,8 @@ body {
   --dashboard-pad: 18px;
   flex: 1 1 0;
   min-height: 0;
+  background: var(--persona-accent, #759aef);
+  border: none;
   padding: var(--dashboard-pad);
   gap: var(--dashboard-btn-gap);
   display: grid;
@@ -2016,7 +2306,8 @@ body {
 .dashboard-timer-card--status {
   background: var(--card, #fff);
   color: #000;
-  border: 2px solid var(--persona-accent, #759aef);
+  border: 2px solid #000;
+  border-radius: 22px;
   cursor: default;
   text-transform: none;
 }
@@ -2029,8 +2320,19 @@ body {
 }
 
 .dashboard-capsule--figma .dashboard-ring-card {
+  background: var(--ring-accent, #d8d8d8);
+  border: none;
   height: auto;
   align-self: start;
+}
+
+.dashboard-capsule--figma .dashboard-ring-card--dominant {
+  background: #000;
+  color: var(--ring-accent, #759aef);
+}
+
+.dashboard-capsule--figma .dashboard-ring-card--dominant .dashboard-ring-delta {
+  color: var(--ring-accent, #759aef);
 }
 
 /* ── LEADERBOARDS ── */
@@ -2041,4 +2343,3 @@ body {
   color: var(--muted);
   font-style: italic;
 }
-

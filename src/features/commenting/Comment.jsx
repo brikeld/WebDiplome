@@ -1,9 +1,12 @@
+import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
+
 export default function Comment({
   persona,
   content,
   displayName,
   avatarSrc,
   avatarInitials,
+  personaBadgePersona,
   staggerIndex = 0,
   metaLeft,
   metaCenter,
@@ -23,6 +26,7 @@ export default function Comment({
           ) : (
             <span>{avatarInitials}</span>
           )}
+          <PersonaBadge persona={personaBadgePersona ?? persona} />
         </div>
         <div className="commenting-comment-lead">
           <p className="commenting-comment-content">{content}</p>

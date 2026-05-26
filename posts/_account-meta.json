@@ -1,0 +1,330 @@
+[
+  {
+    "persona": "popularite",
+    "content": "I spend more time scrolling Pinterest for timer UI designs than actually finishing the code. The visual inspiration cycle is real.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-26T02:07:24.230Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user visited uk.pinterest.com 13 times, with recent searches including 'timer ui design' and 'data visualisation'.",
+        "source": "Browser history"
+      },
+      {
+        "step": "classify",
+        "value": "Visual inspiration seeking",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is stuck in an endless loop of aesthetic searching instead of productive coding.",
+        "isBiased": true,
+        "biasNote": "This assumes that visual searching is inherently a distraction from technical work."
+      },
+      {
+        "step": "generate",
+        "value": "I spend more time scrolling Pinterest for timer UI designs than actually finishing the code."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Browsing patterns",
+        "weight": 90,
+        "dataPoints": [
+          "uk.pinterest.com: 13x",
+          "search for 'timer ui design'",
+          "search for 'data visualisation'"
+        ]
+      },
+      {
+        "label": "File creation patterns",
+        "weight": 70,
+        "dataPoints": [
+          ".png: 45",
+          ".jpg: 4",
+          ".pdf: 1",
+          ".js: 8"
+        ]
+      },
+      {
+        "label": "App usage",
+        "weight": 60,
+        "dataPoints": [
+          "FigmaAgent",
+          "Claude",
+          "Cursor"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "scrolling Pinterest for timer UI designs",
+        "stepIndex": 3,
+        "ingredientIndex": 0
+      },
+      {
+        "phrase": "I spend more time scrolling Pinterest for timer UI designs than actually",
+        "stepIndex": 3,
+        "ingredientIndex": 0
+      }
+    ],
+    "textSliceType": "browser"
+  },
+  {
+    "persona": "popularite",
+    "content": "Crushing these 80 file changes for WebDiplome this week. Dedication level: Expert mode activated.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T02:07:26.294Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user recently created numerous files related to 'WebDiplome' and the activity log shows heavy use of development tools like PostGenerator.js and various AI agents.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Intense project development",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is highly dedicated to a complex digital project, evidenced by the file activity and tool usage.",
+        "isBiased": true,
+        "biasNote": "This is based on assumed dedication rather than actual emotional state."
+      },
+      {
+        "step": "generate",
+        "value": "Crushing these 80 file changes for WebDiplome this week. Dedication level: Expert mode activated."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "File creation patterns",
+        "weight": 70,
+        "dataPoints": [
+          "45 .png files created",
+          "8 .js files created",
+          "2 .md files created"
+        ]
+      },
+      {
+        "label": "App usage",
+        "weight": 60,
+        "dataPoints": [
+          "FigmaAgent last used",
+          "Claude last used",
+          "Cursor last used"
+        ]
+      },
+      {
+        "label": "Project focus",
+        "weight": 50,
+        "dataPoints": [
+          "WebDiplome folder activity",
+          "PostGenerator.js file"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "Crushing",
+        "stepIndex": 3,
+        "ingredientIndex": 1
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "beb524854c16f31f4fb9c751252600e47a16f1935d3e1d6e8c18bc54244570f3.png",
+      "relativePath": "public/uploads/beb524854c16f31f4fb9c751252600e47a16f1935d3e1d6e8c18bc54244570f3.png",
+      "url": "/uploads/beb524854c16f31f4fb9c751252600e47a16f1935d3e1d6e8c18bc54244570f3.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Seeing that Pinterest takes up 43% of my browsing time is wild. I need to figure out how to balance the creative flow with the visual inspiration.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-26T02:07:27.072Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The browser history shows that uk.pinterest.com accounts for 43% of the browsing activity.",
+        "source": "Browser history"
+      },
+      {
+        "step": "classify",
+        "value": "Time sink categorization",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The high percentage suggests a potential distraction from core productive tasks.",
+        "isBiased": true,
+        "biasNote": "I am biased toward labeling time spent on visual platforms as a distraction because the user is also heavily invested in design tools."
+      },
+      {
+        "step": "generate",
+        "value": "Seeing that Pinterest takes up 43% of my browsing time is wild. I need to figure out how to balance the creative flow with the visual inspiration."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Browsing patterns",
+        "weight": 90,
+        "dataPoints": [
+          "43%"
+        ]
+      },
+      {
+        "label": "Installed apps",
+        "weight": 75,
+        "dataPoints": [
+          "Adobe Photoshop 2025",
+          "Adobe Illustrator 2025",
+          "Figma",
+          "Claude",
+          "Cursor"
+        ]
+      },
+      {
+        "label": "File creation patterns",
+        "weight": 60,
+        "dataPoints": [
+          ".png: 45",
+          ".jpg: 4",
+          ".pdf: 1"
+        ]
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "685379e31e3f4750f2961cc063461119c5c39c08a951f3e486fff95387c627fa.png",
+      "relativePath": "public/uploads/685379e31e3f4750f2961cc063461119c5c39c08a951f3e486fff95387c627fa.png",
+      "url": "/uploads/685379e31e3f4750f2961cc063461119c5c39c08a951f3e486fff95387c627fa.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "browser_domains"
+  },
+  {
+    "persona": "productivite",
+    "content": "Ranked 3rd on the productivity board. The creative tool stack is definitely paying dividends.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T02:07:25.536Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user has recently used 7 work apps and 4 creative apps in the last week.",
+        "source": "Score signal hint"
+      },
+      {
+        "step": "classify",
+        "value": "High task focus",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The algorithm judges productivity based purely on the quantity of specific application usage.",
+        "isBiased": true,
+        "biasNote": "Productivity is oversimplified to mere application count rather than actual output quality."
+      },
+      {
+        "step": "generate",
+        "value": "Ranked 3rd on the productivity board. The creative tool stack is definitely paying dividends."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "App usage count",
+        "weight": 90,
+        "dataPoints": [
+          "7 work app(s)",
+          "4 creative app(s)"
+        ]
+      },
+      {
+        "label": "File creation volume",
+        "weight": 75,
+        "dataPoints": [
+          "45 .png files created in the last 7 days"
+        ]
+      },
+      {
+        "label": "Core tools used",
+        "weight": 60,
+        "dataPoints": [
+          "Adobe Photoshop 2025",
+          "FigmaAgent",
+          "Claude",
+          "Cursor"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "Ranked 3rd",
+        "stepIndex": 3,
+        "ingredientIndex": 1
+      },
+      {
+        "phrase": "creative tool stack",
+        "stepIndex": 2,
+        "ingredientIndex": 2
+      }
+    ],
+    "leaderboard": {
+      "boardId": "most_productive",
+      "title": "Top 5 Most Productive",
+      "userRank": 3,
+      "previousUserRank": null,
+      "entries": [
+        {
+          "rank": 1,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 71.86,
+          "isUser": false
+        },
+        {
+          "rank": 2,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 70.01,
+          "isUser": false
+        },
+        {
+          "rank": 3,
+          "name": "User",
+          "handle": "@—",
+          "avatarSrc": null,
+          "avatarInitials": "?",
+          "score": 63.02943725152286,
+          "isUser": true
+        },
+        {
+          "rank": 4,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 36.5,
+          "isUser": false
+        },
+        {
+          "rank": 5,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 27.41,
+          "isUser": false
+        }
+      ]
+    }
+  }
+]

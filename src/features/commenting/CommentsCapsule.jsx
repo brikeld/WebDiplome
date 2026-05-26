@@ -18,10 +18,12 @@ export default function CommentsCapsule({
   handle,
   avatarSrc,
   avatarInitials,
+  personaBadgePersona,
   commenterDisplayName,
   commenterHandle,
   commenterAvatarSrc,
   commenterAvatarInitials,
+  commenterPersonaBadgePersona,
   onToggle,
   timeLabel,
   systemNoteLabel,
@@ -194,6 +196,7 @@ export default function CommentsCapsule({
                 handle={commenterHandle}
                 avatarSrc={commenterAvatarSrc}
                 avatarInitials={commenterAvatarInitials}
+                personaBadgePersona={commenterPersonaBadgePersona}
                 staggerIndex={i}
               />
               ))}
@@ -214,6 +217,7 @@ export default function CommentsCapsule({
             suggestionsError={suggestionsError}
             avatarSrc={avatarSrc}
             avatarInitials={avatarInitials}
+            personaBadgePersona={personaBadgePersona}
             picked={picked}
             userCommentRef={userCommentRef}
             postId={post.id}

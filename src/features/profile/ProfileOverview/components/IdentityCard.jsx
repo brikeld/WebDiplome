@@ -1,3 +1,5 @@
+import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
+
 function accountAge(dateStr) {
   const created = new Date(dateStr);
   const now = new Date();
@@ -20,6 +22,7 @@ export default function IdentityCard({ profile, identity, behavioral }) {
         <div className="po-avatar-wrap">
           <div className="po-avatar">
             <span className="po-avatar-initials">{initials(profile.username)}</span>
+            <PersonaBadge profile={profile} />
           </div>
           <span
             className="po-status-dot"

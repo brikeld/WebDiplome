@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 
 const PERSONAS = [
   {
@@ -222,7 +223,10 @@ export default function LandingTab({ onEnterDemo }) {
           </div>
 
           <div className="landing-preview-hero">
-            <div className="landing-preview-cap-avatar" aria-hidden>AJ</div>
+            <div className="landing-preview-cap-avatar" aria-hidden>
+              AJ
+              <PersonaBadge persona="security" />
+            </div>
             <div className="landing-preview-hero-main">
               <div className="landing-preview-hero-left">
                 <div className="landing-preview-name">Alex Johnson</div>
@@ -256,7 +260,10 @@ export default function LandingTab({ onEnterDemo }) {
               >
                 <div className="landing-preview-post-bubble">
                   <div className="landing-preview-post-head">
-                    <div className="landing-preview-post-avatar" aria-hidden>{post.initials}</div>
+                    <div className="landing-preview-post-avatar" aria-hidden>
+                      {post.initials}
+                      <PersonaBadge persona="security" />
+                    </div>
                     <div className="landing-preview-post-text">
                       <p className="landing-preview-post-lead">{post.content}</p>
                       <div className="landing-preview-post-byline">

@@ -1,4 +1,5 @@
 import MainScoreStyle from '@/features/profile/MainScoreStyle.jsx';
+import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 import {
   displayNameFromProfile,
   getCenterDisplayScore,
@@ -10,6 +11,7 @@ import {
 export default function ProfileHeader({
   profile,
   personaColor = 'var(--prod)',
+  personaBadgePersona = null,
   mainScoreEntryReplayKey = 0,
 }) {
   const name = displayNameFromProfile(profile ?? {});
@@ -35,6 +37,7 @@ export default function ProfileHeader({
       ) : (
         <span className="profile-cap-avatar-initials">{initials}</span>
       )}
+      <PersonaBadge persona={personaBadgePersona} profile={profile ?? {}} />
     </div>
   );
 

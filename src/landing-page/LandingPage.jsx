@@ -1,4 +1,5 @@
 import PostCard from '../features/feed/PostCard.jsx';
+import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 import './landingPage.css';
 
 const PERSONAS = [
@@ -107,6 +108,7 @@ function ProfileHeaderPreview() {
         <div className="profile-hero-capsule">
           <div className="profile-cap-avatar" aria-hidden style={{ '--cap-avatar-stroke': '#759AEF' }}>
             <img className="profile-cap-avatar-img" src="/imgs/AlexP.png" alt="" />
+            <PersonaBadge persona="security" />
           </div>
           <div className="profile-hero-main">
             <div className="profile-hero-left">
@@ -199,6 +201,7 @@ export default function LandingPage({ onEnterDemo }) {
                     systemDeltaPct: Math.abs(parseInt(post.delta, 10)),
                     persona: post.persona,
                     avatarSrc: '/imgs/AlexP.png',
+                    personaBadgePersona: 'security',
                     attachedAsset: post.attachment?.type === 'photo' ? {
                       kind: 'image',
                       url: post.attachment.url,

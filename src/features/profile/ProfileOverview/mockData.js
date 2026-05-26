@@ -3,6 +3,7 @@ const mockData = {
     user_id: 'brikeld_001',
     username: 'Brikeld Hoxha',
     profile_picture: 'profile.jpg',
+    dominantPersona: 'security',
     status: 'online',
     last_activity: '3d & 8 hours ago',
     account_created: '2024-06-15',

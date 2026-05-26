@@ -13,6 +13,11 @@ import {
 import HarvestScreen from '@/features/harvest/HarvestScreen.jsx';
 import PersonaDeltaSummary from '@/features/harvest/PersonaDeltaSummary.jsx';
 import GeneratingContentLabel from '@/features/harvest/GeneratingContentLabel.jsx';
+import {
+  DASHBOARD_UPDATE_INTERVAL_MS,
+  formatDashboardCountdown,
+  getDashboardTimerRingModel,
+} from '@/features/harvest/dashboardUpdateFlow.js';
 import '@/features/harvest/harvest.css';
 import TellMeMorePill from '@/features/inferenceChain/TellMeMorePill.jsx';
 import '@/features/inferenceChain/inferenceChain.css';
@@ -135,7 +140,6 @@ const HARVEST_WAIT_MS = 12 * 60 * 1000;
 const PERSONA_DELTA_DISPLAY_MS = 7000;
 /** Ring score deltas (= / + / −) stay after generation finishes. */
 const PERSONA_RING_DELTA_CLEAR_MS = 15_000;
-
 const POST_GEN_IDLE = { loading: false, phase: 'idle', error: null };
 
 function computePersonaDeltas(before, after) {
@@ -198,13 +202,31 @@ function AppInner({
     useLiveScoring();
   const [confirmingHide, setConfirmingHide] = useState(false);
   const [highlightedPost, setHighlightedPost] = useState(null);
+  const [selectionPulseFlip, setSelectionPulseFlip] = useState(false);
   const [hideNudge, setHideNudge] = useState(false);
   const [tellExpanded, setTellExpanded] = useState(false);
+  const updateTimerStartRef = useRef(Date.now());
+  const [updateRemainingMs, setUpdateRemainingMs] = useState(DASHBOARD_UPDATE_INTERVAL_MS);
 
   const personaKey = personaOverride ?? liveDominantPersona;
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
   const personaToggleLabel =
     personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
+  const updateTimerLabel = formatDashboardCountdown(updateRemainingMs);
+  const updateTimerRings = getDashboardTimerRingModel(
+    updateRemainingMs,
+    DASHBOARD_UPDATE_INTERVAL_MS,
+  );
+
+  useEffect(() => {
+    const tick = () => {
+      const elapsed = (Date.now() - updateTimerStartRef.current) % DASHBOARD_UPDATE_INTERVAL_MS;
+      setUpdateRemainingMs(DASHBOARD_UPDATE_INTERVAL_MS - elapsed);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const dashboardRingOrder = useMemo(() => {
     const others = PERSONA_KEYS.filter((k) => k !== personaKey);
@@ -219,11 +241,15 @@ function AppInner({
   };
 
   const handleHighlightPost = useCallback((post) => {
-    setHighlightedPost((prev) => (prev?.id === post.id ? null : post));
+    const isDeselect = highlightedPost?.id === post.id;
+    setHighlightedPost(isDeselect ? null : post);
+    if (!isDeselect) {
+      setSelectionPulseFlip((prev) => !prev);
+    }
     setConfirmingHide(false);
     setHideNudge(false); // dismiss "select a post first" immediately when user picks one
     setTellExpanded(false); // close any open inference-chain panel when selection changes
-  }, []);
+  }, [highlightedPost?.id]);
 
   const highlightedPostIsHidden = highlightedPost
     ? isHidden(normalizePostHideKey(highlightedPost.createdAt))
@@ -317,6 +343,7 @@ function AppInner({
                 isGeneratingPosts={postGen.phase === 'generating'}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
+                personaBadgePersona={personaKey}
               />
             </ScrollArea>
           </div>
@@ -326,6 +353,7 @@ function AppInner({
           <ProfileView
             profile={profile}
             personaColor={personaColor}
+            personaBadgePersona={personaKey}
             activeTab={activeTab}
             onTabChange={setActiveTab}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
@@ -464,12 +492,15 @@ function AppInner({
                   stateModifier = 'dashboard-hide-pill--armed-hidden';
                 else if (highlightedPost)
                   stateModifier = 'dashboard-hide-pill--armed';
+                const selectionPulseClass = highlightedPost
+                  ? ` dashboard-hide-pill--select-pulse-${selectionPulseFlip ? 'b' : 'a'}`
+                  : '';
 
                 return (
                   <div className="dashboard-actions-row">
                     <button
                       type="button"
-                      className={`dashboard-hide-pill ${stateModifier}`}
+                      className={`dashboard-hide-pill ${stateModifier}${selectionPulseClass}`}
                       onClick={handleDashboardHide}
                       disabled={!profile}
                       style={pillStyle}
@@ -516,7 +547,10 @@ function AppInner({
                     className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide dashboard-timer-card--status dashboard-timer-card--analysis"
                     aria-live="polite"
                   >
-                    <PersonaDeltaSummary deltas={personaDeltas} />
+                    <PersonaDeltaSummary
+                      deltas={personaDeltas}
+                      scores={adjustedScores}
+                    />
                   </div>
                 ) : postGen.phase === 'generating' ? (
                   <div
@@ -528,11 +562,37 @@ function AppInner({
                 ) : (
                   <button
                     type="button"
-                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide"
+                    className="dashboard-timer-card dashboard-timer-card--primary dashboard-timer-card--wide dashboard-timer-card--update"
                     disabled={postGen.loading || !profile}
                     onClick={handleGeneratePersonaPosts}
                   >
-                    next analysis in 10 minutes
+                    <span className="dashboard-update-label">next update</span>
+                    <span
+                      className="dashboard-update-timer"
+                      aria-label={`Next update in ${updateTimerLabel}`}
+                    >
+                      <span className="dashboard-update-copy">
+                        <span className="dashboard-update-time">{updateTimerLabel}</span>
+                        <span className="dashboard-update-caption">
+                          next collection window
+                        </span>
+                      </span>
+                      <span
+                        className="dashboard-update-orbit"
+                        style={{
+                          '--timer-outer-deg': `${updateTimerRings.outer}deg`,
+                          '--timer-middle-deg': `${updateTimerRings.middle}deg`,
+                          '--timer-inner-deg': `${updateTimerRings.inner}deg`,
+                        }}
+                        aria-hidden
+                      >
+                        <span className="dashboard-update-orbit-ring dashboard-update-orbit-ring--outer" />
+                        <span className="dashboard-update-orbit-ring dashboard-update-orbit-ring--middle" />
+                        <span className="dashboard-update-orbit-ring dashboard-update-orbit-ring--inner" />
+                        <span className="dashboard-update-orbit-core" />
+                        <span className="dashboard-update-orbit-dot" />
+                      </span>
+                    </span>
                     {postGen.error ? (
                       <span className="generate-posts-error" role="alert">
                         {postGen.error}
@@ -544,6 +604,7 @@ function AppInner({
               <div className="dashboard-tell-row">
                 <TellMeMorePill
                   highlightedPost={highlightedPost}
+                  selectionPulseFlip={selectionPulseFlip}
                   expanded={tellExpanded}
                   onExpand={() => setTellExpanded(true)}
                   onCollapse={() => setTellExpanded(false)}

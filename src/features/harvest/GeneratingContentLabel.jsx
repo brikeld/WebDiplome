@@ -43,24 +43,24 @@ export default function GeneratingContentLabel() {
       aria-live="polite"
       aria-label={`${personaLabel}: ${phrase.text}`}
     >
-      <p
-        // `key` on the persona tag + label triggers the fade animation each
-        // time the phrase swaps. Without it, the element is reused and the
-        // CSS animation never re-runs.
+      <div className="generating-content-rail" aria-hidden>
+        <span />
+        <span data-active="true" />
+        <span />
+      </div>
+      <div
+        // `key` triggers the fade animation each time the phrase swaps.
         key={index}
-        className="generating-content-line"
+        className="generating-content-copy"
       >
-        <span
-          className="generating-content-tag"
-          data-persona={phrase.persona}
-        >
-          [{personaLabel}]
+        <span className="generating-content-tag" data-persona={phrase.persona}>
+          {personaLabel.toLowerCase()}
         </span>
-        <span className="generating-content-text">
+        <p className="generating-content-text">
           {phrase.text}
           <GeneratingEllipsis />
-        </span>
-      </p>
+        </p>
+      </div>
     </div>
   );
 }

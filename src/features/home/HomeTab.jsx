@@ -5,6 +5,7 @@ export default function HomeTab({
   isGeneratingPosts = false,
   highlightedPostId = null,
   onHighlightPost,
+  personaBadgePersona = null,
 }) {
   return (
     <div className="home-tab">
@@ -15,6 +16,7 @@ export default function HomeTab({
         isGeneratingPosts={isGeneratingPosts}
         highlightedPostId={highlightedPostId}
         onHighlightPost={onHighlightPost}
+        personaBadgePersona={personaBadgePersona}
       />
     </div>
   );

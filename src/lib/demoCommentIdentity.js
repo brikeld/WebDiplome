@@ -4,4 +4,5 @@ export const DEMO_OTHER_COMMENTER = {
   handle: '@AlexLaptop',
   avatarSrc: '/imgs/AlexP.png',
   avatarInitials: 'AJ',
+  personaBadgePersona: 'security',
 };

@@ -1,64 +1,74 @@
-const PERSONA_DELTA_LINES = [
-  { key: 'productivity', label: 'productivity', color: '#D8D8D8' },
-  { key: 'social', label: 'social', color: '#CCF847' },
-  { key: 'security', label: 'security', color: '#759AEF' },
+const PERSONA_DELTA_CARDS = [
+  {
+    key: 'productivity',
+    scoreKey: 'productivity',
+    label: 'productivity',
+    color: '#D8D8D8',
+  },
+  {
+    key: 'security',
+    scoreKey: 'security',
+    label: 'security',
+    color: '#759AEF',
+  },
+  {
+    key: 'social',
+    scoreKey: 'social',
+    label: 'social',
+    color: '#CCF847',
+  },
 ];
 
-function DeltaValue({ delta, color }) {
+function formatDelta(delta) {
   const n = Number(delta);
-  if (!Number.isFinite(n) || n === 0) return null;
-  const text = n > 0 ? `+${n}` : String(n);
-  return (
-    <span className="persona-delta-summary__value" style={{ color }}>
-      {text}
-    </span>
-  );
+  if (!Number.isFinite(n)) return '—';
+  if (n > 0) return `+${n}`;
+  if (n < 0) return String(n);
+  return '=';
 }
 
-function lineCopy(label, delta, color) {
+function deltaMod(delta) {
   const n = Number(delta);
-  if (!Number.isFinite(n)) {
-    return (
-      <>
-        your {label} persona has <span className="persona-delta-summary__muted">no data</span>
-      </>
-    );
-  }
-  if (n > 0) {
-    return (
-      <>
-        your {label} persona has improved by{' '}
-        <DeltaValue delta={n} color={color} />
-      </>
-    );
-  }
-  if (n < 0) {
-    return (
-      <>
-        your {label} persona has declined by{' '}
-        <span className="persona-delta-summary__value" style={{ color }}>
-          {Math.abs(n)}
-        </span>
-      </>
-    );
-  }
-  return <>your {label} persona has not changed</>;
+  if (!Number.isFinite(n) || n === 0) return 'flat';
+  return n > 0 ? 'up' : 'down';
 }
 
-export default function PersonaDeltaSummary({ deltas }) {
+function formatScore(score) {
+  const n = Number(score);
+  if (!Number.isFinite(n)) return null;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+export default function PersonaDeltaSummary({ deltas, scores }) {
   if (!deltas) return null;
 
   return (
     <div className="persona-delta-summary" role="status" aria-live="polite">
-      <ul className="persona-delta-summary__list">
-        {PERSONA_DELTA_LINES.map(({ key, label, color }) => (
-          <li key={key} className="persona-delta-summary__line">
-            <span className="persona-delta-summary__text">
-              {lineCopy(label, deltas[key], color)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="persona-delta-summary__grid">
+        {PERSONA_DELTA_CARDS.map(({ key, scoreKey, label, color }, i) => {
+          const score = formatScore(scores?.[scoreKey]);
+          const delta = deltas[key];
+          return (
+            <article
+              key={key}
+              className={`persona-delta-card persona-delta-card--${key}${
+                i === 0 ? ' persona-delta-card--main' : ''
+              }`}
+              style={{ '--delta-card-color': color }}
+            >
+              <span className="persona-delta-card__label">{label}</span>
+              <span
+                className={`persona-delta-card__delta persona-delta-card__delta--${deltaMod(delta)}`}
+              >
+                {formatDelta(delta)}
+              </span>
+              {score != null ? (
+                <span className="persona-delta-card__score">{score}% current</span>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }

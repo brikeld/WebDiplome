@@ -14,6 +14,7 @@ export default function ProfileView({
   onTabChange,
   mainScoreEntryReplayKey,
   isGeneratingPosts,
+  personaBadgePersona = null,
 }) {
   const handleLabel = machineHandleFromProfile(profile);
 
@@ -36,6 +37,7 @@ export default function ProfileView({
                   feedContext="profile"
                   hideInteractions
                   isGeneratingPosts={isGeneratingPosts}
+                  personaBadgePersona={personaBadgePersona}
                 />
               )}
               {activeTab === 'leaderboards' && <LeaderboardsTab />}
@@ -53,6 +55,7 @@ export default function ProfileView({
           <ProfileHeader
             profile={profile}
             personaColor={personaColor}
+            personaBadgePersona={personaBadgePersona}
             mainScoreEntryReplayKey={mainScoreEntryReplayKey}
           />
           <TabBar

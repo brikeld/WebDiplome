@@ -54,12 +54,13 @@
   background: radial-gradient(circle at 50% 35%, #ffd700 0%, #ff8c00 100%);
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .profile-cap-avatar-img {
   width: 100%;
   height: 100%;
+  border-radius: inherit;
   object-fit: cover;
   display: block;
 }
@@ -252,6 +253,14 @@
   --profile-ring-avatar-size: calc(var(--profile-score-size) * var(--profile-ring-photo-ratio, 0.3));
 }
 
+.profile-cap-avatar .persona-badge {
+  --persona-badge-size: 26%;
+  --persona-badge-border: 3px;
+  right: -4%;
+  bottom: -4%;
+  font-size: max(10px, calc(13px * var(--profile-hero-scale, 1)));
+}
+
 /* Photo centered inside innermost persona ring (MainScoreStyle hole ≈ 36% of diameter) */
 .profile-ring-avatar {
   position: absolute;
@@ -267,7 +276,7 @@
   background: radial-gradient(circle at 50% 35%, #ffd700 0%, #ff8c00 100%);
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -275,6 +284,14 @@
 .profile-ring-avatar .profile-cap-avatar-initials {
   width: 100%;
   height: 100%;
+  border-radius: inherit;
+}
+
+.profile-ring-avatar .persona-badge {
+  --persona-badge-size: calc(var(--profile-ring-avatar-size) * 0.34);
+  --persona-badge-border: max(2px, calc(var(--profile-ring-avatar-size) * 0.04));
+  right: calc(var(--profile-ring-avatar-size) * -0.065);
+  bottom: calc(var(--profile-ring-avatar-size) * -0.065);
 }
 
 .profile-ring-avatar .profile-cap-avatar-initials {
@@ -467,6 +484,8 @@ button.profile-last-analysis-pill:disabled {
 
 /* Right rail: persona-filled shell (dashboard-capsule) + inverted inner chrome */
 .profile-rail-capsule.dashboard-capsule {
+  background: var(--persona-accent, #759aef);
+  border: none;
   gap: 12px;
 }
 
@@ -485,8 +504,8 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-rings-gutter: 10px;
   --profile-rail-text-gap: 14px;
   margin-top: 0;
-  background: var(--persona-accent, #759aef);
-  border-color: var(--persona-accent, #759aef);
+  background: var(--card, #fff);
+  border: none;
 }
 
 .profile-rail-capsule .profile-name-handle-stack {
@@ -803,4 +822,3 @@ button.profile-last-analysis-pill:disabled {
     font-size: clamp(22px, 3.2vw, 36px);
   }
 }
-

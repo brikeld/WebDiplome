@@ -149,6 +149,7 @@
 }
 
 .po-avatar {
+  position: relative;
   width: 80px;
   height: 80px;
   border-radius: 50%;
@@ -156,7 +157,14 @@
   background: color-mix(in srgb, var(--persona-accent, #2323ff) 15%, #fff);
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
+}
+
+.po-avatar .persona-badge {
+  --persona-badge-size: 24px;
+  --persona-badge-border: 3px;
+  right: -4px;
+  bottom: -4px;
 }
 
 .po-avatar-initials {
@@ -169,7 +177,7 @@
 
 .po-status-dot {
   position: absolute;
-  bottom: 4px;
+  top: 4px;
   right: 4px;
   width: 14px;
   height: 14px;

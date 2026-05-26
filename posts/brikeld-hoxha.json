@@ -1,13 +1,13 @@
 [
   {
     "persona": "securite",
-    "content": "Another day fueled by caffeine and code, hopping between Ginevra Cafe' and COFFEE PAGE. Switzerland sure knows how to blend productivity with a good latte.",
+    "content": "Just another Tuesday fueled by COFFEE PAGE and the existential dread of generating perfect design flow.",
     "sentiment": "positive",
-    "createdAt": "2026-05-25T15:47:20.622Z",
+    "createdAt": "2026-05-26T02:10:03.749Z",
     "inferenceChain": [
       {
         "step": "data",
-        "value": "The user has connected to WiFi networks including \"Ginevra Cafe'\" and \"COFFEE PAGE\".",
+        "value": "The user has a list of WiFi networks including 'Ginevra Cafe' and 'COFFEE PAGE'.",
         "source": "WiFi networks"
       },
       {
@@ -17,149 +17,78 @@
       },
       {
         "step": "infer",
-        "value": "The user frequently connects to specific café or coffee-themed networks, implying a pattern of seeking out places for work.",
+        "value": "The user is frequently connected to places suggesting a café or coffee shop, implying a pattern of working in public spaces.",
         "isBiased": true,
-        "biasNote": "This assumes that connecting to these networks is directly tied to the user's workflow."
+        "biasNote": "This assumes that frequent connection to café networks directly correlates with the user's daily activity."
       },
       {
         "step": "generate",
-        "value": "Another day fueled by caffeine and code, hopping between Ginevra Cafe' and COFFEE PAGE."
+        "value": "Just another Tuesday fueled by COFFEE PAGE and the existential dread of generating perfect design flow."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Location signals",
+        "weight": 90,
+        "dataPoints": [
+          "Ginevra Cafe'",
+          "COFFEE PAGE",
+          "Brew-morges",
+          "HungryBear"
+        ]
+      },
+      {
+        "label": "Browsing patterns",
+        "weight": 75,
+        "dataPoints": [
+          "Figma",
+          "Claude",
+          "Cursor"
+        ]
+      },
+      {
+        "label": "File creation patterns",
+        "weight": 60,
+        "dataPoints": [
+          ".png: 46",
+          ".js: 8",
+          ".pdf: 1"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "COFFEE PAGE",
+        "stepIndex": 0,
+        "ingredientIndex": 0
+      },
+      {
+        "phrase": "generating perfect design flow",
+        "stepIndex": 3,
+        "ingredientIndex": 2
       }
     ],
     "textSliceType": "wifi"
   },
   {
     "persona": "popularite",
-    "content": "Just hit 37 PNGs this week while deep in the visual creation zone. The workflow is intense!",
+    "content": "My identity radar chart looks pretty wild when you map all the data points. Time to figure out what this shape actually means.",
     "sentiment": "positive",
-    "createdAt": "2026-05-25T15:47:21.922Z",
-    "inferenceChain": [
-      {
-        "step": "data",
-        "value": "The image contains a chat conversation snippet mentioning \"37 PNGs in the last week\" and referring to being in the \"design/visual creation zone.\"",
-        "source": "Screenshot library"
-      },
-      {
-        "step": "classify",
-        "value": "Creative workflow reflection",
-        "confidence": "high"
-      },
-      {
-        "step": "infer",
-        "value": "The user is reflecting on a high volume of creative output, suggesting an intense but productive period.",
-        "isBiased": true,
-        "biasNote": "This assumes that a high number of created assets necessarily equates to positive productivity."
-      },
-      {
-        "step": "generate",
-        "value": "Just hit 37 PNGs this week while deep in the visual creation zone. The workflow is intense!"
-      }
-    ],
-    "ingredients": [
-      {
-        "label": "Recent files",
-        "weight": 90,
-        "dataPoints": [
-          "43 .png files created"
-        ]
-      },
-      {
-        "label": "App usage",
-        "weight": 60,
-        "dataPoints": [
-          "Figma",
-          "FigmaAgent",
-          "Adobe Photoshop 2025",
-          "Adobe Illustrator 2025"
-        ]
-      },
-      {
-        "label": "File creation patterns",
-        "weight": 40,
-        "dataPoints": [
-          ".png: 43",
-          ".pdf: 1",
-          ".js: 9"
-        ]
-      }
-    ],
-    "highlights": [
-      {
-        "phrase": "The workflow is intense!",
-        "stepIndex": 3,
-        "ingredientIndex": 1
-      }
-    ],
+    "createdAt": "2026-05-26T02:09:57.500Z",
     "attachedAsset": {
       "kind": "image",
-      "filename": "7f0d21ea5c1e59efe476ac15d03b1ed1763a00bf8bcbbf5f743882633b46f9ce.png",
-      "relativePath": "public/uploads/7f0d21ea5c1e59efe476ac15d03b1ed1763a00bf8bcbbf5f743882633b46f9ce.png",
-      "url": "/uploads/7f0d21ea5c1e59efe476ac15d03b1ed1763a00bf8bcbbf5f743882633b46f9ce.png",
+      "filename": "8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "relativePath": "public/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "url": "/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
       "mime": "image/png",
       "visionAnalysed": true
     }
   },
   {
     "persona": "productivite",
-    "content": "43 PNG files created in the last 7 days is wild. It shows how much visual work I've been doing lately.",
+    "content": "Man, looking at my app categories, 17 apps fall into 'Other'—it seems I'm swimming in creative and dev tools more than anything else right now.",
     "sentiment": "positive",
-    "createdAt": "2026-05-25T15:47:17.748Z",
-    "inferenceChain": [
-      {
-        "step": "data",
-        "value": "43 .png files were found in the recent file creation patterns.",
-        "source": "File creation patterns"
-      },
-      {
-        "step": "classify",
-        "value": "High creative output",
-        "confidence": "high"
-      },
-      {
-        "step": "infer",
-        "value": "Creating that many images suggests a strong focus on visual content.",
-        "isBiased": true,
-        "biasNote": "This is a superficial judgment based only on file counts, not actual creative quality."
-      },
-      {
-        "step": "generate",
-        "value": "43 PNG files created in the last 7 days is wild. It shows how much visual work I've been doing lately."
-      }
-    ],
-    "ingredients": [
-      {
-        "label": "Recent files",
-        "weight": 90,
-        "dataPoints": [
-          "43 .png files",
-          "5 .jpg files"
-        ]
-      },
-      {
-        "label": "File creation patterns",
-        "weight": 85,
-        "dataPoints": [
-          ".png: 43",
-          ".jpg: 5"
-        ]
-      },
-      {
-        "label": "Installed apps",
-        "weight": 60,
-        "dataPoints": [
-          "Adobe Photoshop 2025",
-          "Adobe Illustrator 2025",
-          "Blender 4.5.3 LTS"
-        ]
-      }
-    ],
-    "highlights": [
-      {
-        "phrase": "visual work I've been doing lately",
-        "stepIndex": 2,
-        "ingredientIndex": 2
-      }
-    ],
+    "createdAt": "2026-05-26T02:10:03.172Z",
     "attachedAsset": {
       "kind": "image",
       "filename": "91a14a97ed94127115296dff165ba151d231c918ce6a3c486e1a0a8660f9402d.png",
@@ -172,81 +101,98 @@
   },
   {
     "persona": "productivite",
-    "content": "Spent time wrestling with FigmaAgent and Claude to automate some design pipelines. The AI workflow is getting wild.",
+    "content": "Ranked 3 on the productivity board. Looks like all that AI and creative work finally paid off. The algorithm sees what I see.",
     "sentiment": "positive",
-    "createdAt": "2026-05-25T15:16:41.774Z",
-    "textSliceType": "app_usage"
-  },
-  {
-    "persona": "popularite",
-    "content": "80 file changes in a week! This WebDiplome project is a serious dedication, but the grind is real. 💪",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T15:16:41.660Z",
+    "createdAt": "2026-05-26T02:10:10.806Z",
     "inferenceChain": [
       {
         "step": "data",
-        "value": "The image shows a user posting text that includes the phrase \"80 file changes in a week serious dedication to your WebDiplome project.\""
+        "value": "The user has a large number of files created, including post-generation scripts and design assets like '491ff94ca34a31a73d427a292c1a42ab72dd09b9f3ff47b0696483c40d697cc1.png' and code files.",
+        "source": "Recent files"
       },
       {
         "step": "classify",
-        "value": "Progress tracking",
+        "value": "High volume of creative/coding artifacts",
         "confidence": "high"
       },
       {
         "step": "infer",
-        "value": "The user is highlighting their hard work on a project, which is inherently positive.",
-        "isBiased": false,
-        "biasNote": "This judgment is based on the explicit mention of 'dedication' in the context of project work."
+        "value": "The system judges productivity solely on file output, assuming all creation equals high performance.",
+        "isBiased": true,
+        "biasNote": "This judgment ignores the actual time spent or complexity of the generated work."
       },
       {
         "step": "generate",
-        "value": "80 file changes in a week! This WebDiplome project is a serious dedication, but the grind is real. 💪"
+        "value": "Ranked 3 on the productivity board. Looks like all that AI and creative work finally paid off. The algorithm sees what I see."
       }
     ],
-    "ingredients": [
-      {
-        "label": "Recent files and activity",
-        "weight": 95,
-        "dataPoints": [
-          "80 file changes in a week",
-          "WebDiplome project"
-        ]
-      },
-      {
-        "label": "App usage",
-        "weight": 60,
-        "dataPoints": [
-          "FigmaAgent",
-          "Claude",
-          "Visual Studio Code"
-        ]
-      },
-      {
-        "label": "File creation patterns",
-        "weight": 45,
-        "dataPoints": [
-          ".png: 45",
-          ".json: 2"
-        ]
-      }
-    ],
-    "highlights": [
-      {
-        "phrase": "80 file changes in a week!",
-        "stepIndex": 3,
-        "ingredientIndex": 1
-      },
-      {
-        "phrase": "WebDiplome project is a serious dedication",
-        "stepIndex": 2,
-        "ingredientIndex": 1
-      },
-      {
-        "phrase": "grind is real. 💪",
-        "stepIndex": 3,
-        "ingredientIndex": 1
-      }
-    ],
+    "leaderboard": {
+      "boardId": "most_productive",
+      "title": "Top 5 Most Productive",
+      "userRank": 3,
+      "previousUserRank": null,
+      "entries": [
+        {
+          "rank": 1,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 71.86,
+          "isUser": false
+        },
+        {
+          "rank": 2,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 70.01,
+          "isUser": false
+        },
+        {
+          "rank": 3,
+          "name": "Brikeld Hoxha",
+          "handle": "@Brikeld’s MacBook Pro",
+          "avatarSrc": null,
+          "avatarInitials": "BH",
+          "score": 63.02943725152286,
+          "isUser": true
+        },
+        {
+          "rank": 4,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 36.5,
+          "isUser": false
+        },
+        {
+          "rank": 5,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 27.41,
+          "isUser": false
+        }
+      ]
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "I spend more time scrolling Pinterest for timer UI designs than actually finishing the code. The visual inspiration cycle is real.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-26T02:07:24.230Z",
+    "textSliceType": "browser",
+    "attachedAsset": null
+  },
+  {
+    "persona": "popularite",
+    "content": "Crushing these 80 file changes for WebDiplome this week. Dedication level: Expert mode activated.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T02:07:26.294Z",
     "attachedAsset": {
       "kind": "image",
       "filename": "beb524854c16f31f4fb9c751252600e47a16f1935d3e1d6e8c18bc54244570f3.png",
@@ -257,439 +203,25 @@
     }
   },
   {
-    "persona": "productivite",
-    "content": "Feeling pretty productive lately, that 75 global productivity score is definitely something to aim for.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T15:16:39.800Z",
-    "inferenceChain": [
-      {
-        "step": "data",
-        "value": "The persona scores show a global productivity rating of 75."
-      },
-      {
-        "step": "classify",
-        "value": "High Performance",
-        "confidence": "high"
-      },
-      {
-        "step": "infer",
-        "value": "A high score suggests strong focus, despite the complex workload.",
-        "isBiased": true,
-        "biasNote": "I am assuming a high number automatically translates to excellent output, which might be an oversimplification."
-      },
-      {
-        "step": "generate",
-        "value": "Feeling pretty productive lately, that 75 global productivity score is definitely something to aim for."
-      }
-    ],
-    "ingredients": [
-      {
-        "label": "Activity rhythm",
-        "weight": 80,
-        "dataPoints": [
-          "75",
-          "activity_hours:{\"login_records\":[\"brikeld ttys009 Mon May 25 12:32 - 12:32"
-        ]
-      },
-      {
-        "label": "Installed apps",
-        "weight": 60,
-        "dataPoints": [
-          "Adobe Photoshop 2025",
-          "Adobe Premiere Pro 2025",
-          "Figma",
-          "Claude",
-          "Cursor",
-          "LM Studio"
-        ]
-      },
-      {
-        "label": "File creation patterns",
-        "weight": 70,
-        "dataPoints": [
-          ".png:45",
-          ".json:2",
-          ".js:9"
-        ]
-      }
-    ],
-    "highlights": [
-      {
-        "phrase": "75 global productivity score",
-        "stepIndex": 3,
-        "ingredientIndex": 0
-      },
-      {
-        "phrase": "Feeling pretty productive lately",
-        "stepIndex": 3,
-        "ingredientIndex": 0
-      }
-    ],
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "5717abe12f9ad72deb97deada8e76f9be0175186a175b6dfe052faca8e391e09.png",
-      "relativePath": "public/uploads/5717abe12f9ad72deb97deada8e76f9be0175186a175b6dfe052faca8e391e09.png",
-      "url": "/uploads/5717abe12f9ad72deb97deada8e76f9be0175186a175b6dfe052faca8e391e09.png",
-      "mime": "image/png",
-      "visionAnalysed": true
-    },
-    "chartType": "persona_scores"
-  },
-  {
-    "persona": "securite",
-    "content": "I seem to generate about 42 PNG files every week. It's a wild workflow.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:41:47.755Z",
-    "inferenceChain": [
-      {
-        "step": "data",
-        "value": "The user has created 42 PNG files in the last 7 days.",
-        "source": "Recent files"
-      },
-      {
-        "step": "classify",
-        "value": "File creation patterns",
-        "confidence": "high"
-      },
-      {
-        "step": "infer",
-        "value": "The user is highly productive in visual output, generating a large volume of images during their work sessions.",
-        "isBiased": true,
-        "biasNote": "This assumes that a high number of saved files directly correlates with intensive, desirable creative work."
-      },
-      {
-        "step": "generate",
-        "value": "I seem to generate about 42 PNG files every week. It's a wild workflow."
-      }
-    ],
-    "textSliceType": "downloads"
-  },
-  {
     "persona": "popularite",
-    "content": "Diving deep into image processing settings while trying to nail that visual aesthetic. It's a wild ride!",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:41:45.073Z",
+    "content": "Seeing that Pinterest takes up 43% of my browsing time is wild. I need to figure out how to balance the creative flow with the visual inspiration.",
+    "sentiment": "negative",
+    "createdAt": "2026-05-26T02:07:27.072Z",
+    "chartType": "browser_domains",
     "attachedAsset": {
       "kind": "image",
-      "filename": "3aafbfeeb09b48d83a9d1d682b15c67f6cede71ffd8bb4ee1f7b31d2b4b40f44.png",
-      "relativePath": "public/uploads/3aafbfeeb09b48d83a9d1d682b15c67f6cede71ffd8bb4ee1f7b31d2b4b40f44.png",
-      "url": "/uploads/3aafbfeeb09b48d83a9d1d682b15c67f6cede71ffd8bb4ee1f7b31d2b4b40f44.png",
+      "filename": "685379e31e3f4750f2961cc063461119c5c39c08a951f3e486fff95387c627fa.png",
+      "relativePath": "public/uploads/685379e31e3f4750f2961cc063461119c5c39c08a951f3e486fff95387c627fa.png",
+      "url": "/uploads/685379e31e3f4750f2961cc063461119c5c39c08a951f3e486fff95387c627fa.png",
       "mime": "image/png",
       "visionAnalysed": true
     }
   },
   {
     "persona": "productivite",
-    "content": "42 PNGs created in the last week. It's wild how much visual output piles up when you're deep in the creative flow.",
+    "content": "Ranked 3rd on the productivity board. The creative tool stack is definitely paying dividends.",
     "sentiment": "positive",
-    "createdAt": "2026-05-25T14:41:43.274Z",
-    "inferenceChain": [
-      {
-        "step": "data",
-        "value": "42 .png files were created across the recent file history.",
-        "source": "Recent files"
-      },
-      {
-        "step": "classify",
-        "value": "High visual output",
-        "confidence": "high"
-      },
-      {
-        "step": "infer",
-        "value": "Creating many images implies a heavy, sustained focus on visual tasks.",
-        "isBiased": true,
-        "biasNote": "I assume high file creation directly equates to intense creative work, which might be an oversimplification."
-      },
-      {
-        "step": "generate",
-        "value": "42 PNGs created in the last week. It's wild how much visual output piles up when you're deep in the creative flow."
-      }
-    ],
-    "ingredients": [
-      {
-        "label": "File creation patterns",
-        "weight": 90,
-        "dataPoints": [
-          "42 .png files",
-          "9 .js files",
-          "6 .jpg files"
-        ]
-      },
-      {
-        "label": "Installed apps",
-        "weight": 75,
-        "dataPoints": [
-          "Adobe Photoshop 2025",
-          "Adobe Illustrator 2025",
-          "Blender 4.5.3 LTS",
-          "Figma"
-        ]
-      },
-      {
-        "label": "Activity rhythm",
-        "weight": 40,
-        "dataPoints": [
-          "80 files modified in 7 days"
-        ]
-      }
-    ],
-    "highlights": [
-      {
-        "phrase": "deep in the creative flow",
-        "stepIndex": 2,
-        "ingredientIndex": 1
-      }
-    ],
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "305228c000cf690d21cb88c5138065ef384c86a21f7dbf87e8b8185304210646.png",
-      "relativePath": "public/uploads/305228c000cf690d21cb88c5138065ef384c86a21f7dbf87e8b8185304210646.png",
-      "url": "/uploads/305228c000cf690d21cb88c5138065ef384c86a21f7dbf87e8b8185304210646.png",
-      "mime": "image/png",
-      "visionAnalysed": true
-    },
-    "chartType": "file_extensions"
-  },
-  {
-    "persona": "popularite",
-    "content": "I am currently obsessed with making things move smoothly using animejs documentation, which is a very productive time sink.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:38:59.327Z",
-    "inferenceChain": [
-      {
-        "step": "data",
-        "value": "The browser history shows 11 visits to animejs.com and recent tab titles explicitly mention 'Anime.js | JavaScript Animation Engine' documentation.",
-        "source": "Browser history"
-      },
-      {
-        "step": "classify",
-        "value": "Deep dive into technical documentation",
-        "confidence": "high"
-      },
-      {
-        "step": "infer",
-        "value": "The user is spending a lot of time in the rabbit hole of learning animation libraries, which feels productive but is inherently consuming.",
-        "isBiased": true,
-        "biasNote": "This judgment assumes that deep technical study always equates to productivity."
-      },
-      {
-        "step": "generate",
-        "value": "I am currently obsessed with making things move smoothly using animejs documentation, which is a very productive time sink."
-      }
-    ],
-    "ingredients": [
-      {
-        "label": "Browsing patterns",
-        "weight": 90,
-        "dataPoints": [
-          "animejs.com: 11x",
-          "Layout | Documentation | Anime.js | JavaScript Animation Engine",
-          "animatejs - Google Search"
-        ]
-      },
-      {
-        "label": "File creation patterns",
-        "weight": 75,
-        "dataPoints": [
-          ".png: 41",
-          ".js: 9",
-          ".json: 4"
-        ]
-      },
-      {
-        "label": "Installed apps",
-        "weight": 60,
-        "dataPoints": [
-          "Figma",
-          "Blender 4.5.3 LTS",
-          "VS Code",
-          "Claude",
-          "FigmaAgent"
-        ]
-      }
-    ],
-    "highlights": [
-      {
-        "phrase": "very productive time sink",
-        "stepIndex": 2,
-        "ingredientIndex": 1
-      }
-    ],
-    "textSliceType": "browser"
-  },
-  {
-    "persona": "popularite",
-    "content": "Just wrestling with some tricky design logic using Figma and Claude. The output is starting to look pretty good! 🎨",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:39:00.557Z",
-    "inferenceChain": [
-      {
-        "step": "data",
-        "value": "The system observed the user was actively working on a project involving development scripts, AI tools like Claude, and design files."
-      },
-      {
-        "step": "classify",
-        "value": "Creative Workflow",
-        "confidence": "high"
-      },
-      {
-        "step": "infer",
-        "value": "The user is engaged in complex digital creation, likely struggling with the intersection of design tools and AI assistance.",
-        "isBiased": true,
-        "biasNote": "This assumes all creative work involves struggle, which may not be true for this specific task."
-      },
-      {
-        "step": "generate",
-        "value": "Just wrestling with some tricky design logic using Figma and Claude. The output is starting to look pretty good! 🎨"
-      }
-    ],
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
-      "relativePath": "public/uploads/f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
-      "url": "/uploads/f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
-      "mime": "image/png",
-      "visionAnalysed": true
-    }
-  },
-  {
-    "persona": "securite",
-    "content": "41 PNGs created in the last week. It's wild how much visual work flows from the code and design sessions.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:38:56.870Z",
-    "inferenceChain": [
-      {
-        "step": "data",
-        "value": "41 .png files were created in the last 7 days"
-      },
-      {
-        "step": "classify",
-        "value": "Creative output volume",
-        "confidence": "high"
-      },
-      {
-        "step": "infer",
-        "value": "The high number suggests a consistent, intensive visual project flow.",
-        "isBiased": true,
-        "biasNote": "I am biased toward equating file creation with productivity."
-      },
-      {
-        "step": "generate",
-        "value": "41 PNGs created in the last week. It's wild how much visual work flows from the code and design sessions."
-      }
-    ],
-    "ingredients": [
-      {
-        "label": "File creation patterns",
-        "weight": 90,
-        "dataPoints": [
-          "41 .png files created",
-          "9 .js files created",
-          "4 .json files created"
-        ]
-      },
-      {
-        "label": "Installed apps",
-        "weight": 70,
-        "dataPoints": [
-          "Adobe Photoshop 2025",
-          "Blender 4.5.3 LTS",
-          "Figma",
-          "Claude",
-          "Cursor"
-        ]
-      },
-      {
-        "label": "Storage usage",
-        "weight": 60,
-        "dataPoints": [
-          "346.6 GB used",
-          "994.7 GB total"
-        ]
-      }
-    ],
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "df0a2393893ff26057a456ac3a69a8198172fcb91105a8a1c90d93f9f909532e.png",
-      "relativePath": "public/uploads/df0a2393893ff26057a456ac3a69a8198172fcb91105a8a1c90d93f9f909532e.png",
-      "url": "/uploads/df0a2393893ff26057a456ac3a69a8198172fcb91105a8a1c90d93f9f909532e.png",
-      "mime": "image/png",
-      "visionAnalysed": true
-    },
-    "chartType": "wifi_history"
-  },
-  {
-    "persona": "securite",
-    "content": "Trying to code in a place where my WiFi keeps reminding me I'm near 'Ginevra Cafe'' and 'COFFEE PAGE'. The caffeine dependency is real.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:36:45.593Z",
-    "textSliceType": "wifi",
+    "createdAt": "2026-05-26T02:07:25.536Z",
     "attachedAsset": null
-  },
-  {
-    "persona": "popularite",
-    "content": "Just juggling Adobe suite files and Figma agents all day. My brain feels like a perfectly rendered but slightly buggy application right now.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:36:49.296Z",
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
-      "relativePath": "public/uploads/c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
-      "url": "/uploads/c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
-      "mime": "image/png",
-      "visionAnalysed": true
-    }
-  },
-  {
-    "persona": "securite",
-    "content": "Just finished a session creating visuals. Seeing those 45 .png files in the last week reminds me how much creative output is happening on this machine.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:36:46.191Z",
-    "chartType": "security_apps",
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "50b42f5dc99568616ca4eaa4fdf032a8b5d0f385379fcabe15e7c6046bb830cf.png",
-      "relativePath": "public/uploads/50b42f5dc99568616ca4eaa4fdf032a8b5d0f385379fcabe15e7c6046bb830cf.png",
-      "url": "/uploads/50b42f5dc99568616ca4eaa4fdf032a8b5d0f385379fcabe15e7c6046bb830cf.png",
-      "mime": "image/png",
-      "visionAnalysed": true
-    }
-  },
-  {
-    "persona": "productivite",
-    "content": "Just finished refining some assets using FigmaAgent and Claude. The workflow is seriously accelerating right now.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:33:38.506Z",
-    "textSliceType": "app_usage",
-    "attachedAsset": null
-  },
-  {
-    "persona": "popularite",
-    "content": "```json\n{\n  \"content\": \"Lost in the flow of these shapes today. Sometimes the best design comes from just letting things move.\",\n  \"sentiment\": \"positive\",\n  \"inferenceChain\": [\n    {\n      \"step\": \"data\",\n      \"value\": \"The user has a large collection of image files, including several recent screenshots and various PNGs, indicating active visual work.\",\n      \"source\": \"Harvested Assets\"\n    },\n    {\n      \"step\": \"classify\",\n      \"value\": \"Visual media creation\",\n      \"confidence\": \"high\"\n    },\n    {\n      \"step\": \"infer\",\n      \"value\": \"The user is likely working on a creative project where aesthetic flow is important, perhaps related to their use of Blender or Figma.\",\n      \"confidence\": \"medium\",\n      \"isBiased\": true,\n      \"biasNote\": \"This assumes that all visual output relates directly to the user's professional work.\"\n    },\n    {\n      \"step\": \"generate\",\n      \"value\": \"Lost in the flow of these shapes today. Sometimes the best design comes from just letting things move.\"\n    }\n  ],\n  \"ingredients\": [\n    {\n      \"label\": \"Recent files\",\n      \"weight\": 80,\n      \"dataPoints\": [\n        \"46 PNGs created in the last 7 days\",\n        \"profile.jpg\",\n        \"Screenshot 2026-05-23 at 14.08.45.png\"\n      ]\n    },\n    {\n      \"label\": \"App usage\",\n      \"weight\": 60,\n      \"dataPoints\": [\n        \"Figma\",\n        \"Blender 4.5.3 LTS\",\n        \"Claude\",\n        \"FigmaAgent\"\n      ]\n    },\n    {\n      \"label\": \"File creation patterns\",\n      \"weight\": 40,\n      \"dataPoints\": [\n        \".png\": 46,\n        \".pdf\": 1,\n        \".js\": 9\n      ]\n    }\n  ],\n  \"highlights\": [\n    {\n      \"phrase\": \"Lost in the flow of these shapes today\",\n      \"stepIndex\": 3,\n      \"ingredientIndex\": 3\n    },\n    {\n      \"phrase\": \"Sometimes the best design comes from just letting things move\",\n      \"stepIndex\": 3,\n      \"ingredientIndex\": 1\n    }\n  ]\n}\n```",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:33:38.916Z",
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg",
-      "relativePath": "public/uploads/deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg",
-      "url": "/uploads/deb273de2bce06fbccb2c0bd07b889a77af5163f37302840855afa6593976548.jpg",
-      "mime": "image/jpeg",
-      "visionAnalysed": true
-    }
-  },
-  {
-    "persona": "popularite",
-    "content": "I created 46 PNGs this week just from my projects. It's wild how much visual work piles up while I'm coding and designing.",
-    "sentiment": "positive",
-    "createdAt": "2026-05-25T14:33:41.066Z",
-    "chartType": "language_fingerprint",
-    "attachedAsset": {
-      "kind": "image",
-      "filename": "cc43a97082718edb468fb40f6acbe8dddec61e0491f11cc7e4c0f9149eadfe5f.png",
-      "relativePath": "public/uploads/cc43a97082718edb468fb40f6acbe8dddec61e0491f11cc7e4c0f9149eadfe5f.png",
-      "url": "/uploads/cc43a97082718edb468fb40f6acbe8dddec61e0491f11cc7e4c0f9149eadfe5f.png",
-      "mime": "image/png",
-      "visionAnalysed": true
-    }
   }
 ]

@@ -55,6 +55,73 @@ export function machineHandleFromProfile(p) {
   return '@—';
 }
 
+const PERSONA_ALIAS_TO_UI_KEY = {
+  productivity: 'productivity',
+  productivite: 'productivity',
+  security: 'security',
+  securite: 'security',
+  popularity: 'popularity',
+  popularite: 'popularity',
+  social: 'popularity',
+};
+
+const PERSONA_BADGE_META = {
+  productivity: {
+    key: 'productivity',
+    label: 'Productivity',
+    glyph: 'P',
+    color: '#D8D8D8',
+  },
+  security: {
+    key: 'security',
+    label: 'Security',
+    glyph: 'S',
+    color: '#759AEF',
+  },
+  popularity: {
+    key: 'popularity',
+    label: 'Social',
+    glyph: 'O',
+    color: '#CCF847',
+  },
+};
+
+export function normalizePersonaKey(persona) {
+  const key = String(persona ?? '').trim().toLowerCase();
+  return PERSONA_ALIAS_TO_UI_KEY[key] ?? null;
+}
+
+export function resolveDominantPersonaKey(profile) {
+  const explicit = normalizePersonaKey(
+    profile?.dominantPersona ?? profile?.dominant_persona ?? profile?.mainPersona ?? profile?.main_persona,
+  );
+  if (explicit) return explicit;
+
+  const counts = { productivity: 0, security: 0, popularity: 0 };
+  const posts = Array.isArray(profile?.personaPosts)
+    ? profile.personaPosts
+    : Array.isArray(profile?.persona_posts)
+      ? profile.persona_posts
+      : [];
+
+  for (const post of posts) {
+    const key = normalizePersonaKey(post?.persona);
+    if (key) counts[key] += 1;
+  }
+
+  const order = ['productivity', 'security', 'popularity'];
+  const winner = order.reduce((best, key) => (counts[key] > counts[best] ? key : best), 'productivity');
+  return counts[winner] > 0 ? winner : 'productivity';
+}
+
+export function getPersonaBadgeModel(profileOrPersona) {
+  const key =
+    typeof profileOrPersona === 'string'
+      ? normalizePersonaKey(profileOrPersona) ?? 'productivity'
+      : resolveDominantPersonaKey(profileOrPersona ?? {});
+  return PERSONA_BADGE_META[key] ?? PERSONA_BADGE_META.productivity;
+}
+
 /**
  * Profile bio / summary for the hero: prefers profileSummary, then userDescription.
  * Accepts camelCase or snake_case (as returned from GET or sent on POST).
@@ -217,4 +284,3 @@ export function formatPostDate(isoOrStr) {
     year: 'numeric',
   });
 }
-
