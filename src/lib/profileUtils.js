@@ -26,6 +26,23 @@ export function formatRelativeTimeAgo(isoOrDate) {
   return `${day} days ago`;
 }
 
+/** Portrait URL used in profile header, post cards, and leaderboard self-rows. */
+export function avatarSrcFromProfile(p) {
+  const src =
+    p?.wallpaperBase64 ??
+    p?.wallpaper_base64 ??
+    p?.wallpaperUrl ??
+    p?.wallpaper_url ??
+    p?.wallpaper ??
+    p?.avatarUrl ??
+    p?.avatar_url ??
+    p?.avatarSrc ??
+    p?.avatar_src ??
+    null;
+  if (src == null || src === '') return null;
+  return String(src);
+}
+
 export function initialsFromProfile(p) {
   const a = String(p?.firstname ?? '')
     .trim()

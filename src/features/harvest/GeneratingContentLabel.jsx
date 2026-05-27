@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  GENERATING_PHRASES,
-  PERSONA_DISPLAY_LABEL,
-  shufflePhrases,
-} from './generatingPhrases.js';
+import { shuffledTextsForPersona } from './generatingPhrases.js';
 
-const PHRASE_INTERVAL_MS = 1800;
+const PHRASE_INTERVAL_MS = 2200;
+
+const GENERATING_BAR_ROWS = [
+  { key: 'productivity', persona: 'productivite', color: '#D8D8D8' },
+  { key: 'security', persona: 'securite', color: '#759AEF' },
+  { key: 'social', persona: 'popularite', color: '#CCF847' },
+];
 
 export function GeneratingEllipsis() {
   return (
@@ -17,49 +19,49 @@ export function GeneratingEllipsis() {
   );
 }
 
-export default function GeneratingContentLabel() {
-  // Shuffle once per mount so the user sees a different order each generation.
-  const phrases = useMemo(
-    () => (GENERATING_PHRASES.length > 0 ? shufflePhrases(GENERATING_PHRASES) : []),
-    [],
-  );
-  const [index, setIndex] = useState(0);
+function GeneratingBarRow({ persona, color }) {
+  const phrases = useMemo(() => shuffledTextsForPersona(persona), [persona]);
+  const [phraseIndex, setPhraseIndex] = useState(0);
 
   useEffect(() => {
     if (phrases.length <= 1) return undefined;
     const id = setInterval(() => {
-      setIndex((i) => (i + 1) % phrases.length);
+      setPhraseIndex((i) => (i + 1) % phrases.length);
     }, PHRASE_INTERVAL_MS);
     return () => clearInterval(id);
   }, [phrases.length]);
 
-  const phrase = phrases[index] ?? { persona: 'productivite', text: 'generating new content' };
-  const personaLabel = PERSONA_DISPLAY_LABEL[phrase.persona] ?? 'Social';
+  const phrase = phrases[phraseIndex] ?? phrases[0] ?? 'Generating';
 
   return (
+    <div className="update-gen-row" style={{ '--gen-bar-color': color }}>
+      <p key={phraseIndex} className="update-gen-row__phrase">
+        {phrase}
+      </p>
+      <div className="update-gen-row__track" aria-hidden>
+        <div className="update-gen-row__shimmer" />
+      </div>
+    </div>
+  );
+}
+
+export default function GeneratingContentLabel() {
+  return (
     <div
-      className="generating-content-block"
+      className="update-flow update-flow--generating"
       role="status"
       aria-live="polite"
-      aria-label={`${personaLabel}: ${phrase.text}`}
+      aria-busy="true"
+      aria-label="Generating content"
     >
-      <div className="generating-content-rail" aria-hidden>
-        <span />
-        <span data-active="true" />
-        <span />
-      </div>
-      <div
-        // `key` triggers the fade animation each time the phrase swaps.
-        key={index}
-        className="generating-content-copy"
-      >
-        <span className="generating-content-tag" data-persona={phrase.persona}>
-          {personaLabel.toLowerCase()}
-        </span>
-        <p className="generating-content-text">
-          {phrase.text}
-          <GeneratingEllipsis />
-        </p>
+      <h3 className="update-flow__generating-title">
+        Generating content
+        <GeneratingEllipsis />
+      </h3>
+      <div className="update-flow__gen-rows">
+        {GENERATING_BAR_ROWS.map(({ key, persona, color }) => (
+          <GeneratingBarRow key={key} persona={persona} color={color} />
+        ))}
       </div>
     </div>
   );

@@ -1,83 +1,58 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { HARVEST_PHRASES, shuffledHarvestPhrases } from './harvestPhrases.js';
+
+const PHRASE_INTERVAL_MS = 2200;
 
 /**
- * Harvest progress inside the dashboard generate card.
+ * Harvest progress — rotating phrase + simple progress bar.
  */
 export default function HarvestScreen({ progress, error }) {
-  const lines = Array.isArray(progress?.lines) ? progress.lines : [];
-  const pct = Math.max(0, Math.min(100, Number(progress?.percent) || 0));
-  const step = Number(progress?.step) || 0;
-  const statusText = progress?.statusText || 'Initializing system scan…';
-  const logRef = useRef(null);
-  const activeCells = Math.max(1, Math.ceil((pct / 100) * 27));
+  const rawPct = Math.max(0, Math.min(100, Number(progress?.percent) || 0));
+  // Server tops at 95 during analyze; cap 100 if a stray progress push arrives early.
+  const pct = rawPct >= 100 ? 95 : rawPct;
 
-  const logKey = lines.join('\n');
+  const phrases = useMemo(
+    () => (HARVEST_PHRASES.length > 0 ? shuffledHarvestPhrases() : []),
+    [],
+  );
+  const [phraseIndex, setPhraseIndex] = useState(0);
 
   useEffect(() => {
-    const el = logRef.current;
-    if (!el) return;
-    const id = requestAnimationFrame(() => {
-      el.scrollTop = el.scrollHeight;
-    });
-    return () => cancelAnimationFrame(id);
-  }, [logKey, statusText]);
+    if (phrases.length <= 1) return undefined;
+    const id = setInterval(() => {
+      setPhraseIndex((i) => (i + 1) % phrases.length);
+    }, PHRASE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [phrases.length]);
+
+  const phraseText = phrases[phraseIndex] ?? 'Initializing system scan';
+
+  if (error) {
+    return (
+      <div className="update-flow update-flow--harvest update-flow--error" role="alert">
+        <p className="update-flow__error">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div
-      className={`harvest-panel${error ? ' harvest-panel--error' : ''}`}
+      className="update-flow update-flow--harvest"
       role="status"
       aria-live="polite"
-      aria-busy={!error}
+      aria-busy="true"
+      aria-label={`Harvesting: ${phraseText}`}
     >
-      <div className="harvest-panel__head">
-        <span className="harvest-panel__label">Data harvesting</span>
-        <span className="harvest-panel__step">
-          {step > 0 ? `step ${step}/4` : 'step 0/4'}
-        </span>
+      <p key={phraseIndex} className="update-flow__harvest-phrase">
+        {phraseText}
+      </p>
+      <div className="update-flow__harvest-foot">
+        <span className="update-flow__harvest-label">Data harvesting</span>
+        <span className="update-flow__harvest-pct">{pct}%</span>
       </div>
-      {!error ? (
-        <>
-          <div className="harvest-panel__progress-row">
-            <div className="harvest-panel__track" aria-hidden>
-              <div className="harvest-panel__fill" style={{ width: `${pct}%` }} />
-            </div>
-            <span className="harvest-panel__percent">{pct}%</span>
-          </div>
-          <p className="harvest-panel__status">{statusText}</p>
-          <div className="harvest-panel__body">
-            <div className="harvest-panel__matrix" aria-hidden>
-              {Array.from({ length: 27 }).map((_, i) => (
-                <span
-                  key={i}
-                  className={i < activeCells ? 'is-active' : undefined}
-                />
-              ))}
-            </div>
-            <div ref={logRef} className="harvest-panel__log" aria-label="Harvest log">
-              {lines.length === 0 ? (
-                <div className="harvest-panel__log-line harvest-panel__log-line--muted">
-                  Waiting for desktop collector
-                </div>
-              ) : (
-                lines.slice(-5).map((line, i) => (
-                  <div
-                    key={`${i}-${line.slice(0, 32)}`}
-                    className={`harvest-panel__log-line${
-                      line.includes('✓') || line.includes('[')
-                        ? ' harvest-panel__log-line--highlight'
-                        : ''
-                    }`}
-                  >
-                    {line}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </>
-      ) : (
-        <p className="harvest-panel__status harvest-panel__status--error">{error}</p>
-      )}
+      <div className="update-flow__track" aria-hidden>
+        <div className="update-flow__fill" style={{ width: `${pct}%` }} />
+      </div>
     </div>
   );
 }

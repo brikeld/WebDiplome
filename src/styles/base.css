@@ -358,38 +358,60 @@ body {
   line-height: 1.18;
 }
 
-/* 3 persona ring cards at bottom of dashboard */
+/* 3 persona ring cards below the dashboard capsule */
 .dashboard-rings {
-  flex: 0 0 auto;
+  flex: 0 0 clamp(122px, 16vh, 152px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 14px;
   width: 100%;
-  align-items: start;
+  align-items: stretch;
+  margin-top: 12px;
 }
 
 .dashboard-ring-card {
   appearance: none;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 6px 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 0;
   border: none;
-  border-radius: var(--radius-pill);
-  background: var(--ring-accent, #d8d8d8);
+  border-radius: 0;
+  background: transparent;
   color: #000;
   font-family: var(--font-avant);
   box-sizing: border-box;
-  height: auto;
-  align-self: start;
+  height: 100%;
+  min-height: 0;
+  align-self: stretch;
+  position: relative;
+  isolation: isolate;
+  transition:
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 220ms ease;
+}
+
+.dashboard-ring-card::before {
+  content: '';
+  grid-row: 2;
+  grid-column: 1;
+  border-radius: 22px;
+  background: var(--ring-accent, #d8d8d8);
+  z-index: 0;
 }
 
 .dashboard-ring-card--dominant {
   outline: none;
-  background: #000;
-  color: var(--ring-accent, #759aef);
+}
+
+.dashboard-ring-card--dominant .dashboard-ring-delta--flat {
+  color: #000;
+}
+
+.dashboard-ring-card:hover {
+  transform: translateY(-2px);
 }
 
 .dashboard-ring-card:focus-visible {
@@ -398,30 +420,52 @@ body {
 }
 
 .dashboard-ring-svg {
+  grid-row: 2;
+  grid-column: 1;
+  justify-self: center;
+  align-self: center;
   display: block;
-  width: 52px;
-  height: 52px;
+  width: clamp(70px, 6.8vw, 88px);
+  height: clamp(70px, 6.8vw, 88px);
+  z-index: 1;
 }
 
 .dashboard-ring-label {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  line-height: 1.1;
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 3px 10px 4px;
+  border-radius: var(--radius-pill);
+  background: var(--ring-accent, #d8d8d8);
+  color: #000;
+  font-size: clamp(13px, 1.2vw, 17px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
   text-transform: lowercase;
   text-align: center;
+  z-index: 1;
 }
 
 .dashboard-ring-score {
+  grid-row: 2;
+  grid-column: 1;
+  justify-self: center;
+  align-self: center;
   font-family: var(--font-avant);
   font-weight: 900;
-  font-size: 18px;
+  font-size: clamp(17px, 1.55vw, 23px);
   line-height: 1;
   letter-spacing: -0.03em;
   display: inline-flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 1px;
   justify-content: center;
+  z-index: 2;
 }
 
 .dashboard-ring-score-pct {
@@ -438,28 +482,10 @@ body {
   line-height: 1;
 }
 
-.dashboard-ring-delta--up {
-  color: var(--pop, #ccf847);
-}
-
-.dashboard-ring-delta--down {
-  color: var(--sec, #759aef);
-}
-
+.dashboard-ring-delta--up,
+.dashboard-ring-delta--down,
 .dashboard-ring-delta--flat {
-  color: rgba(0, 0, 0, 0.45);
-}
-
-.dashboard-ring-card--dominant .dashboard-ring-delta--flat {
-  color: color-mix(in srgb, var(--ring-accent, #759aef) 72%, transparent);
-}
-
-.dashboard-ring-card--dominant .dashboard-ring-svg circle:first-child {
-  stroke: rgba(255, 255, 255, 0.2);
-}
-
-.dashboard-ring-card--dominant .dashboard-ring-svg circle:last-child {
-  stroke: var(--ring-accent, #759aef);
+  color: #000;
 }
 
 .project-name {
@@ -1197,6 +1223,29 @@ body {
   user-select: none;
 }
 
+@keyframes post-card-unblur-reveal {
+  0% {
+    filter: blur(18px) saturate(0.3);
+    opacity: 0.38;
+    transform: scale(0.992);
+  }
+  55% {
+    filter: blur(8px) saturate(0.72);
+    opacity: 0.82;
+    transform: scale(1.006);
+  }
+  100% {
+    filter: blur(0) saturate(1);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.post-card--revealing .post-unified-capsule,
+.post-card--revealing .post-card-meta-row {
+  animation: post-card-unblur-reveal 1.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* ── Post highlight (clickable selection for HIDE / tell-me-more) ── */
 .post-card--highlightable {
   cursor: pointer;
@@ -1243,9 +1292,9 @@ body {
   animation: post-highlight-glow 1.6s ease-in-out infinite;
 }
 
-/* Hidden + highlighted → lime "reveal" glow */
+/* Hidden + highlighted — same blur as hidden; glow only signals selection */
 .post-card--highlighted.post-card--hidden .post-unified-capsule {
-  filter: blur(5px);
+  filter: blur(18px);
   pointer-events: auto;
   animation: post-unhide-glow 1.6s ease-in-out infinite;
 }
@@ -1345,6 +1394,26 @@ body {
   border-radius: var(--radius-post-surface);
   object-fit: cover;
   display: block;
+}
+
+.post-avatar-compliant-logo {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-post-surface);
+  background: #fff;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem;
+  box-sizing: border-box;
+  font-family: var(--font-avant);
+  font-size: clamp(1rem, 2.2vw, 1.7rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 0.85;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .post-avatar .persona-badge {
@@ -1449,6 +1518,63 @@ body {
   overflow-wrap: break-word;
 }
 
+.post-card--compliant-persona-change .post-card-bubble {
+  background: #000;
+}
+
+.post-card--compliant-persona-change .post-unified-capsule {
+  background: transparent;
+}
+
+.post-card--compliant-persona-change .post-avatar {
+  background: #fff;
+  color: #000;
+}
+
+.post-card--compliant-persona-change .post-card-head {
+  position: relative;
+  align-items: stretch;
+}
+
+.post-card--compliant-persona-change .post-card-lead {
+  grid-row: 1 / -1;
+  align-self: center;
+  min-width: 0;
+  width: 100%;
+  padding: 8px 12px 28px 4px;
+}
+
+.post-card--compliant-persona-change .post-card-footer {
+  position: absolute;
+  left: calc(var(--post-avatar-size) + 14px);
+  right: 12px;
+  bottom: 0;
+  grid-column: unset;
+  grid-row: unset;
+  width: auto;
+  pointer-events: none;
+}
+
+.post-card--compliant-persona-change .post-lead,
+.post-card--compliant-persona-change .post-lead--compliant-persona-change {
+  max-width: none;
+  width: 100%;
+}
+
+.post-card--compliant-persona-change .post-persona-label {
+  font-weight: 800;
+}
+
+.post-card--compliant-persona-change .post-lead,
+.post-card--compliant-persona-change .post-card-name,
+.post-card--compliant-persona-change .post-card-handle {
+  color: #fff;
+}
+
+.post-card--compliant-persona-change .post-lead--compliant-persona-change {
+  max-width: none;
+}
+
 .post-card-name {
   margin: 0;
   font-size: var(--post-name-size);
@@ -1483,8 +1609,26 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: var(--dashboard-btn-gap, 10px);
   width: 100%;
+  /* ~1.1fr of capsule — scales with viewport like the original grid row */
+  flex: 1.1 1 0;
+  min-height: var(--dashboard-actions-min-h, clamp(128px, 15vh, 168px));
+  height: auto;
+  /* No overflow:hidden here — would clip the hide-pill glow into a rectangle.
+     Clipping happens only while collapsing, via .is-tell-expanded below. */
+  transition:
+    flex 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    flex-basis 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    min-height 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    height 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    margin-bottom 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-tell-row {
+  flex: 2.25 1 0;
   min-height: 0;
-  height: 100%;
+  width: 100%;
+  display: flex;
 }
 
 .dashboard-action-pill {
@@ -1628,6 +1772,25 @@ body {
 
 .dashboard-hide-pill__line--short { width: 70%; }
 .dashboard-hide-pill__line--tiny  { width: 45%; height: 7px; }
+
+/* Compact dashboard row: ghost + icon must fit a ~88–108px-tall pill */
+.dashboard-capsule--figma .dashboard-hide-pill__bg-post {
+  top: 18%;
+  bottom: 18%;
+  left: 10px;
+  right: 10px;
+  padding: 0 10px;
+}
+
+.dashboard-capsule--figma .dashboard-hide-pill__icon svg {
+  width: clamp(44px, 5.2vw, 58px);
+  height: clamp(44px, 5.2vw, 58px);
+}
+
+.dashboard-capsule--figma .dashboard-hide-pill--nudge .dashboard-hide-pill__icon svg {
+  width: clamp(40px, 4.8vw, 52px);
+  height: clamp(40px, 4.8vw, 52px);
+}
 
 /* ── Foreground icon (eye-off / cursor) ── */
 .dashboard-hide-pill__icon {
@@ -1911,81 +2074,73 @@ body {
 
 .dashboard-actions-row--confirm {
   grid-template-columns: 1fr;
+  /* Confirm pill needs more vertical room than the compact hide+timer row */
+  flex-basis: auto;
+  height: auto;
 }
 
 .dashboard-hide-pill--confirm {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(120px, 26%, 200px);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: clamp(10px, 1.6vw, 18px);
-  padding: clamp(10px, 1.4vw, 16px) clamp(14px, 1.8vw, 20px);
-  background: var(--hide-pill-pastel, #bccdf5);
+  justify-content: center;
+  gap: 0;
+  padding: clamp(16px, 2vw, 24px) clamp(18px, 2.2vw, 28px);
+  background: var(--card, #fff);
   border: 2px solid var(--hide-pill-accent, #759aef);
   cursor: default;
   overflow: hidden;
   transform-origin: center center;
   animation: hide-confirm-enter 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  text-align: center;
 }
 
 .dashboard-hide-pill--confirm .dashboard-hide-pill__confirm-left {
   animation: hide-confirm-left-enter 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.dashboard-hide-pill--confirm .dashboard-hide-pill__confirm-right {
-  animation: hide-confirm-right-enter 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
 .dashboard-hide-pill__confirm-left {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  gap: clamp(4px, 0.6vh, 8px);
+  gap: clamp(10px, 1.2vh, 16px);
   min-width: 0;
-}
-
-.dashboard-hide-pill__confirm-kicker {
-  display: inline-block;
-  padding: 3px 12px 4px;
-  border-radius: var(--radius-pill);
-  background: var(--hide-pill-accent, #759aef);
-  color: #000;
-  font-family: var(--font-avant);
-  font-size: clamp(10px, 1vw, 13px);
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: lowercase;
-  line-height: 1.1;
+  width: 100%;
+  text-align: center;
 }
 
 .dashboard-hide-pill__confirm-title {
   margin: 0;
   font-family: var(--font-avant);
-  font-size: clamp(18px, 2.1vw, 26px);
+  font-size: clamp(24px, 2.8vw, 34px);
   font-weight: 800;
   letter-spacing: -0.02em;
   text-transform: none;
-  line-height: 1;
+  line-height: 1.05;
   color: #000;
+  text-align: center;
 }
 
 .dashboard-hide-pill__confirm-body {
   margin: 0;
   font-family: var(--font-avant);
-  font-size: clamp(13px, 1.4vw, 17px);
+  font-size: clamp(17px, 1.85vw, 23px);
   font-weight: 600;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
   text-transform: none;
-  line-height: 1.25;
+  line-height: 1.3;
   color: #000;
+  text-align: center;
+  max-width: 36ch;
 }
 
 .dashboard-hide-pill__confirm-points {
   display: inline-block;
-  padding: 1px 8px 2px;
+  padding: 2px 10px 3px;
   border-radius: var(--radius-pill);
-  background: #000;
-  color: #fff;
+  background: var(--hide-pill-accent, #759aef);
+  color: #000;
   font-weight: 800;
   letter-spacing: 0;
   white-space: nowrap;
@@ -1994,17 +2149,20 @@ body {
 .dashboard-hide-pill__confirm-actions {
   display: flex;
   align-items: center;
-  gap: clamp(6px, 0.8vw, 10px);
-  margin-top: clamp(4px, 0.6vh, 8px);
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(8px, 1vw, 14px);
+  margin-top: clamp(6px, 0.8vh, 12px);
+  width: 100%;
 }
 
 .dashboard-hide-pill__confirm-btn {
   appearance: none;
   border: none;
   border-radius: var(--radius-pill);
-  padding: 6px 14px 7px;
+  padding: clamp(8px, 1vh, 11px) clamp(16px, 2vw, 22px);
   font-family: var(--font-avant);
-  font-size: clamp(11px, 1.15vw, 14px);
+  font-size: clamp(15px, 1.55vw, 20px);
   font-weight: 800;
   letter-spacing: 0;
   text-transform: none;
@@ -2019,7 +2177,7 @@ body {
 
 .dashboard-hide-pill__confirm-btn--hide {
   background: #000;
-  color: #fff;
+  color: var(--hide-pill-accent, #759aef);
 }
 
 .dashboard-hide-pill__confirm-btn:focus-visible {
@@ -2031,60 +2189,10 @@ body {
   outline-color: var(--hide-pill-accent, #759aef);
 }
 
-.dashboard-hide-pill__confirm-right {
-  position: relative;
-  align-self: stretch;
-  min-height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dashboard-hide-pill__bg-post--mini {
-  left: 8px;
-  right: 8px;
-  top: 20px;
-  bottom: 20px;
-  padding: 0 15px;
-  border-radius: calc(var(--hide-pill-radius) - 10px);
-  filter: blur(1px);
-}
-
-.dashboard-hide-pill__bg-post--mini .dashboard-hide-pill__avatar {
-  max-width: 50px;
-}
-
-.dashboard-hide-pill__bg-post--mini .dashboard-hide-pill__line {
-  height: 7px;
-}
-
-.dashboard-hide-pill__confirm-mini-icon {
-  position: relative;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #1c1c1c;
-  opacity: 0.85;
-}
-
-.dashboard-hide-pill__confirm-mini-icon svg {
-  width: clamp(40px, 4.6vw, 64px);
-  height: clamp(40px, 4.6vw, 64px);
-  display: block;
-}
-
 /* tell me more — armed */
 .dashboard-timer-card--tell-armed {
   background: #000;
   color: var(--persona-accent, #759aef);
-}
-
-.dashboard-tell-row {
-  width: 100%;
-  min-height: 0;
-  height: 100%;
-  display: flex;
 }
 
 .dashboard-timer-card {
@@ -2143,7 +2251,7 @@ body {
   justify-content: center;
   gap: clamp(10px, 1.2vw, 14px);
   padding: clamp(14px, 1.8vh, 20px);
-  border-radius: 22px;
+  border-radius: var(--capsule-radius);
   overflow: hidden;
   background: var(--card, #fff);
 }
@@ -2151,35 +2259,50 @@ body {
 .dashboard-timer-card--action-update {
   height: 100%;
   min-height: 0;
-  padding: 8px 10px;
-  border-radius: var(--radius-pill);
+  padding: clamp(10px, 1.2vh, 14px) clamp(12px, 1.4vw, 16px);
+  border-radius: var(--capsule-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dashboard-timer-card--action-status {
   cursor: default;
   pointer-events: none;
   padding: 0;
+  min-height: 100%;
+  height: 100%;
   align-items: stretch;
   justify-content: stretch;
   text-align: left;
   text-transform: none;
+  overflow: hidden;
+  border-radius: var(--capsule-radius);
 }
 
 .dashboard-timer-card--action-update .dashboard-update-timer {
+  flex: 1 1 auto;
   flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.1vh, 14px);
+  width: 100%;
+  min-height: 0;
 }
 
 .dashboard-timer-card--action-update .dashboard-update-label {
-  font-size: clamp(11px, 1vw, 13px);
+  font-size: clamp(15px, 1.45vw, 20px);
   font-weight: 800;
   letter-spacing: 0.02em;
+  line-height: 1;
 }
 
 .dashboard-timer-card--action-update .dashboard-update-time {
-  min-width: clamp(76px, 7.5vw, 104px);
-  padding: 0.2em 0.45em 0.24em;
-  font-size: clamp(18px, 2vw, 28px);
+  min-width: clamp(96px, 9vw, 128px);
+  padding: 0.32em 0.55em;
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1;
+  align-self: center;
 }
 
 .dashboard-update-timer {
@@ -2231,22 +2354,41 @@ body {
   padding: 0;
   min-height: 0;
   overflow: hidden;
-  border-radius: 22px;
+  border-radius: var(--capsule-radius);
 }
 
-/* Fills persona-side-panel height: split HIDE/UPDATE row, tall tell row, persona rings. */
+/* Fills the dashboard capsule: HIDE/UPDATE row (~1.1) + Tell-Me-More (~2.25).
+   Flex weights mirror the old grid-template-rows ratio so action buttons scale
+   with capsule height. Expansion collapses the actions row to 0. */
 .dashboard-capsule--figma {
   --dashboard-btn-gap: 10px;
   --dashboard-pad: 18px;
+  --dashboard-actions-min-h: clamp(128px, 15vh, 168px);
+  --dashboard-shell-radius: var(--capsule-radius);
   flex: 1 1 0;
   min-height: 0;
+  border-radius: var(--dashboard-shell-radius);
   background: var(--persona-accent, #759aef);
-  border: none;
+  border: var(--capsule-shell-border-width, 3px) solid transparent;
   padding: var(--dashboard-pad);
   gap: var(--dashboard-btn-gap);
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: minmax(0, 1.1fr) minmax(0, 2.25fr) auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition:
+    background-color 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    gap 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tell-Me-More expanded: white shell + persona stroke (same language as “for you”). */
+.dashboard-capsule--figma.is-tell-expanded,
+.dashboard-capsule--figma.is-tell-closing {
+  background: var(--card, #fff);
+  border-color: var(--persona-accent, #759aef);
+  padding: 0;
+  gap: 0;
 }
 
 .dashboard-capsule--figma .dashboard-actions-row {
@@ -2257,13 +2399,9 @@ body {
   grid-row: 2;
 }
 
-.dashboard-capsule--figma .dashboard-rings {
-  grid-row: 3;
-  flex: unset;
-  margin-top: 0;
-  height: auto;
-  align-items: start;
-  align-self: end;
+.dashboard-capsule--figma .dashboard-timer-card,
+.dashboard-capsule--figma .dashboard-timer-card--status {
+  border: none;
 }
 
 /* Analysis / harvest / generating: same slot as “next analysis”, readable on white */
@@ -2271,9 +2409,25 @@ body {
   background: var(--card, #fff);
   color: #000;
   border: 2px solid #000;
-  border-radius: 22px;
+  border-radius: var(--capsule-radius);
   cursor: default;
   text-transform: none;
+}
+
+.dashboard-capsule--figma .dashboard-hide-pill {
+  --hide-pill-radius: var(--capsule-radius);
+}
+
+.dashboard-capsule--figma .dashboard-hide-pill--armed,
+.dashboard-capsule--figma .dashboard-hide-pill--armed-hidden {
+  --hide-pill-radius: calc(var(--capsule-radius) + 18px);
+}
+
+.dashboard-capsule--figma .tell-more-pill,
+.dashboard-capsule--figma .tell-more-pill--armed,
+.dashboard-capsule--figma .tell-more-pill--expanded {
+  --tell-pill-radius: var(--capsule-radius);
+  border-radius: var(--tell-pill-radius);
 }
 
 .dashboard-timer-card--status.dashboard-timer-card--harvest {
@@ -2283,21 +2437,6 @@ body {
   height: 100%;
 }
 
-.dashboard-capsule--figma .dashboard-ring-card {
-  background: var(--ring-accent, #d8d8d8);
-  border: none;
-  height: auto;
-  align-self: start;
-}
-
-.dashboard-capsule--figma .dashboard-ring-card--dominant {
-  background: #000;
-  color: var(--ring-accent, #759aef);
-}
-
-.dashboard-capsule--figma .dashboard-ring-card--dominant .dashboard-ring-delta {
-  color: var(--ring-accent, #759aef);
-}
 
 /* ── LEADERBOARDS ── */
 .profile-leaderboards-grid {

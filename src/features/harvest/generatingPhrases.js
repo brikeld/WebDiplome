@@ -60,3 +60,8 @@ export function shufflePhrases(phrases = GENERATING_PHRASES) {
   }
   return arr;
 }
+
+export function shuffledTextsForPersona(personaKey) {
+  const texts = GENERATING_PHRASES.filter((p) => p.persona === personaKey).map((p) => p.text);
+  return shufflePhrases(texts);
+}

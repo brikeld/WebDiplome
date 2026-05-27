@@ -66,6 +66,37 @@ const PERSONA_LABELS = {
   popularity: 'Social',
 };
 
+function displayNameFromProfileLite(profile) {
+  const first = String(profile?.firstname ?? '').trim();
+  const last = String(profile?.lastname ?? '').trim();
+  if (first && last) return `${first} ${last}`;
+  return first || last || 'User';
+}
+
+function createCompliantPersonaChangePost({ profile, fromPersona, toPersona }) {
+  const userDisplayName = displayNameFromProfileLite(profile);
+  const fromLabel = PERSONA_LABELS[fromPersona] ?? 'Unknown';
+  const toLabel = PERSONA_LABELS[toPersona] ?? 'Unknown';
+  const createdAt = Date.now();
+
+  return {
+    id: `compliant-persona-change-${createdAt}-${fromPersona}-${toPersona}`,
+    persona: toPersona,
+    createdAt,
+    content: `Due to behavior on COMPLIANT, ${userDisplayName}'s main persona changed from ${fromLabel} to ${toLabel}.`,
+    compliantPersonaChange: {
+      fromPersona,
+      toPersona,
+      userDisplayName,
+      fromLabel,
+      toLabel,
+    },
+    _feedEnter: true,
+    _feedKey: `compliant-persona-change-${createdAt}`,
+    _feedRevealSeq: createdAt,
+  };
+}
+
 const PERSONA_LABEL_BY_POST = {
   productivite: 'Productivity',
   securite: 'Security',
@@ -213,6 +244,10 @@ function AppInner({
   const [selectionPulseFlip, setSelectionPulseFlip] = useState(false);
   const [hideNudge, setHideNudge] = useState(false);
   const [tellExpanded, setTellExpanded] = useState(false);
+  const [tellClosing, setTellClosing] = useState(false);
+  const tellCloseTimerRef = useRef(null);
+  const [compliantPosts, setCompliantPosts] = useState([]);
+  const previousLivePersonaRef = useRef(null);
   const updateTimerStartRef = useRef(Date.now());
   const [updateRemainingMs, setUpdateRemainingMs] = useState(DASHBOARD_UPDATE_INTERVAL_MS);
 
@@ -232,6 +267,29 @@ function AppInner({
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (!profile || !liveDominantPersona) return;
+    const previous = previousLivePersonaRef.current;
+    previousLivePersonaRef.current = liveDominantPersona;
+    if (!previous || previous === liveDominantPersona) return;
+
+    const post = createCompliantPersonaChangePost({
+      profile,
+      fromPersona: previous,
+      toPersona: liveDominantPersona,
+    });
+    setCompliantPosts((prev) => [post, ...prev].slice(0, 6));
+  }, [liveDominantPersona, profile]);
+
+  const homeFeedProfile = useMemo(() => {
+    if (!profile || compliantPosts.length === 0) return profile;
+    const personaPosts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
+    return {
+      ...profile,
+      personaPosts: [...compliantPosts, ...personaPosts],
+    };
+  }, [compliantPosts, profile]);
+
   const dashboardRingOrder = useMemo(() => {
     const others = PERSONA_KEYS.filter((k) => k !== personaKey);
     if (others.length !== 2) return [...PERSONA_KEYS];
@@ -244,6 +302,25 @@ function AppInner({
     setPersonaOverride(order[(idx + 1) % order.length]);
   };
 
+  // Two-phase close: keep panel mounted while exit animation plays, then unmount.
+  // 220ms matches `tell-more-pill--closing` keyframe duration in inferenceChain.css.
+  const closeTell = useCallback(() => {
+    if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
+    setTellExpanded((wasExpanded) => {
+      if (!wasExpanded) return false;
+      setTellClosing(true);
+      tellCloseTimerRef.current = setTimeout(() => {
+        setTellExpanded(false);
+        setTellClosing(false);
+      }, 220);
+      return true; // stay expanded for the duration of the exit animation
+    });
+  }, []);
+
+  useEffect(() => () => {
+    if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
+  }, []);
+
   const handleHighlightPost = useCallback((post) => {
     const isDeselect = highlightedPost?.id === post.id;
     setHighlightedPost(isDeselect ? null : post);
@@ -252,8 +329,8 @@ function AppInner({
     }
     setConfirmingHide(false);
     setHideNudge(false); // dismiss "select a post first" immediately when user picks one
-    setTellExpanded(false); // close any open inference-chain panel when selection changes
-  }, [highlightedPost?.id]);
+    closeTell(); // play close animation when selection changes
+  }, [highlightedPost?.id, closeTell]);
 
   const highlightedPostIsHidden = highlightedPost
     ? (highlightedPost.leaderboard
@@ -271,13 +348,19 @@ function AppInner({
   const getHighlightedPostRect = () =>
     document.querySelector('.post-card--highlighted')?.getBoundingClientRect() ?? null;
 
+  const getHighlightedLeaderboardSelfRect = () =>
+    document
+      .querySelector('.post-card--highlighted .leaderboard-row--self')
+      ?.getBoundingClientRect() ??
+    getHighlightedPostRect();
+
   const handleDashboardHide = () => {
     if (!profile) return;
     if (highlightedPost) {
       const isLeaderboard = Boolean(highlightedPost.leaderboard);
       if (highlightedPostIsHidden) {
         if (isLeaderboard) {
-          revealLeaderboardSelf(highlightedPost, getHighlightedPostRect());
+          revealLeaderboardSelf(highlightedPost, getHighlightedLeaderboardSelfRect());
         } else {
           revealPost(highlightedPost, getHighlightedPostRect());
         }
@@ -302,7 +385,7 @@ function AppInner({
   const handleConfirmHide = () => {
     if (highlightedPost) {
       if (highlightedPost.leaderboard) {
-        hideLeaderboardSelf(highlightedPost, getHighlightedPostRect());
+        hideLeaderboardSelf(highlightedPost, getHighlightedLeaderboardSelfRect());
       } else {
         hidePost(highlightedPost, getHighlightedPostRect());
       }
@@ -353,7 +436,7 @@ function AppInner({
           <div className="main-col">
             <ScrollArea key="home" mode="home">
               <HomeTab
-                profile={profile}
+                profile={homeFeedProfile}
                 isGeneratingPosts={postGen.phase === 'generating'}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
@@ -380,7 +463,7 @@ function AppInner({
           <aside className="persona-side-panel" aria-label="Persona dashboard">
             <p className="dashboard-top-label">dashboard</p>
             <div
-              className={`dashboard-capsule dashboard-capsule--figma${tellExpanded ? ' is-tell-expanded' : ''}`}
+              className={`dashboard-capsule dashboard-capsule--figma${tellExpanded ? ' is-tell-expanded' : ''}${tellClosing ? ' is-tell-closing' : ''}`}
               style={{ '--persona-accent': personaColor }}
             >
               {(() => {
@@ -404,6 +487,10 @@ function AppInner({
                   '--hide-pill-accent': hidePillAccent,
                   '--hide-pill-pastel': hidePillPastel,
                 };
+                const leaderboardSelected = Boolean(highlightedPost?.leaderboard);
+                const leaderboardPillClass = leaderboardSelected
+                  ? ' dashboard-hide-pill--leaderboard-selected'
+                  : '';
 
                 // eye-off (slashed): used for normal, armed-hidden, confirm mini, nudge
                 const EyeOffIcon = (props) => (
@@ -423,20 +510,16 @@ function AppInner({
                   </svg>
                 );
 
-                const GhostPost = ({ tiny = false }) => (
+                const GhostPost = () => (
                   <div
-                    className={`dashboard-hide-pill__bg-post${
-                      tiny ? ' dashboard-hide-pill__bg-post--mini' : ''
-                    }`}
+                    className="dashboard-hide-pill__bg-post"
                     aria-hidden
                   >
                     <div className="dashboard-hide-pill__avatar" />
                     <div className="dashboard-hide-pill__lines">
                       <div className="dashboard-hide-pill__line" />
                       <div className="dashboard-hide-pill__line dashboard-hide-pill__line--short" />
-                      {!tiny && (
-                        <div className="dashboard-hide-pill__line dashboard-hide-pill__line--tiny" />
-                      )}
+                      <div className="dashboard-hide-pill__line dashboard-hide-pill__line--tiny" />
                     </div>
                   </div>
                 );
@@ -447,28 +530,40 @@ function AppInner({
                       className="dashboard-actions-row dashboard-actions-row--confirm"
                     >
                       <div
-                        className="dashboard-hide-pill dashboard-hide-pill--confirm"
+                        className={`dashboard-hide-pill dashboard-hide-pill--confirm${leaderboardPillClass}`}
                         role="alertdialog"
                         aria-labelledby="hide-confirm-title-inline"
                         style={pillStyle}
                       >
                         <div className="dashboard-hide-pill__confirm-left">
-                          <span className="dashboard-hide-pill__confirm-kicker">
-                            {personaLabelLower} persona
-                          </span>
                           <h3
                             id="hide-confirm-title-inline"
                             className="dashboard-hide-pill__confirm-title"
                           >
-                            Hide this post?
+                            {leaderboardSelected
+                              ? 'Hide your ranking?'
+                              : 'Hide this post?'}
                           </h3>
                           <p className="dashboard-hide-pill__confirm-body">
-                            If you hide this post, you will lose{' '}
-                            <span className="dashboard-hide-pill__confirm-points">
-                              -{points}%
-                            </span>{' '}
-                            on your {personaLabelLower} score and no one else will be
-                            able to see this post.
+                            {leaderboardSelected ? (
+                              <>
+                                Hiding your position will cost you{' '}
+                                <span className="dashboard-hide-pill__confirm-points">
+                                  -{points}%
+                                </span>{' '}
+                                on your {personaLabelLower} score and remove
+                                your row from this leaderboard.
+                              </>
+                            ) : (
+                              <>
+                                If you hide this post, you will lose{' '}
+                                <span className="dashboard-hide-pill__confirm-points">
+                                  -{points}%
+                                </span>{' '}
+                                on your {personaLabelLower} score and no one else will be
+                                able to see this post.
+                              </>
+                            )}
                           </p>
                           <div className="dashboard-hide-pill__confirm-actions">
                             <button
@@ -476,25 +571,16 @@ function AppInner({
                               className="dashboard-hide-pill__confirm-btn dashboard-hide-pill__confirm-btn--cancel"
                               onClick={handleCancelHide}
                             >
-                              Keep post
+                              {leaderboardSelected ? 'Stay visible' : 'Keep post'}
                             </button>
                             <button
                               type="button"
                               className="dashboard-hide-pill__confirm-btn dashboard-hide-pill__confirm-btn--hide"
                               onClick={handleConfirmHide}
                             >
-                              Hide anyway
+                              {leaderboardSelected ? 'Hide ranking' : 'Hide anyway'}
                             </button>
                           </div>
-                        </div>
-                        <div
-                          className="dashboard-hide-pill__confirm-right"
-                          aria-hidden
-                        >
-                          <GhostPost tiny />
-                          <span className="dashboard-hide-pill__confirm-mini-icon">
-                            <EyeOffIcon width="44" height="44" />
-                          </span>
                         </div>
                       </div>
                     </div>
@@ -515,7 +601,7 @@ function AppInner({
                   <div className="dashboard-actions-row">
                     <button
                       type="button"
-                      className={`dashboard-hide-pill ${stateModifier}${selectionPulseClass}`}
+                      className={`dashboard-hide-pill ${stateModifier}${selectionPulseClass}${leaderboardPillClass}`}
                       onClick={handleDashboardHide}
                       disabled={!profile}
                       style={pillStyle}
@@ -553,6 +639,7 @@ function AppInner({
                         <PersonaDeltaSummary
                           deltas={personaDeltas}
                           scores={adjustedScores}
+                          dominantPersona={personaKey}
                         />
                       </div>
                     ) : dashboardLayout.actionSlot === 'generating' ? (
@@ -573,7 +660,7 @@ function AppInner({
                           className="dashboard-update-timer"
                           aria-label={`Next update in ${updateTimerLabel}`}
                         >
-                          <span className="dashboard-update-label">Next update in :</span>
+                          <span className="dashboard-update-label">Next update in</span>
                           <span className="dashboard-update-time">{updateTimerLabel}</span>
                         </span>
                         {postGen.error ? (
@@ -592,12 +679,17 @@ function AppInner({
                   highlightedPost={highlightedPost}
                   selectionPulseFlip={selectionPulseFlip}
                   expanded={tellExpanded}
-                  onExpand={() => setTellExpanded(true)}
-                  onCollapse={() => setTellExpanded(false)}
+                  closing={tellClosing}
+                  onExpand={() => {
+                    if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
+                    setTellClosing(false);
+                    setTellExpanded(true);
+                  }}
                   disabled={dashboardBusy}
                   fallbackPersona={personaKey}
                 />
               </div>
+            </div>
 
               <div className="dashboard-rings">
                 {dashboardRingOrder.map((k) => {
@@ -631,7 +723,7 @@ function AppInner({
                           cy="40"
                           r={R}
                           fill="none"
-                          stroke={isDominantRing ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.18)'}
+                          stroke="rgba(0, 0, 0, 0.18)"
                           strokeWidth="8"
                         />
                         <circle
@@ -639,7 +731,7 @@ function AppInner({
                           cy="40"
                           r={R}
                           fill="none"
-                          stroke={isDominantRing ? personaColor : '#000'}
+                          stroke="#000"
                           strokeWidth="8"
                           strokeDasharray={`${dash} ${gap}`}
                           strokeLinecap="round"
@@ -670,7 +762,6 @@ function AppInner({
                   );
                 })}
               </div>
-            </div>
           </aside>
         )}
       </div>

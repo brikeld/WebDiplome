@@ -30,6 +30,9 @@ import {
   parseRationalesResponse,
   buildRationalesPayload,
   fallbackRationales,
+  parseClimbTipResponse,
+  buildClimbTipPayload,
+  fallbackClimbTip,
 } from './leaderboardRationales.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
 
@@ -674,6 +677,29 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
     }
     if (!rationales) rationales = fallbackRationales(board, standing, cloneHidden);
     slot.leaderboard.rationales = rationales;
+
+    const climbPromptCfg = SP.leaderboard_climb_tip ?? null;
+    let climbTip = null;
+    if (climbPromptCfg) {
+      try {
+        const climbBody = buildChatBody({
+          model: slot._model,
+          systemPrompt: climbPromptCfg.system,
+          userPayload: buildClimbTipPayload(board, standing),
+          imageData: null,
+          docText: null,
+          docFilename: null,
+          temperature: climbPromptCfg.temperature,
+          maxTokens: climbPromptCfg.maxTokens,
+        });
+        const climbResp = await lmChatCompletion({ baseUrl, timeoutMs, retries, body: climbBody });
+        climbTip = parseClimbTipResponse(extractChoiceText(climbResp));
+      } catch {
+        climbTip = null;
+      }
+    }
+    if (!climbTip) climbTip = fallbackClimbTip(board, standing);
+    slot.leaderboard.climbTip = climbTip;
   }
   if (slot.leaderboard) post.leaderboard = slot.leaderboard;
 

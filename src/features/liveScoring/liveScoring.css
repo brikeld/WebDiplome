@@ -2,20 +2,162 @@
 
 /* ── Ring pulse on particle arrival ────────────────────────────────── */
 @keyframes lsc-ring-pulse {
-  0%   { transform: scale(1);    filter: drop-shadow(0 0 0px transparent); }
-  40%  { transform: scale(1.18); filter: drop-shadow(0 0 18px var(--ring-accent)); }
-  100% { transform: scale(1);    filter: drop-shadow(0 0 0px transparent); }
+  0%   { transform: scale(1);    filter: drop-shadow(0 0 0px transparent) saturate(1); }
+  18%  { transform: scale(1.32) rotate(-2deg); filter: drop-shadow(0 0 28px var(--ring-accent)) saturate(1.8); }
+  36%  { transform: scale(0.92) rotate(1.5deg); filter: drop-shadow(0 0 54px var(--ring-accent)) saturate(2.2); }
+  58%  { transform: scale(1.18); filter: drop-shadow(0 0 38px var(--ring-accent)) saturate(1.8); }
+  100% { transform: scale(1);    filter: drop-shadow(0 0 0px transparent) saturate(1); }
 }
 
 .dashboard-ring-card--pulse {
-  animation: lsc-ring-pulse 450ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: lsc-ring-pulse 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Subtle pulse when a reveal orb lands on a post / ranking row */
+@keyframes lsc-target-pulse {
+  0% {
+    transform: scale(1) rotate(0);
+    filter: drop-shadow(0 0 0 transparent) saturate(1);
+  }
+  24% {
+    transform: scale(1.028) rotate(-0.4deg);
+    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--hit-accent, var(--ring-accent, #759aef)) 42%, transparent)) saturate(1.15);
+  }
+  52% {
+    transform: scale(0.992) rotate(0.3deg);
+    filter: drop-shadow(0 0 16px color-mix(in srgb, var(--hit-accent, var(--ring-accent, #759aef)) 32%, transparent)) saturate(1.1);
+  }
+  76% {
+    transform: scale(1.012) rotate(0);
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--hit-accent, var(--ring-accent, #759aef)) 22%, transparent)) saturate(1.05);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    filter: drop-shadow(0 0 0 transparent) saturate(1);
+  }
+}
+
+.lsc-target-pulse {
+  animation: lsc-target-pulse 980ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: center center;
+}
+
+.lsc-target-hit-delta {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.88);
+  z-index: 6;
+  padding: 4px 10px 5px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-avant);
+  font-size: clamp(12px, 1.15vw, 15px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.18);
+}
+
+.lsc-target-hit-delta--down {
+  box-shadow:
+    0 0 0 3px var(--sec, #759aef),
+    0 8px 22px rgb(0 0 0 / 0.18);
+}
+
+.lsc-target-hit-delta--up {
+  box-shadow:
+    0 0 0 3px var(--pop, #ccf847),
+    0 8px 22px rgb(0 0 0 / 0.18);
+}
+
+.lsc-target-hit-delta.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.lsc-target-hit-delta.is-leaving {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.96);
+}
+
+.dashboard-ring-card {
+  position: relative;
+}
+
+.lsc-ring-hit-delta {
+  position: absolute;
+  left: 50%;
+  /* Center of the ring SVG (10px card padding + 26px half of 52px svg) */
+  top: 36px;
+  transform: translate(-50%, -50%) scale(0.88);
+  z-index: 3;
+  padding: 4px 10px 5px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-avant);
+  font-size: clamp(12px, 1.15vw, 15px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.18);
+}
+
+.lsc-ring-hit-delta--down {
+  box-shadow:
+    0 0 0 3px var(--sec, #759aef),
+    0 8px 22px rgb(0 0 0 / 0.18);
+}
+
+.lsc-ring-hit-delta--up {
+  box-shadow:
+    0 0 0 3px var(--pop, #ccf847),
+    0 8px 22px rgb(0 0 0 / 0.18);
+}
+
+.lsc-ring-hit-delta.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.lsc-ring-hit-delta.is-leaving {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.92);
+}
+
+.dashboard-ring-card--dominant .lsc-ring-hit-delta {
+  background: #000;
+  color: var(--ring-accent, #759aef);
+  border-color: var(--ring-accent, #759aef);
+}
+
+.dashboard-ring-card--dominant .lsc-ring-hit-delta--down,
+.dashboard-ring-card--dominant .lsc-ring-hit-delta--up {
+  box-shadow: 0 0 0 3px #fff, 0 8px 22px rgb(0 0 0 / 0.35);
 }
 
 /* ── Score number flash ─────────────────────────────────────────────── */
 @keyframes lsc-score-flash-down {
-  0%   { opacity: 1; }
-  30%  { color: var(--sec, #759aef); }
-  100% { opacity: 1; }
+  0%   { opacity: 1; transform: scale(1); text-shadow: 0 0 0 transparent; }
+  18%  { color: #000; transform: scale(1.42) rotate(-4deg); text-shadow: 0 0 18px #fff, 0 0 42px var(--ring-accent); }
+  42%  { color: var(--sec, #759aef); transform: scale(0.9) rotate(2deg); text-shadow: 0 0 28px var(--ring-accent); }
+  100% { opacity: 1; transform: scale(1); text-shadow: 0 0 0 transparent; }
 }
 
 @keyframes lsc-score-flash-up {
@@ -25,7 +167,7 @@
 }
 
 .lsc-score-flash-down {
-  animation: lsc-score-flash-down 550ms ease-out both;
+  animation: lsc-score-flash-down 850ms cubic-bezier(0.2, 1.7, 0.28, 1) both;
 }
 
 .lsc-score-flash-up {
@@ -35,12 +177,268 @@
 /* ── Particle ──────────────────────────────────────────────────────── */
 .lsc-particle {
   position: fixed;
-  width: 11px;
-  height: 11px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 9999;
   /* color and position set via inline styles */
+}
+
+.lsc-particle--hide {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #000;
+  outline: 3px solid #fff;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+
+.lsc-particle--reveal {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #fff;
+  outline: 3px solid #000;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--lsc-color, #ccf847) 76%, transparent),
+    0 0 42px 16px color-mix(in srgb, var(--lsc-color, #ccf847) 62%, transparent),
+    0 0 100px 36px color-mix(in srgb, var(--lsc-color, #ccf847) 26%, transparent) !important;
+}
+
+.lsc-particle--hide::before,
+.lsc-particle--hide::after,
+.lsc-particle--reveal::before,
+.lsc-particle--reveal::after {
+  content: "";
+  position: absolute;
+  inset: -20px;
+  border-radius: inherit;
+  border: 2px solid var(--lsc-color, #759aef);
+  opacity: 0.85;
+  animation: lsc-particle-orbit 520ms linear infinite;
+}
+
+.lsc-particle--hide::after,
+.lsc-particle--reveal::after {
+  inset: -34px;
+  border-style: dashed;
+  animation-duration: 760ms;
+  animation-direction: reverse;
+}
+
+.lsc-particle--leaderboard-hide {
+  border-radius: 10px;
+  transform: rotate(-8deg);
+  box-shadow:
+    0 0 0 5px #000,
+    0 0 0 9px #fff,
+    0 0 42px 16px color-mix(in srgb, var(--lsc-color, #759aef) 84%, transparent),
+    0 0 110px 44px color-mix(in srgb, var(--lsc-color, #759aef) 36%, transparent) !important;
+}
+
+.lsc-particle--leaderboard-reveal {
+  border-radius: 10px;
+  transform: rotate(8deg);
+}
+
+.lsc-particle__label {
+  position: absolute;
+  left: 50%;
+  top: -36px;
+  transform: translateX(-50%);
+  padding: 5px 11px 6px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-avant);
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  box-shadow: 0 0 0 3px var(--lsc-color, #759aef), 0 12px 28px rgb(0 0 0 / 0.25);
+}
+
+.lsc-particle__shock {
+  position: absolute;
+  inset: 50%;
+  border-radius: inherit;
+  border: 3px solid var(--lsc-color, #759aef);
+  transform: translate(-50%, -50%) scale(0.2);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lsc-particle__shock--outer {
+  animation: lsc-particle-shock 980ms ease-out infinite;
+}
+
+.lsc-particle__shock--inner {
+  animation: lsc-particle-shock 980ms 160ms ease-out infinite;
+}
+
+@keyframes lsc-particle-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes lsc-particle-shock {
+  0% {
+    width: 16px;
+    height: 16px;
+    opacity: 0.85;
+  }
+  100% {
+    width: 118px;
+    height: 118px;
+    opacity: 0;
+  }
+}
+
+@keyframes lsc-leaderboard-redaction-shell {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+    filter: blur(0);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.015);
+    filter: blur(5px);
+  }
+}
+
+@keyframes lsc-leaderboard-redaction-blur {
+  0% {
+    opacity: 0;
+    filter: blur(0);
+    transform: scaleX(0.2);
+  }
+  18% {
+    opacity: 0.18;
+    filter: blur(1px);
+    transform: scaleX(0.45);
+  }
+  48% {
+    opacity: 1;
+    filter: blur(8px);
+    transform: scaleX(1);
+  }
+  82% {
+    opacity: 1;
+    filter: blur(12px);
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(16px);
+    transform: scaleX(1.04);
+  }
+}
+
+@keyframes lsc-leaderboard-unredaction-shell {
+  0% {
+    opacity: 1;
+    transform: scale(1.015);
+    filter: blur(5px);
+  }
+  42% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.99);
+    filter: blur(0);
+  }
+}
+
+@keyframes lsc-leaderboard-unredaction-blur {
+  0% {
+    opacity: 1;
+    filter: blur(16px);
+    transform: scaleX(1.04);
+  }
+  45% {
+    opacity: 0.72;
+    filter: blur(9px);
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(0);
+    transform: scaleX(0.68);
+  }
+}
+
+.lsc-leaderboard-blur-redaction {
+  position: fixed;
+  z-index: 9998;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 22% 50%, color-mix(in srgb, var(--lsc-color, #759aef) 48%, transparent) 0 18%, transparent 36%),
+    linear-gradient(90deg, rgb(0 0 0 / 0.05), rgb(255 255 255 / 0.12), rgb(0 0 0 / 0.05));
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--lsc-color, #759aef) 78%, transparent),
+    0 0 34px 12px color-mix(in srgb, var(--lsc-color, #759aef) 44%, transparent);
+  backdrop-filter: blur(2px) saturate(1.6);
+  animation: lsc-leaderboard-redaction-shell 1.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lsc-leaderboard-blur-redaction--reveal {
+  background:
+    radial-gradient(circle at 22% 50%, color-mix(in srgb, var(--lsc-color, #759aef) 34%, transparent) 0 18%, transparent 40%),
+    linear-gradient(90deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.04), rgb(0 0 0 / 0));
+  animation: lsc-leaderboard-unredaction-shell 1.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lsc-leaderboard-blur-redaction__avatar,
+.lsc-leaderboard-blur-redaction__name {
+  position: absolute;
+  top: 50%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lsc-color, #759aef) 68%, #fff);
+  box-shadow: 0 0 22px 6px color-mix(in srgb, var(--lsc-color, #759aef) 42%, transparent);
+  transform: translateY(-50%);
+  transform-origin: left center;
+  animation: lsc-leaderboard-redaction-blur 1.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lsc-leaderboard-blur-redaction--reveal .lsc-leaderboard-blur-redaction__avatar,
+.lsc-leaderboard-blur-redaction--reveal .lsc-leaderboard-blur-redaction__name {
+  animation: lsc-leaderboard-unredaction-blur 1.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lsc-leaderboard-blur-redaction__avatar {
+  left: 16%;
+  width: 12%;
+  height: 62%;
+  border-radius: 50%;
+  animation-delay: 90ms;
+}
+
+.lsc-leaderboard-blur-redaction__name {
+  left: 31%;
+  width: 52%;
+  height: 58%;
+  animation-delay: 160ms;
 }
 
 /* ── Persona flip overlay (full viewport when dominant persona changes) ─ */

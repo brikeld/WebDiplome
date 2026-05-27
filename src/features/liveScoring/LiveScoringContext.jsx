@@ -12,6 +12,7 @@ import {
   applyLeaderboardSelfReveal,
   isPostHidden,
   isLeaderboardSelfHidden,
+  leaderboardSelfKey,
   dominantPersonaFromAdjustedScores,
 } from './scoringLogic.js';
 import { syncScoreAdjustment } from './scoreSync.js';
@@ -99,6 +100,8 @@ export function LiveScoringProvider({ profile, children }) {
   const [ringScores, setRingScores] = useState({ productivity: 0, security: 0, social: 0 });
   const [animatingRing, setAnimatingRing] = useState(/** @type {string | null} */ (null));
   const [optimisticHidden, setOptimisticHidden] = useState(() => new Set());
+  const [optimisticLeaderboardHidden, setOptimisticLeaderboardHidden] = useState(() => new Set());
+  const [optimisticLeaderboardRevealing, setOptimisticLeaderboardRevealing] = useState(() => new Set());
   const [revealingKeys, setRevealingKeys] = useState(() => new Set());
   const animationQueueRef = useRef([]);
   const animationListenersRef = useRef(new Set());
@@ -108,6 +111,8 @@ export function LiveScoringProvider({ profile, children }) {
   useEffect(() => {
     if (!profileId) return;
     setOptimisticHidden(new Set());
+    setOptimisticLeaderboardHidden(new Set());
+    setOptimisticLeaderboardRevealing(new Set());
     setRevealingKeys(new Set());
     const records = loadFromStorage(profileId);
     dispatch({ type: 'LOAD', records });
@@ -190,6 +195,7 @@ export function LiveScoringProvider({ profile, children }) {
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'hide',
         persona: String(post.persona ?? '').toLowerCase(),
+        delta: Math.abs(Number(post.systemDeltaPct) || 1),
         sourcePillRect,
         onCommit: () => {
           dispatch({
@@ -225,6 +231,7 @@ export function LiveScoringProvider({ profile, children }) {
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'boost',
         persona: String(persona ?? '').toLowerCase(),
+        delta,
         sourcePillRect,
         onCommit: () => {
           dispatch({
@@ -243,14 +250,18 @@ export function LiveScoringProvider({ profile, children }) {
     (post, sourcePillRect) => {
       const postKey = normalizePostHideKey(post.createdAt);
       if (!postKey || !isPostHidden(state.records, postKey)) return;
+      const restored = state.records[postKey]?.restorable ?? 0;
       setRevealingKeys((prev) => new Set(prev).add(postKey));
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'reveal',
         persona: String(post.persona ?? '').toLowerCase(),
+        delta: restored,
         sourcePillRect,
         onCommit: () => {
           dispatch({ type: 'REVEAL', postKey });
+        },
+        onAnimationComplete: () => {
           setRevealingKeys((prev) => {
             const next = new Set(prev);
             next.delete(postKey);
@@ -266,10 +277,13 @@ export function LiveScoringProvider({ profile, children }) {
     (post, sourcePillRect) => {
       const boardId = post?.leaderboard?.boardId;
       if (!boardId || isLeaderboardSelfHidden(state.records, boardId)) return;
+      setOptimisticLeaderboardHidden((prev) => new Set(prev).add(boardId));
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'hide',
+        variant: 'leaderboard-self',
         persona: String(post.leaderboard.persona ?? post.persona ?? '').toLowerCase(),
+        delta: Math.abs(Number(post.systemDeltaPct) || 1),
         sourcePillRect,
         onCommit: () => {
           dispatch({
@@ -277,6 +291,11 @@ export function LiveScoringProvider({ profile, children }) {
             boardId,
             persona: post.leaderboard.persona ?? post.persona,
             systemDeltaPct: post.systemDeltaPct ?? 1,
+          });
+          setOptimisticLeaderboardHidden((prev) => {
+            const next = new Set(prev);
+            next.delete(boardId);
+            return next;
           });
         },
       });
@@ -288,13 +307,24 @@ export function LiveScoringProvider({ profile, children }) {
     (post, sourcePillRect) => {
       const boardId = post?.leaderboard?.boardId;
       if (!boardId || !isLeaderboardSelfHidden(state.records, boardId)) return;
+      const restored = state.records[leaderboardSelfKey(boardId)]?.restorable ?? 0;
+      setOptimisticLeaderboardRevealing((prev) => new Set(prev).add(boardId));
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'reveal',
+        variant: 'leaderboard-self',
         persona: String(post.leaderboard.persona ?? post.persona ?? '').toLowerCase(),
+        delta: restored,
         sourcePillRect,
         onCommit: () => {
           dispatch({ type: 'REVEAL_LEADERBOARD_SELF', boardId });
+        },
+        onAnimationComplete: () => {
+          setOptimisticLeaderboardRevealing((prev) => {
+            const next = new Set(prev);
+            next.delete(boardId);
+            return next;
+          });
         },
       });
     },
@@ -302,8 +332,15 @@ export function LiveScoringProvider({ profile, children }) {
   );
 
   const isLeaderboardSelfHiddenForBoard = useCallback(
-    (boardId) => isLeaderboardSelfHidden(state.records, boardId),
-    [state.records],
+    (boardId) =>
+      !optimisticLeaderboardRevealing.has(boardId) &&
+      (optimisticLeaderboardHidden.has(boardId) || isLeaderboardSelfHidden(state.records, boardId)),
+    [state.records, optimisticLeaderboardHidden, optimisticLeaderboardRevealing],
+  );
+
+  const isLeaderboardSelfRevealingForBoard = useCallback(
+    (boardId) => optimisticLeaderboardRevealing.has(boardId),
+    [optimisticLeaderboardRevealing],
   );
 
   const isHidden = useCallback(
@@ -313,6 +350,11 @@ export function LiveScoringProvider({ profile, children }) {
       return isPostHidden(state.records, key) || optimisticHidden.has(key);
     },
     [state.records, optimisticHidden, revealingKeys],
+  );
+
+  const isRevealing = useCallback(
+    (postKey) => revealingKeys.has(String(postKey)),
+    [revealingKeys],
   );
 
   const value = useMemo(
@@ -327,8 +369,10 @@ export function LiveScoringProvider({ profile, children }) {
       hideLeaderboardSelf,
       revealLeaderboardSelf,
       isLeaderboardSelfHidden: isLeaderboardSelfHiddenForBoard,
+      isLeaderboardSelfRevealing: isLeaderboardSelfRevealingForBoard,
       boostFromComment,
       isHidden,
+      isRevealing,
       subscribeAnimations,
       dequeueAnimation,
       beginRingAnimation,
@@ -344,8 +388,10 @@ export function LiveScoringProvider({ profile, children }) {
       hideLeaderboardSelf,
       revealLeaderboardSelf,
       isLeaderboardSelfHiddenForBoard,
+      isLeaderboardSelfRevealingForBoard,
       boostFromComment,
       isHidden,
+      isRevealing,
       subscribeAnimations,
       dequeueAnimation,
       beginRingAnimation,

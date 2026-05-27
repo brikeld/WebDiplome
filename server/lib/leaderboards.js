@@ -6,14 +6,18 @@
  */
 
 import crypto from 'crypto';
+import { avatarSrcFromProfile } from '../../src/lib/profileUtils.js';
 
-/** Demo Alex Johnson identity (matches src/lib/demoCommentIdentity.js). */
-export const FAKE_CLONE_IDENTITY = Object.freeze({
-  displayName: 'Alex Johnson',
-  handle: '@AlexLaptop',
-  avatarSrc: '/imgs/AlexP.png',
-  avatarInitials: 'AJ',
-});
+/** Diverse clone identities — no avatarSrc so they never show a photo. */
+export const CLONE_IDENTITIES = Object.freeze([
+  { displayName: 'M. Laurent',  handle: '@m_laurent',  avatarInitials: 'ML' },
+  { displayName: 'S. Park',     handle: '@s_park',     avatarInitials: 'SP' },
+  { displayName: 'R. Chen',     handle: '@r_chen',     avatarInitials: 'RC' },
+  { displayName: 'T. Müller',   handle: '@t_muller',   avatarInitials: 'TM' },
+]);
+
+/** @deprecated use CLONE_IDENTITIES[i] instead */
+export const FAKE_CLONE_IDENTITY = CLONE_IDENTITIES[0];
 
 export const FAKE_CLONE_COUNT = 4;
 
@@ -72,7 +76,7 @@ function realUserIdentity(profile) {
   return {
     displayName,
     handle,
-    avatarSrc: null,
+    avatarSrc: avatarSrcFromProfile(profile),
     avatarInitials: initials,
   };
 }
@@ -98,11 +102,11 @@ export function computeBoardStanding(board, dataJson, profile, nowMs) {
   });
 
   for (let i = 0; i < FAKE_CLONE_COUNT; i++) {
+    const ident = CLONE_IDENTITIES[i % CLONE_IDENTITIES.length];
     rows.push({
-      name: FAKE_CLONE_IDENTITY.displayName,
-      handle: FAKE_CLONE_IDENTITY.handle,
-      avatarSrc: FAKE_CLONE_IDENTITY.avatarSrc,
-      avatarInitials: FAKE_CLONE_IDENTITY.avatarInitials,
+      name: ident.displayName,
+      handle: ident.handle,
+      avatarInitials: ident.avatarInitials,
       score: scoreCloneFor(board.id, i, nowMs),
       isUser: false,
     });

@@ -11,6 +11,54 @@ import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 
 const PostPdfCarousel = lazy(() => import('./PostPdfCarousel.jsx'));
 
+const PERSONA_UI_COLORS = {
+  productivity: '#D8D8D8',
+  productivite: '#D8D8D8',
+  security: '#759AEF',
+  securite: '#759AEF',
+  popularity: '#CCF847',
+  popularite: '#CCF847',
+  social: '#CCF847',
+};
+
+function personaUiColor(key) {
+  return PERSONA_UI_COLORS[String(key ?? '').toLowerCase()] ?? '#fff';
+}
+
+function CompliantPersonaChangeLead({ change, fallbackContent }) {
+  if (!change) {
+    return <p className="post-lead post-lead--compliant-persona-change">{fallbackContent}</p>;
+  }
+
+  const {
+    userDisplayName,
+    fromLabel,
+    toLabel,
+    fromPersona,
+    toPersona,
+  } = change;
+
+  return (
+    <p className="post-lead post-lead--compliant-persona-change">
+      Due to behavior on COMPLIANT, {userDisplayName}&apos;s main persona changed from{' '}
+      <span
+        className="post-persona-label"
+        style={{ color: personaUiColor(fromPersona) }}
+      >
+        {fromLabel}
+      </span>
+      {' '}to{' '}
+      <span
+        className="post-persona-label"
+        style={{ color: personaUiColor(toPersona) }}
+      >
+        {toLabel}
+      </span>
+      .
+    </p>
+  );
+}
+
 export default function PostCard({
   post,
   isCommentsOpen = false,
@@ -18,6 +66,7 @@ export default function PostCard({
   /** Reserved for a future hide control (dashboard HIDE uses the same flow today). */
   onHide: _onHide,
   isHidden = false,
+  isRevealing = false,
   hidePills = false,
   /** 'meta' | 'bottom-only' | 'none' — landing mock uses bottom-only */
   pillsMode,
@@ -39,8 +88,10 @@ export default function PostCard({
     attachedAsset,
     chartType,
     leaderboard,
+    compliantPersonaChange,
   } = post;
 
+  const isCompliantPersonaChange = Boolean(compliantPersonaChange);
   const applyImageFx = shouldApplyPostImageFx({ chartType });
   const hasLeadContent = Boolean(String(content ?? '').trim());
 
@@ -55,8 +106,9 @@ export default function PostCard({
 
   const resolvedPillsMode = pillsMode ?? (hidePills ? 'none' : 'meta');
   const showBottomMeta =
-    resolvedPillsMode === 'meta' || resolvedPillsMode === 'bottom-only';
-  const showCommentsCapsule = resolvedPillsMode !== 'bottom-only';
+    !isCompliantPersonaChange &&
+    (resolvedPillsMode === 'meta' || resolvedPillsMode === 'bottom-only');
+  const showCommentsCapsule = !isCompliantPersonaChange && resolvedPillsMode !== 'bottom-only';
 
   const personaLabel = (() => {
     const key = String(persona ?? '').toLowerCase();
@@ -90,7 +142,7 @@ export default function PostCard({
   return (
     <article
       ref={cardRef}
-      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${leaderboard ? ' post-card--has-leaderboard' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
+      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${leaderboard ? ' post-card--has-leaderboard' : ''}${isCompliantPersonaChange ? ' post-card--compliant-persona-change' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${isRevealing ? ' post-card--revealing' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
       data-persona={post.persona}
       style={{ '--post-accent': noteColor }}
       onClick={isHighlightable ? (e) => {
@@ -101,20 +153,37 @@ export default function PostCard({
         <div className="post-card-bubble">
           <div className="post-card-head">
             <div className="post-avatar" aria-hidden>
-              {avatarSrc ? <img className="post-avatar-img" src={avatarSrc} alt="" /> : avatarInitials}
-              <PersonaBadge persona={personaBadgePersona ?? persona} />
+              {isCompliantPersonaChange ? (
+                <span className="post-avatar-compliant-logo">COMPLIANT</span>
+              ) : avatarSrc ? (
+                <img className="post-avatar-img" src={avatarSrc} alt="" />
+              ) : (
+                avatarInitials
+              )}
+              {!isCompliantPersonaChange ? (
+                <PersonaBadge persona={personaBadgePersona ?? persona} />
+              ) : null}
             </div>
             <div className="post-card-lead">
-              <p className="post-lead">{content}</p>
+              {isCompliantPersonaChange ? (
+                <CompliantPersonaChangeLead
+                  change={compliantPersonaChange}
+                  fallbackContent={content}
+                />
+              ) : (
+                <p className="post-lead">{content}</p>
+              )}
             </div>
             <div className="post-card-footer">
               <div className="post-card-byline">
                 <p className="post-card-name">{displayName}</p>
                 {handle ? <p className="post-card-handle">{handle}</p> : null}
               </div>
-              <span ref={systemNotePillRef} className="post-system-note-pill">
-                System note [{personaLabel}] [+{systemDeltaPct}%]
-              </span>
+              {!isCompliantPersonaChange ? (
+                <span ref={systemNotePillRef} className="post-system-note-pill">
+                  System note [{personaLabel}] [+{systemDeltaPct}%]
+                </span>
+              ) : null}
             </div>
           </div>
         </div>

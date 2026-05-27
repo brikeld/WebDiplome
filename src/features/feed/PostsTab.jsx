@@ -3,6 +3,7 @@ import PostCard from './PostCard.jsx';
 import { sanitizePostContent } from '@/lib/postContent.js';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import {
+  avatarSrcFromProfile,
   displayNameFromProfile,
   initialsFromProfile,
   machineHandleFromProfile,
@@ -14,6 +15,9 @@ const PERSONA_COLORS = {
   productivite: '#D8D8D8',
   securite: '#759AEF',
   popularite: '#CCF847',
+  productivity: '#D8D8D8',
+  security: '#759AEF',
+  popularity: '#CCF847',
 };
 
 const API_ORIGIN = 'http://localhost:3001';
@@ -66,7 +70,7 @@ export default function PostsTab({
   personaBadgePersona = null,
 }) {
   const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
-  const { isHidden } = useLiveScoring();
+  const { isHidden, isRevealing } = useLiveScoring();
 
   const posts = useMemo(() => {
     if (!profile) return [];
@@ -75,13 +79,16 @@ export default function PostsTab({
     const avatarInitials = initialsFromProfile(profile);
     const handle = machineHandleFromProfile(profile);
     const resolvedPersonaBadgePersona = personaBadgePersona ?? resolveDominantPersonaKey(profile);
-    const avatarSrc =
-      profile?.wallpaperBase64 ??
-      profile?.wallpaper_base64 ??
-      profile?.wallpaperUrl ??
-      profile?.wallpaper_url ??
-      profile?.wallpaper ??
-      null;
+    const avatarSrc = avatarSrcFromProfile(profile);
+
+    const enrichLeaderboardEntries = (entries) => {
+      if (!avatarSrc || !Array.isArray(entries)) return entries;
+      return entries.map((entry) =>
+        entry?.isUser && !entry?.avatarSrc
+          ? { ...entry, avatarSrc }
+          : entry,
+      );
+    };
 
     const stablePct = (seed) => {
       // Deterministic 1..5 (so it doesn't change every render)
@@ -94,13 +101,15 @@ export default function PostsTab({
 
     const createdAtFallback = (i) => Date.now() - (i + 1) * 6 * 60 * 60 * 1000; // 6h steps
 
-    const mapped = raw.map((p, i) => ({
+    const mapped = raw.map((p, i) => {
+      const isCompliantPersonaChange = Boolean(p.compliantPersonaChange);
+      return {
       id: postStableKey(p, i),
       persona: p.persona,
       content: sanitizePostContent(p.content),
-      noteColor: PERSONA_COLORS[p.persona] ?? '#2323FF',
-      displayName,
-      handle,
+      noteColor: isCompliantPersonaChange ? '#000' : (PERSONA_COLORS[p.persona] ?? '#2323FF'),
+      displayName: isCompliantPersonaChange ? 'COMPLIANT' : displayName,
+      handle: isCompliantPersonaChange ? '' : handle,
       avatarInitials,
       avatarSrc,
       personaBadgePersona: resolvedPersonaBadgePersona,
@@ -117,20 +126,23 @@ export default function PostsTab({
       inferenceChain: Array.isArray(p.inferenceChain) ? p.inferenceChain : null,
       ingredients: Array.isArray(p.ingredients) ? p.ingredients : null,
       highlights: Array.isArray(p.highlights) ? p.highlights : null,
+      compliantPersonaChange: p.compliantPersonaChange ?? null,
       leaderboard: (p.leaderboard && Array.isArray(p.leaderboard.entries)) ? {
         boardId: p.leaderboard.boardId,
         title: p.leaderboard.title,
         persona: p.leaderboard.persona ?? p.persona,
         userRank: p.leaderboard.userRank,
         previousUserRank: p.leaderboard.previousUserRank ?? null,
-        entries: p.leaderboard.entries,
+        entries: enrichLeaderboardEntries(p.leaderboard.entries),
         cloneHidden: Array.isArray(p.leaderboard.cloneHidden) ? p.leaderboard.cloneHidden : [false, false, false, false],
         rationales: Array.isArray(p.leaderboard.rationales) ? p.leaderboard.rationales : null,
+        climbTip: typeof p.leaderboard.climbTip === 'string' ? p.leaderboard.climbTip : null,
       } : null,
       _feedEnter: !!p._feedEnter,
       _feedKey: p._feedKey ?? null,
       _feedRevealSeq: typeof p._feedRevealSeq === 'number' ? p._feedRevealSeq : 0,
-    }));
+    };
+    });
 
     // Newest first; tie-break so staggered client posts keep order even if timestamps collide.
     return mapped.sort((a, b) => {
@@ -177,8 +189,9 @@ export default function PostsTab({
                       return next;
                     })
             }
-            isHidden={isHidden(normalizePostHideKey(p.createdAt))}
-            isHighlightable={!hideInteractions}
+            isHidden={p.compliantPersonaChange ? false : isHidden(normalizePostHideKey(p.createdAt))}
+            isRevealing={p.compliantPersonaChange ? false : isRevealing(normalizePostHideKey(p.createdAt))}
+            isHighlightable={!hideInteractions && !p.compliantPersonaChange}
             isHighlighted={!hideInteractions && highlightedPostId !== null && highlightedPostId === p.id}
             onHighlight={() => onHighlightPost?.(p)}
           />

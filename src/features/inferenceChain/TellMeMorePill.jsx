@@ -78,8 +78,8 @@ export default function TellMeMorePill({
   highlightedPost,
   selectionPulseFlip = false,
   expanded,
+  closing = false,
   onExpand,
-  onCollapse,
   disabled = false,
   fallbackPersona = 'security',
 }) {
@@ -111,7 +111,7 @@ export default function TellMeMorePill({
   if (expanded && highlightedPost) {
     return (
       <div
-        className="tell-more-pill tell-more-pill--expanded"
+        className={`tell-more-pill tell-more-pill--expanded${closing ? ' tell-more-pill--closing' : ''}`}
         style={pillStyle}
         role="region"
         aria-label="Inference chain analysis"
@@ -119,7 +119,6 @@ export default function TellMeMorePill({
         <InferenceChainPanel
           post={highlightedPost}
           personaLabel={label}
-          onClose={onCollapse}
         />
       </div>
     );

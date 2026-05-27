@@ -1,6 +1,7 @@
 import MainScoreStyle from '@/features/profile/MainScoreStyle.jsx';
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 import {
+  avatarSrcFromProfile,
   displayNameFromProfile,
   getCenterDisplayScore,
   initialsFromProfile,
@@ -19,13 +20,7 @@ export default function ProfileHeader({
 }) {
   const name = displayNameFromProfile(profile ?? {});
   const initials = initialsFromProfile(profile ?? {});
-  const avatarSrc =
-    profile?.wallpaperBase64 ??
-    profile?.wallpaper_base64 ??
-    profile?.wallpaperUrl ??
-    profile?.wallpaper_url ??
-    profile?.wallpaper ??
-    null;
+  const avatarSrc = avatarSrcFromProfile(profile);
   const handle = machineHandleFromProfile(profile ?? {});
   const centerScore = getCenterDisplayScore(profile ?? {});
   const postCount = profilePostCount(profile ?? {});

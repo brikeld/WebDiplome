@@ -243,6 +243,26 @@ describe('computeBoardStanding', () => {
     expect(userEntry.handle).toBe('@brikeld-mbp');
   });
 
+  it('uses profile portrait as user avatarSrc when wallpaper is present', () => {
+    const portrait = 'data:image/jpeg;base64,/9j/test';
+    const standing = computeBoardStanding(
+      board,
+      data,
+      { ...profile, wallpaperBase64: portrait },
+      nowMs,
+    );
+    const userEntry = standing.entries.find((e) => e.isUser);
+    expect(userEntry.avatarSrc).toBe(portrait);
+    expect(userEntry.avatarInitials).toBe('BH');
+  });
+
+  it('falls back to initials when profile has no portrait', () => {
+    const standing = computeBoardStanding(board, data, profile, nowMs);
+    const userEntry = standing.entries.find((e) => e.isUser);
+    expect(userEntry.avatarSrc).toBeNull();
+    expect(userEntry.avatarInitials).toBe('BH');
+  });
+
   it('returns the hint string emitted by the board scoreFn', () => {
     const standing = computeBoardStanding(board, data, profile, nowMs);
     expect(typeof standing.hint).toBe('string');

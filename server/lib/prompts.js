@@ -47,6 +47,11 @@ export const DEFAULT_SLOT_PROMPTS = {
     temperature: 0.6,
     maxTokens: 600,
   },
+  leaderboard_climb_tip: {
+    system: `You write ONE short, plain tip for climbing a satirical surveillance leaderboard. You get the board title, how the board scores people, the user's rank (1–5), and their signal hint. Write a single simple sentence the user can actually follow — conversational, not technical. Start with "To climb this board," then one concrete action tied to the scoring rule. If rank is 1, say they are already at the top and what to keep doing. Max 110 characters. No emojis, no hashtags. Return ONLY valid JSON: {"climbTip":"..."}. /no_think`,
+    temperature: 0.65,
+    maxTokens: 120,
+  },
 };
 
 export const DEFAULT_PROMPTS = {

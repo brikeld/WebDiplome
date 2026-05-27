@@ -7,6 +7,7 @@
 import { RATIONALE_TEMPLATES } from './prompts.js';
 
 const PHRASE_MAX = 90;
+const CLIMB_TIP_MAX = 110;
 const RATIONALE_COUNT = 5;
 
 function truncate(s) {
@@ -78,6 +79,56 @@ export function buildRationalesPayload(board, standing, cloneHidden) {
 /**
  * Deterministic template-based fallback. Always returns 5 entries.
  */
+/**
+ * Parse LLM climb-tip response. Returns trimmed string or null.
+ */
+export function parseClimbTipResponse(rawText) {
+  if (typeof rawText !== 'string') return null;
+  let obj;
+  try {
+    const m = rawText.match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    obj = JSON.parse(m[0]);
+  } catch {
+    return null;
+  }
+  const tip = obj?.climbTip ?? obj?.text ?? obj?.tip;
+  if (typeof tip !== 'string' || !tip.trim()) return null;
+  const trimmed = tip.trim();
+  return trimmed.length > CLIMB_TIP_MAX ? trimmed.slice(0, CLIMB_TIP_MAX) : trimmed;
+}
+
+export function buildClimbTipPayload(board, standing) {
+  const user = standing.entries.find((e) => e.isUser);
+  const userRank = user?.rank ?? standing.userRank ?? '?';
+  const targetRank = Number(userRank) > 1 ? Number(userRank) - 1 : null;
+  return [
+    `Board: ${board.title}`,
+    `Scoring rule: ${standing.hint}`,
+    `Your rank: ${userRank} of 5`,
+    targetRank != null ? `Next rank to reach: #${targetRank}` : 'You are already #1.',
+    `Your signals: ${standing.hint}`,
+  ].join('\n');
+}
+
+const CLIMB_TIP_FALLBACK = {
+  most_productive: 'To climb this board, spend more time in work apps and less in entertainment.',
+  closest_to_burnout: 'To climb this board, add more late-night file edits and fewer social-app breaks.',
+  most_likely_change_jobs: 'To climb this board, visit job boards more and keep file output lower.',
+  ignoring_health: 'To climb this board, work later, skip the health app, and roam more café wifi.',
+  most_secure: 'To climb this board, use VPN tools and stick to a small set of known networks.',
+  most_socially_isolated: 'To climb this board, use fewer social apps and keep your wifi footprint small.',
+  most_likely_ghost: 'To climb this board, cut comms apps while keeping everything else busy.',
+};
+
+export function fallbackClimbTip(board, standing) {
+  const userRank = standing.entries.find((e) => e.isUser)?.rank ?? standing.userRank;
+  if (userRank === 1) {
+    return 'You are #1 on this board — keep doing what the algorithm already likes.';
+  }
+  return CLIMB_TIP_FALLBACK[board.id] ?? 'To climb this board, lean into what this ranking rewards.';
+}
+
 export function fallbackRationales(board, standing, cloneHidden) {
   const tpl = RATIONALE_TEMPLATES[board.id] ?? {
     selfPhrase: 'classified by the algorithm',

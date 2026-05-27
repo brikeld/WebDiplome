@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseRationalesResponse,
+  parseClimbTipResponse,
   fallbackRationales,
+  fallbackClimbTip,
   buildRationalesPayload,
+  buildClimbTipPayload,
 } from '../server/lib/leaderboardRationales.js';
 
 const STANDING = {
@@ -108,5 +111,45 @@ describe('buildRationalesPayload', () => {
     expect(payload).toContain('4 work app');
     expect(payload).toContain('"hidden":true');
     expect((payload.match(/"rank":/g) || [])).toHaveLength(5);
+  });
+});
+
+describe('parseClimbTipResponse', () => {
+  it('accepts climbTip JSON', () => {
+    const out = parseClimbTipResponse(JSON.stringify({ climbTip: 'To climb this board, open more work apps.' }));
+    expect(out).toBe('To climb this board, open more work apps.');
+  });
+
+  it('returns null on bad JSON', () => {
+    expect(parseClimbTipResponse('nope')).toBeNull();
+  });
+
+  it('truncates long tips', () => {
+    const long = 'x'.repeat(200);
+    const out = parseClimbTipResponse(JSON.stringify({ climbTip: long }));
+    expect(out.length).toBeLessThanOrEqual(110);
+  });
+});
+
+describe('fallbackClimbTip', () => {
+  it('returns hold copy at rank 1', () => {
+    const standing = {
+      ...STANDING,
+      entries: STANDING.entries.map((e) => ({ ...e, rank: e.isUser ? 1 : e.rank + 1 })),
+      userRank: 1,
+    };
+    expect(fallbackClimbTip(BOARD, standing)).toContain('#1');
+  });
+
+  it('returns board-specific tip otherwise', () => {
+    expect(fallbackClimbTip(BOARD, STANDING)).toMatch(/^To climb this board,/);
+  });
+});
+
+describe('buildClimbTipPayload', () => {
+  it('includes rank and scoring rule', () => {
+    const payload = buildClimbTipPayload(BOARD, { ...STANDING, userRank: 3 });
+    expect(payload).toContain('Your rank: 3');
+    expect(payload).toContain('4 work app');
   });
 });

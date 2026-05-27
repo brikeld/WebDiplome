@@ -660,11 +660,6 @@ const CHART_POOL = [
     build: (data, _profile, persona) => buildSecurityAppsChart(data, _profile, persona),
   },
   {
-    id: 'file_heatmap',
-    persona: 'productivite',
-    build: (data, _profile, persona) => buildFileHeatmapChart(data, persona),
-  },
-  {
     id: 'app_recency',
     persona: 'productivite',
     build: (data, _profile, persona) => buildAppRecencyChart(data, persona),

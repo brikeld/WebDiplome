@@ -35,8 +35,9 @@ function parseLine(line) {
       break;
     }
   }
-  const pct =
-    step >= 4 ? 100 : Math.min(95, Math.round((step / 4) * 95));
+  // Gradual ramp — step 4 is not 100% until completeHarvest().
+  const STEP_PERCENT = { 0: 8, 1: 28, 2: 52, 3: 76, 4: 88 };
+  const pct = STEP_PERCENT[step] ?? session.progress.percent;
   const match = STEP_PATTERNS.find((sp) => sp.step === step);
   return {
     step,
@@ -107,7 +108,7 @@ export function pushHarvestProgress({ line, statusText, percent, step, phase } =
   if (typeof step === 'number' && Number.isFinite(step)) session.progress.step = step;
   if (phase === 'analyzing') {
     session.progress.statusText = 'Analyzing collected data…';
-    session.progress.percent = 100;
+    session.progress.percent = 95;
     session.progress.step = 4;
   }
   touch();

@@ -2,7 +2,7 @@
  * The panel that fills the dashboard capsule when "Tell me more" is expanded.
  *
  * Layout (top → bottom):
- *   1. Persona kicker + title + close button
+ *   1. Persona kicker + title
  *   2. Post content, with phrases from `post.highlights` rendered as clickable
  *      buttons (each one links a step + an ingredient)
  *   3. Pill toggle: Ingredients | Inference Chain
@@ -19,6 +19,8 @@ import { StepRow, InferStepRow } from './inferenceChainSteps.jsx';
 import IngredientsView from './IngredientsView.jsx';
 import PostTextHighlights from './PostTextHighlights.jsx';
 import LeaderboardRationaleView from './LeaderboardRationaleView.jsx';
+import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
+import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 
 function findStep(chain, step) {
   return Array.isArray(chain) ? chain.find((s) => s && s.step === step) ?? null : null;
@@ -53,7 +55,7 @@ function isValidChain(chain) {
 }
 
 
-export default function InferenceChainPanel({ post, personaLabel, onClose }) {
+export default function InferenceChainPanel({ post, personaLabel }) {
   const chain = post?.inferenceChain;
   const ingredients = Array.isArray(post?.ingredients) ? post.ingredients : null;
   const highlights = Array.isArray(post?.highlights) ? post.highlights : null;
@@ -61,7 +63,9 @@ export default function InferenceChainPanel({ post, personaLabel, onClose }) {
   const hasIngredients = !!(ingredients && ingredients.length);
   const leaderboard = post?.leaderboard ?? null;
   const isLeaderboardPost = Boolean(leaderboard && Array.isArray(leaderboard.entries));
-
+  const { ready, loadingKey } = useTellMeMoreLoading(
+    isLeaderboardPost ? [] : [post?.id],
+  );
   // Default to Inference Chain when present; otherwise Ingredients.
   const [view, setView] = useState(validChain ? 'chain' : 'ingredients');
   const [expandedIngredients, setExpandedIngredients] = useState(() => new Set());
@@ -107,99 +111,102 @@ export default function InferenceChainPanel({ post, personaLabel, onClose }) {
     setView(next);
   };
 
+  const analysisBody = view === 'chain' && validChain ? (
+    <ol className="inference-panel__steps" aria-label="Inference steps">
+      <StepRow
+        step="data"
+        value={readableValue(findStep(chain, 'data').value, 'A signal from the user’s machine data')}
+        source={readableSource(findStep(chain, 'data').source)}
+        showConnector
+        pulse={pulseStep.index === 0 ? pulseStep.key : 0}
+      />
+      <StepRow
+        step="classify"
+        value={findStep(chain, 'classify').value}
+        confidence={findStep(chain, 'classify').confidence ?? 'high'}
+        showConnector
+        pulse={pulseStep.index === 1 ? pulseStep.key : 0}
+      />
+      <InferStepRow
+        value={findStep(chain, 'infer').value}
+        confidence={findStep(chain, 'infer').confidence ?? 'low'}
+        isBiased={findStep(chain, 'infer').isBiased === true}
+        biasNote={findStep(chain, 'infer').biasNote}
+        pulse={pulseStep.index === 2 ? pulseStep.key : 0}
+      />
+    </ol>
+  ) : view === 'ingredients' && hasIngredients ? (
+    <IngredientsView
+      ingredients={ingredients}
+      expandedIndices={expandedIngredients}
+      onToggleExpand={handleToggleIngredient}
+    />
+  ) : (
+    <div className="inference-panel__empty">
+      <p>Analysis not available for this post.</p>
+    </div>
+  );
+
   return (
-    <div className="inference-panel" role="region" aria-label="Algorithm inference chain">
-      <header className="inference-panel__head">
-        <div className="inference-panel__title-group">
-          <span className="inference-panel__kicker">
-            {isLeaderboardPost
-              ? `${(leaderboard.persona ?? '').toLowerCase()} leaderboard`
-              : personaLabel ? `${personaLabel.toLowerCase()} persona` : 'inference chain'}
-          </span>
-          <h3 className="inference-panel__title">How the system reached this post</h3>
-        </div>
-        <button
-          type="button"
-          className="inference-panel__close"
-          onClick={onClose}
-          aria-label="Collapse analysis"
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden width="20" height="20">
-            <path d="M18.3 5.71 12 12.01 5.7 5.71 4.29 7.12 10.59 13.42 4.29 19.71 5.7 21.12 12 14.83 18.3 21.12 19.71 19.71 13.41 13.42 19.71 7.12z" />
-          </svg>
-        </button>
-      </header>
-
-      {post?.content ? (
-        <PostTextHighlights
-          content={post.content}
-          highlights={highlights}
-          onSelect={handleHighlightSelect}
-        />
-      ) : null}
-
-      {isLeaderboardPost ? null : ((validChain && hasIngredients) ? (
-        <div className="inference-panel__toggle" role="tablist" aria-label="Analysis view">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'ingredients'}
-            className={`inference-panel__toggle-btn${view === 'ingredients' ? ' is-active' : ''}`}
-            onClick={() => handleSetView('ingredients')}
-          >
-            Ingredients
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'chain'}
-            className={`inference-panel__toggle-btn${view === 'chain' ? ' is-active' : ''}`}
-            onClick={() => handleSetView('chain')}
-          >
-            Inference Chain
-          </button>
-        </div>
-      ) : null)}
-
-      <div className="inference-panel__body">
-        {isLeaderboardPost ? (
+    <div
+      className={`inference-panel${isLeaderboardPost ? ' inference-panel--leaderboard' : ''}${!isLeaderboardPost && ready ? ' is-ready' : ''}`}
+      role="region"
+      aria-label="Algorithm inference chain"
+    >
+      {isLeaderboardPost ? (
+        <div className="inference-panel__body">
           <LeaderboardRationaleView leaderboard={leaderboard} />
-        ) : view === 'chain' && validChain ? (
-          <ol className="inference-panel__steps" aria-label="Inference steps">
-            <StepRow
-              step="data"
-              value={readableValue(findStep(chain, 'data').value, 'A signal from the user’s machine data')}
-              source={readableSource(findStep(chain, 'data').source)}
-              showConnector
-              pulse={pulseStep.index === 0 ? pulseStep.key : 0}
-            />
-            <StepRow
-              step="classify"
-              value={findStep(chain, 'classify').value}
-              confidence={findStep(chain, 'classify').confidence ?? 'high'}
-              showConnector
-              pulse={pulseStep.index === 1 ? pulseStep.key : 0}
-            />
-            <InferStepRow
-              value={findStep(chain, 'infer').value}
-              confidence={findStep(chain, 'infer').confidence ?? 'low'}
-              isBiased={findStep(chain, 'infer').isBiased === true}
-              biasNote={findStep(chain, 'infer').biasNote}
-              pulse={pulseStep.index === 2 ? pulseStep.key : 0}
-            />
-          </ol>
-        ) : view === 'ingredients' && hasIngredients ? (
-          <IngredientsView
-            ingredients={ingredients}
-            expandedIndices={expandedIngredients}
-            onToggleExpand={handleToggleIngredient}
-          />
-        ) : (
-          <div className="inference-panel__empty">
-            <p>Analysis not available for this post.</p>
+        </div>
+      ) : (
+        <>
+          <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
+          <div className="inference-panel__stack">
+            <header className="inference-panel__head">
+              <div className="inference-panel__title-group">
+                <span className="inference-panel__kicker">
+                  {personaLabel ? `${personaLabel.toLowerCase()} persona` : 'inference chain'}
+                </span>
+                <h3 className="inference-panel__title">How the system reached this post</h3>
+              </div>
+            </header>
+
+            {post?.content ? (
+              <PostTextHighlights
+                content={post.content}
+                highlights={highlights}
+                onSelect={handleHighlightSelect}
+              />
+            ) : null}
+
+            {validChain && hasIngredients ? (
+              <div className="inference-panel__toggle" role="tablist" aria-label="Analysis view">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === 'ingredients'}
+                  className={`inference-panel__toggle-btn${view === 'ingredients' ? ' is-active' : ''}`}
+                  onClick={() => handleSetView('ingredients')}
+                >
+                  Ingredients
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === 'chain'}
+                  className={`inference-panel__toggle-btn${view === 'chain' ? ' is-active' : ''}`}
+                  onClick={() => handleSetView('chain')}
+                >
+                  Inference Chain
+                </button>
+              </div>
+            ) : validChain && !hasIngredients && !post?.attachedAsset ? (
+              <p className="inference-panel__chain-only-note">inference chain only — no ingredients for this post type</p>
+            ) : null}
+
+            <div className="inference-panel__body">{analysisBody}</div>
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

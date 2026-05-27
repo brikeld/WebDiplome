@@ -1,437 +1,229 @@
-/* Update-flow states that occupy the primary dashboard button slot. */
-.dashboard-timer-card.dashboard-timer-card--primary.dashboard-timer-card--harvest,
-.dashboard-timer-card.dashboard-timer-card--primary.dashboard-timer-card--analysis,
-.dashboard-timer-card.dashboard-timer-card--primary.dashboard-timer-card--generating {
-  cursor: default;
-  pointer-events: none;
-  padding: 0;
-  min-height: 0;
-  height: 100%;
-  align-items: stretch;
-  justify-content: stretch;
-  text-align: left;
-  text-transform: none;
-  overflow: hidden;
-}
+/* ── Shared update-flow shell (timer slot: harvest / deltas / generating) ── */
 
-.harvest-panel,
-.persona-delta-summary,
-.generating-content-block {
+.update-flow {
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(14px, 1.8vh, 20px) clamp(16px, 2vw, 22px);
+  box-sizing: border-box;
   color: #000;
   font-family: var(--font-avant);
-  letter-spacing: 0;
   text-transform: none;
-  box-sizing: border-box;
   overflow: hidden;
 }
 
-.harvest-panel {
-  display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
-  gap: clamp(8px, 1vh, 12px);
-  padding: clamp(12px, 1.55vh, 16px);
+.dashboard-timer-card--action-status .update-flow {
+  justify-content: center;
+  overflow: hidden;
 }
 
-.harvest-panel--error {
-  grid-template-rows: auto minmax(0, 1fr);
-  align-items: start;
+/* ── Screen 2: harvest ── */
+
+.update-flow--harvest {
+  gap: clamp(12px, 1.4vh, 18px);
+  justify-content: center;
+  text-align: center;
 }
 
-.harvest-panel__head {
+.update-flow__harvest-phrase {
+  margin: 0;
+  flex: 1 1 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  font-size: clamp(22px, 2.8vw, 34px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  animation: update-phrase-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.update-flow__harvest-foot {
+  display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 10px;
-  min-width: 0;
-}
-
-.generating-content-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 36px;
-  width: fit-content;
-  max-width: 100%;
-  padding: 6px 12px 8px;
-  border: 2px solid #000;
-  border-radius: 7px;
-  background: var(--persona-accent, #759aef);
-  color: #000;
-  font-size: clamp(18px, 2.1vw, 26px);
-  font-weight: 900;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.harvest-panel__label,
-.harvest-panel__step {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  max-width: 100%;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  color: #000;
-  font-size: clamp(18px, 2.1vw, 26px);
-  font-weight: 900;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.harvest-panel__step {
-  flex: 0 0 auto;
-}
-
-.generating-content-tag {
-  background: #fff;
-}
-
-.harvest-panel__progress-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
   gap: 12px;
+  width: 100%;
 }
 
-.harvest-panel__track {
-  height: 14px;
-  border-radius: 7px;
-  background: #000;
+.update-flow__harvest-label,
+.update-flow__harvest-pct {
+  font-size: clamp(14px, 1.45vw, 18px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.update-flow__harvest-pct {
+  font-variant-numeric: tabular-nums;
+}
+
+.update-flow__track {
+  width: 100%;
+  height: clamp(10px, 1.2vh, 14px);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--persona-accent, #759aef) 28%, #fff);
   overflow: hidden;
 }
 
-.harvest-panel__fill {
+.update-flow__fill {
   height: 100%;
   border-radius: inherit;
   background: var(--persona-accent, #759aef);
   transition: width 0.35s ease;
 }
 
-.harvest-panel__percent {
-  color: #000;
-  font-size: clamp(22px, 2.5vw, 30px);
-  font-weight: 900;
-  line-height: 0.9;
-  font-variant-numeric: tabular-nums;
-}
-
-.harvest-panel__status {
+.update-flow__error {
   margin: 0;
-  color: #000;
-  font-size: clamp(12px, 1.18vw, 15px);
+  font-size: clamp(14px, 1.4vw, 17px);
   font-weight: 800;
-  line-height: 1.08;
+  line-height: 1.2;
+  text-align: center;
 }
 
-.harvest-panel__status--error {
-  align-self: center;
-  font-size: clamp(13px, 1.3vw, 16px);
-}
+/* ── Screen 3: score deltas ── */
 
-.harvest-panel__body {
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(84px, 0.86fr) minmax(0, 1fr);
-  gap: 10px;
-}
-
-.harvest-panel__matrix {
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  grid-auto-rows: 1fr;
-  gap: 4px;
-}
-
-.harvest-panel__matrix span {
-  min-width: 0;
-  min-height: 0;
-  border: 1px solid rgba(0, 0, 0, 0.32);
-  background: #f4f4f4;
-}
-
-.harvest-panel__matrix span.is-active {
-  border-color: #000;
-  background: var(--persona-accent, #759aef);
-}
-
-.harvest-panel__log {
-  min-height: 0;
-  overflow: hidden;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  align-content: end;
-  gap: 3px;
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: clamp(8px, 0.8vw, 10px);
-  line-height: 1.25;
-}
-
-.harvest-panel__log-line {
-  color: #000;
-  opacity: 0.78;
-  word-break: break-word;
-}
-
-.harvest-panel__log-line--highlight {
-  opacity: 1;
-  font-weight: 800;
-}
-
-.harvest-panel__log-line--muted {
-  opacity: 0.78;
-}
-
-.dashboard-timer-card--action-status .harvest-panel {
-  grid-template-rows: auto auto;
-  gap: 7px;
-  padding: 8px 10px;
-}
-
-.dashboard-timer-card--action-status .harvest-panel__head {
-  gap: 6px;
-}
-
-.dashboard-timer-card--action-status .harvest-panel__label,
-.dashboard-timer-card--action-status .harvest-panel__step {
-  font-size: clamp(10px, 0.95vw, 13px);
-}
-
-.dashboard-timer-card--action-status .harvest-panel__progress-row {
-  gap: 8px;
-}
-
-.dashboard-timer-card--action-status .harvest-panel__track {
-  height: 9px;
-}
-
-.dashboard-timer-card--action-status .harvest-panel__percent {
-  font-size: clamp(15px, 1.45vw, 20px);
-}
-
-.dashboard-timer-card--action-status .harvest-panel__status,
-.dashboard-timer-card--action-status .harvest-panel__body {
-  display: none;
-}
-
-.persona-delta-summary {
-  display: flex;
-  align-items: stretch;
+.update-flow--deltas {
+  padding: clamp(10px, 1.2vh, 14px);
   justify-content: stretch;
-  padding: 10px;
 }
 
-.persona-delta-summary__grid {
-  flex: 1 1 auto;
+.update-flow__delta-grid {
+  flex: 1 1 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr);
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 1vw, 12px);
+  align-items: end;
+}
+
+.update-delta-col {
+  appearance: none;
+  border: none;
+  border-radius: 14px;
+  background: var(--delta-card-color, #d8d8d8);
+  min-height: 52%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 8px clamp(12px, 1.4vh, 18px);
+  box-sizing: border-box;
+}
+
+.update-delta-col--main {
+  min-height: 100%;
+}
+
+.update-delta-col__value,
+.persona-delta-card__delta {
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #000;
+}
+
+/* ── Screen 4: generating ── */
+
+.update-flow--generating {
+  gap: clamp(14px, 1.6vh, 20px);
+  justify-content: center;
+}
+
+.update-flow__generating-title {
+  margin: 0;
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.update-flow__gen-rows {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.2vh, 14px);
   width: 100%;
 }
 
-.persona-delta-card {
-  min-width: 0;
-  min-height: 0;
-  border: 2px solid #000;
-  border-radius: 18px;
-  background: var(--delta-card-color, #d8d8d8);
-  color: #000;
-  padding: clamp(9px, 1.1vw, 13px);
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
-  align-content: stretch;
-  gap: 5px;
-}
-
-.persona-delta-card--main {
-  grid-row: span 2;
-}
-
-.persona-delta-card__label {
-  min-width: 0;
-  color: #000;
-  font-size: clamp(12px, 1.12vw, 14px);
-  font-weight: 900;
-  line-height: 1;
-  overflow-wrap: anywhere;
-}
-
-.persona-delta-card__delta {
-  align-self: end;
-  color: #000;
-  font-size: clamp(34px, 4.1vw, 48px);
-  font-weight: 900;
-  line-height: 0.82;
-  font-variant-numeric: tabular-nums;
-}
-
-.persona-delta-card__outcome {
-  color: #000;
-  font-size: clamp(18px, 2.1vw, 26px);
-  font-weight: 900;
-  line-height: 0.98;
-  overflow-wrap: anywhere;
-}
-
-.persona-delta-card__score {
-  color: #000;
-  font-size: clamp(10px, 1vw, 12px);
-  font-weight: 800;
-  line-height: 1;
-}
-
-.generating-content-block {
-  display: grid;
-  grid-template-columns: clamp(48px, 5vw, 74px) minmax(0, 1fr);
-  gap: clamp(10px, 1.4vw, 14px);
-  padding: clamp(12px, 1.55vh, 16px);
-}
-
-.generating-content-rail {
-  min-height: 0;
-  display: grid;
-  grid-template-rows: repeat(3, 1fr);
-  gap: 7px;
-}
-
-.generating-content-rail span {
-  border: 1px solid rgba(0, 0, 0, 0.32);
-  border-radius: 7px;
-  background: #f1f1f1;
-}
-
-.generating-content-rail span[data-active='true'] {
-  border: 2px solid #000;
-  background: var(--pop, #ccf847);
-}
-
-.generating-content-copy {
-  min-width: 0;
-  min-height: 0;
-  display: grid;
-  align-content: center;
-  justify-items: start;
-  gap: clamp(10px, 1.4vh, 14px);
-  animation: generating-content-fade 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.generating-content-tag[data-persona='productivite'] {
-  border-color: #000;
-}
-
-.generating-content-tag[data-persona='securite'] {
-  border-color: #000;
-}
-
-.generating-content-tag[data-persona='popularite'] {
-  border-color: #000;
-}
-
-.generating-content-text {
-  margin: 0;
-  color: #000;
-  font-family: var(--font-avant);
-  font-size: clamp(22px, 3vw, 38px);
-  font-weight: 900;
-  line-height: 0.95;
-  text-transform: none;
-  overflow-wrap: anywhere;
-}
-
-.dashboard-timer-card--action-status .persona-delta-summary {
-  padding: 7px;
-}
-
-.dashboard-timer-card--action-status .persona-delta-summary__grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1fr);
-  gap: 5px;
-}
-
-.dashboard-timer-card--action-status .persona-delta-card {
-  border-width: 1px;
-  border-radius: 13px;
-  padding: 6px;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 3px;
-}
-
-.dashboard-timer-card--action-status .persona-delta-card--main {
-  grid-row: auto;
-}
-
-.dashboard-timer-card--action-status .persona-delta-card__label {
-  font-size: clamp(8px, 0.75vw, 10px);
-}
-
-.dashboard-timer-card--action-status .persona-delta-card__delta {
-  font-size: clamp(18px, 1.9vw, 26px);
-}
-
-.dashboard-timer-card--action-status .persona-delta-card__outcome {
-  display: none;
-}
-
-.dashboard-timer-card--action-status .persona-delta-card__score {
-  font-size: clamp(7px, 0.7vw, 9px);
-}
-
-.dashboard-timer-card--action-status .generating-content-block {
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 8px;
-  padding: 8px 10px;
-}
-
-.dashboard-timer-card--action-status .generating-content-rail {
-  gap: 4px;
-}
-
-.dashboard-timer-card--action-status .generating-content-rail span {
-  border-radius: 5px;
-}
-
-.dashboard-timer-card--action-status .generating-content-copy {
+.update-gen-row {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
-.dashboard-timer-card--action-status .generating-content-tag {
-  min-height: 24px;
-  padding: 4px 8px 5px;
-  border-width: 1px;
-  border-radius: 6px;
-  font-size: clamp(10px, 0.95vw, 13px);
+.update-gen-row__phrase {
+  margin: 0;
+  font-size: clamp(13px, 1.35vw, 16px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: #000;
+  animation: update-phrase-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.dashboard-timer-card--action-status .generating-content-text {
-  font-size: clamp(14px, 1.45vw, 20px);
+.update-gen-row__track {
+  height: clamp(10px, 1.1vh, 13px);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gen-bar-color, #759aef) 22%, #fff);
+  overflow: hidden;
+  position: relative;
 }
 
-@keyframes generating-content-fade {
+.update-gen-row__shimmer {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 42%;
+  border-radius: inherit;
+  background: var(--gen-bar-color, #759aef);
+  animation: update-gen-shimmer 1.4s ease-in-out infinite;
+}
+
+.update-gen-row:nth-child(2) .update-gen-row__shimmer {
+  animation-delay: 0.2s;
+}
+
+.update-gen-row:nth-child(3) .update-gen-row__shimmer {
+  animation-delay: 0.4s;
+}
+
+@keyframes update-phrase-in {
   from {
     opacity: 0;
     transform: translateY(6px);
-    filter: blur(3px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
+
+@keyframes update-gen-shimmer {
+  0% {
+    transform: translateX(-10%);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateX(140%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(280%);
+    opacity: 0.55;
+  }
+}
+
+/* ── Animated ellipsis (generating title) ── */
 
 .generating-ellipsis {
   display: inline-flex;
   align-items: baseline;
-  margin-left: 0.05em;
+  margin-left: 0.02em;
 }
 
 .generating-ellipsis__dot {
@@ -463,12 +255,21 @@
   }
 }
 
-@media (max-width: 860px) {
-  .harvest-panel__body {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .harvest-panel__log {
-    display: none;
-  }
+/* Status cards fill the action slot */
+.dashboard-timer-card.dashboard-timer-card--primary.dashboard-timer-card--harvest,
+.dashboard-timer-card.dashboard-timer-card--primary.dashboard-timer-card--analysis,
+.dashboard-timer-card.dashboard-timer-card--primary.dashboard-timer-card--generating,
+.dashboard-timer-card--action-status.dashboard-timer-card--harvest,
+.dashboard-timer-card--action-status.dashboard-timer-card--analysis,
+.dashboard-timer-card--action-status.dashboard-timer-card--generating {
+  cursor: default;
+  pointer-events: none;
+  padding: 0;
+  min-height: 0;
+  height: 100%;
+  align-items: stretch;
+  justify-content: stretch;
+  text-align: left;
+  text-transform: none;
+  overflow: hidden;
 }

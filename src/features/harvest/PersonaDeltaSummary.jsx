@@ -1,29 +1,14 @@
 const PERSONA_DELTA_CARDS = [
-  {
-    key: 'productivity',
-    scoreKey: 'productivity',
-    label: 'productivity',
-    color: '#D8D8D8',
-  },
-  {
-    key: 'security',
-    scoreKey: 'security',
-    label: 'security',
-    color: '#759AEF',
-  },
-  {
-    key: 'social',
-    scoreKey: 'social',
-    label: 'social',
-    color: '#CCF847',
-  },
+  { key: 'productivity', scoreKey: 'productivity', color: '#D8D8D8' },
+  { key: 'security', scoreKey: 'security', color: '#759AEF' },
+  { key: 'social', scoreKey: 'social', color: '#CCF847' },
 ];
 
 function formatDelta(delta) {
   const n = Number(delta);
   if (!Number.isFinite(n)) return '—';
-  if (n > 0) return `+${n}`;
-  if (n < 0) return String(n);
+  if (n > 0) return `+${n}%`;
+  if (n < 0) return `${n}%`;
   return '=';
 }
 
@@ -33,49 +18,46 @@ function deltaMod(delta) {
   return n > 0 ? 'up' : 'down';
 }
 
-function deltaOutcome(delta, label) {
-  const n = Number(delta);
-  const suffix = label ? ` in ${label}` : '';
-  if (!Number.isFinite(n) || n === 0) return `ur score${suffix} has stayed the same`;
-  if (n > 0) return `ur score${suffix} has improved`;
-  return `ur score${suffix} has decreased`;
+function personaToDeltaKey(personaKey) {
+  const k = String(personaKey ?? '').toLowerCase();
+  if (k === 'popularity' || k === 'popularite' || k === 'social') return 'social';
+  if (k === 'productivity' || k === 'productivite') return 'productivity';
+  if (k === 'security' || k === 'securite') return 'security';
+  return 'security';
 }
 
-function formatScore(score) {
-  const n = Number(score);
-  if (!Number.isFinite(n)) return null;
-  return Math.max(0, Math.min(100, Math.round(n)));
+function orderCards(dominantPersona) {
+  const mainKey = personaToDeltaKey(dominantPersona);
+  const main = PERSONA_DELTA_CARDS.find((c) => c.key === mainKey) ?? PERSONA_DELTA_CARDS[1];
+  const others = PERSONA_DELTA_CARDS.filter((c) => c.key !== main.key);
+  if (others.length !== 2) return PERSONA_DELTA_CARDS;
+  return [others[0], main, others[1]];
 }
 
-export default function PersonaDeltaSummary({ deltas, scores }) {
+export default function PersonaDeltaSummary({ deltas, scores: _scores, dominantPersona = 'security' }) {
   if (!deltas) return null;
 
+  const cards = orderCards(dominantPersona);
+  const mainKey = personaToDeltaKey(dominantPersona);
+
   return (
-    <div className="persona-delta-summary" role="status" aria-live="polite">
-      <div className="persona-delta-summary__grid">
-        {PERSONA_DELTA_CARDS.map(({ key, scoreKey, label, color }, i) => {
-          const score = formatScore(scores?.[scoreKey]);
+    <div className="update-flow update-flow--deltas" role="status" aria-live="polite">
+      <div className="update-flow__delta-grid">
+        {cards.map(({ key, scoreKey, color }) => {
           const delta = deltas[key];
+          const isMain = key === mainKey;
           return (
             <article
               key={key}
-              className={`persona-delta-card persona-delta-card--${key}${
-                i === 0 ? ' persona-delta-card--main' : ''
-              }`}
+              className={`persona-delta-card update-delta-col${isMain ? ' update-delta-col--main persona-delta-card--main' : ''}`}
               style={{ '--delta-card-color': color }}
+              aria-label={`${key} ${formatDelta(delta)}`}
             >
-              <span className="persona-delta-card__label">{label}</span>
               <span
-                className={`persona-delta-card__delta persona-delta-card__delta--${deltaMod(delta)}`}
+                className={`update-delta-col__value persona-delta-card__delta persona-delta-card__delta--${deltaMod(delta)}`}
               >
                 {formatDelta(delta)}
               </span>
-              <span className="persona-delta-card__outcome">
-                {deltaOutcome(delta, label)}
-              </span>
-              {score != null ? (
-                <span className="persona-delta-card__score">{score}% current</span>
-              ) : null}
             </article>
           );
         })}

@@ -24,28 +24,29 @@ function formatLeaderboardTitle(title) {
   return text.toUpperCase();
 }
 
-function Row({ entry, hidden }) {
+function Row({ entry, hidden, revealing }) {
   const cls = [
     'leaderboard-row',
     entry.isUser ? 'leaderboard-row--self' : '',
     hidden ? 'leaderboard-row--hidden' : '',
+    revealing ? 'leaderboard-row--revealing' : '',
   ].filter(Boolean).join(' ');
   // Assumes 5-entry board: rank 1 → 100%, rank 5 → 20%.
   const widthPct = ((6 - entry.rank) / 5) * 100;
-  const name = hidden ? 'position hidden' : entry.name;
+  const name = entry.name;
   return (
-    <li className={cls}>
+    <li className={cls} aria-current={entry.isUser ? 'true' : undefined}>
       <div className="leaderboard-row__header">
         <span className="leaderboard-row__rank">{String(entry.rank).padStart(2, '0')}</span>
         <span className="leaderboard-row__avatar" aria-hidden>
-          {!hidden && entry.avatarSrc
+          {entry.isUser && entry.avatarSrc
             ? <img className="leaderboard-row__avatar-img" src={entry.avatarSrc} alt="" />
-            : !hidden
+            : entry.avatarInitials
               ? <span className="leaderboard-row__avatar-initials">{entry.avatarInitials}</span>
               : null}
         </span>
         <span className="leaderboard-row__name">{name}</span>
-        {!hidden && entry.handle
+        {entry.handle
           ? <span className="leaderboard-row__handle">{entry.handle}</span>
           : null}
       </div>
@@ -57,7 +58,7 @@ function Row({ entry, hidden }) {
 }
 
 export default function LeaderboardBlock({ leaderboard, accentColor }) {
-  const { isLeaderboardSelfHidden } = useLiveScoring();
+  const { isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
   const reactId = useId();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
   const {
@@ -69,6 +70,7 @@ export default function LeaderboardBlock({ leaderboard, accentColor }) {
     cloneHidden = [false, false, false, false],
   } = leaderboard;
   const selfHidden = isLeaderboardSelfHidden(boardId);
+  const selfRevealing = isLeaderboardSelfRevealing(boardId);
   const titleId = `leaderboard-title-${boardId}-${reactId}`;
 
   // Map each entry to its "is this row hidden?" flag.
@@ -95,7 +97,12 @@ export default function LeaderboardBlock({ leaderboard, accentColor }) {
         aria-labelledby={titleId}
       >
         {entries.map((e, i) => (
-          <Row key={e.rank} entry={e} hidden={hiddenForEntry[i]} />
+          <Row
+            key={e.rank}
+            entry={e}
+            hidden={hiddenForEntry[i]}
+            revealing={e.isUser && selfRevealing}
+          />
         ))}
       </ul>
     </div>
