@@ -96,11 +96,11 @@ describe('fallbackRationales', () => {
     expect(out[1].signal).toBeNull();
   });
 
-  it('clone signals use "score N · yours M" format', () => {
+  it('clone signals use "score N" only (no user score)', () => {
     const out = fallbackRationales(BOARD, STANDING, CLONE_HIDDEN);
-    expect(out[0].signal).toBe('score 61 · yours 47');
-    expect(out[3].signal).toBe('score 40 · yours 47');
-    expect(out[4].signal).toBe('score 30 · yours 47');
+    expect(out[0].signal).toBe('score 61');
+    expect(out[3].signal).toBe('score 40');
+    expect(out[4].signal).toBe('score 30');
   });
 });
 

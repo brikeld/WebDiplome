@@ -4,9 +4,21 @@ import {
   parseUserSignals,
   fallbackClimbTip,
   BOARD_DESCRIPTIONS,
+  cloneRationaleSignal,
 } from './leaderboardRationaleUtils.js';
 import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
+
+function OtherUserAvatar({ entry }) {
+  return (
+    <span
+      className={`lb2__other-avatar${entry.hidden ? ' lb2__other-avatar--hidden' : ''}`}
+      aria-hidden
+    >
+      <span className="lb2__other-avatar-mock" />
+    </span>
+  );
+}
 
 export default function LeaderboardRationaleView({ leaderboard }) {
   const [showOthers, setShowOthers] = useState(false);
@@ -177,31 +189,37 @@ export default function LeaderboardRationaleView({ leaderboard }) {
             const rat = Array.isArray(rationales)
               ? rationales.find((r) => r.rank === entry.rank)
               : null;
+            const cloneSignal = cloneRationaleSignal(rat?.signal);
             return (
               <li
                 key={entry.rank}
                 className={`lb2__other${entry.hidden ? ' is-hidden' : ''}`}
               >
-                <div className="lb2__other-head">
+                <div className="lb2__other-meta">
                   <span className="lb2__other-rank">#{entry.rank}</span>
-                  <span className="lb2__other-name">
-                    {entry.hidden ? '—' : entry.name}
-                  </span>
+                  {!entry.hidden && cloneSignal ? (
+                    <span className="lb2__other-score">{cloneSignal}</span>
+                  ) : null}
                 </div>
-                {entry.hidden ? (
-                  <p className="lb2__other-phrase">position hidden</p>
-                ) : (
-                  <>
-                    {rat?.phrase ? (
-                      <p className="lb2__other-phrase">{rat.phrase}</p>
-                    ) : null}
-                    {rat?.signal ? (
-                      <div className="lb2__other-chips">
-                        <span className="lb2__other-chip">{rat.signal}</span>
-                      </div>
-                    ) : null}
-                  </>
-                )}
+                <div className="lb2__other-body">
+                  <div className="lb2__other-portrait">
+                    <OtherUserAvatar entry={entry} />
+                  </div>
+                  {entry.hidden ? (
+                    <p className="lb2__other-phrase">position hidden</p>
+                  ) : (
+                    <>
+                      {rat?.phrase ? (
+                        <blockquote className="lb2__other-quote">
+                          <p className="lb2__other-quote-text">{rat.phrase}</p>
+                        </blockquote>
+                      ) : null}
+                      {entry.name ? (
+                        <cite className="lb2__other-cite">{entry.name}</cite>
+                      ) : null}
+                    </>
+                  )}
+                </div>
               </li>
             );
           })}

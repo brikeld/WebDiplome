@@ -134,7 +134,6 @@ export function fallbackRationales(board, standing, cloneHidden) {
     selfPhrase: 'classified by the algorithm',
     clonePhrases: ['', '', '', ''],
   };
-  const userScore = Math.round(standing.entries.find((e) => e.isUser)?.score ?? 0);
   let cloneIdx = -1;
   return standing.entries.map((e) => {
     if (e.isUser) {
@@ -145,6 +144,6 @@ export function fallbackRationales(board, standing, cloneHidden) {
       return { rank: e.rank, phrase: null, signal: null };
     }
     const phrase = tpl.clonePhrases[cloneIdx % tpl.clonePhrases.length] || 'in your zone';
-    return { rank: e.rank, phrase, signal: `score ${Math.round(e.score)} \u00B7 yours ${userScore}` };
+    return { rank: e.rank, phrase, signal: `score ${Math.round(e.score)}` };
   });
 }

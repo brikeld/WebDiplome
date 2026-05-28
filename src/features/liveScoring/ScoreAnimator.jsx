@@ -41,12 +41,6 @@ function animateCounterToTarget(persona, targetValue, onDone, duration = 760) {
   const endVal = Math.max(0, Math.min(100, targetValue));
   _counterState.set(ringAttr, endVal);
 
-  const flashClass = endVal < startVal ? 'lsc-score-flash-down' : 'lsc-score-flash-up';
-  scoreEl.classList.remove('lsc-score-flash-down', 'lsc-score-flash-up');
-  void scoreEl.offsetWidth;
-  scoreEl.classList.add(flashClass);
-  setTimeout(() => scoreEl.classList.remove(flashClass), duration + 100);
-
   const startTime = performance.now();
   function tick(ts) {
     const progress = Math.min((ts - startTime) / duration, 1);
@@ -70,9 +64,7 @@ function formatHitDeltaText(type, delta) {
 }
 
 const RING_HIT_DELTA_MS = 6000;
-const TARGET_HIT_DELTA_MS = 6000;
 const _ringHitState = new Map();
-const _targetHitState = new Map();
 
 function showRingHitDelta(persona, type, delta) {
   const text = formatHitDeltaText(type, delta);
@@ -113,40 +105,6 @@ function showRingHitDelta(persona, type, delta) {
   _ringHitState.set(ringAttr, { leaveTimeout, removeTimeout: null, el });
 }
 
-function showTargetHitDelta(hostEl, type, delta, stateKey) {
-  const text = formatHitDeltaText(type, delta);
-  if (!text || !hostEl) return;
-
-  const mod = type === 'hide' ? 'down' : 'up';
-  const prev = _targetHitState.get(stateKey);
-  if (prev) {
-    clearTimeout(prev.leaveTimeout);
-    clearTimeout(prev.removeTimeout);
-    prev.el?.remove();
-  }
-
-  const el = document.createElement('span');
-  el.className = `lsc-target-hit-delta lsc-target-hit-delta--${mod}`;
-  el.textContent = text;
-  el.setAttribute('aria-live', 'polite');
-  hostEl.appendChild(el);
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => el.classList.add('is-visible'));
-  });
-
-  const leaveTimeout = setTimeout(() => {
-    el.classList.remove('is-visible');
-    el.classList.add('is-leaving');
-    const removeTimeout = setTimeout(() => {
-      el.remove();
-      _targetHitState.delete(stateKey);
-    }, 420);
-    _targetHitState.set(stateKey, { leaveTimeout: null, removeTimeout, el: null });
-  }, TARGET_HIT_DELTA_MS);
-
-  _targetHitState.set(stateKey, { leaveTimeout, removeTimeout: null, el });
-}
-
 function commitScoreOnHit(event, { beginRingAnimation, finishRingAnimation, adjustedScoresRef }) {
   const persona = String(event.persona ?? '').toLowerCase();
   const scoreKey = PERSONA_TO_SCORE_KEY[persona] ?? 'productivity';
@@ -155,7 +113,7 @@ function commitScoreOnHit(event, { beginRingAnimation, finishRingAnimation, adju
   beginRingAnimation(ringAttr);
   event.onCommit?.();
 
-  if (event.delta != null && Number(event.delta) > 0 && event.type !== 'reveal') {
+  if (event.delta != null && Number(event.delta) > 0) {
     showRingHitDelta(persona, event.type, event.delta);
   }
 
@@ -221,12 +179,6 @@ function pulseRevealTarget(sourceRect, variant, event) {
     row.style.setProperty('--hit-accent', accent);
     pulseTargetEl(row);
     const header = row.querySelector('.leaderboard-row__header') ?? row;
-    if (header !== row && getComputedStyle(header).position === 'static') {
-      header.style.position = 'relative';
-    }
-    if (event.delta != null && Number(event.delta) > 0) {
-      showTargetHitDelta(header, event.type, event.delta, `leaderboard-self|${row.dataset.boardId ?? sourceRect.y}`);
-    }
     return;
   }
 
@@ -237,12 +189,6 @@ function pulseRevealTarget(sourceRect, variant, event) {
   const accentFromCard = getComputedStyle(card).getPropertyValue('--post-accent').trim();
   capsule.style.setProperty('--hit-accent', accentFromCard || accent);
   pulseTargetEl(capsule);
-  if (getComputedStyle(card).position === 'static') {
-    card.style.position = 'relative';
-  }
-  if (event.delta != null && Number(event.delta) > 0) {
-    showTargetHitDelta(card, event.type, event.delta, `post|${sourceRect.x}|${sourceRect.y}`);
-  }
 }
 
 function Particle({ event, onComplete, scoringApi }) {

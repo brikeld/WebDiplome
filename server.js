@@ -29,6 +29,7 @@ import {
   readPostsForId,
   writePostsForId,
   syncPersonaPostsFromClient,
+  appendPersonaPosts,
   POSTS_DIR,
 } from './server/lib/postsStore.js';
 
@@ -328,6 +329,29 @@ app.post('/api/harvest/error', (req, res) => {
 app.post('/api/harvest/ack', (_req, res) => {
   ackHarvest();
   res.json({ success: true, ...getHarvestStatus() });
+});
+
+// POST /api/profile/:id/posts/prepend — persist system or generated posts at feed head
+app.post('/api/profile/:id/posts/prepend', async (req, res) => {
+  const id = req.params.id;
+  const posts = req.body?.posts;
+  if (!Array.isArray(posts) || posts.length === 0) {
+    return res.status(400).json({ error: 'posts array required' });
+  }
+
+  try {
+    const profilePath = path.join(PROFILES_DIR, `${id}.json`);
+    try {
+      await fs.access(profilePath);
+    } catch {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    const merged = await appendPersonaPosts(id, posts, normalizePost);
+    res.json({ success: true, count: merged.length, posts: merged });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // DELETE /api/posts/:id — remove one post by createdAt from a profile's post array

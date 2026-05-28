@@ -501,6 +501,16 @@ async function generateOneSuggestion({
  * Three sequential LM calls (one per persona) — avoids LM Studio overload and
  * thinking models colliding on parallel requests.
  */
+function normalizeAllowedPersonas(allowedPersonas) {
+  if (!Array.isArray(allowedPersonas) || allowedPersonas.length === 0) return null;
+  const out = [];
+  for (const raw of allowedPersonas) {
+    const key = PERSONA_ALIASES[String(raw ?? '').toLowerCase()];
+    if (key && !out.includes(key)) out.push(key);
+  }
+  return out.length ? out : null;
+}
+
 export async function generateCommentSuggestions({
   baseUrl,
   model,
@@ -508,17 +518,49 @@ export async function generateCommentSuggestions({
   post,
   electronData: _electronData = null,
   electronUser: _electronUser = null,
-  uploadsDir,
+  uploadsDir: _uploadsDir,
   timeoutMs = 120000,
   retries = 1,
+  allowedPersonas = null,
 }) {
   const mainPersona = dominantPersonaKey(profile);
   const userPayload = buildCompactUserPayload(profile, post, mainPersona);
   const plainUserPayload = buildPlainUserPayload(profile, post, mainPersona);
+  const allowed = normalizeAllowedPersonas(allowedPersonas);
+
+  // Low persona score: three reply options on the same track (keeps the 3-column UI).
+  if (allowed?.length === 1) {
+    const persona = allowed[0];
+    const results = [];
+    for (let slot = 0; slot < 3; slot += 1) {
+      const content = await generateOneSuggestion({
+        persona,
+        mainPersona,
+        baseUrl,
+        model,
+        userPayload,
+        plainUserPayload,
+        timeoutMs,
+        retries,
+      });
+      results.push({
+        persona,
+        content,
+        plusValue: ((slot + 1) % 5) + 1,
+        slotIndex: slot,
+      });
+    }
+    return results;
+  }
+
+  const personaOrder =
+    allowed?.length === 2
+      ? allowed
+      : PERSONA_ORDER;
 
   const results = [];
-  for (let index = 0; index < PERSONA_ORDER.length; index += 1) {
-    const persona = PERSONA_ORDER[index];
+  for (let index = 0; index < personaOrder.length; index += 1) {
+    const persona = personaOrder[index];
     const content = await generateOneSuggestion({
       persona,
       mainPersona,
@@ -533,6 +575,7 @@ export async function generateCommentSuggestions({
       persona,
       content,
       plusValue: ((index + 1) % 5) + 1,
+      slotIndex: index,
     });
   }
 

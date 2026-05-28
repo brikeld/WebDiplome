@@ -17,7 +17,9 @@ export function clearAllLiveScoringStorage() {
     const keys = [];
     for (let i = 0; i < localStorage.length; i += 1) {
       const k = localStorage.key(i);
-      if (k && k.startsWith(LS_PREFIX)) keys.push(k);
+      if (k && (k.startsWith(LS_PREFIX) || k.startsWith('compliant-low-score-fired|'))) {
+        keys.push(k);
+      }
     }
     for (const k of keys) localStorage.removeItem(k);
   } catch {

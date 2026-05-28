@@ -312,34 +312,47 @@
 }
 
 @keyframes tell-pill-expand-enter {
-  from { opacity: 0; transform: translateY(8px) scale(0.985); }
-  to   { opacity: 1; transform: translateY(0)   scale(1);     }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes tell-pill-expand-exit {
-  from { opacity: 1; transform: translateY(0)   scale(1);     }
-  to   { opacity: 0; transform: translateY(6px) scale(0.985); }
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
+/* Fills the dashboard capsule edge-to-edge — no inner rounded “pill” shell */
 .tell-more-pill--expanded {
-  --tell-pill-radius: var(--capsule-radius);
   --tell-pill-border: 0;
   border: none;
-  border-radius: var(--tell-pill-radius);
+  border-radius: 0;
   cursor: default;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   padding: 0;
   min-height: 0;
+  width: 100%;
   height: 100%;
-  transform-origin: center top;
+  flex: 1 1 0;
   animation: tell-pill-expand-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboard-capsule--figma.is-tell-expanded .tell-more-pill--expanded,
+.dashboard-capsule--figma.is-tell-closing .tell-more-pill--expanded {
+  border-radius: 0;
 }
 
 .tell-more-pill--expanded .inference-panel,
 .tell-more-pill--expanded .inference-panel--leaderboard {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+  border-radius: 0;
   background: transparent;
+  /* Dashboard capsule supplies outer pad — no double gutter here */
+  padding: 0;
+  gap: clamp(8px, 0.9vh, 12px);
 }
 
 .tell-more-pill--expanded.tell-more-pill--closing {
@@ -363,10 +376,10 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--tell-pill-pastel, #bccdf5);
+  background: transparent;
   color: #000;
-  padding: 8px 10px 8px;
-  gap: clamp(6px, 0.9vh, 12px);
+  padding: clamp(10px, 1.15vw, 14px);
+  gap: clamp(8px, 0.9vh, 12px);
   text-align: left;
   overflow: hidden;
 }
@@ -377,8 +390,9 @@
   --lb-radius: 14px;
   --lb-gap: clamp(6px, 0.9vh, 12px);
   position: relative;
-  padding: 22px 24px 20px;
-  gap: clamp(12px, 1.2vh, 18px);
+  background: transparent;
+  padding: clamp(10px, 1.15vw, 14px);
+  gap: clamp(8px, 0.9vh, 12px);
 }
 
 .inference-panel__stack {
@@ -456,24 +470,25 @@
   white-space: nowrap;
 }
 
-/* Leaderboard variant — same pastel shell as the armed Tell-Me-More pill. */
+/* Leaderboard — pastel shell comes from .dashboard-capsule.is-tell-expanded */
 .inference-panel--leaderboard {
-  background: var(--tell-pill-pastel, #bccdf5);
-  padding: 22px 18px;
-  gap: 16px;
-  transition: padding 420ms cubic-bezier(0.4, 0, 0.2, 1), gap 420ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.tell-more-pill--expanded .inference-panel--leaderboard {
-  padding: 20px 14px;
-  gap: 18px;
+  background: transparent;
+  padding: clamp(10px, 1.15vw, 14px);
+  gap: clamp(8px, 0.9vh, 12px);
 }
 
 .tell-more-pill--expanded .lb2 {
-  --lb-fs-label: clamp(13px, 1.35vw, 17px);
-  --lb-fs-value: clamp(18px, 2.15vw, 26px);
-  --lb-gap: 16px;
-  --lb-radius: 16px;
+  --lb-fs-label: clamp(12px, 1.2vw, 15px);
+  --lb-fs-value: clamp(17px, 1.85vw, 22px);
+  --lb-gap: clamp(10px, 1vh, 13px);
+  --lb-shell-inset: clamp(10px, 1.1vw, 14px);
+  --lb-radius: 12px;
+  --lb-space-md: clamp(10px, 1vh, 12px);
+  --lb-tile-pad-y: clamp(11px, 1.05vw, 14px);
+  --lb-tile-pad-x: clamp(13px, 1.2vw, 16px);
+  --lb-signals-inset: clamp(5px, 0.55vw, 7px);
+  box-sizing: border-box;
+  padding: var(--lb-shell-inset);
 }
 
 .inference-panel--leaderboard .inference-panel__body {
@@ -1076,10 +1091,19 @@
 
 .lb2 {
   --lb-acc: var(--tell-pill-accent, #759aef);
-  --lb-fs-label: clamp(12px, 1.2vw, 15px);
-  --lb-fs-value: clamp(16px, 1.9vw, 22px);
+  /* Strict 2-size type: label = section headers / meta; value = all body copy */
+  --lb-fs-label: clamp(11px, 1.1vw, 14px);
+  --lb-fs-value: clamp(15px, 1.65vw, 20px);
   --lb-radius: 14px;
-  --lb-gap: 14px;
+  --lb-gap: 8px;
+  --lb-space-xs: clamp(4px, 0.5vh, 6px);
+  --lb-space-sm: clamp(7px, 0.8vh, 9px);
+  --lb-space-md: clamp(10px, 1vh, 12px);
+  --lb-tile-pad-y: clamp(11px, 1.05vw, 14px);
+  --lb-tile-pad-x: clamp(13px, 1.2vw, 16px);
+  --lb-signals-inset: clamp(5px, 0.55vw, 7px);
+  /* Only rank # uses a display size outside the 2-size label/value system */
+  --lb-fs-rank: clamp(34px, 5vw, 56px);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1107,8 +1131,9 @@
 /* Normal-post inference panel has its own padding (22/24/20). The overlay
    covers the panel edge-to-edge, so apply matching padding here so the
    skeleton bars sit inside the same content rect the real UI lives in. */
+.tell-more-pill--expanded .tell-load,
 .inference-panel:not(.inference-panel--leaderboard) .tell-load {
-  padding: 22px 24px 20px;
+  padding: 0;
 }
 
 .tell-load__skel {
@@ -1186,11 +1211,11 @@
 .lb2__tile {
   background: var(--lb-acc);
   border-radius: var(--lb-radius);
-  padding: 14px 18px 16px;
+  padding: var(--lb-tile-pad-y) var(--lb-tile-pad-x) calc(var(--lb-tile-pad-y) + 2px);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
+  gap: var(--lb-space-sm);
   min-height: 0;
   overflow: hidden;
   color: #000;
@@ -1198,10 +1223,21 @@
 }
 
 /* Grid placement */
-.lb2__tile--rank    { grid-column: 1; grid-row: 1; align-items: center; justify-content: center; padding: 8px; gap: 0; }
+.lb2__tile--rank {
+  grid-column: 1;
+  grid-row: 1;
+  align-items: center;
+  justify-content: center;
+  padding: var(--lb-space-sm);
+  gap: var(--lb-space-xs);
+}
 .lb2__tile--verdict { grid-column: 2; grid-row: 1; }
 .lb2__tile--improve { grid-column: 1 / -1; grid-row: 2; }
-.lb2__tile--signals { grid-column: 1 / -1; grid-row: 3; padding-bottom: 10px; }
+.lb2__tile--signals {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  padding-bottom: var(--lb-tile-pad-y);
+}
 
 /* ── Type system — only 2 sizes, no opacity ──────────────────────────────── */
 
@@ -1221,16 +1257,16 @@
   font-family: var(--font-avant);
   font-weight: 800;
   font-size: var(--lb-fs-value);
-  line-height: 1.2;
-  letter-spacing: -0.012em;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
   color: #000;
 }
 
-/* Smaller value variant — STILL one of the 2 sizes; just clamped lines */
+/* Secondary body — same label size, sentence case (e.g. board blurb under verdict) */
 .lb2__value--small {
   font-size: var(--lb-fs-label);
   font-weight: 800;
-  line-height: 1.3;
+  line-height: 1.4;
   letter-spacing: 0;
   text-transform: none;
   color: #000;
@@ -1263,11 +1299,11 @@
 .lb2__rank-value {
   font-family: var(--font-avant);
   font-weight: 800;
-  font-size: clamp(34px, 5vw, 56px);
+  font-size: var(--lb-fs-rank, clamp(34px, 5vw, 56px));
   line-height: 0.9;
   letter-spacing: -0.04em;
   color: #000;
-  margin: 2px 0 0;
+  margin: var(--lb-space-xs) 0 0;
 }
 
 .lb2__rank-of {
@@ -1283,7 +1319,7 @@
 /* ── Verdict tile ────────────────────────────────────────────────────────── */
 
 .lb2__tile--verdict {
-  gap: 6px;
+  gap: var(--lb-space-sm);
 }
 
 .lb2__tile--verdict .lb2__value {
@@ -1300,13 +1336,13 @@
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-top: 2px;
+  margin-top: var(--lb-space-xs);
 }
 
 /* ── Improve tile ────────────────────────────────────────────────────────── */
 
 .lb2__tile--improve {
-  gap: 6px;
+  gap: var(--lb-space-sm);
 }
 
 .lb2__tile--improve .lb2__value--climb {
@@ -1321,14 +1357,20 @@
 /* ── Signals tile — grid of signals + detail strip ───────────────────────── */
 
 .lb2__tile--signals {
-  gap: 8px;
+  gap: var(--lb-space-sm);
   flex: 1 1 0;
+}
+
+.lb2__tile--signals .lb2__sig-wrap {
+  padding-inline: var(--lb-signals-inset);
+  padding-bottom: var(--lb-signals-inset);
+  box-sizing: border-box;
 }
 
 .lb2__sig-wrap {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--lb-space-sm);
   flex: 1 1 0;
   min-height: 0;
 }
@@ -1336,7 +1378,7 @@
 .lb2__sig-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: var(--lb-space-sm);
   flex: 1 1 0;
   min-height: 0;
 }
@@ -1346,7 +1388,7 @@
   border: 2px solid #000;
   border-radius: var(--lb-radius);
   background: transparent;
-  padding: 10px 12px;
+  padding: var(--lb-space-sm) calc(var(--lb-space-sm) + 2px);
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -1362,7 +1404,7 @@
 
 .lb2__sig--named {
   min-height: 52px;
-  padding: 10px 12px 11px;
+  padding: var(--lb-space-sm) calc(var(--lb-space-sm) + 2px);
 }
 
 .lb2__sig:hover,
@@ -1392,8 +1434,9 @@
 .lb2__sig-mark {
   font-family: var(--font-avant);
   font-weight: 800;
-  font-size: var(--lb-fs-value);
-  line-height: 1;
+  font-size: var(--lb-fs-label);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
   color: var(--lb-acc);
   flex-shrink: 0;
 }
@@ -1401,7 +1444,7 @@
 .lb2__sig-copy {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--lb-space-xs);
   min-width: 0;
   flex: 1 1 0;
 }
@@ -1410,7 +1453,7 @@
   font-family: var(--font-avant);
   font-weight: 800;
   font-size: var(--lb-fs-value);
-  line-height: 1.12;
+  line-height: 1.3;
   letter-spacing: -0.01em;
   color: #000;
   display: -webkit-box;
@@ -1424,7 +1467,7 @@
   font-family: var(--font-avant);
   font-weight: 800;
   font-size: var(--lb-fs-label);
-  line-height: 1.2;
+  line-height: 1.35;
   letter-spacing: 0;
   text-transform: none;
   color: var(--lb-acc);
@@ -1435,15 +1478,15 @@
   overflow: hidden;
 }
 
-/* Detail strip — black fill, accent text only */
+/* Detail strip — black fill, accent text; 2 sizes only (label headers + value body) */
 .lb2__sig-detail {
   flex-shrink: 0;
   background: #000;
   border-radius: var(--lb-radius);
-  padding: 12px 14px 14px;
+  padding: var(--lb-space-md);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   box-sizing: border-box;
   animation: lb2-detail-in 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
@@ -1451,18 +1494,31 @@
 .lb2__sig-detail-block {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--lb-space-sm);
   min-width: 0;
+}
+
+.lb2__sig-detail-block + .lb2__sig-detail-block {
+  margin-top: var(--lb-space-md);
+  padding-top: var(--lb-space-md);
+  border-top: 2px solid color-mix(in srgb, var(--lb-acc) 45%, transparent);
 }
 
 .lb2__sig-detail .lb2__label {
   color: var(--lb-acc);
+  font-size: var(--lb-fs-label);
+  line-height: 1.15;
+}
+
+.lb2__sig-detail .lb2__value,
+.lb2__sig-detail .lb2__value--reason {
+  color: var(--lb-acc);
+  font-size: var(--lb-fs-value);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 
 .lb2__sig-detail .lb2__value--reason {
-  color: var(--lb-acc);
-  font-size: var(--lb-fs-label);
-  line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 4;
   line-clamp: 4;
@@ -1476,23 +1532,24 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--lb-space-xs);
 }
 
 .lb2__sig-example-item {
   font-family: var(--font-avant);
   font-weight: 800;
   font-size: var(--lb-fs-value);
-  line-height: 1.1;
+  line-height: 1.3;
   letter-spacing: -0.01em;
   color: var(--lb-acc);
 }
 
 .lb2__sig-example-more {
+  margin: var(--lb-space-xs) 0 0;
   font-family: var(--font-avant);
   font-weight: 800;
   font-size: var(--lb-fs-label);
-  line-height: 1.15;
+  line-height: 1.35;
   color: var(--lb-acc);
 }
 
@@ -1510,7 +1567,7 @@
   border: none;
   background: var(--lb-acc);
   border-radius: var(--lb-radius);
-  padding: 12px 16px;
+  padding: var(--lb-tile-pad-y) var(--lb-tile-pad-x);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1585,9 +1642,9 @@
 
 .lb2__label--head {
   color: #000;
-  font-size: clamp(20px, 2.3vw, 30px);
-  font-weight: 900;
-  letter-spacing: -0.02em;
+  font-size: var(--lb-fs-value);
+  font-weight: 800;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -1604,17 +1661,32 @@
 }
 
 .lb2__other {
+  --lb-other-avatar-size: min(100%, clamp(112px, 94%, 172px));
   background: var(--lb-acc);
   border-radius: var(--lb-radius);
-  padding: 12px 14px;
+  padding: var(--lb-tile-pad-y) var(--lb-tile-pad-x);
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  text-align: center;
+  gap: clamp(6px, 0.65vh, 8px);
   min-height: 0;
   overflow: hidden;
   color: #000;
   box-sizing: border-box;
+}
+
+/* Portrait + quote stack — tight gap, centered in the card */
+.lb2__other-body {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  gap: clamp(6px, 0.75vh, 10px);
 }
 
 .lb2__other.is-hidden {
@@ -1622,11 +1694,57 @@
   color: var(--lb-acc);
 }
 
-.lb2__other-head {
+/* Rank + score on one line — attribution header for the quote */
+.lb2__other-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  width: 100%;
   flex-shrink: 0;
+}
+
+.lb2__other-portrait {
+  flex: 0 0 auto;
+  width: var(--lb-other-avatar-size);
+  height: var(--lb-other-avatar-size);
+  margin-inline: auto;
+}
+
+.lb2__other-portrait .lb2__other-avatar {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: clamp(12px, 1.4vw, 18px);
+}
+
+.lb2__other-avatar {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  border-radius: clamp(12px, 1.4vw, 18px);
+  overflow: hidden;
+  background: color-mix(in srgb, #000 14%, var(--lb-acc));
+  display: block;
+}
+
+/* Generic profile mock (same language as dashboard hide-pill ghost avatar) */
+.lb2__other-avatar-mock {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--lb-acc) 52%, #000);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #000 18%, transparent);
+}
+
+.lb2__other-avatar--hidden .lb2__other-avatar-mock {
+  background: color-mix(in srgb, var(--lb-acc) 38%, #000);
+  opacity: 0.55;
+}
+
+.lb2__other.is-hidden .lb2__other-avatar {
+  background: color-mix(in srgb, var(--lb-acc) 35%, #000);
 }
 
 .lb2__other-rank {
@@ -1646,16 +1764,21 @@
   color: #000;
 }
 
-.lb2__other-name {
+.lb2__other-score {
   font-family: var(--font-avant);
   font-weight: 800;
-  font-size: var(--lb-fs-value);
-  letter-spacing: -0.015em;
-  color: inherit;
+  font-size: var(--lb-fs-label);
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  background: #000;
+  color: var(--lb-acc);
+  padding: 2px 10px 3px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
 }
 
 .lb2__other-phrase {
@@ -1678,33 +1801,71 @@
   color: var(--lb-acc);
 }
 
-.lb2__other-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: auto;
+/* Direct quote — portrait above, phrase below (Demi Oblique) */
+.lb2__other-quote {
+  margin: 0;
+  padding: 0;
+  border: none;
+  width: 100%;
+  flex: 0 1 auto;
+  min-height: 0;
 }
 
-.lb2__other-chip {
-  display: inline-block;
-  padding: 2px 9px 3px;
-  border-radius: 999px;
-  background: #000;
-  color: var(--lb-acc);
+.lb2__other-quote-text {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-style: oblique;
+  font-weight: 600;
+  font-size: clamp(15px, 1.65vw, 20px);
+  line-height: 1.38;
+  letter-spacing: -0.012em;
+  color: #000;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lb2__other-cite {
+  display: block;
+  margin: 0;
+  padding: 0;
   font-family: var(--font-avant);
   font-weight: 800;
   font-size: var(--lb-fs-label);
-  letter-spacing: 0.02em;
-  line-height: 1.15;
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #000 72%, transparent);
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.lb2__other.is-hidden .lb2__other-chip {
-  background: var(--lb-acc);
-  color: #000;
+.lb2__other.is-hidden .lb2__other-cite {
+  display: none;
+}
+
+.lb2__other-quote-text::before {
+  content: '\201C';
+}
+
+.lb2__other-quote-text::after {
+  content: '\201D';
+}
+
+.tell-more-pill--expanded .lb2__other {
+  --lb-other-avatar-size: min(100%, clamp(120px, 96%, 188px));
+}
+
+.tell-more-pill--expanded .lb2__other-quote-text {
+  font-size: clamp(16px, 1.85vw, 22px);
+}
+
+.lb2__other.is-hidden .lb2__other-score {
+  display: none;
 }
 
 /* ── Redacted state ──────────────────────────────────────────────────────── */
@@ -1735,3 +1896,326 @@
   color: var(--lb-acc);
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   np2 — Normal-post Tell-Me-More layout (mirror of lb2 conventions).
+   Big post quote on top, then 3 capsule tiles: thinking / ingredients / chain.
+   Each chip is a small interactable capsule; the active chip drops a black
+   detail strip directly under the chip grid, exactly like lb2__sig-detail.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.np2 {
+  --np2-acc: var(--tell-pill-accent, #759aef);
+  --np2-fs-label: clamp(11px, 1.1vw, 14px);
+  --np2-fs-value: clamp(15px, 1.65vw, 20px);
+  --np2-radius: 14px;
+  --np2-gap: clamp(10px, 1.1vh, 14px);
+  --np2-space-xs: clamp(4px, 0.5vh, 6px);
+  --np2-space-sm: clamp(7px, 0.8vh, 9px);
+  --np2-space-md: clamp(11px, 1.05vw, 14px);
+
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--np2-gap);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--np2-acc) transparent;
+  color: #000;
+  padding-right: 4px;
+}
+
+.tell-more-pill--expanded .np2 {
+  --np2-fs-label: clamp(12px, 1.2vw, 15px);
+  --np2-fs-value: clamp(17px, 1.85vw, 22px);
+  --np2-gap: 8px;
+  --np2-radius: 12px;
+  --np2-space-md: clamp(11px, 1.05vw, 14px);
+}
+
+.np2::-webkit-scrollbar { width: 6px; }
+.np2::-webkit-scrollbar-track { background: transparent; }
+.np2::-webkit-scrollbar-thumb {
+  background: var(--np2-acc);
+  border-radius: 999px;
+}
+
+.inference-panel.is-ready .np2 {
+  animation: tell-load-screen-in 280ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* ── Post quote ─────────────────────────────────────────────────────── */
+
+.np2__quote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--np2-space-sm);
+  padding: 0 0 var(--np2-space-xs);
+  flex-shrink: 0;
+}
+
+.np2__kicker {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 3px 12px 4px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--np2-acc);
+  color: #000;
+  font-family: var(--font-avant);
+  font-size: var(--np2-fs-label);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  line-height: 1.1;
+}
+
+.np2 .inference-panel__post-quote {
+  margin-bottom: 0;
+}
+
+.np2 .inference-panel__post-text {
+  font-size: var(--np2-fs-value);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  font-weight: 800;
+  font-style: oblique;
+}
+
+.np2 .inference-panel__highlight {
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* ── Tiles ─────────────────────────────────────────────────────────── */
+
+.np2__tile {
+  background: var(--np2-acc);
+  border-radius: var(--np2-radius);
+  padding: var(--np2-space-md) calc(var(--np2-space-md) + 2px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--np2-space-sm);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.np2__tile-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.np2__label {
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: var(--np2-fs-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: #000;
+}
+
+.np2__label--hint {
+  letter-spacing: 0.04em;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* ── Chip grid ─────────────────────────────────────────────────────── */
+
+.np2__chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.np2__chip-grid--chain {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.np2__chip {
+  appearance: none;
+  border: 2px solid #000;
+  border-radius: var(--np2-radius);
+  background: transparent;
+  padding: 8px 12px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font: inherit;
+  color: #000;
+  text-align: left;
+  min-height: 38px;
+  box-sizing: border-box;
+  transition: background-color 140ms ease, color 140ms ease, transform 120ms ease;
+}
+
+.np2__chip:hover,
+.np2__chip.is-active {
+  background: #000;
+  color: var(--np2-acc);
+}
+
+.np2__chip:hover .np2__chip-mark,
+.np2__chip:hover .np2__chip-text,
+.np2__chip.is-active .np2__chip-mark,
+.np2__chip.is-active .np2__chip-text {
+  color: var(--np2-acc);
+}
+
+.np2__chip:active { transform: scale(0.98); }
+
+.np2__chip:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.np2__chip-mark {
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: var(--np2-fs-label);
+  line-height: 1;
+  color: var(--np2-acc);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.np2__chip-mark--chain {
+  font-size: var(--np2-fs-label);
+  width: 1.6em;
+  text-align: center;
+}
+
+.np2__chip-text {
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: var(--np2-fs-label);
+  line-height: 1.15;
+  color: #000;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np2__chip--weighted {
+  flex: 1 1 calc(33.333% - 6px);
+  min-width: 130px;
+}
+
+.np2__chip--chain {
+  justify-content: center;
+}
+
+/* ── Active detail strip (mirrors lb2__sig-detail) ─────────────────── */
+
+.np2__detail {
+  background: #000;
+  color: var(--np2-acc);
+  border-radius: var(--np2-radius);
+  padding: var(--np2-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--np2-space-sm);
+  box-sizing: border-box;
+  animation: lb2-detail-in 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.np2__detail .np2__label {
+  color: var(--np2-acc);
+  font-size: var(--np2-fs-label);
+  line-height: 1.15;
+}
+
+.np2__detail-value {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: var(--np2-fs-value);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--np2-acc);
+}
+
+.np2__detail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--np2-space-xs);
+}
+
+.np2__detail-item {
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: var(--np2-fs-value);
+  line-height: 1.3;
+  color: var(--np2-acc);
+  letter-spacing: -0.01em;
+}
+
+.np2__detail-more {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: var(--np2-fs-label);
+  line-height: 1.15;
+  color: var(--np2-acc);
+  opacity: 0.7;
+}
+
+.np2__detail-meta {
+  margin: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: var(--np2-fs-label);
+  color: var(--np2-acc);
+}
+
+.np2__detail-meta-tag {
+  display: inline-block;
+  padding: 1px 8px 2px;
+  border-radius: 999px;
+  background: var(--np2-acc);
+  color: #000;
+  font-size: var(--np2-fs-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.np2__detail-bias {
+  margin: 0;
+  padding: 8px 10px 9px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--np2-acc);
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: var(--np2-fs-label);
+  line-height: 1.2;
+}
+
+.np2__empty {
+  background: var(--np2-acc);
+  border-radius: var(--np2-radius);
+  padding: 14px 16px;
+  font-family: var(--font-avant);
+  font-weight: 800;
+  font-size: var(--np2-fs-label);
+  color: #000;
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* The skeleton overlay during loading already covers the panel; once ready,
+   reveal np2 with the same fade as lb2. */

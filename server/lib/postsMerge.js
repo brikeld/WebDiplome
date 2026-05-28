@@ -2,6 +2,10 @@
 
 export function postIdentityKey(post) {
   if (!post || typeof post !== 'object') return '';
+  const id = post.id ?? post._id;
+  if (id !== undefined && id !== null && String(id).trim() !== '') {
+    return `id:${String(id)}`;
+  }
   const createdAt = post.createdAt ?? post.created_at ?? '';
   const content = String(post.content ?? '').trim();
   const persona = String(post.persona ?? '').toLowerCase();

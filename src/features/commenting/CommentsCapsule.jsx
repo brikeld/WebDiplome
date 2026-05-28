@@ -1,5 +1,5 @@
 import '@/styles/commenting.css';
-import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Comment from './Comment.jsx';
 import SuggestionRow from './SuggestionRow.jsx';
 import {
@@ -9,6 +9,8 @@ import {
 import { getMockCommentsFor } from './commentingMock.js';
 import { fetchCommentSuggestions } from './fetchCommentSuggestions.js';
 import { LiveScoringContext } from '@/features/liveScoring/LiveScoringContext.jsx';
+import { getAllowedCommentPersonas } from '@/lib/personaScoreCompliance.js';
+import { loadCommentPick, saveCommentPick } from '@/lib/commentPickStorage.js';
 
 export default function CommentsCapsule({
   post,
@@ -28,7 +30,7 @@ export default function CommentsCapsule({
   timeLabel,
   systemNoteLabel,
 }) {
-  const [picked, setPicked] = useState(null);
+  const [picked, setPicked] = useState(() => loadCommentPick(post.id));
   const [originRect, setOriginRect] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
@@ -39,13 +41,22 @@ export default function CommentsCapsule({
   const commentBoostSessionRef = useRef(0);
   const commentBoostAppliedRef = useRef(false);
   const liveScoring = useContext(LiveScoringContext);
+  const allowedCommentPersonas = useMemo(
+    () => getAllowedCommentPersonas(liveScoring?.adjustedScores ?? {}),
+    [liveScoring?.adjustedScores],
+  );
+  const commentsRestricted = allowedCommentPersonas.length < 3;
+  const restrictionsKey = commentsRestricted
+    ? allowedCommentPersonas.join(',')
+    : 'all';
 
-  // Reset pick state when capsule closes; new session id when it opens
+  useEffect(() => {
+    setPicked(loadCommentPick(post.id));
+  }, [post.id]);
+
   useEffect(() => {
     if (!isOpen) {
       setOriginRect(null);
-      setSuggestionsLoading(false);
-      setSuggestionsError(null);
       commentBoostAppliedRef.current = false;
       return;
     }
@@ -53,20 +64,25 @@ export default function CommentsCapsule({
     commentBoostAppliedRef.current = false;
   }, [isOpen, post.id]);
 
-  // Fetch AI suggestions when comments open (skip if already cached for this post)
   useEffect(() => {
-    if (!isOpen || picked || suggestions.length > 0) return undefined;
+    if (!isOpen) return;
+    setSuggestions([]);
+    setSuggestionsError(null);
+  }, [isOpen, restrictionsKey, post.id]);
+
+  useEffect(() => {
+    if (!isOpen || picked) return undefined;
 
     const gen = fetchGenRef.current + 1;
     fetchGenRef.current = gen;
-    setSuggestions([]);
-    setSuggestionsError(null);
     setSuggestionsLoading(true);
 
-    fetchCommentSuggestions(post)
+    fetchCommentSuggestions(post, {
+      allowedPersonas: commentsRestricted ? allowedCommentPersonas : undefined,
+    })
       .then((rows) => {
         if (fetchGenRef.current !== gen) return;
-        setSuggestions(rows);
+        setSuggestions(Array.isArray(rows) ? rows : []);
         setSuggestionsLoading(false);
       })
       .catch((err) => {
@@ -78,7 +94,7 @@ export default function CommentsCapsule({
     return () => {
       fetchGenRef.current += 1;
     };
-  }, [isOpen, post.id, post.content, picked]);
+  }, [isOpen, post.id, post.content, picked, commentsRestricted, restrictionsKey]);
 
   // Set max-height to measured scroll height when open
   useEffect(() => {
@@ -137,7 +153,9 @@ export default function CommentsCapsule({
     const root = rootRef.current;
     let sourcePillRect = null;
     if (root) {
-      const card = root.querySelector(`[data-suggestion-card="${s.persona}"]`);
+      const card = root.querySelector(
+        `[data-suggestion-card="${s.slotKey ?? s.persona}"]`,
+      );
       if (card) {
         setOriginRect(card.getBoundingClientRect());
         const plusEl = card.querySelector('.commenting-suggestion-option-plus');
@@ -158,6 +176,7 @@ export default function CommentsCapsule({
     }
 
     setPicked(s);
+    saveCommentPick(post.id, s);
   };
 
   const { comments } = getMockCommentsFor(post.id);
@@ -216,6 +235,8 @@ export default function CommentsCapsule({
             suggestions={suggestions}
             suggestionsLoading={suggestionsLoading}
             suggestionsError={suggestionsError}
+            allowedPersonas={allowedCommentPersonas}
+            commentsRestricted={commentsRestricted}
             avatarSrc={avatarSrc}
             avatarInitials={avatarInitials}
             personaBadgePersona={personaBadgePersona}

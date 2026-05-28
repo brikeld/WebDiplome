@@ -455,6 +455,17 @@ export function composeVerdict({ rank, title }) {
 /**
  * 1–5 ranks → a normalized 0–1 position (rank 1 = 1, rank 5 = 0).
  */
+/**
+ * Other-users screen: show only the clone's score chip, not "score N · yours M".
+ * Leaves descriptive user-row signals (e.g. app counts) unchanged when reused.
+ */
+export function cloneRationaleSignal(signal) {
+  if (signal == null || signal === '') return null;
+  const s = String(signal).trim();
+  const withoutYours = s.replace(/\s*[·•]\s*yours\s+\d+\s*$/i, '').trim();
+  return withoutYours || null;
+}
+
 export function rankFraction(rank, totalRanks = 5) {
   if (!Number.isFinite(rank)) return 0;
   return Math.max(0, Math.min(1, (totalRanks - rank) / (totalRanks - 1)));

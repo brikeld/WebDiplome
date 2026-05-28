@@ -35,6 +35,7 @@ import {
   fallbackClimbTip,
 } from './leaderboardRationales.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
+import { synthesiseChartMetadata } from '../../src/lib/chartPostMetadata.js';
 
 /** Slot index for the asset slot (image or document from disk). */
 export const ASSET_SLOT_INDEX = 1;
@@ -191,6 +192,10 @@ const INGREDIENT_LABEL_MAX = 48;
 const INGREDIENT_DATAPOINT_MAX = 80;
 const INGREDIENT_COUNT = 3;
 const HIGHLIGHT_PHRASE_MAX = 80;
+const THINKING_LABEL_MAX = 32;
+const THINKING_DETAIL_MAX = 180;
+const THINKING_MIN = 3;
+const THINKING_MAX = 5;
 
 // Appended to every slot system prompt; explains the inferenceChain output schema,
 // the ingredients summary, and the highlight ↔ chain/ingredient mapping.
@@ -225,13 +230,32 @@ Include as MANY dataPoints per ingredient as the source data supports (5–12 id
 
 Pick phrases the reader would want to interrogate ("42 PNGs", "tricky design logic", "FigmaAgent and Claude"). They MUST appear character-for-character inside "content".
 
-Return the full envelope: {"content":"...","sentiment":"positive"|"negative","inferenceChain":[…4…],"ingredients":[…3…],"highlights":[…2-3…]}.`;
+4) "thinking" — array of EXACTLY 3 to 5 short objects describing the model's internal reasoning while writing this post. Each is a small thought, written as if the model is thinking out loud in first-person ("I noticed...", "I almost said...", "I picked..."). Must be specific to this user's data, not generic. Each entry has a tiny LABEL (1–3 words, ALL CAPS, no punctuation) and a DETAIL (one short sentence, plain text, max 180 chars):
+
+[
+  { "label": "WHAT I SAW",      "detail": "<one specific concrete observation about the user data, e.g. '12 .fig files modified yesterday — peak around 23:00.'>" },
+  { "label": "WHAT I IGNORED",  "detail": "<one specific signal you considered then dropped, e.g. 'The Spotify history — interesting but off-topic for productivity persona.'>" },
+  { "label": "WHY THIS ANGLE",  "detail": "<why you wrote the post the way you did, in plain language>" },
+  { "label": "WORD I PICKED",   "detail": "<one specific word/phrase choice and why, e.g. 'Said \"basically a map of caffeine\" because the wifi names skewed café-heavy.'>" },
+  { "label": "ALMOST WROTE",    "detail": "<the alternate post you considered first and rejected, in plain words>" }
+]
+
+These five labels are EXAMPLES — feel free to swap any of them for a more specific label, but keep the 1–3 word ALL-CAPS rule, and keep the detail concrete and grounded in the data the system saw. NO generic phrases like "I analyzed the data" — always cite a real artefact from the user data above.
+
+Return the full envelope: {"content":"...","sentiment":"positive"|"negative","inferenceChain":[…4…],"ingredients":[…3…],"highlights":[…2-3…],"thinking":[…3-5…]}.`;
+
+/** Legacy slot prompts ask for content+sentiment only; strip that so the full envelope wins. */
+const LEGACY_CONTENT_ONLY_JSON_RETURN =
+  /\nReturn ONLY valid JSON:\s*\{[^}]*"content"[^}]*\}\.\s*(?:\/no_think)?\s*/gi;
 
 function injectInferenceChainInstruction(systemPrompt) {
   const base = String(systemPrompt || '').trim();
   if (!base) return INFERENCE_CHAIN_INSTRUCTION.trim();
-  if (base.includes('inferenceChain')) return base;
-  return `${base}${INFERENCE_CHAIN_INSTRUCTION}`;
+  if (base.includes('"inferenceChain"') && base.includes('ingredients')) return base;
+
+  const stripped = base.replace(LEGACY_CONTENT_ONLY_JSON_RETURN, '\n').trim();
+  if (stripped.includes('"inferenceChain"')) return stripped;
+  return `${stripped}${INFERENCE_CHAIN_INSTRUCTION}`;
 }
 
 function clipChainValue(value) {
@@ -319,6 +343,71 @@ function normalizeIngredients(raw) {
   return out.length === INGREDIENT_COUNT ? out : null;
 }
 
+function normalizeThinking(raw) {
+  if (!Array.isArray(raw)) return null;
+  const out = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const labelRaw = String(item.label || '').trim();
+    const detailRaw = String(item.detail || item.text || item.value || '').trim();
+    if (!labelRaw || !detailRaw) continue;
+    if (looksLikeInternalKey(labelRaw) || looksLikeInternalKey(detailRaw)) continue;
+    const label = clipText(labelRaw, THINKING_LABEL_MAX).toUpperCase();
+    const detail = clipText(detailRaw, THINKING_DETAIL_MAX);
+    if (!label || !detail) continue;
+    out.push({ label, detail });
+    if (out.length >= THINKING_MAX) break;
+  }
+  return out.length >= THINKING_MIN ? out : null;
+}
+
+/**
+ * Last-resort fallback when the model omits "thinking" — we paraphrase the
+ * inference chain + the heaviest ingredient into a believable internal monologue
+ * so the UI always has at least 3 capsules to display. Generic but grounded.
+ */
+function synthesiseThinking(parsed, persona) {
+  const chain = Array.isArray(parsed?.inferenceChain) ? parsed.inferenceChain : null;
+  const ingredients = Array.isArray(parsed?.ingredients) ? parsed.ingredients : null;
+  if (!chain && !ingredients) return null;
+
+  const out = [];
+  const dataStep = chain?.find((s) => s?.step === 'data');
+  const inferStep = chain?.find((s) => s?.step === 'infer');
+  const heaviestIng = ingredients?.length
+    ? [...ingredients].sort((a, b) => Number(b.weight ?? 0) - Number(a.weight ?? 0))[0]
+    : null;
+
+  if (dataStep?.value) {
+    out.push({ label: 'WHAT I SAW', detail: clipText(dataStep.value, THINKING_DETAIL_MAX) });
+  }
+  if (heaviestIng?.label) {
+    out.push({
+      label: 'WHAT WEIGHED MOST',
+      detail: clipText(`${heaviestIng.label} carried the most weight here.`, THINKING_DETAIL_MAX),
+    });
+  }
+  if (inferStep?.value) {
+    out.push({
+      label: 'THE LEAP',
+      detail: clipText(inferStep.value, THINKING_DETAIL_MAX),
+    });
+  }
+  if (inferStep?.biasNote) {
+    out.push({
+      label: 'WHERE I CHEATED',
+      detail: clipText(inferStep.biasNote, THINKING_DETAIL_MAX),
+    });
+  }
+  if (!out.length) {
+    out.push({
+      label: 'PERSONA LENS',
+      detail: `I read this through the ${persona || 'productivite'} persona filter.`,
+    });
+  }
+  return out.length >= THINKING_MIN ? out : null;
+}
+
 function normalizeHighlights(raw, content, ingredientsCount) {
   if (!Array.isArray(raw) || !content) return null;
   const out = [];
@@ -357,7 +446,7 @@ function fixInvalidDataPoints(jsonText) {
 
 function parsePostResponse(raw, fallbackPersona) {
   let text = (raw || '').trim();
-  if (!text) return { content: '', sentiment: null, inferenceChain: null };
+  if (!text) return { content: '', sentiment: null, inferenceChain: null, thinking: null };
 
   // Strip markdown code fences
   if (text.startsWith('```')) {
@@ -385,6 +474,7 @@ function parsePostResponse(raw, fallbackPersona) {
           inferenceChain: normalizeInferenceChain(obj.inferenceChain),
           ingredients,
           highlights,
+          thinking: normalizeThinking(obj.thinking),
         };
       }
     } catch { /* ignore */ }
@@ -412,12 +502,79 @@ function parsePostResponse(raw, fallbackPersona) {
     const extracted = extractContentField(slice);
     if (extracted) {
       const inferred = fallbackPersona === 'securite' ? 'negative' : 'positive';
-      return { content: extracted, sentiment: inferred, inferenceChain: null, ingredients: null, highlights: null };
+      return { content: extracted, sentiment: inferred, inferenceChain: null, ingredients: null, highlights: null, thinking: null };
     }
   }
 
   const inferred = fallbackPersona === 'securite' ? 'negative' : 'positive';
-  return { content: text, sentiment: inferred, inferenceChain: null, ingredients: null, highlights: null };
+  return { content: text, sentiment: inferred, inferenceChain: null, ingredients: null, highlights: null, thinking: null };
+}
+
+function postMetadataComplete(parsed) {
+  return Boolean(
+    parsed?.inferenceChain
+    && parsed?.ingredients
+    && parsed?.thinking,
+  );
+}
+
+/**
+ * Text-only follow-up when the model returned caption JSON but dropped analysis fields
+ * (common for chart vision calls that truncate or obey the legacy content-only return line).
+ */
+async function fetchPostMetadataOnly({
+  slot,
+  content,
+  baseUrl,
+  timeoutMs,
+  retries,
+}) {
+  const systemPrompt = injectInferenceChainInstruction(
+    'The social post text is LOCKED — do not rewrite or paraphrase it. '
+    + 'Return ONLY JSON with inferenceChain, ingredients, highlights, and thinking for that exact content.',
+  );
+  const chartNote = slot.chartType
+    ? `\nChart annex type: ${slot.chartType} (user saw a chart image with this post).`
+    : '';
+  const userPayload = `LOCKED post content (must appear verbatim in highlights and in inferenceChain "generate" step):\n${JSON.stringify(content)}${chartNote}\n\n---\n${slot.userPayload}`;
+
+  const body = buildChatBody({
+    model: slot._model,
+    systemPrompt,
+    userPayload,
+    imageData: null,
+    docText: slot.docText || null,
+    docFilename: slot.docFilename || null,
+    temperature: 0.35,
+    maxTokens: 2100,
+  });
+  const text = extractChoiceText(
+    await lmChatCompletion({ baseUrl, timeoutMs, retries, body }),
+  );
+  const parsed = parsePostResponse(text, slot.persona);
+  return {
+    inferenceChain: parsed.inferenceChain,
+    ingredients: parsed.ingredients,
+    highlights: parsed.highlights,
+    thinking: parsed.thinking,
+  };
+}
+
+function applyChartMetadataFallback(parsed, slot) {
+  if (!parsed.content || !slot.chartType || parsed.inferenceChain) return parsed;
+  const synth = synthesiseChartMetadata({
+    content: parsed.content,
+    chartType: slot.chartType,
+    persona: slot.persona,
+  });
+  if (!synth) return parsed;
+  return {
+    ...parsed,
+    inferenceChain: parsed.inferenceChain || synth.inferenceChain,
+    ingredients: parsed.ingredients || synth.ingredients,
+    highlights: parsed.highlights || synth.highlights,
+    thinking: parsed.thinking || synth.thinking,
+  };
 }
 
 // ─── Slot builders ─────────────────────────────────────────────────────────
@@ -579,8 +736,8 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
 async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
   const promptCfg = SP[slot.promptKey] ?? DEFAULT_SLOT_PROMPTS.browser;
   const systemPrompt = injectInferenceChainInstruction(promptCfg.system);
-  // Higher token budget so chain + ingredients + highlights all fit alongside the post.
-  const maxTokens = Math.max(promptCfg.maxTokens || 900, 1800);
+  // Higher token budget so chain + ingredients + highlights + thinking all fit alongside the post.
+  const maxTokens = Math.max(promptCfg.maxTokens || 900, 2100);
 
   const runOnce = async (temperature, withVision) => {
     const body = buildChatBody({
@@ -597,7 +754,7 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
     return parsePostResponse(extractChoiceText(r), slot.persona);
   };
 
-  let parsed = { content: '', sentiment: null, inferenceChain: null, ingredients: null, highlights: null };
+  let parsed = { content: '', sentiment: null, inferenceChain: null, ingredients: null, highlights: null, thinking: null };
   let visionSucceeded = false;
 
   if (slot.imageData) {
@@ -638,6 +795,26 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
     parsed = parsePostResponse(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
   }
 
+  if (parsed.content && !postMetadataComplete(parsed)) {
+    try {
+      const extra = await fetchPostMetadataOnly({
+        slot,
+        content: parsed.content,
+        baseUrl,
+        timeoutMs,
+        retries,
+      });
+      if (extra.inferenceChain) parsed.inferenceChain = extra.inferenceChain;
+      if (extra.ingredients) parsed.ingredients = extra.ingredients;
+      if (extra.highlights) parsed.highlights = extra.highlights;
+      if (extra.thinking) parsed.thinking = extra.thinking;
+    } catch {
+      /* deterministic chart fallback below */
+    }
+  }
+
+  parsed = applyChartMetadataFallback(parsed, slot);
+
   const post = {
     persona: slot.persona,
     content: parsed.content,
@@ -647,6 +824,8 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
   if (parsed.inferenceChain) post.inferenceChain = parsed.inferenceChain;
   if (parsed.ingredients) post.ingredients = parsed.ingredients;
   if (parsed.highlights) post.highlights = parsed.highlights;
+  const thinking = parsed.thinking || synthesiseThinking(parsed, slot.persona);
+  if (thinking) post.thinking = thinking;
   if (slot.attachedAsset) {
     post.attachedAsset = { ...slot.attachedAsset };
     if (slot.attachedAsset.kind === 'image') post.attachedAsset.visionAnalysed = visionSucceeded;

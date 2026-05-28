@@ -3,7 +3,25 @@ import {
   parseUserSignals,
   buildSignalExamples,
   examplesDisplayCount,
+  cloneRationaleSignal,
 } from '../src/features/inferenceChain/leaderboardRationaleUtils.js';
+
+describe('cloneRationaleSignal', () => {
+  it('strips "· yours N" from clone score chips', () => {
+    expect(cloneRationaleSignal('score 52 · yours 28')).toBe('score 52');
+    expect(cloneRationaleSignal('score 7 · yours 28')).toBe('score 7');
+  });
+
+  it('keeps descriptive signals unchanged', () => {
+    const hint = '2 VPN app(s), 30 known wifi network(s), 1 torrent app(s).';
+    expect(cloneRationaleSignal(hint)).toBe(hint);
+  });
+
+  it('returns null for empty input', () => {
+    expect(cloneRationaleSignal(null)).toBeNull();
+    expect(cloneRationaleSignal('')).toBeNull();
+  });
+});
 
 describe('examplesDisplayCount', () => {
   it('shows all names for small counts', () => {

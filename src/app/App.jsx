@@ -5,6 +5,7 @@ import ScrollArea from '@/layout/ScrollArea.jsx';
 import ProfileView from '@/features/profile/ProfileView.jsx';
 import HomeTab from '@/features/home/HomeTab.jsx';
 import LandingPage from '@/landing-page/LandingPage.jsx';
+import { LANDING_PROFILE_ENTRY_MS } from '@/landing-page/landingProfileEntry.js';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import {
   getPersonaScoresNormalized,
@@ -26,6 +27,20 @@ import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.j
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
+import {
+  canHideContentForScores,
+  PERSONA_SCORE_RESTRICT_THRESHOLD,
+  personaToUiKey,
+  resolveHideContentPersona,
+} from '@/lib/personaScoreCompliance.js';
+import {
+  createCompliantLowScorePost,
+  createCompliantPersonaChangePost,
+  hasLowScorePostForPersona,
+} from '@/lib/compliantSystemPosts.js';
+import { markLowScoreFired } from '@/lib/compliantLowScoreStorage.js';
+import { mergePersonaPostsFromApi, mergePostsPrepend } from '@/lib/mergePersonaPosts.js';
+import { prependPersonaPosts } from '@/lib/postsApi.js';
 const API_ORIGIN =
   (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
   'http://localhost:3001';
@@ -71,30 +86,6 @@ function displayNameFromProfileLite(profile) {
   const last = String(profile?.lastname ?? '').trim();
   if (first && last) return `${first} ${last}`;
   return first || last || 'User';
-}
-
-function createCompliantPersonaChangePost({ profile, fromPersona, toPersona }) {
-  const userDisplayName = displayNameFromProfileLite(profile);
-  const fromLabel = PERSONA_LABELS[fromPersona] ?? 'Unknown';
-  const toLabel = PERSONA_LABELS[toPersona] ?? 'Unknown';
-  const createdAt = Date.now();
-
-  return {
-    id: `compliant-persona-change-${createdAt}-${fromPersona}-${toPersona}`,
-    persona: toPersona,
-    createdAt,
-    content: `Due to behavior on COMPLIANT, ${userDisplayName}'s main persona changed from ${fromLabel} to ${toLabel}.`,
-    compliantPersonaChange: {
-      fromPersona,
-      toPersona,
-      userDisplayName,
-      fromLabel,
-      toLabel,
-    },
-    _feedEnter: true,
-    _feedKey: `compliant-persona-change-${createdAt}`,
-    _feedRevealSeq: createdAt,
-  };
 }
 
 const PERSONA_LABEL_BY_POST = {
@@ -203,14 +194,14 @@ function formatRingDelta(delta) {
   return { text: '=', mod: 'flat' };
 }
 
-/** Keep the longer post list when API returns stale data (e.g. after Electron re-sync). */
+/** Keep posts when API returns stale data; never drop persisted COMPLIANT system posts. */
 function mergeProfileFromApi(prev, incoming) {
   if (!incoming) return prev ?? null;
   if (!prev) return incoming;
-  const prevPosts = Array.isArray(prev.personaPosts) ? prev.personaPosts : [];
-  const incomingPosts = Array.isArray(incoming.personaPosts) ? incoming.personaPosts : [];
-  if (incomingPosts.length >= prevPosts.length) return incoming;
-  return { ...incoming, personaPosts: prevPosts };
+  return {
+    ...incoming,
+    personaPosts: mergePersonaPostsFromApi(prev.personaPosts, incoming.personaPosts),
+  };
 }
 
 function AppInner({
@@ -219,6 +210,7 @@ function AppInner({
   activeTab,
   setActiveTab,
   profile,
+  setProfile,
   personaOverride,
   setPersonaOverride,
   postGen,
@@ -246,10 +238,34 @@ function AppInner({
   const [tellExpanded, setTellExpanded] = useState(false);
   const [tellClosing, setTellClosing] = useState(false);
   const tellCloseTimerRef = useRef(null);
-  const [compliantPosts, setCompliantPosts] = useState([]);
+  const [hideBlocked, setHideBlocked] = useState(false);
   const previousLivePersonaRef = useRef(null);
+  const previousPersonaScoresRef = useRef(null);
+  const lowScoreInitRef = useRef(false);
   const updateTimerStartRef = useRef(Date.now());
   const [updateRemainingMs, setUpdateRemainingMs] = useState(DASHBOARD_UPDATE_INTERVAL_MS);
+
+  const profileId = useMemo(() => {
+    if (!profile) return null;
+    const first = String(profile.firstname ?? '').trim().toLowerCase();
+    const last = String(profile.lastname ?? '').trim().toLowerCase();
+    return first && last ? `${first}-${last}` : null;
+  }, [profile?.firstname, profile?.lastname]);
+
+  const prependCompliantPost = useCallback(
+    (post) => {
+      if (!profileId || !post) return;
+      setProfile((prev) =>
+        prev
+          ? { ...prev, personaPosts: mergePostsPrepend([post], prev.personaPosts ?? []) }
+          : prev,
+      );
+      prependPersonaPosts(profileId, [post]).catch((err) => {
+        console.warn('[compliant] failed to persist system post:', err?.message || err);
+      });
+    },
+    [profileId, setProfile],
+  );
 
   const personaKey = personaOverride ?? liveDominantPersona;
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
@@ -277,18 +293,72 @@ function AppInner({
       profile,
       fromPersona: previous,
       toPersona: liveDominantPersona,
+      userDisplayName: displayNameFromProfileLite(profile),
     });
-    setCompliantPosts((prev) => [post, ...prev].slice(0, 6));
-  }, [liveDominantPersona, profile]);
+    prependCompliantPost(post);
+  }, [liveDominantPersona, profile, prependCompliantPost]);
 
-  const homeFeedProfile = useMemo(() => {
-    if (!profile || compliantPosts.length === 0) return profile;
-    const personaPosts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
-    return {
-      ...profile,
-      personaPosts: [...compliantPosts, ...personaPosts],
+  useEffect(() => {
+    previousPersonaScoresRef.current = null;
+    lowScoreInitRef.current = false;
+  }, [profileId]);
+
+  useEffect(() => {
+    if (!profileId || !profile) return;
+    const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
+    for (const p of posts) {
+      const ui = p?.compliantLowScore?.uiPersonaKey;
+      if (ui) markLowScoreFired(profileId, ui);
+    }
+  }, [profileId, profile?.personaPosts]);
+
+  useEffect(() => {
+    if (!profile || !profileId) return;
+
+    const prev = previousPersonaScoresRef.current;
+    const userDisplayName = displayNameFromProfileLite(profile);
+    const scoreKeys = [
+      { ui: 'productivity', key: 'productivity' },
+      { ui: 'security', key: 'security' },
+      { ui: 'popularity', key: 'social' },
+    ];
+
+    const existingPosts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
+
+    for (const { ui, key } of scoreKeys) {
+      const score = Math.max(0, Math.min(100, Number(adjustedScores[key]) || 0));
+      const nowBelow = score < PERSONA_SCORE_RESTRICT_THRESHOLD;
+      const wasAbove =
+        prev == null ? true : (Number(prev[key]) || 0) >= PERSONA_SCORE_RESTRICT_THRESHOLD;
+      const firstCheck = !lowScoreInitRef.current;
+      const alreadyOnFeed = hasLowScorePostForPersona(existingPosts, ui);
+
+      if (alreadyOnFeed) {
+        markLowScoreFired(profileId, ui);
+        continue;
+      }
+
+      const shouldFire = nowBelow && (wasAbove || firstCheck);
+
+      if (shouldFire) {
+        const post = createCompliantLowScorePost({
+          profile,
+          uiPersonaKey: ui,
+          score,
+          userDisplayName,
+        });
+        prependCompliantPost(post);
+        markLowScoreFired(profileId, ui);
+      }
+    }
+
+    previousPersonaScoresRef.current = {
+      productivity: adjustedScores.productivity,
+      security: adjustedScores.security,
+      social: adjustedScores.social,
     };
-  }, [compliantPosts, profile]);
+    lowScoreInitRef.current = true;
+  }, [adjustedScores, profile, profileId, prependCompliantPost]);
 
   const dashboardRingOrder = useMemo(() => {
     const others = PERSONA_KEYS.filter((k) => k !== personaKey);
@@ -328,6 +398,7 @@ function AppInner({
       setSelectionPulseFlip((prev) => !prev);
     }
     setConfirmingHide(false);
+    setHideBlocked(false);
     setHideNudge(false); // dismiss "select a post first" immediately when user picks one
     closeTell(); // play close animation when selection changes
   }, [highlightedPost?.id, closeTell]);
@@ -366,12 +437,22 @@ function AppInner({
         }
         setHighlightedPost(null);
         setConfirmingHide(false);
+        setHideBlocked(false);
       } else {
         // Encode "only hide a leaderboard if user is in it" — userRank null means not present.
         if (isLeaderboard && highlightedPost.leaderboard.userRank == null) {
           setConfirmingHide(false);
+          setHideBlocked(false);
           return;
         }
+        const hidePersona = resolveHideContentPersona(highlightedPost);
+        if (!canHideContentForScores(hidePersona, adjustedScores)) {
+          setConfirmingHide(false);
+          setHideBlocked(true);
+          setHideNudge(false);
+          return;
+        }
+        setHideBlocked(false);
         setConfirmingHide(true);
         setHideNudge(false);
       }
@@ -396,6 +477,7 @@ function AppInner({
 
   const handleCancelHide = () => {
     setConfirmingHide(false);
+    setHideBlocked(false);
   };
 
   const dashboardLayout = getDashboardControlLayout({
@@ -436,7 +518,7 @@ function AppInner({
           <div className="main-col">
             <ScrollArea key="home" mode="home">
               <HomeTab
-                profile={homeFeedProfile}
+                profile={profile}
                 isGeneratingPosts={postGen.phase === 'generating'}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
@@ -464,7 +546,17 @@ function AppInner({
             <p className="dashboard-top-label">dashboard</p>
             <div
               className={`dashboard-capsule dashboard-capsule--figma${tellExpanded ? ' is-tell-expanded' : ''}${tellClosing ? ' is-tell-closing' : ''}`}
-              style={{ '--persona-accent': personaColor }}
+              style={(() => {
+                const base = { '--persona-accent': personaColor };
+                if (!tellExpanded || !highlightedPost) return base;
+                const pk = String(highlightedPost.persona ?? personaKey).toLowerCase();
+                return {
+                  ...base,
+                  '--tell-pill-accent': highlightedPost.noteColor ?? personaColor,
+                  '--tell-pill-pastel':
+                    PERSONA_PASTEL_COLORS[pk] ?? PERSONA_PASTEL_COLORS.security,
+                };
+              })()}
             >
               {(() => {
                 const personaKeyForPill = String(
@@ -474,6 +566,11 @@ function AppInner({
                 const hidePillPastel =
                   PERSONA_PASTEL_COLORS[personaKeyForPill] ??
                   PERSONA_PASTEL_COLORS.security;
+                const hidePersonaUiKey = highlightedPost
+                  ? personaToUiKey(resolveHideContentPersona(highlightedPost))
+                  : null;
+                const hideBlockedActive =
+                  hideBlocked && highlightedPost && !highlightedPostIsHidden;
                 const confirmActive =
                   confirmingHide && highlightedPost && !highlightedPostIsHidden;
                 const points = Math.abs(
@@ -523,6 +620,65 @@ function AppInner({
                     </div>
                   </div>
                 );
+
+                if (hideBlockedActive) {
+                  const blockedLabel = (
+                    PERSONA_LABELS[hidePersonaUiKey] ?? highlightedPostPersonaLabel ?? 'Social'
+                  ).toLowerCase();
+                  return (
+                    <div
+                      className="dashboard-actions-row dashboard-actions-row--confirm"
+                    >
+                      <div
+                        className={`dashboard-hide-pill dashboard-hide-pill--confirm dashboard-hide-pill--confirm-blocked${leaderboardPillClass}`}
+                        role="alertdialog"
+                        aria-labelledby="hide-blocked-title-inline"
+                        style={pillStyle}
+                      >
+                        <div className="dashboard-hide-pill__confirm-left">
+                          <h3
+                            id="hide-blocked-title-inline"
+                            className="dashboard-hide-pill__confirm-title"
+                          >
+                            {leaderboardSelected
+                              ? "Can't hide your ranking"
+                              : "Can't hide this post"}
+                          </h3>
+                          <p className="dashboard-hide-pill__confirm-body">
+                            {leaderboardSelected ? (
+                              <>
+                                Sorry, but you cannot hide your ranking, since your{' '}
+                                <span className="dashboard-hide-pill__confirm-points">
+                                  {blockedLabel}
+                                </span>{' '}
+                                persona score is too low right now. Improve your score and
+                                try again.
+                              </>
+                            ) : (
+                              <>
+                                Sorry, but you cannot hide this post, since your{' '}
+                                <span className="dashboard-hide-pill__confirm-points">
+                                  {blockedLabel}
+                                </span>{' '}
+                                persona score is too low right now. Improve your score and
+                                try again.
+                              </>
+                            )}
+                          </p>
+                          <div className="dashboard-hide-pill__confirm-actions">
+                            <button
+                              type="button"
+                              className="dashboard-hide-pill__confirm-btn dashboard-hide-pill__confirm-btn--cancel"
+                              onClick={handleCancelHide}
+                            >
+                              Got it
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
 
                 if (confirmActive) {
                   return (
@@ -785,6 +941,8 @@ export default function App() {
   /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
   const prevMainViewRef = useRef(null);
+  const [landingEnteringProfile, setLandingEnteringProfile] = useState(false);
+  const landingEnterProfileTimerRef = useRef(null);
 
   const cancelPersonaDeltasClear = useCallback(() => {
     if (personaDeltasClearRef.current) {
@@ -802,6 +960,27 @@ export default function App() {
   }, [cancelPersonaDeltasClear]);
 
   useEffect(() => () => cancelPersonaDeltasClear(), [cancelPersonaDeltasClear]);
+
+  useEffect(
+    () => () => {
+      if (landingEnterProfileTimerRef.current) {
+        clearTimeout(landingEnterProfileTimerRef.current);
+        landingEnterProfileTimerRef.current = null;
+      }
+    },
+    [],
+  );
+
+  const handleLandingEnterProfile = useCallback(() => {
+    if (landingEnteringProfile || !profile) return;
+    setLandingEnteringProfile(true);
+    if (landingEnterProfileTimerRef.current) clearTimeout(landingEnterProfileTimerRef.current);
+    landingEnterProfileTimerRef.current = setTimeout(() => {
+      landingEnterProfileTimerRef.current = null;
+      setLandingEnteringProfile(false);
+      setMainView('profile');
+    }, LANDING_PROFILE_ENTRY_MS);
+  }, [landingEnteringProfile, profile]);
 
   useEffect(() => {
     if (mainView === 'profile' && prevMainViewRef.current !== 'profile') {
@@ -1187,7 +1366,15 @@ export default function App() {
   };
 
   if (mainView === 'landing') {
-    return <LandingPage onEnterDemo={() => setMainView('profile')} />;
+    return (
+      <>
+        <LandingPage
+          profile={profile}
+          onEnterProfile={handleLandingEnterProfile}
+          profileEntryLoading={landingEnteringProfile}
+        />
+      </>
+    );
   }
 
   return (
@@ -1198,6 +1385,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         profile={profile}
+        setProfile={setProfile}
         personaOverride={personaOverride}
         setPersonaOverride={setPersonaOverride}
         postGen={postGen}

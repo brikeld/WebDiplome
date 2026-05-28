@@ -34,6 +34,11 @@
   --post-body-weight: 600;
   --post-body-line: 0.95;
   --post-name-size: 14px;
+  --post-meta-pill-size: 16px;
+  --post-meta-pill-icon-size: 22px;
+  --post-meta-comment-icon-size: 28px;
+  --post-meta-comment-pad-y: 9px;
+  --post-meta-comment-pad-x: 18px;
   --post-name-weight: 600;
   --post-name-line: 1.2;
   --post-handle-size: 11px;
@@ -466,6 +471,12 @@ body {
   gap: 1px;
   justify-content: center;
   z-index: 2;
+  color: #000;
+}
+
+/* Counter tick target — never inherit ring pulse filters or persona tints */
+[data-persona-ring-score] {
+  color: #000;
 }
 
 .dashboard-ring-score-pct {
@@ -1156,11 +1167,37 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-self: flex-start;
-  padding-left: 28px;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: nowrap;
+  align-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 28px;
+}
+
+.post-card-meta-row .post-meta-pill--time {
+  font-size: var(--post-meta-pill-size);
+  padding: 7px 15px 8px;
+}
+
+.post-card-meta-row .post-meta-pill--comment,
+.post-card-meta-row .post-action-btn--comment {
+  font-size: var(--post-meta-pill-size);
+  padding: var(--post-meta-comment-pad-y) var(--post-meta-comment-pad-x)
+    calc(var(--post-meta-comment-pad-y) + 1px);
+}
+
+.post-card-meta-row .post-meta-pill--time {
+  background: transparent;
+  border: 2px solid var(--post-accent, var(--persona-accent, #759aef));
+  color: #000;
+  box-shadow: none;
+}
+
+.post-card-meta-row .post-meta-pill--comment,
+.post-card-meta-row .post-action-btn--comment {
+  flex-shrink: 0;
 }
 
 .post-card-footer {
@@ -1199,17 +1236,22 @@ body {
 
 .post-meta-pill--comment,
 .post-action-btn--comment.commenting-toggle-host {
-  min-width: 2.75rem;
+  min-width: 3.45rem;
   width: auto;
   max-width: none;
-  padding: 5px 12px 6px;
+  padding: var(--post-meta-comment-pad-y) var(--post-meta-comment-pad-x)
+    calc(var(--post-meta-comment-pad-y) + 1px);
+  overflow: visible;
 }
 
+/* Larger glyph only — layout box stays pill-sized */
 .post-meta-pill--comment svg,
 .post-action-btn--comment svg {
-  width: 18px;
-  height: 18px;
+  width: var(--post-meta-pill-icon-size);
+  height: var(--post-meta-pill-icon-size);
   display: block;
+  transform: scale(calc(var(--post-meta-comment-icon-size) / var(--post-meta-pill-icon-size)));
+  transform-origin: center;
 }
 
 .post-pill-slot--top.post-pill-slot--right {
@@ -2382,13 +2424,29 @@ body {
     gap 420ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Tell-Me-More expanded: white shell + persona stroke (same language as “for you”). */
+/* Tell-Me-More expanded: dashboard shell is the frame; content tiles keep their own padding */
 .dashboard-capsule--figma.is-tell-expanded,
 .dashboard-capsule--figma.is-tell-closing {
-  background: var(--card, #fff);
+  --dashboard-tell-pad: clamp(14px, 1.45vw, 18px);
+  background: var(--tell-pill-pastel, #bccdf5);
   border-color: var(--persona-accent, #759aef);
-  padding: 0;
+  padding: var(--dashboard-tell-pad);
   gap: 0;
+}
+
+/* Home/profile rail sets large capsule padding — swap to tell-pad when expanded */
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanded,
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing,
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanded,
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing {
+  padding: var(--dashboard-tell-pad, clamp(14px, 1.45vw, 18px));
+  gap: 0;
+}
+
+.dashboard-capsule--figma.is-tell-expanded .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-closing .dashboard-tell-row {
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 .dashboard-capsule--figma .dashboard-actions-row {
@@ -2424,10 +2482,14 @@ body {
 }
 
 .dashboard-capsule--figma .tell-more-pill,
-.dashboard-capsule--figma .tell-more-pill--armed,
-.dashboard-capsule--figma .tell-more-pill--expanded {
+.dashboard-capsule--figma .tell-more-pill--armed {
   --tell-pill-radius: var(--capsule-radius);
   border-radius: var(--tell-pill-radius);
+}
+
+.dashboard-capsule--figma.is-tell-expanded .tell-more-pill--expanded,
+.dashboard-capsule--figma.is-tell-closing .tell-more-pill--expanded {
+  border-radius: 0;
 }
 
 .dashboard-timer-card--status.dashboard-timer-card--harvest {

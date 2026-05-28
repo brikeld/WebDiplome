@@ -6,6 +6,7 @@ import PostsTab from '@/features/feed/PostsTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import { machineHandleFromProfile } from '@/lib/profileUtils.js';
 import { profilePaneLabel } from '@/features/profile/profileTabs.js';
+import { useProfileTabTransition } from '@/features/profile/useProfileTabTransition.js';
 
 export default function ProfileView({
   profile,
@@ -18,35 +19,47 @@ export default function ProfileView({
   generateApiOrigin,
 }) {
   const handleLabel = machineHandleFromProfile(profile);
+  const { displayTab, phase } = useProfileTabTransition(activeTab);
+  const paneLabel = profilePaneLabel(displayTab);
 
   return (
     <>
       <div className="main-col">
         <ScrollArea key="profile-content" mode="profile">
           <div className="home-tab">
-            <p className="home-top-label">{profilePaneLabel(activeTab)}</p>
+            <p
+              className={`home-top-label profile-pane-label profile-pane-label--${phase}`}
+              key={displayTab}
+            >
+              {paneLabel}
+            </p>
             <div
-              className="posts-capsule profile-content-capsule"
+              className={`posts-capsule profile-content-capsule profile-content-capsule--${phase}`}
               style={{ '--persona-accent': personaColor }}
               role="tabpanel"
-              aria-label={profilePaneLabel(activeTab)}
+              aria-label={paneLabel}
+              aria-busy={phase !== 'visible'}
             >
-              {activeTab === 'profile' && <ProfileTab />}
-              {activeTab === 'posts' && (
-                <PostsTab
-                  profile={profile}
-                  feedContext="profile"
-                  hideInteractions
-                  isGeneratingPosts={isGeneratingPosts}
-                  personaBadgePersona={personaBadgePersona}
-                />
-              )}
-              {activeTab === 'leaderboards' && (
-                <LeaderboardsTab
-                  profile={profile}
-                  generateApiOrigin={generateApiOrigin}
-                />
-              )}
+              <div className="profile-tab-panels">
+                <div className="profile-tab-panels__inner" data-profile-tab={displayTab}>
+                  {displayTab === 'profile' && <ProfileTab />}
+                  {displayTab === 'posts' && (
+                    <PostsTab
+                      profile={profile}
+                      feedContext="profile"
+                      hideInteractions
+                      isGeneratingPosts={isGeneratingPosts}
+                      personaBadgePersona={personaBadgePersona}
+                    />
+                  )}
+                  {displayTab === 'leaderboards' && (
+                    <LeaderboardsTab
+                      profile={profile}
+                      generateApiOrigin={generateApiOrigin}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </ScrollArea>

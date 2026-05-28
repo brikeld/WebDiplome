@@ -26,7 +26,7 @@ export default function TabBar({
           type="button"
           role="tab"
           aria-selected={activeTab === t.id}
-          className={`tab${activeTab === t.id ? ' active' : ''}`}
+          className={`tab${activeTab === t.id ? ' active' : ''}${variant === 'rail' ? ' tab--rail' : ''}`}
           onClick={() => onTabChange(t.id)}
           style={
             variant === 'rail'

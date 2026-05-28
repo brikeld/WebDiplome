@@ -89,9 +89,12 @@ export default function PostCard({
     chartType,
     leaderboard,
     compliantPersonaChange,
+    compliantLowScore,
   } = post;
 
   const isCompliantPersonaChange = Boolean(compliantPersonaChange);
+  const isCompliantLowScore = Boolean(compliantLowScore);
+  const isCompliantSystemPost = isCompliantPersonaChange || isCompliantLowScore;
   const applyImageFx = shouldApplyPostImageFx({ chartType });
   const hasLeadContent = Boolean(String(content ?? '').trim());
 
@@ -106,9 +109,9 @@ export default function PostCard({
 
   const resolvedPillsMode = pillsMode ?? (hidePills ? 'none' : 'meta');
   const showBottomMeta =
-    !isCompliantPersonaChange &&
+    !isCompliantSystemPost &&
     (resolvedPillsMode === 'meta' || resolvedPillsMode === 'bottom-only');
-  const showCommentsCapsule = !isCompliantPersonaChange && resolvedPillsMode !== 'bottom-only';
+  const showCommentsCapsule = !isCompliantSystemPost && resolvedPillsMode !== 'bottom-only';
 
   const personaLabel = (() => {
     const key = String(persona ?? '').toLowerCase();
@@ -142,7 +145,7 @@ export default function PostCard({
   return (
     <article
       ref={cardRef}
-      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${leaderboard ? ' post-card--has-leaderboard' : ''}${isCompliantPersonaChange ? ' post-card--compliant-persona-change' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${isRevealing ? ' post-card--revealing' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
+      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${leaderboard ? ' post-card--has-leaderboard' : ''}${isCompliantSystemPost ? ' post-card--compliant-persona-change' : ''}${isCompliantLowScore ? ' post-card--compliant-low-score' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${isRevealing ? ' post-card--revealing' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
       data-persona={post.persona}
       style={{ '--post-accent': noteColor }}
       onClick={isHighlightable ? (e) => {
@@ -153,14 +156,14 @@ export default function PostCard({
         <div className="post-card-bubble">
           <div className="post-card-head">
             <div className="post-avatar" aria-hidden>
-              {isCompliantPersonaChange ? (
+              {isCompliantSystemPost ? (
                 <span className="post-avatar-compliant-logo">COMPLIANT</span>
               ) : avatarSrc ? (
                 <img className="post-avatar-img" src={avatarSrc} alt="" />
               ) : (
                 avatarInitials
               )}
-              {!isCompliantPersonaChange ? (
+              {!isCompliantSystemPost ? (
                 <PersonaBadge persona={personaBadgePersona ?? persona} />
               ) : null}
             </div>
@@ -171,7 +174,11 @@ export default function PostCard({
                   fallbackContent={content}
                 />
               ) : (
-                <p className="post-lead">{content}</p>
+                <p
+                  className={`post-lead${isCompliantLowScore ? ' post-lead--compliant-low-score' : ''}`}
+                >
+                  {content}
+                </p>
               )}
             </div>
             <div className="post-card-footer">
@@ -179,7 +186,7 @@ export default function PostCard({
                 <p className="post-card-name">{displayName}</p>
                 {handle ? <p className="post-card-handle">{handle}</p> : null}
               </div>
-              {!isCompliantPersonaChange ? (
+              {!isCompliantSystemPost ? (
                 <span ref={systemNotePillRef} className="post-system-note-pill">
                   System note [{personaLabel}] [+{systemDeltaPct}%]
                 </span>
@@ -255,7 +262,7 @@ export default function PostCard({
               controlsId={`commenting-${post.id}`}
             />
           )}
-          <span className="post-meta-pill">{timeAgo} ago</span>
+          <span className="post-meta-pill post-meta-pill--time">{timeAgo} ago</span>
         </div>
       ) : null}
     </article>

@@ -103,13 +103,15 @@ export default function PostsTab({
 
     const mapped = raw.map((p, i) => {
       const isCompliantPersonaChange = Boolean(p.compliantPersonaChange);
+      const isCompliantLowScore = Boolean(p.compliantLowScore);
+      const isCompliantSystem = isCompliantPersonaChange || isCompliantLowScore;
       return {
       id: postStableKey(p, i),
       persona: p.persona,
       content: sanitizePostContent(p.content),
-      noteColor: isCompliantPersonaChange ? '#000' : (PERSONA_COLORS[p.persona] ?? '#2323FF'),
-      displayName: isCompliantPersonaChange ? 'COMPLIANT' : displayName,
-      handle: isCompliantPersonaChange ? '' : handle,
+      noteColor: isCompliantSystem ? '#000' : (PERSONA_COLORS[p.persona] ?? '#2323FF'),
+      displayName: isCompliantSystem ? 'COMPLIANT' : displayName,
+      handle: isCompliantSystem ? '' : handle,
       avatarInitials,
       avatarSrc,
       personaBadgePersona: resolvedPersonaBadgePersona,
@@ -126,7 +128,9 @@ export default function PostsTab({
       inferenceChain: Array.isArray(p.inferenceChain) ? p.inferenceChain : null,
       ingredients: Array.isArray(p.ingredients) ? p.ingredients : null,
       highlights: Array.isArray(p.highlights) ? p.highlights : null,
+      thinking: Array.isArray(p.thinking) ? p.thinking : null,
       compliantPersonaChange: p.compliantPersonaChange ?? null,
+      compliantLowScore: p.compliantLowScore ?? null,
       leaderboard: (p.leaderboard && Array.isArray(p.leaderboard.entries)) ? {
         boardId: p.leaderboard.boardId,
         title: p.leaderboard.title,
@@ -189,9 +193,9 @@ export default function PostsTab({
                       return next;
                     })
             }
-            isHidden={p.compliantPersonaChange ? false : isHidden(normalizePostHideKey(p.createdAt))}
-            isRevealing={p.compliantPersonaChange ? false : isRevealing(normalizePostHideKey(p.createdAt))}
-            isHighlightable={!hideInteractions && !p.compliantPersonaChange}
+            isHidden={p.compliantPersonaChange || p.compliantLowScore ? false : isHidden(normalizePostHideKey(p.createdAt))}
+            isRevealing={p.compliantPersonaChange || p.compliantLowScore ? false : isRevealing(normalizePostHideKey(p.createdAt))}
+            isHighlightable={!hideInteractions && !p.compliantPersonaChange && !p.compliantLowScore}
             isHighlighted={!hideInteractions && highlightedPostId !== null && highlightedPostId === p.id}
             onHighlight={() => onHighlightPost?.(p)}
           />

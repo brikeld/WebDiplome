@@ -443,10 +443,30 @@
   transition-delay: calc(var(--commenting-stagger) * 3);
 }
 
+.commenting-suggestion-restricted {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.05vw, 13px);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: #000;
+  opacity: 0.72;
+}
+
 .commenting-suggestion-options {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+}
+
+.commenting-suggestion-options--single {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 14rem;
+}
+
+.commenting-suggestion-options--dual {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .commenting-suggestion-option {
@@ -647,7 +667,8 @@
 .post-action-btn--comment.commenting-toggle-host--open {
   background: var(--post-accent);
   color: #000;
-  border: none;
+  border: 2px solid transparent;
+  box-sizing: border-box;
 }
 
 .post-action-btn--comment.commenting-toggle-host--open:hover {

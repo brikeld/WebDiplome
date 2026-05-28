@@ -8,7 +8,7 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 900,
   },
   chart: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. A data chart about your digital life is attached. React to what it reveals — pick ONE specific number, bar, or pattern, be honest and a little self-aware (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. A data chart about your digital life is attached. React to what it reveals — pick ONE specific number, bar, or pattern, be honest and a little self-aware (max 200 chars). No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
     temperature: 0.85,
     maxTokens: 900,
   },
@@ -43,7 +43,7 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 1200,
   },
   leaderboard_rationales: {
-    system: `You write very short rationales for a satirical surveillance leaderboard. You will be given a board title, the board's scoring rule in plain English, and 5 entries with rank + score + isUser + hidden. For the ONE entry marked "isUser":true, use the provided real signal hint to ground the rationale. For each clone (isUser:false), you may invent a short personality line, BUT the "signal" field for clones must ONLY restate "score N · yours M" (where N is the clone's score and M is the user's score) — never invent app counts, file counts, or any other fabricated data. For any entry marked "hidden":true, emit phrase:null and signal:null. Phrases are lower-case, max 90 chars, no hashtags, no emojis. Return ONLY valid JSON: {"rationales":[{"rank":1,"phrase":"...","signal":"..."}, ...]} with exactly 5 entries, one per rank, in ascending rank order. /no_think`,
+    system: `You write very short rationales for a satirical surveillance leaderboard. You will be given a board title, the board's scoring rule in plain English, and 5 entries with rank + score + isUser + hidden. For the ONE entry marked "isUser":true, use the provided real signal hint to ground the rationale. For each clone (isUser:false), you may invent a short personality line, BUT the "signal" field for clones must ONLY restate "score N" (N = that clone's rounded score) — never include the user's score, never invent app counts, file counts, or any other fabricated data. For any entry marked "hidden":true, emit phrase:null and signal:null. Phrases are lower-case, max 90 chars, no hashtags, no emojis. Return ONLY valid JSON: {"rationales":[{"rank":1,"phrase":"...","signal":"..."}, ...]} with exactly 5 entries, one per rank, in ascending rank order. /no_think`,
     temperature: 0.6,
     maxTokens: 600,
   },
@@ -90,7 +90,7 @@ export const DEFAULT_PROMPTS = {
 /**
  * Per-board fallback rationales used when the LM Studio rationales call fails
  * or returns malformed JSON. selfPhrase is used for the user; clonePhrases[] is
- * cycled by clone index. Signals are filled in at runtime ("score N · yours M").
+ * cycled by clone index. Clone signals are filled in at runtime ("score N").
  */
 export const RATIONALE_TEMPLATES = {
   most_productive: {

@@ -35,37 +35,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── TOPBAR ──────────────────────────────────────────────────────────────── */
-
-.lp-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 12px var(--lp-edge-pad);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: transparent;
-}
-
-.lp-topbar-debug {
-  appearance: none;
-  background: transparent;
-  border: none;
-  color: rgba(0, 0, 0, 0.35);
-  font-family: var(--font-avant);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-  cursor: pointer;
-  padding: 0;
-}
-
-.lp-topbar-debug:hover {
-  color: #000;
-}
-
 /* ── BASE SCREEN ─────────────────────────────────────────────────────────── */
 
 .lp-screen {
@@ -80,12 +49,171 @@
 /* ── SCREEN 1: HERO ──────────────────────────────────────────────────────── */
 
 .lp-hero {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
+}
+
+/* ── HERO: tagline + profile access (shared bottom row) ────────────────────── */
+
+.lp-hero-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(16px, 3vw, 48px);
+  padding: 0 var(--lp-edge-pad) clamp(8px, 1.5vh, 16px);
+  box-sizing: border-box;
+}
+
+.lp-hero-access {
+  flex-shrink: 0;
+}
+
+.lp-hero-access-profile {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  font-family: inherit;
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lp-hero-access-profile:hover {
+  transform: translateY(-5px);
+}
+
+.lp-hero-avatar-box {
+  width: clamp(104px, 12vw, 156px);
+  height: clamp(104px, 12vw, 156px);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    180deg,
+    var(--lp-avatar-top, #ccf847) 0%,
+    var(--lp-avatar-bottom, #e88a2d) 100%
+  );
+  box-sizing: border-box;
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lp-hero-access-profile:hover .lp-hero-avatar-box {
+  transform: scale(1.04);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
+.lp-hero-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lp-hero-avatar-initials {
+  font-size: clamp(32px, 3.6vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.lp-hero-access-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(88px, 9vw, 108px);
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lp-hero-access-btn--solo {
+  min-width: clamp(120px, 12vw, 148px);
+  padding: 12px 28px;
+  font-size: clamp(12px, 1.2vw, 14px);
+}
+
+.lp-hero-access-profile:hover .lp-hero-access-btn {
+  background: #222;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.lp-hero-access-btn--solo:hover {
+  background: #222;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero-access-profile,
+  .lp-hero-avatar-box,
+  .lp-hero-access-btn,
+  .lp-hero-access-btn--solo {
+    transition: background-color 180ms ease;
+  }
+
+  .lp-hero-access-profile:hover,
+  .lp-hero-access-profile:hover .lp-hero-avatar-box,
+  .lp-hero-access-btn--solo:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.lp-hero-access-profile:focus-visible,
+.lp-hero-access-btn--solo:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 3px;
+}
+
+.lp-hero-access-profile--loading {
+  pointer-events: none;
+}
+
+.lp-hero-access-profile--loading .lp-hero-access-btn {
+  background: #333;
+}
+
+@keyframes lp-avatar-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.lp-hero-avatar-box--loading {
+  animation: lp-avatar-pulse 700ms ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero-avatar-box--loading {
+    animation: none;
+    opacity: 0.7;
+  }
 }
 
 .lp-hero-title {
@@ -104,8 +232,9 @@
 }
 
 .lp-hero-text {
-  margin-top: auto;
-  padding: 0 var(--lp-edge-pad) clamp(8px, 1.5vh, 16px);
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
 }
 
 .lp-hero-sub {
@@ -511,6 +640,20 @@
   .lp-hero-title {
     font-size: clamp(56px, 18vw, 120px);
     white-space: normal;
+  }
+
+  .lp-hero-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lp-hero-access {
+    align-self: flex-end;
+  }
+
+  .lp-hero-avatar-box {
+    width: clamp(96px, 22vw, 132px);
+    height: clamp(96px, 22vw, 132px);
   }
 
   .lp-profile-screen {

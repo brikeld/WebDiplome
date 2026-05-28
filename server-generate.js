@@ -526,6 +526,10 @@ app.post('/api/comments/suggest', async (req, res) => {
     }
 
     const electronUser = await readJsonOrNull(ELECTRON_USER_JSON);
+    const allowedPersonas = Array.isArray(req.body?.allowedPersonas)
+      ? req.body.allowedPersonas
+      : null;
+
     const suggestions = await generateCommentSuggestions({
       baseUrl: ctx.baseUrl,
       model: ctx.model,
@@ -536,6 +540,7 @@ app.post('/api/comments/suggest', async (req, res) => {
       uploadsDir: UPLOADS_DIR,
       timeoutMs: LM_STUDIO_TIMEOUT_MS,
       retries: LM_STUDIO_RETRIES,
+      allowedPersonas,
     });
 
     return res.json({ success: true, suggestions });
