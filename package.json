@@ -10,11 +10,13 @@
     "preview": "vite preview",
     "server": "node server.js",
     "server:generate": "node server-generate.js",
+    "worker:ai": "node worker/ai-worker.js",
     "servers": "concurrently -n data,gen -c cyan,magenta \"node server.js\" \"node server-generate.js\"",
     "dedupe:uploads": "node scripts/dedupe-uploads.js",
     "test": "vitest run"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
     "sharp": "^0.34.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
