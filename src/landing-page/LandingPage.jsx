@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { fetchLatestMacRelease } from '@/lib/apiClient.js';
 import PostCard from '../features/feed/PostCard.jsx';
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 import {
@@ -214,6 +215,20 @@ function LandingHeroAccess({ profile, onEnterProfile, onRegister, profileEntryLo
 
 export default function LandingPage({ profile, onEnterProfile, onRegister, profileEntryLoading }) {
   const downloadRef = useRef(null);
+  const [release, setRelease] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchLatestMacRelease()
+      .then((r) => { if (!cancelled) setRelease(r); })
+      .catch(() => { if (!cancelled) setRelease(null); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const downloadUrl = release?.downloadUrl || '#';
+  const downloadLabel = release
+    ? `Compliant.dmg · macOS · ${release.sizeLabel || release.version}`
+    : 'Compliant.dmg · macOS · coming soon';
 
   const handleRegister = () => {
     onRegister?.();
@@ -292,14 +307,20 @@ export default function LandingPage({ profile, onEnterProfile, onRegister, profi
                 </p>
               </div>
             </div>
-            <div className="lp-download-card" ref={downloadRef}>
+            <a
+              className="lp-download-card lp-download-link"
+              ref={downloadRef}
+              href={downloadUrl}
+              aria-disabled={release ? 'false' : 'true'}
+              download={Boolean(release)}
+            >
               <div className="lp-download-card-info">
                 <p className="lp-download-title">Download Compliant</p>
                 <p className="lp-download-sub">Let the process begin</p>
-                <p className="lp-download-fine">Compliant.dmg · macOS · zero refunds</p>
+                <p className="lp-download-fine">{downloadLabel}</p>
               </div>
-              <div className="lp-app-icon">icon app,{' '}coming soon</div>
-            </div>
+              <div className="lp-app-icon">{release ? 'download' : 'coming soon'}</div>
+            </a>
           </div>
         </section>
 
@@ -387,7 +408,7 @@ export default function LandingPage({ profile, onEnterProfile, onRegister, profi
               <div className="lp-summary-download-row">
                 <div className="lp-summary-download-info">
                   <p className="lp-summary-download-title">Download Compliant</p>
-                  <p className="lp-summary-download-fine">Compliant.dmg · macOS · zero refunds</p>
+                  <p className="lp-summary-download-fine">{downloadLabel}</p>
                 </div>
                 <div className="lp-summary-app-icon">icon app,{' '}coming soon</div>
               </div>

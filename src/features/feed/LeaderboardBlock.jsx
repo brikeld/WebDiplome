@@ -36,7 +36,7 @@ function Row({ entry, hidden, revealing, onOpenProfile }) {
   const widthPct = ((6 - entry.rank) / 5) * 100;
   const name = entry.name;
   return (
-    <li className={cls} aria-current={entry.isUser ? 'true' : undefined}>
+    <li className={cls} data-source={entry.source || 'real'} aria-current={entry.isUser ? 'true' : undefined}>
       <div className="leaderboard-row__header">
         <span className="leaderboard-row__rank">{String(entry.rank).padStart(2, '0')}</span>
         <ProfileAvatarLink

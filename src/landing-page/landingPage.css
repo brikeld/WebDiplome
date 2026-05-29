@@ -421,6 +421,16 @@
   color: #fff;
 }
 
+.lp-download-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.lp-download-link[aria-disabled="true"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .lp-download-card-info {
   flex: 1 1 auto;
   display: flex;

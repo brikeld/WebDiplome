@@ -31,6 +31,7 @@ export default function CommentsCapsule({
   timeLabel,
   systemNoteLabel,
   onOpenProfile,
+  realComments,
 }) {
   const [picked, setPicked] = useState(() => loadCommentPick(post.id));
   const [originRect, setOriginRect] = useState(null);
@@ -187,7 +188,10 @@ export default function CommentsCapsule({
     saveCommentPick(post.id, s);
   };
 
-  const { comments } = getMockCommentsFor(post.id);
+  // Prefer real public comments from the hosted API; fall back to demo comments.
+  const comments = Array.isArray(realComments) && realComments.length > 0
+    ? realComments
+    : getMockCommentsFor(post.id).comments;
 
   return (
     <div

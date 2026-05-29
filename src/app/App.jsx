@@ -45,6 +45,13 @@ import {
   mergePostsPrepend,
 } from '@/lib/mergePersonaPosts.js';
 import { prependPersonaPosts } from '@/lib/postsApi.js';
+import { selectProfileBySlug } from '@/lib/profileDirectory.js';
+
+function selectedProfileSlug() {
+  if (typeof window === 'undefined') return null;
+  return new URLSearchParams(window.location.search).get('profile');
+}
+
 const API_ORIGIN =
   (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
   'http://localhost:3001';
@@ -810,7 +817,8 @@ export default function App() {
         if (!Array.isArray(data) || data.length === 0) {
           return;
         }
-        setProfile((prev) => mergeProfileFromApi(prev, data[0]));
+        const selected = selectProfileBySlug(data, selectedProfileSlug()) ?? data[0];
+        setProfile((prev) => mergeProfileFromApi(prev, selected));
       } catch {
         if (cancelled) return;
       }
@@ -829,7 +837,7 @@ export default function App() {
     if (!res.ok) throw new Error('Failed to reload profile');
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
-    const incoming = data[0];
+    const incoming = selectProfileBySlug(data, selectedProfileSlug()) ?? data[0];
     let merged = incoming;
     setProfile((prev) => {
       merged = mergeProfileFromApi(prev, incoming);
