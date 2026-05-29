@@ -18,6 +18,17 @@ export function hasLowScorePostForPersona(posts, uiPersonaKey) {
   return posts.some((p) => p?.compliantLowScore?.uiPersonaKey === uiPersonaKey);
 }
 
+export function findLowScorePostForPersona(posts, uiPersonaKey) {
+  if (!uiPersonaKey || !Array.isArray(posts)) return null;
+  return posts.find((p) => p?.compliantLowScore?.uiPersonaKey === uiPersonaKey) ?? null;
+}
+
+/** Remove prior low-score notices for one persona before prepending a fresh one. */
+export function stripLowScorePostsForPersona(posts, uiPersonaKey) {
+  if (!uiPersonaKey || !Array.isArray(posts)) return posts ?? [];
+  return posts.filter((p) => p?.compliantLowScore?.uiPersonaKey !== uiPersonaKey);
+}
+
 export function createCompliantPersonaChangePost({
   profile,
   fromPersona,

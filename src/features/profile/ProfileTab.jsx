@@ -1,5 +1,5 @@
 import ProfileOverview from './ProfileOverview/ProfileOverview.jsx';
 
-export default function ProfileTab() {
-  return <ProfileOverview />;
+export default function ProfileTab({ profile }) {
+  return <ProfileOverview profile={profile} />;
 }

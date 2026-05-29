@@ -13,6 +13,7 @@ export default function ProfileView({
   personaColor,
   activeTab,
   onTabChange,
+  onOpenProfile,
   mainScoreEntryReplayKey,
   isGeneratingPosts,
   personaBadgePersona = null,
@@ -42,7 +43,7 @@ export default function ProfileView({
             >
               <div className="profile-tab-panels">
                 <div className="profile-tab-panels__inner" data-profile-tab={displayTab}>
-                  {displayTab === 'profile' && <ProfileTab />}
+                  {displayTab === 'profile' && <ProfileTab profile={profile} />}
                   {displayTab === 'posts' && (
                     <PostsTab
                       profile={profile}
@@ -50,6 +51,7 @@ export default function ProfileView({
                       hideInteractions
                       isGeneratingPosts={isGeneratingPosts}
                       personaBadgePersona={personaBadgePersona}
+                      onOpenProfile={onOpenProfile}
                     />
                   )}
                   {displayTab === 'leaderboards' && (
@@ -77,6 +79,7 @@ export default function ProfileView({
             personaBadgePersona={personaBadgePersona}
             mainScoreEntryReplayKey={mainScoreEntryReplayKey}
             onNavigateTab={onTabChange}
+            onOpenProfile={onOpenProfile}
           />
           <TabBar
             variant="rail"

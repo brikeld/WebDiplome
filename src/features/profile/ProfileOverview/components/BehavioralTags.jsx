@@ -1,52 +1,51 @@
-export default function BehavioralTags({ behavioral, lifestyle }) {
+import { PoFold } from './PoCard.jsx';
+import PersonaPill from './PersonaPill.jsx';
+
+function ChipBlock({ label, items, dominantPersona }) {
+  if (!items?.length) return null;
   return (
-    <div className="po-card po-behavioral">
-      <p className="po-card-title">Behavioral Profile</p>
-
-      <p className="po-behavioral-type">{behavioral.profile_type}</p>
-      <p className="po-secondary" style={{ marginBottom: 12 }}>
-        Inferred role: <strong>{behavioral.inferred_role}</strong>
-      </p>
-      <p className="po-secondary" style={{ marginBottom: 16 }}>
-        Work context: {behavioral.work_context}
-      </p>
-
-      <hr className="po-divider" />
-
-      <div className="po-lifestyle-section">
-        <span className="po-clue-label">Entertainment</span>
-        <div className="po-badge-row" style={{ marginTop: 4 }}>
-          {lifestyle.entertainment_apps.map(app => (
-            <span key={app} className="po-pill">{app}</span>
-          ))}
-        </div>
-      </div>
-
-      <div className="po-lifestyle-section">
-        <span className="po-clue-label">Health tracking</span>
-        <div className="po-badge-row" style={{ marginTop: 4 }}>
-          {lifestyle.health_tracking.map(app => (
-            <span key={app} className="po-pill">{app}</span>
-          ))}
-        </div>
-      </div>
-
-      <div className="po-lifestyle-section">
-        <span className="po-clue-label">Gaming</span>
-        <div className="po-badge-row" style={{ marginTop: 4 }}>
-          {lifestyle.gaming.map(app => (
-            <span key={app} className="po-pill">{app}</span>
-          ))}
-        </div>
-      </div>
-
-      <hr className="po-divider" />
-
-      <div className="po-badge-row" style={{ marginTop: 0 }}>
-        {behavioral.badges.map(badge => (
-          <span key={badge} className="po-pill po-pill--accent">{badge}</span>
+    <div className="po-block">
+      <span className="po-block-label">{label}</span>
+      <div className="po-chip-row">
+        {items.map((item) => (
+          <PersonaPill key={item} dot personaKey={dominantPersona}>
+            {item}
+          </PersonaPill>
         ))}
       </div>
     </div>
+  );
+}
+
+export default function BehavioralTags({ behavioral, lifestyle, dominantPersona = 'popularity', expanded = false }) {
+  return (
+    <>
+      <p className="po-behavioral-type">{behavioral.profile_type}</p>
+      <p className="po-summary-line">
+        Inferred role: <strong>{behavioral.inferred_role}</strong>
+      </p>
+
+      <PoFold open={expanded}>
+        <div className="po-block">
+          <span className="po-block-label">Work context</span>
+          <span className="po-kv-value">{behavioral.work_context}</span>
+        </div>
+
+        <ChipBlock label="Entertainment" items={lifestyle.entertainment_apps} dominantPersona={dominantPersona} />
+        <ChipBlock label="Health tracking" items={lifestyle.health_tracking} dominantPersona={dominantPersona} />
+        <ChipBlock label="Gaming" items={lifestyle.gaming} dominantPersona={dominantPersona} />
+
+        {behavioral.badges?.length ? (
+          <div className="po-block">
+            <span className="po-block-label">Signals</span>
+            <div className="po-chip-row">
+              {behavioral.badges.map((badge) => (
+                <PersonaPill key={badge}>{badge}</PersonaPill>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </PoFold>
+    </>
   );
 }

@@ -67,10 +67,14 @@ export default function PostsTab({
   hideInteractions = false,
   highlightedPostId = null,
   onHighlightPost,
+  onPostHide,
+  onPostTellMeMore,
+  tellMeMorePostId = null,
   personaBadgePersona = null,
+  onOpenProfile,
 }) {
   const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
-  const { isHidden, isRevealing } = useLiveScoring();
+  const { isHidden, isRevealing, isLeaderboardSelfHidden } = useLiveScoring();
 
   const posts = useMemo(() => {
     if (!profile) return [];
@@ -193,11 +197,23 @@ export default function PostsTab({
                       return next;
                     })
             }
-            isHidden={p.compliantPersonaChange || p.compliantLowScore ? false : isHidden(normalizePostHideKey(p.createdAt))}
+            isHidden={
+              p.compliantPersonaChange || p.compliantLowScore
+                ? false
+                : p.leaderboard
+                  ? isLeaderboardSelfHidden(p.leaderboard.boardId)
+                  : isHidden(normalizePostHideKey(p.createdAt))
+            }
             isRevealing={p.compliantPersonaChange || p.compliantLowScore ? false : isRevealing(normalizePostHideKey(p.createdAt))}
             isHighlightable={!hideInteractions && !p.compliantPersonaChange && !p.compliantLowScore}
             isHighlighted={!hideInteractions && highlightedPostId !== null && highlightedPostId === p.id}
             onHighlight={() => onHighlightPost?.(p)}
+            onHide={hideInteractions || !onPostHide ? undefined : () => onPostHide(p)}
+            onTellMeMore={
+              hideInteractions || !onPostTellMeMore ? undefined : () => onPostTellMeMore(p)
+            }
+            tellMeMoreActive={tellMeMorePostId === p.id}
+            onOpenProfile={onOpenProfile}
           />
         </div>
       ))}

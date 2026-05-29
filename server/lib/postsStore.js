@@ -1,7 +1,11 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { appendPostsForceGrow, mergePostsPrepend } from './postsMerge.js';
+import {
+  appendPostsForceGrow,
+  dedupeCompliantSystemPosts,
+  mergePostsPrepend,
+} from './postsMerge.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const POSTS_DIR = path.join(__dirname, '..', '..', 'posts');
@@ -10,7 +14,12 @@ export async function readPostsForId(id) {
   try {
     const raw = await fs.readFile(path.join(POSTS_DIR, `${id}.json`), 'utf8');
     const data = JSON.parse(raw);
-    return Array.isArray(data) ? data : [];
+    const posts = Array.isArray(data) ? data : [];
+    const deduped = dedupeCompliantSystemPosts(posts);
+    if (deduped.length !== posts.length) {
+      await writePostsForId(id, deduped);
+    }
+    return deduped;
   } catch (err) {
     if (err.code === 'ENOENT') return [];
     throw err;
@@ -27,7 +36,15 @@ export async function writePostsForId(id, personaPosts, normalizePost = (p) => p
 /** Prepend freshly generated posts — always reads current file from disk first. */
 export async function appendPersonaPosts(id, newPosts, normalizePost = (p) => p) {
   const current = await readPostsForId(id);
-  const merged = appendPostsForceGrow(newPosts, current);
+  const incoming = Array.isArray(newPosts) ? newPosts.filter(Boolean) : [];
+  const replaceUiKeys = new Set(
+    incoming.map((p) => p?.compliantLowScore?.uiPersonaKey).filter(Boolean),
+  );
+  const baseline =
+    replaceUiKeys.size > 0
+      ? current.filter((p) => !replaceUiKeys.has(p?.compliantLowScore?.uiPersonaKey))
+      : current;
+  const merged = appendPostsForceGrow(incoming, baseline);
   await writePostsForId(id, merged, normalizePost);
   return merged;
 }

@@ -383,6 +383,7 @@ export default function ScoreAnimator() {
     subscribeAnimations,
     dequeueAnimation,
     dominantPersona,
+    scoresLoaded,
     adjustedScoresRef,
     beginRingAnimation,
     finishRingAnimation,
@@ -393,7 +394,8 @@ export default function ScoreAnimator() {
   );
   const [particles, setParticles] = useState([]);
   const [flipOverlay, setFlipOverlay] = useState(null);
-  const prevDominantPersonaRef = useRef(dominantPersona);
+  const prevDominantPersonaRef = useRef(null);
+  const flipBaselineReadyRef = useRef(false);
 
   useEffect(() => {
     const unsub = subscribeAnimations((queue) => {
@@ -411,11 +413,20 @@ export default function ScoreAnimator() {
   }, [subscribeAnimations, dequeueAnimation]);
 
   useEffect(() => {
+    if (!scoresLoaded) {
+      flipBaselineReadyRef.current = false;
+      return;
+    }
+    if (!flipBaselineReadyRef.current) {
+      flipBaselineReadyRef.current = true;
+      prevDominantPersonaRef.current = dominantPersona;
+      return;
+    }
     if (prevDominantPersonaRef.current !== dominantPersona) {
       setFlipOverlay({ id: Date.now(), persona: dominantPersona });
     }
     prevDominantPersonaRef.current = dominantPersona;
-  }, [dominantPersona]);
+  }, [dominantPersona, scoresLoaded]);
 
   return createPortal(
     <>

@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
+import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import './leaderboardBlock.css';
 
 function DeltaChip({ userRank, previousUserRank }) {
@@ -24,7 +25,7 @@ function formatLeaderboardTitle(title) {
   return text.toUpperCase();
 }
 
-function Row({ entry, hidden, revealing }) {
+function Row({ entry, hidden, revealing, onOpenProfile }) {
   const cls = [
     'leaderboard-row',
     entry.isUser ? 'leaderboard-row--self' : '',
@@ -38,13 +39,15 @@ function Row({ entry, hidden, revealing }) {
     <li className={cls} aria-current={entry.isUser ? 'true' : undefined}>
       <div className="leaderboard-row__header">
         <span className="leaderboard-row__rank">{String(entry.rank).padStart(2, '0')}</span>
-        <span className="leaderboard-row__avatar" aria-hidden>
-          {entry.isUser && entry.avatarSrc
-            ? <img className="leaderboard-row__avatar-img" src={entry.avatarSrc} alt="" />
-            : entry.avatarInitials
-              ? <span className="leaderboard-row__avatar-initials">{entry.avatarInitials}</span>
-              : null}
-        </span>
+        <ProfileAvatarLink
+          className="leaderboard-row__avatar"
+          imgClassName="leaderboard-row__avatar-img"
+          initialsClassName="leaderboard-row__avatar-initials"
+          onOpenProfile={onOpenProfile ? () => onOpenProfile('profile') : undefined}
+          ariaLabel={entry.isUser ? 'View your profile' : `View ${name}'s profile`}
+          avatarSrc={entry.isUser ? entry.avatarSrc : null}
+          avatarInitials={entry.avatarInitials}
+        />
         <span className="leaderboard-row__name">{name}</span>
         {entry.handle
           ? <span className="leaderboard-row__handle">{entry.handle}</span>
@@ -57,7 +60,7 @@ function Row({ entry, hidden, revealing }) {
   );
 }
 
-export default function LeaderboardBlock({ leaderboard, accentColor }) {
+export default function LeaderboardBlock({ leaderboard, accentColor, onOpenProfile }) {
   const { isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
   const reactId = useId();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
@@ -102,6 +105,7 @@ export default function LeaderboardBlock({ leaderboard, accentColor }) {
             entry={e}
             hidden={hiddenForEntry[i]}
             revealing={e.isUser && selfRevealing}
+            onOpenProfile={onOpenProfile}
           />
         ))}
       </ul>

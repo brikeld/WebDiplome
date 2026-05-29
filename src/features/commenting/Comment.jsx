@@ -1,4 +1,5 @@
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
+import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 
 export default function Comment({
   persona,
@@ -7,6 +8,7 @@ export default function Comment({
   avatarSrc,
   avatarInitials,
   personaBadgePersona,
+  onOpenProfile,
   staggerIndex = 0,
   metaLeft,
   metaCenter,
@@ -20,14 +22,16 @@ export default function Comment({
       style={{ transitionDelay: `${staggerIndex * 60}ms` }}
     >
       <div className="commenting-comment-head">
-        <div className="commenting-comment-avatar" aria-hidden>
-          {avatarSrc ? (
-            <img className="commenting-comment-avatar-img" src={avatarSrc} alt="" />
-          ) : (
-            <span>{avatarInitials}</span>
-          )}
+        <ProfileAvatarLink
+          className="commenting-comment-avatar"
+          imgClassName="commenting-comment-avatar-img"
+          onOpenProfile={onOpenProfile ? () => onOpenProfile('profile') : undefined}
+          ariaLabel={displayName ? `View ${displayName}'s profile` : 'View profile'}
+          avatarSrc={avatarSrc}
+          avatarInitials={avatarInitials}
+        >
           <PersonaBadge persona={personaBadgePersona ?? persona} />
-        </div>
+        </ProfileAvatarLink>
         <div className="commenting-comment-lead">
           <p className="commenting-comment-content">{content}</p>
         </div>

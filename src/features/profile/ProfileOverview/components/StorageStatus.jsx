@@ -1,4 +1,7 @@
-function Bar({ label, percent, fillColor, sublabel }) {
+import { PoFold } from './PoCard.jsx';
+import PersonaPill from './PersonaPill.jsx';
+
+function Bar({ label, percent, sublabel }) {
   return (
     <div className="po-bar-wrap">
       <div className="po-bar-label">
@@ -6,40 +9,60 @@ function Bar({ label, percent, fillColor, sublabel }) {
         <span>{sublabel}</span>
       </div>
       <div className="po-bar-track">
-        <div
-          className="po-bar-fill"
-          style={{ width: `${percent}%`, background: fillColor }}
-        />
+        <div className="po-bar-fill" style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} />
       </div>
     </div>
   );
 }
 
-export default function StorageStatus({ storage }) {
+export default function StorageStatus({ storage, dominantPersona = 'productivity', expanded = false }) {
   return (
-    <div className="po-card po-storage">
-      <p className="po-card-title">Storage &amp; Battery</p>
-
-      <Bar
-        label={`Storage — ${storage.used_gb} GB used of ${storage.total_gb} GB`}
-        percent={storage.usage_percent}
-        fillColor="#FF4E00"
-        sublabel={`${storage.usage_percent}% used · ${storage.free_gb} GB free`}
-      />
-
-      <Bar
-        label={`Battery — ${storage.battery_percent}%`}
-        percent={storage.battery_percent}
-        fillColor="#0FA020"
-        sublabel={storage.battery_condition}
-      />
-
-      <div className="po-row" style={{ gap: 16, marginTop: 4 }}>
-        <span className="po-secondary">
-          Battery health: <strong>{storage.battery_health_percent}%</strong>
-        </span>
-        <span className="po-pill">{storage.battery_condition}</span>
+    <>
+      <div className="po-panel">
+        <Bar
+          label="Storage"
+          percent={storage.usage_percent}
+          sublabel={`${storage.usage_percent}% used`}
+        />
+        <p className="po-secondary po-foot-note" style={{ marginTop: 0 }}>
+          {storage.used_gb} GB of {storage.total_gb} GB · {storage.free_gb} GB free
+        </p>
       </div>
-    </div>
+
+      <p className="po-summary-line">
+        <strong>{storage.usage_percent}%</strong> disk used
+        {storage.battery_cycles != null ? (
+          <>
+            {' '}
+            · Battery <strong>{storage.battery_cycles}</strong> cycles
+          </>
+        ) : null}
+      </p>
+
+      <PoFold open={expanded}>
+        <div className="po-block">
+          <span className="po-block-label">Battery</span>
+          <div className="po-panel">
+            <Bar
+              label="Charge"
+              percent={storage.battery_percent ?? 0}
+              sublabel={`${storage.battery_percent ?? '—'}%`}
+            />
+          </div>
+        </div>
+
+        <div className="po-chip-row">
+          <PersonaPill dot personaKey={dominantPersona}>
+            Health {storage.battery_health_percent ?? '—'}%
+          </PersonaPill>
+          {storage.battery_cycles != null ? (
+            <PersonaPill>{storage.battery_cycles} cycles</PersonaPill>
+          ) : null}
+          {storage.battery_condition && storage.battery_condition !== '—' ? (
+            <PersonaPill>{storage.battery_condition}</PersonaPill>
+          ) : null}
+        </div>
+      </PoFold>
+    </>
   );
 }

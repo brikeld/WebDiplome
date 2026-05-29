@@ -1,60 +1,70 @@
-const CATEGORY_COLORS = {
-  video:       '#FF4E00',
-  design:      '#2323FF',
-  development: '#0FA020',
-  '3d':        '#888888',
-  browser:     '#cccac7',
-};
+import { PoFold } from './PoCard.jsx';
+import PersonaPill from './PersonaPill.jsx';
+import { personaColorAtIndex } from '@/lib/personaColors.js';
 
-export default function TechStack({ techStack }) {
+function AppList({ apps, offset = 0 }) {
   return (
-    <div className="po-card po-tech">
-      <p className="po-card-title">Tech Stack</p>
+    <div className="po-app-grid">
+      {apps.map((app, i) => (
+        <div key={app.name} className="po-app-item">
+          <span className="po-app-dot" style={{ background: personaColorAtIndex(offset + i) }} />
+          <div className="po-app-text">
+            <span className="po-app-name">{app.name}</span>
+            <span className="po-app-category">{app.category}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-      <div className="po-app-grid">
-        {techStack.primary_apps.map(app => (
-          <div key={app.name} className="po-app-item">
-            <span
-              className="po-app-dot"
-              style={{ background: CATEGORY_COLORS[app.category] ?? '#888' }}
-            />
-            <div className="po-app-text">
-              <span className="po-app-name">{app.name}</span>
-              <span className="po-app-category">{app.category}</span>
+export default function TechStack({ techStack, dominantPersona = 'productivity', expanded = false }) {
+  const apps = techStack.primary_apps ?? [];
+  const top = apps.slice(0, 4);
+  const rest = apps.slice(4);
+
+  return (
+    <>
+      <div className="po-panel">
+        <AppList apps={top} />
+      </div>
+
+      <p className="po-summary-line">
+        <strong>{techStack.total_apps_installed}</strong> apps · {techStack.ai_tools.length} AI assistants
+      </p>
+
+      <PoFold open={expanded}>
+        {rest.length ? (
+          <div className="po-block">
+            <span className="po-block-label">More apps</span>
+            <div className="po-panel">
+              <AppList apps={rest} offset={top.length} />
             </div>
           </div>
-        ))}
-      </div>
+        ) : null}
 
-      <hr className="po-divider" />
+        <div className="po-block">
+          <span className="po-block-label">AI dependency</span>
+          <div className="po-chip-row">
+            {techStack.ai_tools.map((tool) => (
+              <PersonaPill key={tool} dot personaKey={dominantPersona}>
+                {tool}
+              </PersonaPill>
+            ))}
+          </div>
+        </div>
 
-      <p className="po-secondary" style={{ fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
-        AI Dependency Detected
-      </p>
-      <div className="po-ai-row">
-        {techStack.ai_tools.map(tool => (
-          <span key={tool} className="po-pill po-pill--accent">{tool}</span>
-        ))}
-      </div>
-
-      <hr className="po-divider" />
-
-      <p className="po-secondary" style={{ fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
-        Languages detected
-      </p>
-      <div className="po-badge-row" style={{ marginTop: 0 }}>
-        {techStack.languages_detected.map(lang => (
-          <code key={lang} className="po-code-tag">{lang}</code>
-        ))}
-      </div>
-
-      <hr className="po-divider" />
-
-      <div className="po-badge-row" style={{ marginTop: 0 }}>
-        <span className="po-pill">{techStack.design_tools_count} Design Tools</span>
-        <span className="po-pill">{techStack.total_apps_installed} Apps Total</span>
-        <span className="po-pill">{techStack.ai_tools.length} AI Assistants</span>
-      </div>
-    </div>
+        <div className="po-block">
+          <span className="po-block-label">Languages detected</span>
+          <div className="po-chip-row">
+            {techStack.languages_detected.map((lang) => (
+              <code key={lang} className="po-code-tag">
+                {lang}
+              </code>
+            ))}
+          </div>
+        </div>
+      </PoFold>
+    </>
   );
 }

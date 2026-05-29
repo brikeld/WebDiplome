@@ -9,6 +9,7 @@ import {
 import { getMockCommentsFor } from './commentingMock.js';
 import { fetchCommentSuggestions } from './fetchCommentSuggestions.js';
 import { LiveScoringContext } from '@/features/liveScoring/LiveScoringContext.jsx';
+import { usePersonaBlurbs } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import { getAllowedCommentPersonas } from '@/lib/personaScoreCompliance.js';
 import { loadCommentPick, saveCommentPick } from '@/lib/commentPickStorage.js';
 
@@ -29,6 +30,7 @@ export default function CommentsCapsule({
   onToggle,
   timeLabel,
   systemNoteLabel,
+  onOpenProfile,
 }) {
   const [picked, setPicked] = useState(() => loadCommentPick(post.id));
   const [originRect, setOriginRect] = useState(null);
@@ -41,6 +43,7 @@ export default function CommentsCapsule({
   const commentBoostSessionRef = useRef(0);
   const commentBoostAppliedRef = useRef(false);
   const liveScoring = useContext(LiveScoringContext);
+  const personaBlurbs = usePersonaBlurbs();
   const allowedCommentPersonas = useMemo(
     () => getAllowedCommentPersonas(liveScoring?.adjustedScores ?? {}),
     [liveScoring?.adjustedScores],
@@ -95,6 +98,11 @@ export default function CommentsCapsule({
       fetchGenRef.current += 1;
     };
   }, [isOpen, post.id, post.content, picked, commentsRestricted, restrictionsKey]);
+
+  useEffect(() => {
+    if (!isOpen || picked) return;
+    personaBlurbs?.ensureBlurbs?.();
+  }, [isOpen, picked, personaBlurbs]);
 
   // Set max-height to measured scroll height when open
   useEffect(() => {
@@ -217,6 +225,7 @@ export default function CommentsCapsule({
                 avatarSrc={commenterAvatarSrc}
                 avatarInitials={commenterAvatarInitials}
                 personaBadgePersona={commenterPersonaBadgePersona}
+                onOpenProfile={onOpenProfile}
                 staggerIndex={i}
               />
               ))}
@@ -245,6 +254,7 @@ export default function CommentsCapsule({
             postId={post.id}
             displayName={displayName}
             onPick={handlePick}
+            onOpenProfile={onOpenProfile}
           />
         </div>
       </div>

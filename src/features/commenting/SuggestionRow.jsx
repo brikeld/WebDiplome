@@ -50,6 +50,7 @@ export default function SuggestionRow({
   postId,
   displayName,
   onPick,
+  onOpenProfile,
 }) {
   const personaOrder = PERSONA_ORDER.filter((p) => allowedPersonas.includes(p));
   const singleTrackRestricted =
@@ -88,6 +89,7 @@ export default function SuggestionRow({
           avatarSrc={avatarSrc}
           avatarInitials={avatarInitials}
           personaBadgePersona={personaBadgePersona}
+          onOpenProfile={onOpenProfile}
           metaLeft={mockCommentTimeAgo(postId, picked.persona, 3)}
           metaCenter={commentMetaCenterLine(postId, picked.persona)}
         />

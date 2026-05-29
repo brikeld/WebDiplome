@@ -1,5 +1,6 @@
 import MainScoreStyle from '@/features/profile/MainScoreStyle.jsx';
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
+import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import {
   avatarSrcFromProfile,
   displayNameFromProfile,
@@ -17,6 +18,7 @@ export default function ProfileHeader({
   personaBadgePersona = null,
   mainScoreEntryReplayKey = 0,
   onNavigateTab,
+  onOpenProfile,
 }) {
   const name = displayNameFromProfile(profile ?? {});
   const initials = initialsFromProfile(profile ?? {});
@@ -31,13 +33,17 @@ export default function ProfileHeader({
   const rankingLabel = `${rankingCount} ${rankingCount === 1 ? 'ranking' : 'rankings'}`;
 
   const profilePhoto = (
-    <div className="profile-ring-avatar" aria-hidden>
-      {avatarSrc ? (
-        <img className="profile-cap-avatar-img" src={avatarSrc} alt="" />
-      ) : (
-        <span className="profile-cap-avatar-initials">{initials}</span>
-      )}
-    </div>
+    <ProfileAvatarLink
+      className="profile-ring-avatar"
+      imgClassName="profile-cap-avatar-img"
+      initialsClassName="profile-cap-avatar-initials"
+      onOpenProfile={
+        onOpenProfile ? () => onOpenProfile('profile') : () => onNavigateTab?.('profile')
+      }
+      ariaLabel={`View ${name}'s profile`}
+      avatarSrc={avatarSrc}
+      avatarInitials={initials}
+    />
   );
 
   return (

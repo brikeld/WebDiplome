@@ -1153,7 +1153,7 @@ body {
   cursor: default;
 }
 
-/* Blur post content when hidden; only the Hide/Show control stays sharp */
+/* Blur post content when hidden; action buttons in the meta row stay sharp */
 .post-card-body {
   width: 100%;
   transition: filter 0.3s ease;
@@ -1195,9 +1195,55 @@ body {
   box-shadow: none;
 }
 
-.post-card-meta-row .post-meta-pill--comment,
-.post-card-meta-row .post-action-btn--comment {
+.post-card-meta-row__actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
+}
+
+.post-card-meta-row .post-meta-pill--comment,
+.post-card-meta-row .post-action-btn--comment,
+.post-card-meta-row .post-meta-pill--hide,
+.post-card-meta-row .post-action-btn--hide,
+.post-card-meta-row .post-meta-pill--tell,
+.post-card-meta-row .post-action-btn--tell {
+  flex-shrink: 0;
+}
+
+.post-meta-pill--hide,
+.post-meta-pill--tell,
+.post-action-btn--hide,
+.post-action-btn--tell {
+  min-width: 3.45rem;
+  width: auto;
+  max-width: none;
+  padding: var(--post-meta-comment-pad-y) var(--post-meta-comment-pad-x)
+    calc(var(--post-meta-comment-pad-y) + 1px);
+  overflow: visible;
+}
+
+.post-meta-pill--hide svg,
+.post-meta-pill--tell svg,
+.post-action-btn--hide svg,
+.post-action-btn--tell svg {
+  width: var(--post-meta-pill-icon-size);
+  height: var(--post-meta-pill-icon-size);
+  display: block;
+  transform: scale(calc(var(--post-meta-comment-icon-size) / var(--post-meta-pill-icon-size)));
+  transform-origin: center;
+}
+
+.post-action-btn--tell--active {
+  background: var(--post-accent);
+  color: #000;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+}
+
+.post-action-btn--hide--reveal {
+  background: color-mix(in srgb, var(--post-accent, #ccf847) 88%, #000);
 }
 
 .post-card-footer {
@@ -1258,8 +1304,7 @@ body {
   transition: filter 0.3s ease;
 }
 
-.post-card--hidden .post-unified-capsule,
-.post-card--hidden .post-card-meta-row {
+.post-card--hidden .post-unified-capsule {
   filter: blur(18px);
   pointer-events: none;
   user-select: none;
@@ -1283,8 +1328,7 @@ body {
   }
 }
 
-.post-card--revealing .post-unified-capsule,
-.post-card--revealing .post-card-meta-row {
+.post-card--revealing .post-unified-capsule {
   animation: post-card-unblur-reveal 1.65s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -1339,10 +1383,6 @@ body {
   filter: blur(18px);
   pointer-events: auto;
   animation: post-unhide-glow 1.6s ease-in-out infinite;
-}
-
-.post-card--highlighted.post-card--hidden .post-card-meta-row {
-  pointer-events: auto;
 }
 
 .post-action-btn--comment {
@@ -1458,11 +1498,34 @@ body {
   overflow-wrap: anywhere;
 }
 
-.post-avatar .persona-badge {
+.post-avatar .persona-badge,
+.profile-avatar-link.post-avatar .persona-badge {
   --persona-badge-size: calc(var(--post-avatar-size) * 0.22);
   --persona-badge-border: max(3px, calc(var(--post-avatar-size) * 0.025));
   right: calc(var(--post-avatar-size) * -0.035);
   bottom: calc(var(--post-avatar-size) * -0.035);
+}
+
+.profile-avatar-link {
+  appearance: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+}
+
+.profile-avatar-link:focus-visible {
+  outline: 2px solid var(--post-accent, var(--persona-accent, #759aef));
+  outline-offset: 3px;
+  border-radius: var(--radius-post-surface);
+}
+
+.profile-avatar-link.post-avatar {
+  position: relative;
 }
 
 .landing-preview-cap-avatar,
@@ -1579,11 +1642,11 @@ body {
 }
 
 .post-card--compliant-persona-change .post-card-lead {
-  grid-row: 1 / -1;
-  align-self: center;
+  grid-row: 1;
+  align-self: start;
   min-width: 0;
   width: 100%;
-  padding: 8px 12px 28px 4px;
+  padding: 8px 8px 0 4px;
 }
 
 .post-card--compliant-persona-change .post-card-footer {
@@ -1613,7 +1676,8 @@ body {
   color: #fff;
 }
 
-.post-card--compliant-persona-change .post-lead--compliant-persona-change {
+.post-card--compliant-persona-change .post-lead--compliant-persona-change,
+.post-card--compliant-low-score .post-lead--compliant-low-score {
   max-width: none;
 }
 
@@ -1648,15 +1712,14 @@ body {
 /* ── Dashboard (Figma white shell) ── */
 .dashboard-actions-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: var(--dashboard-btn-gap, 10px);
   width: 100%;
   /* ~1.1fr of capsule — scales with viewport like the original grid row */
   flex: 1.1 1 0;
   min-height: var(--dashboard-actions-min-h, clamp(128px, 15vh, 168px));
   height: auto;
-  /* No overflow:hidden here — would clip the hide-pill glow into a rectangle.
-     Clipping happens only while collapsing, via .is-tell-expanded below. */
+  /* Clipping happens only while tell-me-more is collapsing (see inferenceChain.css). */
   transition:
     flex 380ms cubic-bezier(0.4, 0, 0.2, 1),
     flex-basis 380ms cubic-bezier(0.4, 0, 0.2, 1),
@@ -1706,383 +1769,7 @@ body {
   outline-offset: 3px;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   HIDE PILL — five visual states matching Figma:
-     1. normal               (no post selected)        pastel fill, accent stroke, icon 50%
-     2. armed (unhidden)     (post selected)           same shell + icon 100% + glow
-     3. armed-hidden         (hidden post selected)    inverted: accent fill, pastel stroke
-     4. confirm              (clicked while armed)     wide pill with text + 2 buttons + mini post
-     5. nudge                (clicked with no select)  unblurred post + cursor icon + "select a post first"
-   Each state uses --hide-pill-accent (persona color) and --hide-pill-pastel.
-   ────────────────────────────────────────────────────────────────────────── */
-
-.dashboard-hide-pill {
-  --hide-pill-radius: var(--radius-pill);
-  --hide-pill-border: 2px;
-  appearance: none;
-  border: var(--hide-pill-border) solid var(--hide-pill-accent, #759aef);
-  border-radius: var(--hide-pill-radius);
-  background: var(--hide-pill-pastel, #bccdf5);
-  color: #000;
-  font-family: var(--font-avant);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1.1;
-  cursor: pointer;
-  min-height: 0;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  position: relative;
-  overflow: hidden;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Smooth cross-state morphing — colors + radius + border tween together */
-  transition:
-    background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-width 200ms ease,
-    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 280ms ease,
-    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.dashboard-hide-pill:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.dashboard-hide-pill:focus-visible {
-  outline: 2px solid #000;
-  outline-offset: 3px;
-}
-
-/* ── Anonymous post texture (shared by all states) ──
-   Stretches vertically inside the pill; inner skeleton stays centered. */
-.dashboard-hide-pill__bg-post {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 58px;
-  bottom: 58px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 15px;
-  box-sizing: border-box;
-  border-radius: calc(var(--hide-pill-radius) - 10px);
-  background: color-mix(in srgb, var(--hide-pill-accent, #ffffff) 32%, transparent);
-  filter: blur(1px);
-  pointer-events: none;
-  transition:
-    filter 280ms ease,
-    background-color 280ms ease,
-    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.dashboard-hide-pill--armed .dashboard-hide-pill__bg-post,
-.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__bg-post {
-  border-radius: calc(var(--hide-pill-radius) - 18px);
-}
-
-.dashboard-hide-pill__avatar {
-  width: 38%;
-  max-width: 90px;
-  aspect-ratio: 1 / 1;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--hide-pill-accent, #759aef) 55%, transparent);
-  transition: background-color 280ms ease;
-}
-
-.dashboard-hide-pill__lines {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-}
-
-.dashboard-hide-pill__line {
-  height: 9px;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--hide-pill-accent, #759aef) 55%, transparent);
-  transition: background-color 280ms ease;
-}
-
-.dashboard-hide-pill__line--short { width: 70%; }
-.dashboard-hide-pill__line--tiny  { width: 45%; height: 7px; }
-
-/* Compact dashboard row: ghost + icon must fit a ~88–108px-tall pill */
-.dashboard-capsule--figma .dashboard-hide-pill__bg-post {
-  top: 18%;
-  bottom: 18%;
-  left: 10px;
-  right: 10px;
-  padding: 0 10px;
-}
-
-.dashboard-capsule--figma .dashboard-hide-pill__icon svg {
-  width: clamp(44px, 5.2vw, 58px);
-  height: clamp(44px, 5.2vw, 58px);
-}
-
-.dashboard-capsule--figma .dashboard-hide-pill--nudge .dashboard-hide-pill__icon svg {
-  width: clamp(40px, 4.8vw, 52px);
-  height: clamp(40px, 4.8vw, 52px);
-}
-
-/* ── Foreground icon (eye-off / cursor) ── */
-.dashboard-hide-pill__icon {
-  position: relative;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #1c1c1c;
-  opacity: 0.5;
-  transition:
-    opacity 260ms cubic-bezier(0.4, 0, 0.2, 1),
-    transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    color 280ms ease,
-    filter 280ms ease;
-}
-
-.dashboard-hide-pill__icon svg {
-  width: clamp(54px, 6.8vw, 92px);
-  height: clamp(54px, 6.8vw, 92px);
-  display: block;
-}
-
-/* ── STATE 1: normal — defaults already set above ── */
-.dashboard-hide-pill--normal .dashboard-hide-pill__icon {
-  opacity: 0.5;
-  transform: scale(0.94);
-}
-
-.dashboard-hide-pill--normal {
-  background: var(--card, #fff);
-}
-
-/* ── STATE 2: armed (unhidden post highlighted) ──
-   Stronger glow + larger radius + icon pops to 100% with a small scale-up. */
-@keyframes hide-pill-armed-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 0 0 transparent,
-      0 0 22px 4px rgb(255 255 255 / 0.82),
-      0 0 44px 12px rgb(255 255 255 / 0.5),
-      0 0 72px 24px rgb(255 255 255 / 0.24);
-  }
-  50% {
-    box-shadow:
-      0 0 0 0 transparent,
-      0 0 32px 8px rgb(255 255 255 / 0.95),
-      0 0 60px 18px rgb(255 255 255 / 0.62),
-      0 0 96px 32px rgb(255 255 255 / 0.32);
-  }
-}
-
-@keyframes hide-pill-icon-pop {
-  0%   { transform: scale(0.85); }
-  60%  { transform: scale(1.12); }
-  100% { transform: scale(1);    }
-}
-
-.dashboard-hide-pill--armed {
-  --hide-pill-radius: calc(var(--radius-pill) + 18px);
-  --hide-pill-border: 3px;
-  animation: hide-pill-armed-glow 1.6s ease-in-out infinite;
-}
-
-.dashboard-hide-pill--armed .dashboard-hide-pill__icon {
-  opacity: 1;
-  transform: scale(1);
-  animation: hide-pill-icon-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* ── STATE 3: armed-hidden (hidden post highlighted) ──
-   Inverted colors, same shape language as armed. Glow uses the post's
-   persona accent (not the pastel) so it always tracks the post color. */
-@keyframes hide-pill-hidden-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 22px 4px rgb(255 255 255 / 0.82),
-      0 0 44px 12px rgb(255 255 255 / 0.5),
-      0 0 72px 24px rgb(255 255 255 / 0.24);
-  }
-  50% {
-    box-shadow:
-      0 0 32px 8px rgb(255 255 255 / 0.95),
-      0 0 60px 18px rgb(255 255 255 / 0.62),
-      0 0 96px 32px rgb(255 255 255 / 0.32);
-  }
-}
-
-.dashboard-hide-pill--armed-hidden {
-  --hide-pill-radius: calc(var(--radius-pill) + 18px);
-  --hide-pill-border: 3px;
-  background: var(--hide-pill-accent, #759aef);
-  border-color: var(--hide-pill-pastel, #bccdf5);
-  animation: hide-pill-hidden-glow 1.6s ease-in-out infinite;
-}
-
-.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__bg-post {
-  background: color-mix(in srgb, #fff 32%, transparent);
-  filter: blur(1px);
-}
-
-.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__avatar {
-  background: color-mix(in srgb, #fff 60%, transparent);
-}
-
-.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__line {
-  background: color-mix(in srgb, #fff 55%, transparent);
-}
-
-.dashboard-hide-pill--armed-hidden .dashboard-hide-pill__icon {
-  opacity: 1;
-  transform: scale(1);
-  color: #000;
-  animation: hide-pill-icon-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes hide-pill-select-morph-a {
-  0% {
-    border-radius: var(--radius-pill);
-    transform: scale(0.985);
-  }
-  60% {
-    border-radius: calc(var(--radius-pill) + 20px);
-    transform: scale(1.01);
-  }
-  100% {
-    border-radius: var(--hide-pill-radius);
-    transform: scale(1);
-  }
-}
-
-@keyframes hide-pill-select-morph-b {
-  0% {
-    border-radius: var(--radius-pill);
-    transform: scale(0.985);
-  }
-  60% {
-    border-radius: calc(var(--radius-pill) + 20px);
-    transform: scale(1.01);
-  }
-  100% {
-    border-radius: var(--hide-pill-radius);
-    transform: scale(1);
-  }
-}
-
-.dashboard-hide-pill--armed.dashboard-hide-pill--select-pulse-a {
-  animation:
-    hide-pill-select-morph-a 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    hide-pill-armed-glow 1.6s ease-in-out infinite;
-}
-
-.dashboard-hide-pill--armed.dashboard-hide-pill--select-pulse-b {
-  animation:
-    hide-pill-select-morph-b 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    hide-pill-armed-glow 1.6s ease-in-out infinite;
-}
-
-.dashboard-hide-pill--armed-hidden.dashboard-hide-pill--select-pulse-a {
-  animation:
-    hide-pill-select-morph-a 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    hide-pill-hidden-glow 1.6s ease-in-out infinite;
-}
-
-.dashboard-hide-pill--armed-hidden.dashboard-hide-pill--select-pulse-b {
-  animation:
-    hide-pill-select-morph-b 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    hide-pill-hidden-glow 1.6s ease-in-out infinite;
-}
-
-/* ── STATE 5: nudge ("Select a post first") ── */
-@keyframes hide-pill-error-wiggle {
-  0%, 100% { transform: translateX(0) rotate(0deg); }
-  12%      { transform: translateX(-8px) rotate(-1.2deg); }
-  24%      { transform: translateX(7px) rotate(1deg); }
-  36%      { transform: translateX(-5px) rotate(-0.6deg); }
-  48%      { transform: translateX(5px) rotate(0.6deg); }
-  60%      { transform: translateX(-3px) rotate(-0.3deg); }
-  72%      { transform: translateX(2px) rotate(0.2deg); }
-  84%      { transform: translateX(-1px); }
-}
-
-@keyframes hide-pill-nudge-lifecycle {
-  0%   { opacity: 0; transform: scale(0.96); }
-  10%  { opacity: 1; transform: scale(1);    }
-  88%  { opacity: 1; transform: scale(1);    }
-  100% { opacity: 0; transform: scale(0.98); }
-}
-
-.dashboard-hide-pill--nudge {
-  background: var(--card, #fff);
-  animation: hide-pill-error-wiggle 460ms ease-in-out 1;
-  /* Keep color/radius tweens; let the wiggle own transform */
-  transition:
-    background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-width 200ms ease,
-    border-radius 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 280ms ease;
-}
-
-.dashboard-hide-pill--nudge .dashboard-hide-pill__bg-post {
-  filter: none;
-}
-
-.dashboard-hide-pill--nudge .dashboard-hide-pill__avatar,
-.dashboard-hide-pill--nudge .dashboard-hide-pill__line {
-  background: color-mix(in srgb, var(--hide-pill-accent, #759aef) 70%, transparent);
-}
-
-.dashboard-hide-pill--nudge .dashboard-hide-pill__icon {
-  position: absolute;
-  right: 18%;
-  top: 64%;
-  transform: translateY(-50%);
-  z-index: 3;
-  opacity: 1;
-  color: #111;
-  animation: hide-pill-nudge-lifecycle 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.dashboard-hide-pill--nudge .dashboard-hide-pill__icon svg {
-  width: clamp(38px, 4.6vw, 60px);
-  height: clamp(38px, 4.6vw, 60px);
-}
-
-.dashboard-hide-pill__nudge-capsule {
-  position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 4;
-  display: inline-block;
-  padding: 5px 14px 6px;
-  border-radius: var(--radius-pill);
-  background: var(--hide-pill-accent, #759aef);
-  color: #000;
-  font-family: var(--font-avant);
-  font-size: clamp(11px, 1.15vw, 14px);
-  font-weight: 800;
-  letter-spacing: -0.005em;
-  text-transform: none;
-  line-height: 1;
-  white-space: nowrap;
-  animation: hide-pill-nudge-lifecycle 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   STATE 4: confirm — full-width pill replacing the actions row
-   ────────────────────────────────────────────────────────────────────────── */
+/* ── Hide confirm / blocked (timer capsule when post hide is initiated) ── */
 
 @keyframes hide-confirm-enter {
   0% {
@@ -2093,55 +1780,48 @@ body {
   55% {
     opacity: 1;
     transform: scaleX(1.02) scaleY(1.04);
-    filter: blur(0px);
+    filter: blur(0);
   }
   100% {
     opacity: 1;
     transform: scaleX(1) scaleY(1);
-    filter: blur(0px);
+    filter: blur(0);
   }
 }
 
-@keyframes hide-confirm-left-enter {
+@keyframes hide-confirm-content-enter {
   0%   { opacity: 0; transform: translateX(-14px); }
   40%  { opacity: 0; transform: translateX(-14px); }
   100% { opacity: 1; transform: translateX(0);     }
 }
 
-@keyframes hide-confirm-right-enter {
-  0%   { opacity: 0; transform: translateX(14px) scale(0.85); }
-  30%  { opacity: 0; transform: translateX(14px) scale(0.85); }
-  100% { opacity: 1; transform: translateX(0)    scale(1);    }
-}
-
 .dashboard-actions-row--confirm {
   grid-template-columns: 1fr;
-  /* Confirm pill needs more vertical room than the compact hide+timer row */
   flex-basis: auto;
   height: auto;
 }
 
-.dashboard-hide-pill--confirm {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
+.dashboard-timer-card--confirm {
+  cursor: default;
+  text-transform: none;
   padding: clamp(16px, 2vw, 24px) clamp(18px, 2.2vw, 28px);
   background: var(--card, #fff);
-  border: 2px solid var(--hide-pill-accent, #759aef);
-  cursor: default;
-  overflow: hidden;
-  transform-origin: center center;
+  border: 2px solid var(--hide-pill-accent, var(--persona-accent, #759aef));
+  border-radius: var(--capsule-radius);
+  min-height: 0;
+  height: 100%;
   animation: hide-confirm-enter 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  text-align: center;
 }
 
-.dashboard-hide-pill--confirm .dashboard-hide-pill__confirm-left {
-  animation: hide-confirm-left-enter 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.dashboard-timer-card--confirm .dashboard-hide-confirm__body {
+  animation: hide-confirm-content-enter 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.dashboard-hide-pill__confirm-left {
+.dashboard-capsule--figma .dashboard-timer-card--confirm {
+  border-radius: var(--capsule-radius);
+}
+
+.dashboard-hide-confirm__body {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2152,7 +1832,7 @@ body {
   text-align: center;
 }
 
-.dashboard-hide-pill__confirm-title {
+.dashboard-hide-confirm__title {
   margin: 0;
   font-family: var(--font-avant);
   font-size: clamp(24px, 2.8vw, 34px);
@@ -2164,7 +1844,7 @@ body {
   text-align: center;
 }
 
-.dashboard-hide-pill__confirm-body {
+.dashboard-hide-confirm__message {
   margin: 0;
   font-family: var(--font-avant);
   font-size: clamp(17px, 1.85vw, 23px);
@@ -2177,7 +1857,7 @@ body {
   max-width: 36ch;
 }
 
-.dashboard-hide-pill__confirm-points {
+.dashboard-hide-confirm__chip {
   display: inline-block;
   padding: 2px 10px 3px;
   border-radius: var(--radius-pill);
@@ -2188,7 +1868,7 @@ body {
   white-space: nowrap;
 }
 
-.dashboard-hide-pill__confirm-actions {
+.dashboard-hide-confirm__actions {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2198,7 +1878,7 @@ body {
   width: 100%;
 }
 
-.dashboard-hide-pill__confirm-btn {
+.dashboard-hide-confirm__btn {
   appearance: none;
   border: none;
   border-radius: var(--radius-pill);
@@ -2206,30 +1886,31 @@ body {
   font-family: var(--font-avant);
   font-size: clamp(15px, 1.55vw, 20px);
   font-weight: 800;
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
   text-transform: none;
-  line-height: 1;
+  line-height: 1.1;
   cursor: pointer;
 }
 
-.dashboard-hide-pill__confirm-btn--cancel {
+.dashboard-hide-confirm__btn--cancel {
   background: var(--hide-pill-accent, #759aef);
   color: #000;
 }
 
-.dashboard-hide-pill__confirm-btn--hide {
+.dashboard-hide-confirm__btn--hide {
   background: #000;
   color: var(--hide-pill-accent, #759aef);
 }
 
-.dashboard-hide-pill__confirm-btn:focus-visible {
+.dashboard-hide-confirm__btn:focus-visible {
   outline: 2px solid #000;
   outline-offset: 2px;
 }
 
-.dashboard-hide-pill__confirm-btn--hide:focus-visible {
+.dashboard-hide-confirm__btn--hide:focus-visible {
   outline-color: var(--hide-pill-accent, #759aef);
 }
+
 
 /* tell me more — armed */
 .dashboard-timer-card--tell-armed {
@@ -2332,6 +2013,33 @@ body {
   min-height: 0;
 }
 
+/* Idle countdown only — confirm / harvest / generating keep compact type */
+.dashboard-timer-card--idle-countdown.dashboard-timer-card--action-update {
+  padding: clamp(8px, 1vh, 12px) clamp(10px, 1.2vw, 14px);
+}
+
+.dashboard-timer-card--idle-countdown .dashboard-update-timer {
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: clamp(14px, 1.8vh, 22px);
+  min-height: 100%;
+}
+
+.dashboard-timer-card--idle-countdown .dashboard-update-label {
+  font-size: clamp(20px, 2.2vw, 30px);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+}
+
+.dashboard-timer-card--idle-countdown .dashboard-update-time {
+  min-width: clamp(128px, 12vw, 172px);
+  padding: 0.34em 0.62em 0.38em;
+  font-size: clamp(36px, 4.6vw, 58px);
+  line-height: 0.92;
+  align-self: center;
+}
+
 .dashboard-timer-card--action-update .dashboard-update-label {
   font-size: clamp(15px, 1.45vw, 20px);
   font-weight: 800;
@@ -2345,6 +2053,77 @@ body {
   font-size: clamp(26px, 3vw, 40px);
   line-height: 1;
   align-self: center;
+}
+
+/* 5s one-shot: scale pulse + main-persona glow (--persona-accent on timer button) */
+@keyframes dashboard-timer-countdown-active {
+  0% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  12% {
+    transform: scale(1.025);
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 26px 8px color-mix(in srgb, var(--persona-accent, #759aef) 78%, transparent),
+      0 0 52px 16px color-mix(in srgb, var(--persona-accent, #759aef) 48%, transparent),
+      0 0 80px 28px color-mix(in srgb, var(--persona-accent, #759aef) 22%, transparent);
+  }
+  28% {
+    transform: scale(1.008);
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 18px 5px color-mix(in srgb, var(--persona-accent, #759aef) 55%, transparent),
+      0 0 36px 10px color-mix(in srgb, var(--persona-accent, #759aef) 32%, transparent);
+  }
+  44% {
+    transform: scale(1.022);
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 30px 9px color-mix(in srgb, var(--persona-accent, #759aef) 82%, transparent),
+      0 0 58px 18px color-mix(in srgb, var(--persona-accent, #759aef) 50%, transparent);
+  }
+  60% {
+    transform: scale(1.006);
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 20px 6px color-mix(in srgb, var(--persona-accent, #759aef) 60%, transparent),
+      0 0 40px 12px color-mix(in srgb, var(--persona-accent, #759aef) 35%, transparent);
+  }
+  76% {
+    transform: scale(1.014);
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 14px 4px color-mix(in srgb, var(--persona-accent, #759aef) 42%, transparent),
+      0 0 28px 8px color-mix(in srgb, var(--persona-accent, #759aef) 24%, transparent);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes dashboard-timer-countdown-time-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.06);
+  }
+  50% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.04);
+  }
+}
+
+.dashboard-timer-card--idle-countdown.dashboard-timer-card--countdown-pulse {
+  animation: dashboard-timer-countdown-active 5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.dashboard-timer-card--idle-countdown.dashboard-timer-card--countdown-pulse .dashboard-update-time {
+  animation: dashboard-timer-countdown-time-pulse 1.25s ease-in-out 0s 4;
 }
 
 .dashboard-update-timer {
@@ -2470,15 +2249,6 @@ body {
   border-radius: var(--capsule-radius);
   cursor: default;
   text-transform: none;
-}
-
-.dashboard-capsule--figma .dashboard-hide-pill {
-  --hide-pill-radius: var(--capsule-radius);
-}
-
-.dashboard-capsule--figma .dashboard-hide-pill--armed,
-.dashboard-capsule--figma .dashboard-hide-pill--armed-hidden {
-  --hide-pill-radius: calc(var(--capsule-radius) + 18px);
 }
 
 .dashboard-capsule--figma .tell-more-pill,

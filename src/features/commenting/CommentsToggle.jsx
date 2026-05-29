@@ -12,7 +12,10 @@ const CommentsToggle = forwardRef(function CommentsToggle(
       aria-label={isOpen ? 'Close comments' : 'Open comments'}
       aria-expanded={isOpen}
       aria-controls={controlsId}
-      onClick={onToggle}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle?.();
+      }}
     >
       {isOpen ? (
         <svg

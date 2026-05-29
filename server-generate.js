@@ -15,6 +15,7 @@ import { loadPrompts } from './server/lib/prompts.js';
 import { extractDocText } from './server/lib/docText.js';
 import { readPostsForId, appendPersonaPosts } from './server/lib/postsStore.js';
 import { generateCommentSuggestions } from './server/lib/commentSuggestions.js';
+import { generatePersonaBlurbs } from './server/lib/personaBlurbs.js';
 import { computeAllBoardStandings } from './server/lib/leaderboards.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -549,6 +550,36 @@ app.post('/api/comments/suggest', async (req, res) => {
     return res.status(500).json({
       success: false,
       error: err?.message ? String(err.message) : 'Comment suggestion failed',
+    });
+  }
+});
+
+// POST /api/persona-blurbs/generate — 3 persona axis blurbs (max 120 chars each)
+app.post('/api/persona-blurbs/generate', async (req, res) => {
+  try {
+    const ctx = await prepareGenerationContext();
+    if (ctx.error) {
+      return res.status(ctx.status || 500).json({ success: false, error: ctx.error });
+    }
+
+    const scores = req.body?.scores && typeof req.body.scores === 'object' ? req.body.scores : null;
+
+    const blurbs = await generatePersonaBlurbs({
+      baseUrl: ctx.baseUrl,
+      model: ctx.model,
+      profile: ctx.profile,
+      electronData: ctx.electronData,
+      scores,
+      timeoutMs: LM_STUDIO_TIMEOUT_MS,
+      retries: LM_STUDIO_RETRIES,
+    });
+
+    return res.json({ success: true, blurbs });
+  } catch (err) {
+    console.error('[persona-blurbs/generate] failed:', err?.message || err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message ? String(err.message) : 'Persona blurb generation failed',
     });
   }
 });

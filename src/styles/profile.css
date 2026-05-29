@@ -307,7 +307,8 @@
 }
 
 /* Photo centered inside innermost persona ring (MainScoreStyle hole ≈ 36% of diameter) */
-.profile-ring-avatar {
+.profile-ring-avatar,
+button.profile-avatar-link.profile-ring-avatar {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -322,7 +323,8 @@
   display: grid;
   place-items: center;
   overflow: visible;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .profile-ring-avatar .profile-cap-avatar-img,

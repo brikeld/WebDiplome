@@ -5,9 +5,12 @@ import LeaderboardBlock from './LeaderboardBlock.jsx';
 import { isPdfDocumentAsset } from '@/lib/attachmentKind.js';
 import { shouldApplyPostImageFx } from '@/lib/shouldApplyPostImageFx.js';
 import CommentsToggle from '@/features/commenting/CommentsToggle.jsx';
+import PostHideToggle from '@/features/feed/PostHideToggle.jsx';
+import PostTellMeMoreToggle from '@/features/feed/PostTellMeMoreToggle.jsx';
 import CommentsCapsule from '@/features/commenting/CommentsCapsule.jsx';
 import { DEMO_OTHER_COMMENTER } from '@/lib/demoCommentIdentity.js';
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
+import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 
 const PostPdfCarousel = lazy(() => import('./PostPdfCarousel.jsx'));
 
@@ -59,12 +62,38 @@ function CompliantPersonaChangeLead({ change, fallbackContent }) {
   );
 }
 
+function CompliantLowScoreLead({ notice, fallbackContent }) {
+  if (!notice) {
+    return <p className="post-lead post-lead--compliant-low-score">{fallbackContent}</p>;
+  }
+
+  const { userDisplayName, personaLabel, score, uiPersonaKey } = notice;
+  const accent = personaUiColor(uiPersonaKey);
+
+  return (
+    <p className="post-lead post-lead--compliant-low-score">
+      COMPLIANT notice for {userDisplayName}: your{' '}
+      <span className="post-persona-label" style={{ color: accent }}>
+        {personaLabel}
+      </span>
+      {' '}score is at{' '}
+      <span className="post-persona-label" style={{ color: accent }}>
+        {score}%
+      </span>
+      . That is below the minimum the system expects. Some features are limited until you
+      improve this persona.
+    </p>
+  );
+}
+
 export default function PostCard({
   post,
   isCommentsOpen = false,
   onToggleComments,
-  /** Reserved for a future hide control (dashboard HIDE uses the same flow today). */
-  onHide: _onHide,
+  onHide,
+  onTellMeMore,
+  onOpenProfile,
+  tellMeMoreActive = false,
   isHidden = false,
   isRevealing = false,
   hidePills = false,
@@ -146,6 +175,7 @@ export default function PostCard({
     <article
       ref={cardRef}
       className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${leaderboard ? ' post-card--has-leaderboard' : ''}${isCompliantSystemPost ? ' post-card--compliant-persona-change' : ''}${isCompliantLowScore ? ' post-card--compliant-low-score' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${isRevealing ? ' post-card--revealing' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
+      data-post-id={post.id}
       data-persona={post.persona}
       style={{ '--post-accent': noteColor }}
       onClick={isHighlightable ? (e) => {
@@ -155,30 +185,35 @@ export default function PostCard({
       <div className="post-unified-capsule">
         <div className="post-card-bubble">
           <div className="post-card-head">
-            <div className="post-avatar" aria-hidden>
-              {isCompliantSystemPost ? (
+            {isCompliantSystemPost ? (
+              <div className="post-avatar" aria-hidden>
                 <span className="post-avatar-compliant-logo">COMPLIANT</span>
-              ) : avatarSrc ? (
-                <img className="post-avatar-img" src={avatarSrc} alt="" />
-              ) : (
-                avatarInitials
-              )}
-              {!isCompliantSystemPost ? (
+              </div>
+            ) : (
+              <ProfileAvatarLink
+                className="post-avatar"
+                imgClassName="post-avatar-img"
+                onOpenProfile={onOpenProfile ? () => onOpenProfile('profile') : undefined}
+                ariaLabel={`View ${displayName}'s profile`}
+                avatarSrc={avatarSrc}
+                avatarInitials={avatarInitials}
+              >
                 <PersonaBadge persona={personaBadgePersona ?? persona} />
-              ) : null}
-            </div>
+              </ProfileAvatarLink>
+            )}
             <div className="post-card-lead">
               {isCompliantPersonaChange ? (
                 <CompliantPersonaChangeLead
                   change={compliantPersonaChange}
                   fallbackContent={content}
                 />
+              ) : isCompliantLowScore ? (
+                <CompliantLowScoreLead
+                  notice={compliantLowScore}
+                  fallbackContent={content}
+                />
               ) : (
-                <p
-                  className={`post-lead${isCompliantLowScore ? ' post-lead--compliant-low-score' : ''}`}
-                >
-                  {content}
-                </p>
+                <p className="post-lead">{content}</p>
               )}
             </div>
             <div className="post-card-footer">
@@ -222,7 +257,11 @@ export default function PostCard({
         ) : null}
 
         {leaderboard ? (
-          <LeaderboardBlock leaderboard={leaderboard} accentColor={noteColor} />
+          <LeaderboardBlock
+            leaderboard={leaderboard}
+            accentColor={noteColor}
+            onOpenProfile={onOpenProfile}
+          />
         ) : null}
 
         {showCommentsCapsule ? (
@@ -243,25 +282,46 @@ export default function PostCard({
             commenterAvatarSrc={DEMO_OTHER_COMMENTER.avatarSrc}
             commenterAvatarInitials={DEMO_OTHER_COMMENTER.avatarInitials}
             commenterPersonaBadgePersona={DEMO_OTHER_COMMENTER.personaBadgePersona}
+            onOpenProfile={onOpenProfile}
           />
         ) : null}
       </div>
 
       {showBottomMeta ? (
         <div className="post-card-meta-row" aria-label="Post metadata">
-          {resolvedPillsMode === 'bottom-only' ? (
-            <span className="post-meta-pill post-meta-pill--comment" aria-hidden>
-              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path d="M4 3h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9.5l-3.7 2.8A.6.6 0 0 1 5 17.4V15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
-              </svg>
-            </span>
-          ) : (
-            <CommentsToggle
-              isOpen={isCommentsOpen}
-              onToggle={onToggleComments}
-              controlsId={`commenting-${post.id}`}
-            />
-          )}
+          <div className="post-card-meta-row__actions">
+            {resolvedPillsMode === 'bottom-only' ? (
+              <span className="post-meta-pill post-meta-pill--comment" aria-hidden>
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path d="M4 3h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9.5l-3.7 2.8A.6.6 0 0 1 5 17.4V15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+                </svg>
+              </span>
+            ) : (
+              <CommentsToggle
+                isOpen={isCommentsOpen}
+                onToggle={onToggleComments}
+                controlsId={`commenting-${post.id}`}
+              />
+            )}
+            {onHide ? (
+              <PostHideToggle
+                isHidden={isHidden}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onHide();
+                }}
+              />
+            ) : null}
+            {onTellMeMore ? (
+              <PostTellMeMoreToggle
+                isActive={tellMeMoreActive}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTellMeMore();
+                }}
+              />
+            ) : null}
+          </div>
           <span className="post-meta-pill post-meta-pill--time">{timeAgo} ago</span>
         </div>
       ) : null}

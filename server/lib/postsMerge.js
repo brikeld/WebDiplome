@@ -1,5 +1,66 @@
 /** Shared post-list merge helpers — used by server.js and server-generate.js */
 
+export function isCompliantPersonaChangePost(post) {
+  return Boolean(post?.compliantPersonaChange);
+}
+
+export function isCompliantLowScorePost(post) {
+  return Boolean(post?.compliantLowScore);
+}
+
+function postCreatedAtMs(post) {
+  const v = post?.createdAt ?? post?.created_at ?? 0;
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  const d = new Date(v);
+  return Number.isFinite(d.getTime()) ? d.getTime() : 0;
+}
+
+/** At most one COMPLIANT persona-change post — keeps the newest by createdAt. */
+export function keepLatestPersonaChangePostOnly(posts) {
+  if (!Array.isArray(posts) || posts.length === 0) return posts ?? [];
+
+  let latest = null;
+  let latestMs = -1;
+  for (const p of posts) {
+    if (!isCompliantPersonaChangePost(p)) continue;
+    const ms = postCreatedAtMs(p);
+    if (ms > latestMs) {
+      latestMs = ms;
+      latest = p;
+    }
+  }
+  if (!latest) return posts;
+
+  const latestKey = postIdentityKey(latest);
+  return posts.filter((p) => !isCompliantPersonaChangePost(p) || postIdentityKey(p) === latestKey);
+}
+
+/** At most one low-score notice per UI persona — keeps the newest by createdAt. */
+export function keepLatestLowScorePostPerPersona(posts) {
+  if (!Array.isArray(posts) || posts.length === 0) return posts ?? [];
+
+  const latestByUi = new Map();
+  for (const p of posts) {
+    const ui = p?.compliantLowScore?.uiPersonaKey;
+    if (!ui) continue;
+    const ms = postCreatedAtMs(p);
+    const prev = latestByUi.get(ui);
+    if (!prev || ms > postCreatedAtMs(prev)) latestByUi.set(ui, p);
+  }
+  if (latestByUi.size === 0) return posts;
+
+  return posts.filter((p) => {
+    const ui = p?.compliantLowScore?.uiPersonaKey;
+    if (!ui) return true;
+    const latest = latestByUi.get(ui);
+    return latest && postIdentityKey(p) === postIdentityKey(latest);
+  });
+}
+
+export function dedupeCompliantSystemPosts(posts) {
+  return keepLatestLowScorePostPerPersona(keepLatestPersonaChangePostOnly(posts));
+}
+
 export function postIdentityKey(post) {
   if (!post || typeof post !== 'object') return '';
   const id = post.id ?? post._id;
@@ -24,7 +85,7 @@ export function mergePostsPrepend(newPosts, baselinePosts) {
     seen.add(key);
     merged.push(p);
   }
-  return merged;
+  return dedupeCompliantSystemPosts(merged);
 }
 
 /**

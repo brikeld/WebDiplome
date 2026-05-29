@@ -4,26 +4,25 @@ import Sidebar from '@/layout/Sidebar.jsx';
 import ScrollArea from '@/layout/ScrollArea.jsx';
 import ProfileView from '@/features/profile/ProfileView.jsx';
 import HomeTab from '@/features/home/HomeTab.jsx';
+import DashboardTimerRow from '@/features/home/DashboardTimerRow.jsx';
 import LandingPage from '@/landing-page/LandingPage.jsx';
 import { LANDING_PROFILE_ENTRY_MS } from '@/landing-page/landingProfileEntry.js';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import {
   getPersonaScoresNormalized,
-  personaPercentToRingFill,
 } from '@/lib/profileUtils.js';
-import HarvestScreen from '@/features/harvest/HarvestScreen.jsx';
-import PersonaDeltaSummary from '@/features/harvest/PersonaDeltaSummary.jsx';
-import GeneratingContentLabel from '@/features/harvest/GeneratingContentLabel.jsx';
 import {
   DASHBOARD_UPDATE_INTERVAL_MS,
   formatDashboardCountdown,
   getDashboardControlLayout,
 } from '@/features/harvest/dashboardUpdateFlow.js';
 import '@/features/harvest/harvest.css';
+import DashboardPersonaRings from '@/features/home/DashboardPersonaRings.jsx';
 import TellMeMorePill from '@/features/inferenceChain/TellMeMorePill.jsx';
 import '@/features/inferenceChain/inferenceChain.css';
 import { applyAccountDeletionFromServer } from '@/lib/liveScoringStorage.js';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
+import { PersonaBlurbsProvider } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
@@ -36,10 +35,15 @@ import {
 import {
   createCompliantLowScorePost,
   createCompliantPersonaChangePost,
-  hasLowScorePostForPersona,
+  findLowScorePostForPersona,
+  stripLowScorePostsForPersona,
 } from '@/lib/compliantSystemPosts.js';
 import { markLowScoreFired } from '@/lib/compliantLowScoreStorage.js';
-import { mergePersonaPostsFromApi, mergePostsPrepend } from '@/lib/mergePersonaPosts.js';
+import {
+  isCompliantPersonaChangePost,
+  mergePersonaPostsFromApi,
+  mergePostsPrepend,
+} from '@/lib/mergePersonaPosts.js';
 import { prependPersonaPosts } from '@/lib/postsApi.js';
 const API_ORIGIN =
   (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
@@ -64,8 +68,7 @@ const PERSONA_COLORS = {
   security: '#759AEF',
   popularity: '#CCF847',
 };
-// Pastel companion colors for hide-pill backgrounds. Security pastel matches the
-// Figma spec (#BCCDF5); the others were picked to mirror that lightness ratio.
+// Pastel companion colors for tell-me-more expanded panel backgrounds.
 const PERSONA_PASTEL_COLORS = {
   productivity: '#EEEEEE',
   productivite: '#EEEEEE',
@@ -180,20 +183,6 @@ function computePersonaDeltas(before, after) {
   return out;
 }
 
-function axisKeyToScoreKey(axisKey) {
-  const k = String(axisKey || '').toLowerCase();
-  if (k === 'popularity') return 'social';
-  return k;
-}
-
-function formatRingDelta(delta) {
-  const n = Number(delta);
-  if (!Number.isFinite(n)) return null;
-  if (n > 0) return { text: `+${n}`, mod: 'up' };
-  if (n < 0) return { text: String(n), mod: 'down' };
-  return { text: '=', mod: 'flat' };
-}
-
 /** Keep posts when API returns stale data; never drop persisted COMPLIANT system posts. */
 function mergeProfileFromApi(prev, incoming) {
   if (!incoming) return prev ?? null;
@@ -224,6 +213,7 @@ function AppInner({
   const {
     adjustedScores,
     dominantPersona: liveDominantPersona,
+    scoresLoaded,
     hidePost,
     revealPost,
     hideLeaderboardSelf,
@@ -232,16 +222,15 @@ function AppInner({
     isHidden,
   } = useLiveScoring();
   const [confirmingHide, setConfirmingHide] = useState(false);
+  const [confirmingUnhide, setConfirmingUnhide] = useState(false);
   const [highlightedPost, setHighlightedPost] = useState(null);
   const [selectionPulseFlip, setSelectionPulseFlip] = useState(false);
-  const [hideNudge, setHideNudge] = useState(false);
   const [tellExpanded, setTellExpanded] = useState(false);
   const [tellClosing, setTellClosing] = useState(false);
   const tellCloseTimerRef = useRef(null);
   const [hideBlocked, setHideBlocked] = useState(false);
   const previousLivePersonaRef = useRef(null);
   const previousPersonaScoresRef = useRef(null);
-  const lowScoreInitRef = useRef(false);
   const updateTimerStartRef = useRef(Date.now());
   const [updateRemainingMs, setUpdateRemainingMs] = useState(DASHBOARD_UPDATE_INTERVAL_MS);
 
@@ -267,6 +256,21 @@ function AppInner({
     [profileId, setProfile],
   );
 
+  const prependCompliantLowScorePost = useCallback(
+    (uiPersonaKey, post) => {
+      if (!profileId || !post || !uiPersonaKey) return;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const stripped = stripLowScorePostsForPersona(prev.personaPosts ?? [], uiPersonaKey);
+        return { ...prev, personaPosts: mergePostsPrepend([post], stripped) };
+      });
+      prependPersonaPosts(profileId, [post]).catch((err) => {
+        console.warn('[compliant] failed to persist low-score post:', err?.message || err);
+      });
+    },
+    [profileId, setProfile],
+  );
+
   const personaKey = personaOverride ?? liveDominantPersona;
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
   const personaToggleLabel =
@@ -284,10 +288,21 @@ function AppInner({
   }, []);
 
   useEffect(() => {
-    if (!profile || !liveDominantPersona) return;
+    if (!profile || !liveDominantPersona || !scoresLoaded) return;
+
     const previous = previousLivePersonaRef.current;
+    if (previous === null) {
+      previousLivePersonaRef.current = liveDominantPersona;
+      return;
+    }
+
+    if (previous === liveDominantPersona) return;
+
     previousLivePersonaRef.current = liveDominantPersona;
-    if (!previous || previous === liveDominantPersona) return;
+
+    const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
+    const latestChange = posts.find(isCompliantPersonaChangePost);
+    if (latestChange?.compliantPersonaChange?.toPersona === liveDominantPersona) return;
 
     const post = createCompliantPersonaChangePost({
       profile,
@@ -296,11 +311,11 @@ function AppInner({
       userDisplayName: displayNameFromProfileLite(profile),
     });
     prependCompliantPost(post);
-  }, [liveDominantPersona, profile, prependCompliantPost]);
+  }, [liveDominantPersona, profile, scoresLoaded, prependCompliantPost]);
 
   useEffect(() => {
+    previousLivePersonaRef.current = null;
     previousPersonaScoresRef.current = null;
-    lowScoreInitRef.current = false;
   }, [profileId]);
 
   useEffect(() => {
@@ -313,7 +328,7 @@ function AppInner({
   }, [profileId, profile?.personaPosts]);
 
   useEffect(() => {
-    if (!profile || !profileId) return;
+    if (!profile || !profileId || !scoresLoaded) return;
 
     const prev = previousPersonaScoresRef.current;
     const userDisplayName = displayNameFromProfileLite(profile);
@@ -322,34 +337,55 @@ function AppInner({
       { ui: 'security', key: 'security' },
       { ui: 'popularity', key: 'social' },
     ];
-
     const existingPosts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
 
-    for (const { ui, key } of scoreKeys) {
+    const ensureLowScorePost = (ui, key, prevScores) => {
       const score = Math.max(0, Math.min(100, Number(adjustedScores[key]) || 0));
-      const nowBelow = score < PERSONA_SCORE_RESTRICT_THRESHOLD;
-      const wasAbove =
-        prev == null ? true : (Number(prev[key]) || 0) >= PERSONA_SCORE_RESTRICT_THRESHOLD;
-      const firstCheck = !lowScoreInitRef.current;
-      const alreadyOnFeed = hasLowScorePostForPersona(existingPosts, ui);
+      const rounded = Math.round(score);
+      if (rounded >= PERSONA_SCORE_RESTRICT_THRESHOLD) return;
 
-      if (alreadyOnFeed) {
+      const existing = findLowScorePostForPersona(existingPosts, ui);
+      const existingRounded = existing
+        ? Math.round(Number(existing.compliantLowScore?.score) || 0)
+        : null;
+      const isBaseline = prevScores === null;
+      const wasAbove =
+        prevScores !== null &&
+        (Number(prevScores[key]) || 0) >= PERSONA_SCORE_RESTRICT_THRESHOLD;
+      const scoreChanged = existingRounded !== null && existingRounded !== rounded;
+      const needsPost = !existing || scoreChanged || isBaseline || wasAbove;
+
+      if (!needsPost) {
         markLowScoreFired(profileId, ui);
-        continue;
+        return;
       }
 
-      const shouldFire = nowBelow && (wasAbove || firstCheck);
-
-      if (shouldFire) {
-        const post = createCompliantLowScorePost({
+      prependCompliantLowScorePost(
+        ui,
+        createCompliantLowScorePost({
           profile,
           uiPersonaKey: ui,
-          score,
+          score: rounded,
           userDisplayName,
-        });
-        prependCompliantPost(post);
-        markLowScoreFired(profileId, ui);
+        }),
+      );
+      markLowScoreFired(profileId, ui);
+    };
+
+    if (prev === null) {
+      for (const { ui, key } of scoreKeys) {
+        ensureLowScorePost(ui, key, null);
       }
+      previousPersonaScoresRef.current = {
+        productivity: adjustedScores.productivity,
+        security: adjustedScores.security,
+        social: adjustedScores.social,
+      };
+      return;
+    }
+
+    for (const { ui, key } of scoreKeys) {
+      ensureLowScorePost(ui, key, prev);
     }
 
     previousPersonaScoresRef.current = {
@@ -357,14 +393,7 @@ function AppInner({
       security: adjustedScores.security,
       social: adjustedScores.social,
     };
-    lowScoreInitRef.current = true;
-  }, [adjustedScores, profile, profileId, prependCompliantPost]);
-
-  const dashboardRingOrder = useMemo(() => {
-    const others = PERSONA_KEYS.filter((k) => k !== personaKey);
-    if (others.length !== 2) return [...PERSONA_KEYS];
-    return [others[0], personaKey, others[1]];
-  }, [personaKey]);
+  }, [adjustedScores, profile, profileId, scoresLoaded, prependCompliantLowScorePost]);
 
   const cyclePersona = () => {
     const order = ['productivity', 'popularity', 'security'];
@@ -398,8 +427,8 @@ function AppInner({
       setSelectionPulseFlip((prev) => !prev);
     }
     setConfirmingHide(false);
+    setConfirmingUnhide(false);
     setHideBlocked(false);
-    setHideNudge(false); // dismiss "select a post first" immediately when user picks one
     closeTell(); // play close animation when selection changes
   }, [highlightedPost?.id, closeTell]);
 
@@ -419,49 +448,17 @@ function AppInner({
   const getHighlightedPostRect = () =>
     document.querySelector('.post-card--highlighted')?.getBoundingClientRect() ?? null;
 
+  const getPostCardRect = useCallback((postId) => {
+    if (!postId) return null;
+    const el = document.querySelector(`[data-post-id="${CSS.escape(String(postId))}"]`);
+    return el?.getBoundingClientRect() ?? null;
+  }, []);
+
   const getHighlightedLeaderboardSelfRect = () =>
     document
       .querySelector('.post-card--highlighted .leaderboard-row--self')
       ?.getBoundingClientRect() ??
     getHighlightedPostRect();
-
-  const handleDashboardHide = () => {
-    if (!profile) return;
-    if (highlightedPost) {
-      const isLeaderboard = Boolean(highlightedPost.leaderboard);
-      if (highlightedPostIsHidden) {
-        if (isLeaderboard) {
-          revealLeaderboardSelf(highlightedPost, getHighlightedLeaderboardSelfRect());
-        } else {
-          revealPost(highlightedPost, getHighlightedPostRect());
-        }
-        setHighlightedPost(null);
-        setConfirmingHide(false);
-        setHideBlocked(false);
-      } else {
-        // Encode "only hide a leaderboard if user is in it" — userRank null means not present.
-        if (isLeaderboard && highlightedPost.leaderboard.userRank == null) {
-          setConfirmingHide(false);
-          setHideBlocked(false);
-          return;
-        }
-        const hidePersona = resolveHideContentPersona(highlightedPost);
-        if (!canHideContentForScores(hidePersona, adjustedScores)) {
-          setConfirmingHide(false);
-          setHideBlocked(true);
-          setHideNudge(false);
-          return;
-        }
-        setHideBlocked(false);
-        setConfirmingHide(true);
-        setHideNudge(false);
-      }
-    } else {
-      setConfirmingHide(false);
-      setHideNudge(true);
-      setTimeout(() => setHideNudge(false), 4000);
-    }
-  };
 
   const handleConfirmHide = () => {
     if (highlightedPost) {
@@ -475,10 +472,93 @@ function AppInner({
     setHighlightedPost(null);
   };
 
+  const handleConfirmUnhide = () => {
+    if (highlightedPost) {
+      if (highlightedPost.leaderboard) {
+        revealLeaderboardSelf(highlightedPost, getPostCardRect(highlightedPost.id));
+      } else {
+        revealPost(highlightedPost, getPostCardRect(highlightedPost.id));
+      }
+    }
+    setConfirmingUnhide(false);
+    setHighlightedPost(null);
+  };
+
   const handleCancelHide = () => {
     setConfirmingHide(false);
+    setConfirmingUnhide(false);
     setHideBlocked(false);
   };
+
+  const handlePostHideClick = useCallback(
+    (post) => {
+      if (!profile || !post) return;
+
+      const postIsHidden = post.leaderboard
+        ? isLeaderboardSelfHidden(post.leaderboard.boardId)
+        : isHidden(normalizePostHideKey(post.createdAt));
+
+      setHighlightedPost(post);
+      closeTell();
+
+      if (postIsHidden) {
+        setConfirmingHide(false);
+        setHideBlocked(false);
+        setConfirmingUnhide(true);
+        return;
+      }
+
+      setConfirmingUnhide(false);
+
+      if (post.leaderboard && post.leaderboard.userRank == null) return;
+
+      const hidePersona = resolveHideContentPersona(post);
+      if (!canHideContentForScores(hidePersona, adjustedScores)) {
+        setConfirmingHide(false);
+        setHideBlocked(true);
+        return;
+      }
+
+      setHideBlocked(false);
+      setConfirmingHide(true);
+    },
+    [
+      profile,
+      adjustedScores,
+      closeTell,
+      isHidden,
+      isLeaderboardSelfHidden,
+    ],
+  );
+
+  const handlePostTellMeMoreClick = useCallback(
+    (post) => {
+      if (!post) return;
+      setHighlightedPost(post);
+      setHideBlocked(false);
+      setConfirmingHide(false);
+      setConfirmingUnhide(false);
+      if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
+      setTellClosing(false);
+      setTellExpanded(true);
+    },
+    [],
+  );
+
+  const handleOpenProfile = useCallback(
+    (tab = 'profile') => {
+      setMainView('profile');
+      setActiveTab(tab);
+      setHighlightedPost(null);
+      setConfirmingHide(false);
+      setConfirmingUnhide(false);
+      setHideBlocked(false);
+      if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
+      setTellClosing(false);
+      setTellExpanded(false);
+    },
+    [],
+  );
 
   const dashboardLayout = getDashboardControlLayout({
     harvestPhase,
@@ -522,7 +602,11 @@ function AppInner({
                 isGeneratingPosts={postGen.phase === 'generating'}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
+                onPostHide={handlePostHideClick}
+                onPostTellMeMore={handlePostTellMeMoreClick}
+                tellMeMorePostId={tellExpanded ? (highlightedPost?.id ?? null) : null}
                 personaBadgePersona={personaKey}
+                onOpenProfile={handleOpenProfile}
               />
             </ScrollArea>
           </div>
@@ -535,6 +619,7 @@ function AppInner({
             personaBadgePersona={personaKey}
             activeTab={activeTab}
             onTabChange={setActiveTab}
+            onOpenProfile={handleOpenProfile}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
             isGeneratingPosts={postGen.phase === 'generating'}
             generateApiOrigin={GENERATE_API_ORIGIN}
@@ -558,277 +643,30 @@ function AppInner({
                 };
               })()}
             >
-              {(() => {
-                const personaKeyForPill = String(
-                  highlightedPost?.persona ?? personaKey,
-                ).toLowerCase();
-                const hidePillAccent = highlightedPost?.noteColor ?? personaColor;
-                const hidePillPastel =
-                  PERSONA_PASTEL_COLORS[personaKeyForPill] ??
-                  PERSONA_PASTEL_COLORS.security;
-                const hidePersonaUiKey = highlightedPost
-                  ? personaToUiKey(resolveHideContentPersona(highlightedPost))
-                  : null;
-                const hideBlockedActive =
-                  hideBlocked && highlightedPost && !highlightedPostIsHidden;
-                const confirmActive =
-                  confirmingHide && highlightedPost && !highlightedPostIsHidden;
-                const points = Math.abs(
-                  Number(highlightedPost?.systemDeltaPct) || 1,
-                );
-                const personaLabelLower = (
-                  highlightedPostPersonaLabel ?? PERSONA_LABELS[personaKey] ?? 'Social'
-                ).toLowerCase();
-
-                const pillStyle = {
-                  '--hide-pill-accent': hidePillAccent,
-                  '--hide-pill-pastel': hidePillPastel,
-                };
-                const leaderboardSelected = Boolean(highlightedPost?.leaderboard);
-                const leaderboardPillClass = leaderboardSelected
-                  ? ' dashboard-hide-pill--leaderboard-selected'
-                  : '';
-
-                // eye-off (slashed): used for normal, armed-hidden, confirm mini, nudge
-                const EyeOffIcon = (props) => (
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-                    <path d="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.06 3.06c1.39-1.23 2.49-2.77 3.18-4.53C21.27 7.11 17 4 12 4c-1.27 0-2.49.2-3.64.57l2.17 2.17c.47-.14.96-.24 1.47-.24zM2.71 3.16a.996.996 0 0 0 0 1.41l1.97 1.97C3.06 7.83 1.77 9.53 1 11.5 2.73 15.89 7 19 12 19c1.52 0 2.97-.3 4.31-.82l2.72 2.72a.996.996 0 1 0 1.41-1.41L4.13 3.16c-.39-.39-1.03-.39-1.42 0zM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .38-.03.57-.07l1.57 1.57c-.64.32-1.37.5-2.14.5zm2.97-5.33a2.97 2.97 0 0 0-2.64-2.64l2.64 2.64z" />
-                  </svg>
-                );
-                // plain open eye: used for armed (unhidden post highlighted)
-                const EyeIcon = (props) => (
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                  </svg>
-                );
-                const CursorIcon = (props) => (
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-                    <path d="M4 2v16.4l4.2-3.9 2.4 5.5 2.5-1.1-2.4-5.5H16L4 2z" />
-                  </svg>
-                );
-
-                const GhostPost = () => (
-                  <div
-                    className="dashboard-hide-pill__bg-post"
-                    aria-hidden
-                  >
-                    <div className="dashboard-hide-pill__avatar" />
-                    <div className="dashboard-hide-pill__lines">
-                      <div className="dashboard-hide-pill__line" />
-                      <div className="dashboard-hide-pill__line dashboard-hide-pill__line--short" />
-                      <div className="dashboard-hide-pill__line dashboard-hide-pill__line--tiny" />
-                    </div>
-                  </div>
-                );
-
-                if (hideBlockedActive) {
-                  const blockedLabel = (
-                    PERSONA_LABELS[hidePersonaUiKey] ?? highlightedPostPersonaLabel ?? 'Social'
-                  ).toLowerCase();
-                  return (
-                    <div
-                      className="dashboard-actions-row dashboard-actions-row--confirm"
-                    >
-                      <div
-                        className={`dashboard-hide-pill dashboard-hide-pill--confirm dashboard-hide-pill--confirm-blocked${leaderboardPillClass}`}
-                        role="alertdialog"
-                        aria-labelledby="hide-blocked-title-inline"
-                        style={pillStyle}
-                      >
-                        <div className="dashboard-hide-pill__confirm-left">
-                          <h3
-                            id="hide-blocked-title-inline"
-                            className="dashboard-hide-pill__confirm-title"
-                          >
-                            {leaderboardSelected
-                              ? "Can't hide your ranking"
-                              : "Can't hide this post"}
-                          </h3>
-                          <p className="dashboard-hide-pill__confirm-body">
-                            {leaderboardSelected ? (
-                              <>
-                                Sorry, but you cannot hide your ranking, since your{' '}
-                                <span className="dashboard-hide-pill__confirm-points">
-                                  {blockedLabel}
-                                </span>{' '}
-                                persona score is too low right now. Improve your score and
-                                try again.
-                              </>
-                            ) : (
-                              <>
-                                Sorry, but you cannot hide this post, since your{' '}
-                                <span className="dashboard-hide-pill__confirm-points">
-                                  {blockedLabel}
-                                </span>{' '}
-                                persona score is too low right now. Improve your score and
-                                try again.
-                              </>
-                            )}
-                          </p>
-                          <div className="dashboard-hide-pill__confirm-actions">
-                            <button
-                              type="button"
-                              className="dashboard-hide-pill__confirm-btn dashboard-hide-pill__confirm-btn--cancel"
-                              onClick={handleCancelHide}
-                            >
-                              Got it
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (confirmActive) {
-                  return (
-                    <div
-                      className="dashboard-actions-row dashboard-actions-row--confirm"
-                    >
-                      <div
-                        className={`dashboard-hide-pill dashboard-hide-pill--confirm${leaderboardPillClass}`}
-                        role="alertdialog"
-                        aria-labelledby="hide-confirm-title-inline"
-                        style={pillStyle}
-                      >
-                        <div className="dashboard-hide-pill__confirm-left">
-                          <h3
-                            id="hide-confirm-title-inline"
-                            className="dashboard-hide-pill__confirm-title"
-                          >
-                            {leaderboardSelected
-                              ? 'Hide your ranking?'
-                              : 'Hide this post?'}
-                          </h3>
-                          <p className="dashboard-hide-pill__confirm-body">
-                            {leaderboardSelected ? (
-                              <>
-                                Hiding your position will cost you{' '}
-                                <span className="dashboard-hide-pill__confirm-points">
-                                  -{points}%
-                                </span>{' '}
-                                on your {personaLabelLower} score and remove
-                                your row from this leaderboard.
-                              </>
-                            ) : (
-                              <>
-                                If you hide this post, you will lose{' '}
-                                <span className="dashboard-hide-pill__confirm-points">
-                                  -{points}%
-                                </span>{' '}
-                                on your {personaLabelLower} score and no one else will be
-                                able to see this post.
-                              </>
-                            )}
-                          </p>
-                          <div className="dashboard-hide-pill__confirm-actions">
-                            <button
-                              type="button"
-                              className="dashboard-hide-pill__confirm-btn dashboard-hide-pill__confirm-btn--cancel"
-                              onClick={handleCancelHide}
-                            >
-                              {leaderboardSelected ? 'Stay visible' : 'Keep post'}
-                            </button>
-                            <button
-                              type="button"
-                              className="dashboard-hide-pill__confirm-btn dashboard-hide-pill__confirm-btn--hide"
-                              onClick={handleConfirmHide}
-                            >
-                              {leaderboardSelected ? 'Hide ranking' : 'Hide anyway'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                let stateModifier = 'dashboard-hide-pill--normal';
-                if (hideNudge) stateModifier = 'dashboard-hide-pill--nudge';
-                else if (highlightedPostIsHidden)
-                  stateModifier = 'dashboard-hide-pill--armed-hidden';
-                else if (highlightedPost)
-                  stateModifier = 'dashboard-hide-pill--armed';
-                const selectionPulseClass = highlightedPost
-                  ? ` dashboard-hide-pill--select-pulse-${selectionPulseFlip ? 'b' : 'a'}`
-                  : '';
-
-                return (
-                  <div className="dashboard-actions-row">
-                    <button
-                      type="button"
-                      className={`dashboard-hide-pill ${stateModifier}${selectionPulseClass}${leaderboardPillClass}`}
-                      onClick={handleDashboardHide}
-                      disabled={!profile}
-                      style={pillStyle}
-                    >
-                      <GhostPost />
-                      <span className="dashboard-hide-pill__icon">
-                        {hideNudge ? (
-                          <CursorIcon width="56" height="56" />
-                        ) : highlightedPostIsHidden ? (
-                          // hidden post selected → open eye = "you can reveal it"
-                          <EyeIcon width="56" height="56" />
-                        ) : (
-                          // normal / unhidden-armed → eye-off = "you can hide it"
-                          <EyeOffIcon width="56" height="56" />
-                        )}
-                      </span>
-                      {hideNudge && (
-                        <span className="dashboard-hide-pill__nudge-capsule">
-                          Select a post first
-                        </span>
-                      )}
-                    </button>
-                    {dashboardLayout.actionSlot === 'harvest' ? (
-                      <div
-                        className="dashboard-timer-card dashboard-timer-card--update dashboard-timer-card--action-update dashboard-timer-card--action-status dashboard-timer-card--harvest"
-                        aria-busy="true"
-                      >
-                        <HarvestScreen progress={harvestProgress} error={harvestError} />
-                      </div>
-                    ) : dashboardLayout.actionSlot === 'deltas' ? (
-                      <div
-                        className="dashboard-timer-card dashboard-timer-card--update dashboard-timer-card--action-update dashboard-timer-card--action-status dashboard-timer-card--analysis"
-                        aria-live="polite"
-                      >
-                        <PersonaDeltaSummary
-                          deltas={personaDeltas}
-                          scores={adjustedScores}
-                          dominantPersona={personaKey}
-                        />
-                      </div>
-                    ) : dashboardLayout.actionSlot === 'generating' ? (
-                      <div
-                        className="dashboard-timer-card dashboard-timer-card--update dashboard-timer-card--action-update dashboard-timer-card--action-status dashboard-timer-card--generating"
-                        aria-busy="true"
-                      >
-                        <GeneratingContentLabel />
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="dashboard-timer-card dashboard-timer-card--update dashboard-timer-card--action-update"
-                        disabled={postGen.loading || !profile}
-                        onClick={handleGeneratePersonaPosts}
-                      >
-                        <span
-                          className="dashboard-update-timer"
-                          aria-label={`Next update in ${updateTimerLabel}`}
-                        >
-                          <span className="dashboard-update-label">Next update in</span>
-                          <span className="dashboard-update-time">{updateTimerLabel}</span>
-                        </span>
-                        {postGen.error ? (
-                          <span className="generate-posts-error" role="alert">
-                            {postGen.error}
-                          </span>
-                        ) : null}
-                      </button>
-                    )}
-                  </div>
-                );
-              })()}
+              <DashboardTimerRow
+                highlightedPost={highlightedPost}
+                highlightedPostIsHidden={highlightedPostIsHidden}
+                highlightedPostPersonaLabel={highlightedPostPersonaLabel}
+                personaKey={personaKey}
+                personaColor={personaColor}
+                personaLabels={PERSONA_LABELS}
+                hideBlocked={hideBlocked}
+                confirmingHide={confirmingHide}
+                confirmingUnhide={confirmingUnhide}
+                onCancelHide={handleCancelHide}
+                onConfirmHide={handleConfirmHide}
+                onConfirmUnhide={handleConfirmUnhide}
+                dashboardLayout={dashboardLayout}
+                harvestProgress={harvestProgress}
+                harvestError={harvestError}
+                personaDeltas={personaDeltas}
+                adjustedScores={adjustedScores}
+                postGen={postGen}
+                profile={profile}
+                updateTimerLabel={updateTimerLabel}
+                updateRemainingMs={updateRemainingMs}
+                onGeneratePersonaPosts={handleGeneratePersonaPosts}
+              />
 
               <div className="dashboard-tell-row">
                 <TellMeMorePill
@@ -847,77 +685,12 @@ function AppInner({
               </div>
             </div>
 
-              <div className="dashboard-rings">
-                {dashboardRingOrder.map((k) => {
-                  const ringColor = PERSONA_COLORS[k];
-                  const scoreKey = k === 'popularity' ? 'social' : k;
-                  const value = Math.max(0, Math.min(100, adjustedScores[scoreKey] ?? 0));
-                  const ringFill = personaPercentToRingFill(value);
-                  const R = 32;
-                  const CIRC = 2 * Math.PI * R;
-                  const dash = CIRC * (ringFill / 100);
-                  const gap = CIRC - dash;
-                  const isDominantRing = k === personaKey;
-                  const ringDelta = formatRingDelta(personaDeltas?.[axisKeyToScoreKey(k)]);
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      data-persona-ring={k}
-                      className={`dashboard-ring-card${isDominantRing ? ' dashboard-ring-card--dominant' : ''}`}
-                      style={{ '--ring-accent': ringColor }}
-                      onClick={cyclePersona}
-                      aria-label={`${PERSONA_LABELS[k]} ${value}%`}
-                    >
-                      <svg
-                        className="dashboard-ring-svg"
-                        viewBox="0 0 80 80"
-                        aria-hidden
-                      >
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r={R}
-                          fill="none"
-                          stroke="rgba(0, 0, 0, 0.18)"
-                          strokeWidth="8"
-                        />
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r={R}
-                          fill="none"
-                          stroke="#000"
-                          strokeWidth="8"
-                          strokeDasharray={`${dash} ${gap}`}
-                          strokeLinecap="round"
-                          style={{ transform: 'rotate(-90deg)', transformOrigin: '40px 40px' }}
-                        />
-                      </svg>
-                      <span className="dashboard-ring-label">
-                        {PERSONA_LABELS[k].toLowerCase()}
-                      </span>
-                      <span className="dashboard-ring-score">
-                        <span data-persona-ring-score={k}>
-                          {Number.isFinite(value) ? value : '—'}
-                        </span>
-                        {Number.isFinite(value) ? (
-                          <span className="dashboard-ring-score-pct" aria-hidden>
-                            %
-                          </span>
-                        ) : null}
-                        {ringDelta ? (
-                          <span
-                            className={`dashboard-ring-delta dashboard-ring-delta--${ringDelta.mod}`}
-                          >
-                            {ringDelta.text}
-                          </span>
-                        ) : null}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              <DashboardPersonaRings
+                scores={adjustedScores}
+                dominantPersona={personaKey}
+                deltas={personaDeltas}
+                onRingClick={cyclePersona}
+              />
           </aside>
         )}
       </div>
@@ -1379,23 +1152,25 @@ export default function App() {
 
   return (
     <LiveScoringProvider profile={profile}>
-      <AppInner
-        mainView={mainView}
-        setMainView={setMainView}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        profile={profile}
-        setProfile={setProfile}
-        personaOverride={personaOverride}
-        setPersonaOverride={setPersonaOverride}
-        postGen={postGen}
-        harvestPhase={harvestPhase}
-        harvestProgress={harvestProgress}
-        harvestError={harvestError}
-        personaDeltas={personaDeltas}
-        profileScoreReplayNonce={profileScoreReplayNonce}
-        handleGeneratePersonaPosts={handleGeneratePersonaPosts}
-      />
+      <PersonaBlurbsProvider profile={profile}>
+        <AppInner
+          mainView={mainView}
+          setMainView={setMainView}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          profile={profile}
+          setProfile={setProfile}
+          personaOverride={personaOverride}
+          setPersonaOverride={setPersonaOverride}
+          postGen={postGen}
+          harvestPhase={harvestPhase}
+          harvestProgress={harvestProgress}
+          harvestError={harvestError}
+          personaDeltas={personaDeltas}
+          profileScoreReplayNonce={profileScoreReplayNonce}
+          handleGeneratePersonaPosts={handleGeneratePersonaPosts}
+        />
+      </PersonaBlurbsProvider>
     </LiveScoringProvider>
   );
 }

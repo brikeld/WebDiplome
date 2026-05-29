@@ -1,62 +1,86 @@
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
+import PersonaPill from './PersonaPill.jsx';
+import KeyValue from './KeyValue.jsx';
+import { PERSONA_UI_LABELS } from '@/lib/personaColors.js';
 
 function accountAge(dateStr) {
+  if (!dateStr) return '—';
   const created = new Date(dateStr);
-  const now = new Date();
-  const months = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth());
+  if (Number.isNaN(created.getTime())) return '—';
+  const months =
+    (new Date().getFullYear() - created.getFullYear()) * 12 +
+    (new Date().getMonth() - created.getMonth());
+  if (months < 1) return 'Less than a month';
   if (months < 12) return `${months} month${months !== 1 ? 's' : ''}`;
   const years = Math.floor(months / 12);
   return `${years} year${years !== 1 ? 's' : ''}`;
 }
 
-function initials(name) {
-  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+function Avatar({ profile, size }) {
+  return (
+    <div className="po-avatar-wrap">
+      <div className="po-avatar" style={size ? { width: size, height: size } : undefined}>
+        {profile.avatarSrc ? (
+          <img className="po-avatar-img" src={profile.avatarSrc} alt="" />
+        ) : (
+          <span className="po-avatar-fallback" aria-hidden>
+            {String(profile.username ?? '?').charAt(0)}
+          </span>
+        )}
+        <PersonaBadge profile={profile} persona={profile.dominantPersona} />
+      </div>
+    </div>
+  );
 }
 
-export default function IdentityCard({ profile, identity, behavioral }) {
-  return (
-    <div className="po-card po-identity">
-      <p className="po-card-title">Identity</p>
+export default function IdentityCard({ profile, identity, bio, variant = 'card' }) {
+  const personaLabel = PERSONA_UI_LABELS[profile.dominantPersona] ?? 'Persona';
 
-      <div className="po-identity-top">
-        <div className="po-avatar-wrap">
-          <div className="po-avatar">
-            <span className="po-avatar-initials">{initials(profile.username)}</span>
-            <PersonaBadge profile={profile} />
+  if (variant === 'detail') {
+    return (
+      <div className="po-identity-detail">
+        <div className="po-identity-top">
+          <Avatar profile={profile} size={104} />
+          <div className="po-identity-info">
+            <p className="po-identity-name">{profile.username}</p>
+            <p className="po-identity-handle">@{profile.user_id}</p>
+            <PersonaPill dot personaKey={profile.dominantPersona}>{personaLabel} persona</PersonaPill>
           </div>
-          <span
-            className="po-status-dot"
-            style={{ background: profile.status === 'online' ? '#0FA020' : '#888' }}
-            title={profile.status}
-          />
         </div>
 
-        <div className="po-identity-info">
-          <p className="po-identity-name">{profile.username}</p>
-          <p className="po-secondary">
-            <span className="po-identity-label">Device</span>{' '}
-            {identity.device.hostname}
-          </p>
-          <p className="po-secondary">
-            <span className="po-identity-label">Location</span>{' '}
-            {identity.location_inferred}
-          </p>
-          <p className="po-secondary">
-            <span className="po-identity-label">Account age</span>{' '}
-            {accountAge(profile.account_created)}
-          </p>
-          <p className="po-secondary">
-            <span className="po-identity-label">Last seen</span>{' '}
-            {profile.last_activity}
-          </p>
+        <div className="po-kv-grid">
+          <KeyValue label="Device" value={identity.device.hostname} />
+          <KeyValue label="Chip" value={identity.device.model} />
+          <KeyValue label="macOS" value={identity.device.macos_version} />
+          <KeyValue label="Account age" value={accountAge(profile.account_created)} />
+          <KeyValue label="Last seen" value={profile.last_activity} />
+          <KeyValue label="Appearance" value={identity.ui_theme} />
         </div>
-      </div>
 
-      <div className="po-badge-row">
-        {behavioral.badges.map(b => (
-          <span key={b} className="po-pill">{b}</span>
-        ))}
+        {identity.languages?.length ? (
+          <div className="po-block">
+            <span className="po-block-label">System languages</span>
+            <div className="po-chip-row">
+              {identity.languages.map((lang) => (
+                <PersonaPill key={lang}>{lang}</PersonaPill>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
+    );
+  }
+
+  return (
+    <div className="po-identity">
+      <div className="po-identity-top po-identity-top--solo">
+        <Avatar profile={profile} />
+      </div>
+      {bio?.text ? (
+        <blockquote className="po-bio-quote">{bio.preview || bio.text}</blockquote>
+      ) : (
+        <p className="po-secondary">No self-summary harvested yet.</p>
+      )}
     </div>
   );
 }

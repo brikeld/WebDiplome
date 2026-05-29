@@ -1,5 +1,5 @@
 /**
- * Dashboard "Tell me more" pill — mirrors the hide-pill visual state language.
+ * Dashboard "Tell me more" pill — expansion + nudge state machine.
  *
  * States (set via className):
  *   - normal       : no post highlighted, muted icon, pastel fill
@@ -7,8 +7,8 @@
  *   - nudge        : user clicked with no selection — wiggle + "Select a post first"
  *   - expanded     : panel takes over; renders InferenceChainPanel
  *
- * Shape & animations mirror `.dashboard-hide-pill` so the two pills feel like
- * siblings (see inferenceChain.css for re-used keyframe names where possible).
+ * Shape & animations use the shared dashboard capsule pill language
+ * (see inferenceChain.css).
  */
 
 import { useEffect, useState } from 'react';
@@ -96,12 +96,19 @@ export default function TellMeMorePill({
     if (highlightedPost) setNudging(false);
   }, [highlightedPost]);
 
-  const personaKey = String(
-    highlightedPost?.persona ?? fallbackPersona ?? 'security',
-  ).toLowerCase();
-  const accent = PERSONA_ACCENT[personaKey] ?? PERSONA_ACCENT.security;
-  const pastel = PERSONA_PASTEL[personaKey] ?? PERSONA_PASTEL.security;
-  const label = PERSONA_LABEL[personaKey] ?? 'Social';
+  const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
+  const postPersonaKey = String(highlightedPost?.persona ?? mainPersonaKey).toLowerCase();
+  const postUiKey = PERSONA_ACCENT[postPersonaKey] ? postPersonaKey : mainPersonaKey;
+  const postAccent =
+    highlightedPost?.noteColor ?? PERSONA_ACCENT[postUiKey] ?? PERSONA_ACCENT.security;
+  const postPastel = PERSONA_PASTEL[postUiKey] ?? PERSONA_PASTEL.security;
+  const accent = highlightedPost
+    ? postAccent
+    : PERSONA_ACCENT[mainPersonaKey] ?? PERSONA_ACCENT.security;
+  const pastel = highlightedPost
+    ? postPastel
+    : PERSONA_PASTEL[mainPersonaKey] ?? PERSONA_PASTEL.security;
+  const label = PERSONA_LABEL[postPersonaKey] ?? 'Social';
 
   const pillStyle = {
     '--tell-pill-accent': accent,

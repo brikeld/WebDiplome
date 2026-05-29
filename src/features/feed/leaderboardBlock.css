@@ -104,7 +104,8 @@
   text-shadow: 0 0 18px color-mix(in srgb, var(--leaderboard-ink) 55%, transparent);
 }
 
-.leaderboard-row__avatar {
+.leaderboard-row__avatar,
+button.profile-avatar-link.leaderboard-row__avatar {
   width: 38px;
   height: 38px;
   border-radius: 50%;

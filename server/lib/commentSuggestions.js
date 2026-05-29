@@ -5,7 +5,7 @@ import { normalizePersonaPercentTriplet } from './personaScores.js';
 const PERSONA_ORDER = ['productivite', 'securite', 'popularite'];
 const MAX_COMMENT_CHARS = 60;
 /** Assistant prefill — model completes the string instead of starting with thinking prose. */
-const JSON_CONTENT_PREFILL = '{"content":"';
+export const JSON_CONTENT_PREFILL = '{"content":"';
 
 const PERSONA_HINTS = {
   productivite: 'productivity, focus, throughput, dry wit about work',
@@ -25,14 +25,15 @@ const PERSONA_ALIASES = {
 
 const LIST_KEYS = ['suggestions', 'comments', 'replies', 'options', 'propositions'];
 
-function clampComment(text) {
+export function clampComment(text, maxChars = MAX_COMMENT_CHARS) {
   const t = String(text ?? '')
     .replace(/\s+/g, ' ')
     .trim();
-  if (t.length <= MAX_COMMENT_CHARS) return t;
-  const cut = t.slice(0, MAX_COMMENT_CHARS);
+  if (t.length <= maxChars) return t;
+  const cut = t.slice(0, maxChars);
   const lastSpace = cut.lastIndexOf(' ');
-  if (lastSpace > 24) return cut.slice(0, lastSpace).trim();
+  const minBreak = Math.max(24, Math.floor(maxChars * 0.65));
+  if (lastSpace > minBreak) return cut.slice(0, lastSpace).trim();
   return cut.trim();
 }
 
@@ -42,13 +43,13 @@ function isLikelyThinkingText(text) {
   return /thinking\s*process|analyze\s+(the\s+)?request|^\s*\d+\.\s+\*\*/i.test(t);
 }
 
-function sanitizeParsedComment(text) {
-  const c = clampComment(text);
+export function sanitizeParsedComment(text, maxChars = MAX_COMMENT_CHARS) {
+  const c = clampComment(text, maxChars);
   if (!c || isLikelyThinkingText(c)) return null;
   return c;
 }
 
-function buildChatBody({
+export function buildChatBody({
   model,
   systemPrompt,
   userPayload,
@@ -109,7 +110,7 @@ async function fetchJsonWithTimeout(url, init, timeoutMs) {
   }
 }
 
-async function lmChatCompletion({ baseUrl, timeoutMs, retries, body }) {
+export async function lmChatCompletion({ baseUrl, timeoutMs, retries, body }) {
   const url = `${String(baseUrl).replace(/\/$/, '')}/v1/chat/completions`;
   let lastErr = null;
   for (let attempt = 0; attempt <= retries; attempt += 1) {
@@ -165,7 +166,7 @@ function tryParseJson(s) {
   }
 }
 
-function extractChoiceText(resp) {
+export function extractChoiceText(resp) {
   const msg = resp?.choices?.[0]?.message || {};
   return [msg.content, msg.reasoning_content].filter(Boolean).join('\n');
 }
@@ -193,10 +194,10 @@ function lastContentFieldMatch(text) {
   return last;
 }
 
-function contentFromRow(row) {
+function contentFromRow(row, maxChars = MAX_COMMENT_CHARS) {
   if (row == null) return '';
-  if (typeof row === 'string') return clampComment(row);
-  return clampComment(row.content ?? row.text ?? row.comment ?? row.message ?? row.body ?? '');
+  if (typeof row === 'string') return clampComment(row, maxChars);
+  return clampComment(row.content ?? row.text ?? row.comment ?? row.message ?? row.body ?? '', maxChars);
 }
 
 function rowsFromParsed(obj) {
@@ -262,21 +263,12 @@ export function parseCommentSuggestionsResponse(raw) {
   return null;
 }
 
-function contentFromRegexMatch(m) {
-  if (!m?.[1]) return null;
-  try {
-    return sanitizeParsedComment(JSON.parse(`"${m[1]}"`));
-  } catch {
-    return sanitizeParsedComment(m[1].replace(/\\"/g, '"'));
-  }
-}
-
 /** Parse completion after assistant prefill `{"content":"`. */
-export function parsePrefillSuggestion(rawFragment) {
+export function parsePrefillSuggestion(rawFragment, maxChars = MAX_COMMENT_CHARS) {
   let frag = stripModelWrappers(String(rawFragment ?? ''));
   if (!frag) return null;
 
-  const fromJson = parseSingleSuggestionContent(frag);
+  const fromJson = parseSingleSuggestionContent(frag, maxChars);
   if (fromJson) return fromJson;
 
   if (!frag.includes('{')) {
@@ -295,23 +287,23 @@ export function parsePrefillSuggestion(rawFragment) {
     }
   }
 
-  const parsed = parseSingleSuggestionContent(frag);
+  const parsed = parseSingleSuggestionContent(frag, maxChars);
   if (parsed) return parsed;
 
   const inner = frag.startsWith(JSON_CONTENT_PREFILL)
     ? frag.slice(JSON_CONTENT_PREFILL.length).replace(/"\s*\}.*$/s, '').replace(/^"/, '')
     : frag;
   const bare = inner.replace(/\\"/g, '"').trim();
-  return sanitizeParsedComment(bare);
+  return sanitizeParsedComment(bare, maxChars);
 }
 
 /** Parse a single {"content":"..."} reply (ignores thinking prose before JSON). */
-export function parseSingleSuggestionContent(raw) {
+export function parseSingleSuggestionContent(raw, maxChars = MAX_COMMENT_CHARS) {
   const stripped = stripModelWrappers(String(raw ?? ''));
   if (!stripped) return null;
 
   const lastField = lastContentFieldMatch(stripped);
-  const fromField = contentFromRegexMatch(lastField);
+  const fromField = contentFromRegexMatch(lastField, maxChars);
   if (fromField) return fromField;
 
   const text = extractModelTextForJson({ choices: [{ message: { content: stripped } }] });
@@ -323,14 +315,23 @@ export function parseSingleSuggestionContent(raw) {
   for (const slice of slices) {
     const obj = tryParseJson(slice);
     if (!obj || typeof obj !== 'object') continue;
-    const c = sanitizeParsedComment(contentFromRow(obj));
+    const c = sanitizeParsedComment(contentFromRow(obj, maxChars), maxChars);
     if (c) return c;
   }
 
-  return contentFromRegexMatch(lastContentFieldMatch(text));
+  return contentFromRegexMatch(lastContentFieldMatch(text), maxChars);
 }
 
-function dominantPersonaKey(profile) {
+function contentFromRegexMatch(m, maxChars = MAX_COMMENT_CHARS) {
+  if (!m?.[1]) return null;
+  try {
+    return sanitizeParsedComment(JSON.parse(`"${m[1]}"`), maxChars);
+  } catch {
+    return sanitizeParsedComment(m[1].replace(/\\"/g, '"'), maxChars);
+  }
+}
+
+export function dominantPersonaKey(profile) {
   const d = String(profile?.dominantPersona ?? '').toLowerCase();
   if (d === 'productivity' || d === 'productivite') return 'productivite';
   if (d === 'security' || d === 'securite') return 'securite';
