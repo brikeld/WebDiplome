@@ -32,6 +32,15 @@ import {
   appendPersonaPosts,
   POSTS_DIR,
 } from './server/lib/postsStore.js';
+import { serverConfig } from './server/lib/env.js';
+import { supabaseClients } from './server/lib/supabaseClient.js';
+import { createAuthRoutes } from './server/routes/authRoutes.js';
+import { createPublicDemoRoutes } from './server/routes/publicDemoRoutes.js';
+import { createPublicProfileStore } from './server/lib/publicProfileStore.js';
+import { createStorageStore } from './server/lib/storageStore.js';
+import { buildPublicLeaderboards } from './server/lib/publicLeaderboards.js';
+import { createGenerationJobStore } from './server/lib/generationJobStore.js';
+import { createGenerationJobRoutes } from './server/routes/generationJobRoutes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
@@ -69,6 +78,36 @@ await fs.mkdir(UPLOADS_DIR, { recursive: true });
 // Serve uploaded media files
 app.use('/uploads', express.static(UPLOADS_DIR));
 
+// ── Hosted (Supabase, multi-user) mode ──────────────────────────────────────
+// When Supabase keys are present, mount the public multi-user demo API backed by
+// Supabase Postgres + Storage. Otherwise fall back to the local file-backed routes.
+if (serverConfig.hostedMode) {
+  const profileStore = createPublicProfileStore(supabaseClients.service);
+  const storageStore = createStorageStore({
+    supabase: supabaseClients.service,
+    publicBaseUrl: serverConfig.publicBaseUrl,
+  });
+  const jobStore = createGenerationJobStore(supabaseClients.service);
+
+  app.use('/api/auth', createAuthRoutes({ supabaseAnon: supabaseClients.anon }));
+  app.use('/api', createPublicDemoRoutes({
+    supabaseService: supabaseClients.service,
+    profileStore,
+    storageStore,
+    buildLeaderboards: buildPublicLeaderboards,
+  }));
+  app.use('/api', createGenerationJobRoutes({
+    config: serverConfig,
+    supabaseService: supabaseClients.service,
+    profileStore,
+    jobStore,
+  }));
+  console.log('[hosted] Supabase public demo routes enabled');
+} else {
+  console.log('[local] File-backed demo routes enabled');
+}
+
+if (!serverConfig.hostedMode) {
 // ── Upload endpoint ─────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
@@ -374,6 +413,7 @@ app.delete('/api/posts/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+} // end if (!serverConfig.hostedMode)
 
 const PORT = Number(process.env.PORT) || 3001;
 app.listen(PORT, () => {
