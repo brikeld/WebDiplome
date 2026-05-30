@@ -32,13 +32,17 @@ export default function ProfileHeader({
   const postLabel = `${postCount} ${postCount === 1 ? 'post' : 'posts'}`;
   const rankingLabel = `${rankingCount} ${rankingCount === 1 ? 'ranking' : 'rankings'}`;
 
+  const profileSlug = profile?.slug ?? profile?.id ?? null;
+
   const profilePhoto = (
     <ProfileAvatarLink
       className="profile-ring-avatar"
       imgClassName="profile-cap-avatar-img"
       initialsClassName="profile-cap-avatar-initials"
       onOpenProfile={
-        onOpenProfile ? () => onOpenProfile('profile') : () => onNavigateTab?.('profile')
+        onOpenProfile
+          ? () => onOpenProfile('profile', profileSlug)
+          : () => onNavigateTab?.('profile')
       }
       ariaLabel={`View ${name}'s profile`}
       avatarSrc={avatarSrc}

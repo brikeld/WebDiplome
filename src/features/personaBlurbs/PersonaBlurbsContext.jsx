@@ -41,7 +41,7 @@ export function PersonaBlurbsProvider({ profile, children }) {
     setLoading(true);
     setError(null);
 
-    fetchPersonaBlurbs(adjustedScores)
+    fetchPersonaBlurbs(adjustedScores, profile)
       .then((next) => {
         if (!hasAllBlurbs(next)) {
           throw new Error('Incomplete persona blurbs from server');
@@ -56,7 +56,7 @@ export function PersonaBlurbsProvider({ profile, children }) {
         inflightRef.current = false;
         setLoading(false);
       });
-  }, [profileId, blurbs, adjustedScores]);
+  }, [profileId, blurbs, adjustedScores, profile]);
 
   const value = useMemo(
     () => ({

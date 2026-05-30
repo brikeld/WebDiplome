@@ -47,6 +47,7 @@ import {
 } from '@/lib/mergePersonaPosts.js';
 import { prependPersonaPosts } from '@/lib/postsApi.js';
 import { resolveApiOrigin, resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
+import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
 import {
   persistProfileSlug,
   readStoredProfileSlug,
@@ -593,9 +594,15 @@ function AppInner({
 
   const handleOpenProfile = useCallback(
     async (tab = 'profile', authorSlug = null) => {
-      const targetSlug = authorSlug || ownProfileSlug;
+      const explicitSlug =
+        authorSlug != null && String(authorSlug).trim() !== ''
+          ? String(authorSlug).trim()
+          : null;
+      const targetSlug = explicitSlug || ownProfileSlug;
+
       if (!targetSlug) {
-        setMainView('landing');
+        if (explicitSlug) return;
+        setMainView(ownProfileSlug ? 'profile' : 'home');
         return;
       }
 
@@ -621,6 +628,10 @@ function AppInner({
         }
       }
       if (!target) {
+        if (explicitSlug) {
+          console.warn('[profile] not found for slug:', targetSlug);
+          return;
+        }
         setMainView('landing');
         return;
       }
@@ -636,15 +647,22 @@ function AppInner({
   const handleSelectView = useCallback(
     (view) => {
       if (view === 'profile') {
-        if (!profile) {
-          setMainView('landing');
+        if (profile) {
+          setViewedProfile(null);
+        } else if (viewedProfile) {
+          setMainView('profile');
+          return;
+        } else {
+          setMainView('home');
           return;
         }
+      }
+      if (view === 'home') {
         setViewedProfile(null);
       }
       setMainView(view);
     },
-    [profile, setMainView],
+    [profile, viewedProfile, setMainView],
   );
 
   const dashboardLayout = getDashboardControlLayout({
@@ -1161,35 +1179,13 @@ export default function App() {
     }
   }, [profile, reloadProfileFromApi, schedulePersonaDeltasClearAfterGenerate]);
 
-  // Keep a stable ref so the auto-trigger effect below doesn't re-run when
-  // runBioAndPostGeneration re-memoizes (it has `profile` in its deps).
-  const runBioAndPostGenerationRef = useRef(runBioAndPostGeneration);
-  useEffect(() => {
-    runBioAndPostGenerationRef.current = runBioAndPostGeneration;
-  }, [runBioAndPostGeneration]);
-
-  // Track which profile ID has already had auto-generation triggered so we
-  // never fire twice for the same profile (even if posts get cleared later).
-  const autoPostGenProfileIdRef = useRef(null);
-
-  // Auto-trigger the first-time post generation: when Electron syncs a new
-  // profile that has a bio but no posts yet, kick off the streaming reveal
-  // flow here so posts arrive with animation and inference-chain data intact.
-  useEffect(() => {
-    if (!profile || postGen.loading || harvestPhase !== 'idle') return;
-    const profileId = [profile.firstname, profile.lastname]
-      .filter(Boolean).join('-').toLowerCase();
-    if (!profileId || autoPostGenProfileIdRef.current === profileId) return;
-    const hasBio = String(profile.profileSummary || profile.userDescription || '').trim().length > 0;
-    const hasPosts = Array.isArray(profile.personaPosts) && profile.personaPosts.length > 0;
-    if (!hasBio || hasPosts) return;
-    autoPostGenProfileIdRef.current = profileId;
-    setPostGen({ loading: true, phase: 'generating', error: null });
-    runBioAndPostGenerationRef.current(profile);
-  }, [profile, postGen.loading, harvestPhase]);
-
   const handleGeneratePersonaPosts = async () => {
     if (postGen.loading || harvestPhase === 'harvesting' || !profile) return;
+
+    if (isHostedApiOrigin()) {
+      setHarvestError('Post generation runs from the Compliant desktop app (Generate button). Keep your AI PC worker running.');
+      return;
+    }
 
     cancelPersonaDeltasClear();
     const scoresBefore = getPersonaScoresNormalized(profile);

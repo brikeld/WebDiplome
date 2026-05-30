@@ -102,6 +102,8 @@ export default function PostCard({
   isHighlightable = false,
   isHighlighted = false,
   onHighlight,
+  /** Logged-in viewer profile for hosted AI comment suggestions */
+  commenterProfile = null,
 }) {
   const {
     content,
@@ -172,6 +174,10 @@ export default function PostCard({
     return `${Math.max(1, totalMinutes)}m`;
   })();
 
+  const openAuthorProfile = onOpenProfile
+    ? () => onOpenProfile('profile', authorSlug)
+    : undefined;
+
   return (
     <article
       ref={cardRef}
@@ -194,9 +200,7 @@ export default function PostCard({
               <ProfileAvatarLink
                 className="post-avatar"
                 imgClassName="post-avatar-img"
-                onOpenProfile={
-                  onOpenProfile ? () => onOpenProfile('profile', authorSlug) : undefined
-                }
+                onOpenProfile={openAuthorProfile}
                 ariaLabel={`View ${displayName}'s profile`}
                 avatarSrc={avatarSrc}
                 avatarInitials={avatarInitials}
@@ -264,7 +268,7 @@ export default function PostCard({
             leaderboard={leaderboard}
             accentColor={noteColor}
             authorSlug={authorSlug}
-            onOpenProfile={onOpenProfile}
+            onOpenProfile={openAuthorProfile}
           />
         ) : null}
 
@@ -286,7 +290,8 @@ export default function PostCard({
             commenterAvatarSrc={DEMO_OTHER_COMMENTER.avatarSrc}
             commenterAvatarInitials={DEMO_OTHER_COMMENTER.avatarInitials}
             commenterPersonaBadgePersona={DEMO_OTHER_COMMENTER.personaBadgePersona}
-            onOpenProfile={onOpenProfile}
+            commenterProfile={commenterProfile}
+            onOpenProfile={openAuthorProfile}
           />
         ) : null}
       </div>

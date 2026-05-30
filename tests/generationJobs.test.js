@@ -7,6 +7,10 @@ describe('generation job implementation', () => {
     expect(src).toContain("router.get('/worker/jobs/next'");
     expect(src).toContain("router.post('/worker/jobs/:id/complete'");
     expect(src).toContain("router.post('/worker/jobs/:id/fail'");
+    expect(src).toContain("router.get('/generation-jobs/:id'");
+    expect(src).toContain("router.post('/comments/suggest'");
+    expect(src).toContain("router.post('/persona-blurbs/generate'");
+    expect(src).toContain("router.post('/profile/generate-summary'");
   });
 
   it('worker calls local LM Studio and hosted API', () => {
@@ -15,5 +19,7 @@ describe('generation job implementation', () => {
     expect(src).toContain('/api/worker/jobs/next');
     expect(src).toContain('/api/worker/jobs/');
     expect(src).toContain('generatePersonaPosts');
+    expect(src).toContain('ensureLmModelLoaded');
+    expect(src).not.toContain('compactHarvestDataForLm');
   });
 });

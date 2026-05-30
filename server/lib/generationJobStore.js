@@ -3,6 +3,25 @@ function throwIfError(result, label) {
   return result?.data;
 }
 
+function mapJobRow(row) {
+  if (!row) return null;
+  const payload = row.request_payload && typeof row.request_payload === 'object'
+    ? row.request_payload
+    : {};
+  const jobType = payload.jobType || 'posts';
+  const result = row.result_posts;
+  return {
+    id: row.id,
+    status: row.status,
+    jobType,
+    error: row.error ?? null,
+    result,
+    posts: jobType === 'posts' && Array.isArray(result) ? result : null,
+    createdAt: row.created_at,
+    completedAt: row.completed_at,
+  };
+}
+
 export function createGenerationJobStore(supabase) {
   if (!supabase) throw new Error('Supabase service client required');
 
@@ -12,14 +31,25 @@ export function createGenerationJobStore(supabase) {
         await supabase
           .from('generation_jobs')
           .insert({
-            user_id: userId,
-            profile_id: profileId,
+            user_id: userId ?? null,
+            profile_id: profileId ?? null,
             status: 'queued',
             request_payload: requestPayload ?? {},
           })
           .select('*')
           .single(),
         'create generation job',
+      );
+    },
+
+    async getJobById(jobId) {
+      return throwIfError(
+        await supabase
+          .from('generation_jobs')
+          .select('*')
+          .eq('id', jobId)
+          .maybeSingle(),
+        'get generation job',
       );
     },
 
@@ -52,16 +82,19 @@ export function createGenerationJobStore(supabase) {
       );
     },
 
-    async completeJob({ jobId, posts }) {
+    async completeJob({ jobId, posts, result }) {
+      const update = {
+        status: 'complete',
+        completed_at: new Date().toISOString(),
+        error: null,
+      };
+      if (result !== undefined) update.result_posts = result;
+      else if (posts !== undefined) update.result_posts = posts;
+
       return throwIfError(
         await supabase
           .from('generation_jobs')
-          .update({
-            status: 'complete',
-            result_posts: posts,
-            completed_at: new Date().toISOString(),
-            error: null,
-          })
+          .update(update)
           .eq('id', jobId)
           .select('*')
           .single(),
@@ -84,5 +117,7 @@ export function createGenerationJobStore(supabase) {
         'fail generation job',
       );
     },
+
+    mapJobRow,
   };
 }

@@ -208,6 +208,7 @@ export default function PostsTab({
         >
           <PostCard
             post={p}
+            commenterProfile={profile}
             hidePills={hideInteractions}
             isCommentsOpen={hideInteractions ? false : openCommentsPostIds.has(p.id)}
             onToggleComments={

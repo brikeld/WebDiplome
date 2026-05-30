@@ -27,6 +27,7 @@ export default function CommentsCapsule({
   commenterAvatarSrc,
   commenterAvatarInitials,
   commenterPersonaBadgePersona,
+  commenterProfile = null,
   onToggle,
   timeLabel,
   systemNoteLabel,
@@ -83,6 +84,7 @@ export default function CommentsCapsule({
 
     fetchCommentSuggestions(post, {
       allowedPersonas: commentsRestricted ? allowedCommentPersonas : undefined,
+      profile: commenterProfile,
     })
       .then((rows) => {
         if (fetchGenRef.current !== gen) return;
@@ -98,7 +100,7 @@ export default function CommentsCapsule({
     return () => {
       fetchGenRef.current += 1;
     };
-  }, [isOpen, post.id, post.content, picked, commentsRestricted, restrictionsKey]);
+  }, [isOpen, post.id, post.content, picked, commentsRestricted, restrictionsKey, commenterProfile]);
 
   useEffect(() => {
     if (!isOpen || picked) return;

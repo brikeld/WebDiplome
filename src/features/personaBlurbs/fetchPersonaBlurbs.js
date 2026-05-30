@@ -1,24 +1,43 @@
-const GENERATE_API_ORIGIN =
-  (import.meta?.env?.VITE_GENERATE_API_ORIGIN && String(import.meta.env.VITE_GENERATE_API_ORIGIN)) ||
-  'http://localhost:3010';
+import { isHostedApiOrigin, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
+import { resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
+
+const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
 
 /** @typedef {{ productivity?: string, security?: string, social?: string }} PersonaBlurbsUi */
+
+function mapBlurbs(raw) {
+  return {
+    productivity: String(raw.productivite ?? raw.productivity ?? '').trim(),
+    security: String(raw.securite ?? raw.security ?? '').trim(),
+    social: String(raw.popularite ?? raw.social ?? raw.popularity ?? '').trim(),
+  };
+}
 
 /**
  * @param {{ productivity?: number, security?: number, social?: number }} scores
  * @returns {Promise<PersonaBlurbsUi>}
  */
-export async function fetchPersonaBlurbs(scores) {
+export async function fetchPersonaBlurbs(scores, profile) {
+  const body = {
+    scores: {
+      productivity: scores?.productivity,
+      security: scores?.security,
+      social: scores?.social ?? scores?.popularity,
+    },
+  };
+  const slimProfile = slimProfileForAiRequest(profile);
+  if (slimProfile) body.profile = slimProfile;
+
+  if (isHostedApiOrigin()) {
+    const result = await submitQueuedAiEndpoint('/api/persona-blurbs/generate', body);
+    const raw = result?.blurbs && typeof result.blurbs === 'object' ? result.blurbs : result;
+    return mapBlurbs(raw ?? {});
+  }
+
   const res = await fetch(`${GENERATE_API_ORIGIN}/api/persona-blurbs/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      scores: {
-        productivity: scores?.productivity,
-        security: scores?.security,
-        social: scores?.social ?? scores?.popularity,
-      },
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -35,10 +54,5 @@ export async function fetchPersonaBlurbs(scores) {
 
   const data = await res.json();
   const raw = data?.blurbs && typeof data.blurbs === 'object' ? data.blurbs : {};
-
-  return {
-    productivity: String(raw.productivite ?? raw.productivity ?? '').trim(),
-    security: String(raw.securite ?? raw.security ?? '').trim(),
-    social: String(raw.popularite ?? raw.social ?? raw.popularity ?? '').trim(),
-  };
+  return mapBlurbs(raw);
 }

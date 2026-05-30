@@ -17,6 +17,7 @@ import { readPostsForId, appendPersonaPosts } from './server/lib/postsStore.js';
 import { generateCommentSuggestions } from './server/lib/commentSuggestions.js';
 import { generatePersonaBlurbs } from './server/lib/personaBlurbs.js';
 import { computeAllBoardStandings } from './server/lib/leaderboards.js';
+import { ensureLmModelLoaded } from './server/lib/lmStudioLoad.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
@@ -310,6 +311,16 @@ async function prepareGenerationContext() {
   const model = lmCfg.model;
 
   const prompts = await loadPrompts(ELECTRON_DATA_DIR);
+
+  try {
+    await ensureLmModelLoaded({
+      baseUrl,
+      model,
+      timeoutMs: LM_STUDIO_TIMEOUT_MS,
+    });
+  } catch (err) {
+    console.warn('[lm-studio] model load failed (continuing):', err?.message || err);
+  }
 
   return {
     newest,

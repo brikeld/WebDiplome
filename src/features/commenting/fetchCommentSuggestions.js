@@ -1,8 +1,8 @@
 import { hash } from '@/lib/commentMetaStrip.js';
+import { isHostedApiOrigin, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
+import { resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
 
-const GENERATE_API_ORIGIN =
-  (import.meta?.env?.VITE_GENERATE_API_ORIGIN && String(import.meta.env.VITE_GENERATE_API_ORIGIN)) ||
-  'http://localhost:3010';
+const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
 
 const PERSONA_ORDER = ['productivite', 'securite', 'popularite'];
 
@@ -17,40 +17,7 @@ function attachPlusValues(postId, suggestions) {
   }));
 }
 
-export async function fetchCommentSuggestions(post, { allowedPersonas } = {}) {
-  const body = {
-    post: {
-      content: post.content,
-      persona: post.persona,
-      attachedAsset: post.attachedAsset ?? null,
-      chartType: post.chartType ?? null,
-    },
-  };
-  if (Array.isArray(allowedPersonas) && allowedPersonas.length > 0 && allowedPersonas.length < 3) {
-    body.allowedPersonas = allowedPersonas;
-  }
-
-  const res = await fetch(`${GENERATE_API_ORIGIN}/api/comments/suggest`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    let msg = `Comment suggestions failed (${res.status})`;
-    try {
-      const j = JSON.parse(errText);
-      if (j?.error) msg = j.error;
-    } catch {
-      if (errText) msg = errText.slice(0, 200);
-    }
-    throw new Error(msg);
-  }
-
-  const data = await res.json();
-  const raw = Array.isArray(data?.suggestions) ? data.suggestions : [];
-
+function normalizeSuggestions(postId, raw, allowedPersonas) {
   if (
     Array.isArray(allowedPersonas) &&
     allowedPersonas.length === 1 &&
@@ -69,7 +36,7 @@ export async function fetchCommentSuggestions(post, { allowedPersonas } = {}) {
     if (rows.length < 3 || rows.some((s) => !s.content)) {
       throw new Error('Incomplete suggestions from server');
     }
-    return attachPlusValues(post.id, rows);
+    return attachPlusValues(postId, rows);
   }
 
   const byPersona = Object.fromEntries(
@@ -95,5 +62,49 @@ export async function fetchCommentSuggestions(post, { allowedPersonas } = {}) {
     throw new Error('Incomplete suggestions from server');
   }
 
-  return attachPlusValues(post.id, ordered);
+  return attachPlusValues(postId, ordered);
+}
+
+export async function fetchCommentSuggestions(post, { allowedPersonas, profile } = {}) {
+  const body = {
+    post: {
+      content: post.content,
+      persona: post.persona,
+      attachedAsset: post.attachedAsset ?? null,
+      chartType: post.chartType ?? null,
+    },
+  };
+  if (Array.isArray(allowedPersonas) && allowedPersonas.length > 0 && allowedPersonas.length < 3) {
+    body.allowedPersonas = allowedPersonas;
+  }
+  const slimProfile = slimProfileForAiRequest(profile);
+  if (slimProfile) body.profile = slimProfile;
+
+  if (isHostedApiOrigin()) {
+    const result = await submitQueuedAiEndpoint('/api/comments/suggest', body);
+    const raw = Array.isArray(result?.suggestions) ? result.suggestions : [];
+    return normalizeSuggestions(post.id, raw, allowedPersonas);
+  }
+
+  const res = await fetch(`${GENERATE_API_ORIGIN}/api/comments/suggest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    let msg = `Comment suggestions failed (${res.status})`;
+    try {
+      const j = JSON.parse(errText);
+      if (j?.error) msg = j.error;
+    } catch {
+      if (errText) msg = errText.slice(0, 200);
+    }
+    throw new Error(msg);
+  }
+
+  const data = await res.json();
+  const raw = Array.isArray(data?.suggestions) ? data.suggestions : [];
+  return normalizeSuggestions(post.id, raw, allowedPersonas);
 }

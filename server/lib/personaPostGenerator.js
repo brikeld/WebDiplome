@@ -750,7 +750,6 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
 async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
   const promptCfg = SP[slot.promptKey] ?? DEFAULT_SLOT_PROMPTS.browser;
   const systemPrompt = injectInferenceChainInstruction(promptCfg.system);
-  // Higher token budget so chain + ingredients + highlights + thinking all fit alongside the post.
   const maxTokens = Math.max(promptCfg.maxTokens || 900, 2100);
 
   const runOnce = async (temperature, withVision) => {
@@ -934,43 +933,36 @@ export async function generatePersonaPosts({
   const SP = promptsParam?.slotPrompts ?? DEFAULT_SLOT_PROMPTS;
 
   const personaScores = profile?.personaScores ? normalizePersonaPercentTriplet(profile.personaScores) : null;
-  const [chartSlot, textSlot] = await Promise.all([
-    buildChartSlot(dataJson, profile, userPayload, existingPosts, chartUploadDir, personaScores),
-    Promise.resolve(buildTextSlot(dataJson, userPayload, existingPosts, SP, personaScores)),
-  ]);
+  const chartSlot = await buildChartSlot(dataJson, profile, userPayload, existingPosts, chartUploadDir, personaScores);
+  const textSlot = buildTextSlot(dataJson, userPayload, existingPosts, SP, personaScores);
   const assetSlot = buildAssetSlot(userPayload, assetAssignment);
   const leaderboardSlot = buildLeaderboardSlot(
     dataJson, profile, userPayload, existingPosts, Date.now(),
   );
 
-  // leaderboardSlot may be null (no rank changed) → skipped silently.
   const slots = [textSlot, assetSlot, chartSlot, leaderboardSlot]
     .map((s) => (s ? { ...s, _model: model } : null));
 
   const results = new Array(slots.length).fill(null);
 
-  await Promise.all(
-    slots.map((slot, index) => {
-      if (!slot) return Promise.resolve(null);
-      return runSlot(slot, { baseUrl, timeoutMs, retries, SP })
-        .catch((err) => {
-          console.error(`[personaPostGenerator] slot ${slot.id} failed:`, err?.message || err);
-          return null;
-        })
-        .then(async (post) => {
-          if (!post || !post.content) return null;
-          results[index] = post;
-          if (typeof onEachPost === 'function') {
-            try {
-              await Promise.resolve(onEachPost(post, { slotIndex: index }));
-            } catch (e) {
-              console.error('[personaPostGenerator] onEachPost failed:', e?.message || e);
-            }
-          }
-          return post;
-        });
-    }),
-  );
+  for (let index = 0; index < slots.length; index += 1) {
+    const slot = slots[index];
+    if (!slot) continue;
+    try {
+      const post = await runSlot(slot, { baseUrl, timeoutMs, retries, SP });
+      if (!post?.content) continue;
+      results[index] = post;
+      if (typeof onEachPost === 'function') {
+        try {
+          await Promise.resolve(onEachPost(post, { slotIndex: index }));
+        } catch (e) {
+          console.error('[personaPostGenerator] onEachPost failed:', e?.message || e);
+        }
+      }
+    } catch (err) {
+      console.error(`[personaPostGenerator] slot ${slot.id} failed:`, err?.message || err);
+    }
+  }
 
   return results;
 }
