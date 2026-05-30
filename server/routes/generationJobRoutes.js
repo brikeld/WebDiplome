@@ -59,6 +59,19 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       const requestPayload = slimGenerationRequestPayload(req.body?.requestPayload ?? {});
       requestPayload.jobType = requestPayload.jobType || 'posts';
 
+      const active = await jobStore.findActiveJob({
+        profileId: profile.id,
+        jobType: requestPayload.jobType,
+      });
+      if (active) {
+        return res.json({
+          success: true,
+          jobId: active.id,
+          status: active.status,
+          alreadyQueued: true,
+        });
+      }
+
       const job = await jobStore.createJob({
         userId: req.authUser.id,
         profileId: profile.id,
@@ -78,6 +91,22 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       }
       const post = req.body?.post ?? {};
       const postId = String(post?.id ?? post?.postId ?? '').trim();
+      const active = await jobStore.findActiveJob({
+        profileId: ctx.profileId,
+        jobType: 'comments',
+        payloadMatch: {
+          postId: postId || null,
+          viewerProfileSlug: ctx.slug,
+        },
+      });
+      if (active) {
+        return res.json({
+          success: true,
+          jobId: active.id,
+          status: active.status,
+          alreadyQueued: true,
+        });
+      }
       const job = await jobStore.createJob({
         userId: ctx.userId,
         profileId: ctx.profileId,
@@ -105,6 +134,18 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       }
       if (ctx.personaBlurbs) {
         return res.json({ success: true, blurbs: ctx.personaBlurbs, cached: true });
+      }
+      const active = await jobStore.findActiveJob({
+        profileId: ctx.profileId,
+        jobType: 'blurbs',
+      });
+      if (active) {
+        return res.json({
+          success: true,
+          jobId: active.id,
+          status: active.status,
+          alreadyQueued: true,
+        });
       }
       const job = await jobStore.createJob({
         userId: ctx.userId,

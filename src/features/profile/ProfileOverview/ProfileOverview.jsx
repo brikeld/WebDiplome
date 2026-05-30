@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './profileOverview.css';
 import { buildProfileOverviewData } from '@/lib/profileOverviewData.js';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
@@ -18,7 +18,11 @@ import { usePersonaBlurbs } from '@/features/personaBlurbs/PersonaBlurbsContext.
 
 export default function ProfileOverview({ profile }) {
   const { adjustedScores, dominantPersona, isHidden, isLeaderboardSelfHidden } = useLiveScoring();
-  const { blurbs: personaBlurbs, loading: personaBlurbsLoading } = usePersonaBlurbs() ?? {};
+  const { blurbs: personaBlurbs, loading: personaBlurbsLoading, ensureBlurbs } = usePersonaBlurbs() ?? {};
+
+  useEffect(() => {
+    ensureBlurbs?.();
+  }, [ensureBlurbs]);
 
   const profileData = useMemo(
     () => buildProfileOverviewData(profile, { adjustedScores, dominantPersona }),

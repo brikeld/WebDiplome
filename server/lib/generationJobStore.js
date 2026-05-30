@@ -156,18 +156,48 @@ export function createGenerationJobStore(supabase) {
       );
     },
 
-    async hasActiveJob(profileId) {
-      const row = throwIfError(
+    async hasActiveJob(profileId, jobType = null) {
+      const rows = throwIfError(
         await supabase
           .from('generation_jobs')
-          .select('id')
+          .select('id, request_payload')
           .eq('profile_id', profileId)
           .in('status', ['queued', 'claimed'])
-          .limit(1)
-          .maybeSingle(),
+          .order('created_at', { ascending: false })
+          .limit(12),
         'check active generation job',
       );
-      return Boolean(row);
+      const list = Array.isArray(rows) ? rows.filter(Boolean) : [];
+      if (!jobType) return list.length > 0;
+      return list.some((row) => jobTypeFromRow(row) === jobType);
+    },
+
+    /** Return an in-flight job matching type (+ optional payload fields). */
+    async findActiveJob({ profileId, jobType, payloadMatch = {} }) {
+      if (!profileId) return null;
+      const rows = throwIfError(
+        await supabase
+          .from('generation_jobs')
+          .select('*')
+          .eq('profile_id', profileId)
+          .in('status', ['queued', 'claimed'])
+          .order('created_at', { ascending: false })
+          .limit(12),
+        'find active generation job',
+      );
+      const list = Array.isArray(rows) ? rows.filter(Boolean) : [];
+      return list.find((row) => {
+        if (jobTypeFromRow(row) !== jobType) return false;
+        const payload = row.request_payload && typeof row.request_payload === 'object'
+          ? row.request_payload
+          : {};
+        for (const [key, value] of Object.entries(payloadMatch)) {
+          const left = payload[key] ?? null;
+          const right = value ?? null;
+          if (String(left ?? '') !== String(right ?? '')) return false;
+        }
+        return true;
+      }) ?? null;
     },
 
     async findLatestJobPayload(profileId, jobType = 'posts') {

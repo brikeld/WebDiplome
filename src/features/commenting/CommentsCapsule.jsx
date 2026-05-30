@@ -50,6 +50,7 @@ export default function CommentsCapsule({
   const rootRef = useRef(null);
   const userCommentRef = useRef(null);
   const fetchGenRef = useRef(0);
+  const openAllowedPersonasRef = useRef(null);
   const commentBoostSessionRef = useRef(0);
   const commentBoostAppliedRef = useRef(false);
   const liveScoring = useContext(LiveScoringContext);
@@ -59,9 +60,6 @@ export default function CommentsCapsule({
     [liveScoring?.adjustedScores],
   );
   const commentsRestricted = allowedCommentPersonas.length < 3;
-  const restrictionsKey = commentsRestricted
-    ? allowedCommentPersonas.join(',')
-    : 'all';
 
   useEffect(() => {
     setPicked(
@@ -80,10 +78,20 @@ export default function CommentsCapsule({
   }, [isOpen, post.id]);
 
   useEffect(() => {
+    if (!isOpen) {
+      openAllowedPersonasRef.current = null;
+      return;
+    }
+    openAllowedPersonasRef.current = commentsRestricted
+      ? [...allowedCommentPersonas]
+      : null;
+  }, [isOpen, post.id, commentsRestricted, allowedCommentPersonas]);
+
+  useEffect(() => {
     if (!isOpen) return;
     setSuggestions([]);
     setSuggestionsError(null);
-  }, [isOpen, restrictionsKey, post.id]);
+  }, [isOpen, post.id]);
 
   useEffect(() => {
     if (!isOpen || picked || !aiSuggestionsEnabled) return undefined;
@@ -91,9 +99,10 @@ export default function CommentsCapsule({
     const gen = fetchGenRef.current + 1;
     fetchGenRef.current = gen;
     setSuggestionsLoading(true);
+    const allowedAtOpen = openAllowedPersonasRef.current;
 
     fetchCommentSuggestions(post, {
-      allowedPersonas: commentsRestricted ? allowedCommentPersonas : undefined,
+      allowedPersonas: allowedAtOpen ?? undefined,
       viewerProfile: commenterProfile,
     })
       .then((rows) => {
@@ -110,7 +119,7 @@ export default function CommentsCapsule({
     return () => {
       fetchGenRef.current += 1;
     };
-  }, [isOpen, post.id, post.content, picked, commentsRestricted, restrictionsKey, commenterProfile, aiSuggestionsEnabled, viewerSlug]);
+  }, [isOpen, post.id, post.content, picked, commenterProfile, aiSuggestionsEnabled, viewerSlug]);
 
   // Set max-height to measured scroll height when open
   useEffect(() => {

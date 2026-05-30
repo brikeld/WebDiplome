@@ -30,6 +30,7 @@ describe('generation job implementation', () => {
   it('prioritizes interactive jobs in the job store', () => {
     const src = readFileSync('server/lib/generationJobStore.js', 'utf8');
     expect(src).toContain('INTERACTIVE_JOB_TYPES');
+    expect(src).toContain('findActiveJob');
     expect(src).toContain('requeue stale generation jobs');
   });
 });

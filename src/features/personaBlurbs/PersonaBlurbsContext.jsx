@@ -78,10 +78,6 @@ export function PersonaBlurbsProvider({ profile, children }) {
       });
   }, [profileId, subjectSlug, blurbs, subjectScores, profile]);
 
-  useEffect(() => {
-    ensureBlurbs();
-  }, [profileId, subjectSlug]);
-
   const value = useMemo(
     () => ({
       blurbs,

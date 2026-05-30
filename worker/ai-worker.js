@@ -29,12 +29,18 @@ async function fetchJson(url, options = {}) {
 }
 
 async function reportJobProgress(jobId, body) {
-  if (!jobId) return;
-  await fetchJson(`${API}/api/worker/jobs/${jobId}/progress`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify(body),
-  });
+  if (!jobId) return false;
+  try {
+    await fetchJson(`${API}/api/worker/jobs/${jobId}/progress`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(body),
+    });
+    return true;
+  } catch (err) {
+    console.warn(`[worker] progress ${jobId} failed:`, err.message);
+    return false;
+  }
 }
 
 async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
@@ -135,7 +141,7 @@ async function processPostsJob(payload, jobId) {
 
   const existingBio = String(profile.profileSummary || profile.userDescription || '').trim();
   let profileSummary = existingBio;
-  let streamedPosts = false;
+  let progressPostsSaved = 0;
 
   if (!existingBio) {
     profileSummary = await generateUserSummary({
@@ -168,17 +174,19 @@ async function processPostsJob(payload, jobId) {
       if (!post?.content) return;
       const [rewritten] = await rewritePostAssetUrls([post]);
       if (!rewritten) return;
-      streamedPosts = true;
-      await reportJobProgress(jobId, { posts: [rewritten] });
+      if (await reportJobProgress(jobId, { posts: [rewritten] })) {
+        progressPostsSaved += 1;
+      }
     },
   });
 
   const posts = await rewritePostAssetUrls(slotResults.filter(Boolean));
+  const allPostsSavedViaProgress = posts.length > 0 && progressPostsSaved >= posts.length;
 
   return {
     posts,
     profileSummary: String(profileSummary || '').trim(),
-    finalizeOnly: streamedPosts,
+    finalizeOnly: allPostsSavedViaProgress,
   };
 }
 
@@ -246,12 +254,6 @@ async function processBlurbsJob(payload) {
 async function processJob(job) {
   const payload = job.request_payload || {};
   const jobType = payload.jobType || 'posts';
-
-  await ensureLmModelLoaded({
-    baseUrl: LM_STUDIO_BASE_URL,
-    model: LM_STUDIO_MODEL,
-    timeoutMs: TIMEOUT_MS,
-  });
 
   switch (jobType) {
     case 'bio':

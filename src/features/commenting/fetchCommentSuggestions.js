@@ -70,6 +70,9 @@ function normalizeSuggestions(postId, raw, allowedPersonas) {
   return attachPlusValues(postId, ordered);
 }
 
+/** In-flight comment requests keyed by viewer + post (React Strict Mode / reopen). */
+const commentInflight = new Map();
+
 /**
  * Comment suggestions are per logged-in viewer + post (not shared between users).
  * @param {object} post — post being commented on
@@ -80,6 +83,12 @@ export async function fetchCommentSuggestions(post, { allowedPersonas, viewerPro
   const cached = loadCommentSuggestions(viewerSlug, post.id);
   if (cached?.length) return cached;
 
+  const inflightKey = `${viewerSlug || 'anon'}|${post.id}`;
+  if (commentInflight.has(inflightKey)) {
+    return commentInflight.get(inflightKey);
+  }
+
+  const run = (async () => {
   const body = {
     post: {
       id: post.id,
@@ -141,4 +150,14 @@ export async function fetchCommentSuggestions(post, { allowedPersonas, viewerPro
   const normalized = normalizeSuggestions(post.id, raw, allowedPersonas);
   saveCommentSuggestions(viewerSlug, post.id, normalized);
   return normalized;
+  })();
+
+  commentInflight.set(inflightKey, run);
+  try {
+    return await run;
+  } finally {
+    if (commentInflight.get(inflightKey) === run) {
+      commentInflight.delete(inflightKey);
+    }
+  }
 }
