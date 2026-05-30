@@ -11,3 +11,6 @@ dist/
 
 # User uploads (served from /uploads; do not commit binary media)
 public/uploads/
+
+# Local environment secrets (never commit)
+.env

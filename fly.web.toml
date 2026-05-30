@@ -1,0 +1,19 @@
+# Fly.io static website (Vite build served by nginx)
+# Deploy: npm run deploy:web
+# Edit build.args below if your API app name differs.
+
+app = 'webdiplome-web'
+primary_region = 'ams'
+
+[build]
+  dockerfile = 'Dockerfile.web'
+  [build.args]
+    VITE_API_ORIGIN = 'https://webdiplome-api.fly.dev'
+    VITE_GENERATE_API_ORIGIN = 'https://webdiplome-api.fly.dev'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0

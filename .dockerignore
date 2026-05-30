@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.env.*
+profiles
+posts
+public/uploads
+.git
+.gitignore
+*.md
+docs
+tests
+terminals
+.cursor
+agent-transcripts
