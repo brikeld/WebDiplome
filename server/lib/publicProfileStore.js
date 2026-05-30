@@ -131,5 +131,39 @@ export function createPublicProfileStore(supabase) {
         createdAt: inserted.created_at,
       };
     },
+
+    /** Wipe profile, posts, jobs, assets, and the Supabase auth user. */
+    async deleteAccountForUser(userId) {
+      const profile = await findProfileByUserId(userId);
+      if (!profile) {
+        await supabase.auth.admin.deleteUser(userId).catch(() => null);
+        return { deleted: false, slug: null };
+      }
+
+      const assets = throwIfError(
+        await supabase.from('assets').select('bucket, path').eq('owner_user_id', userId),
+        'list assets',
+      );
+
+      const byBucket = new Map();
+      for (const asset of assets ?? []) {
+        if (!asset?.bucket || !asset?.path) continue;
+        if (!byBucket.has(asset.bucket)) byBucket.set(asset.bucket, []);
+        byBucket.get(asset.bucket).push(asset.path);
+      }
+      for (const [bucket, paths] of byBucket) {
+        await supabase.storage.from(bucket).remove(paths);
+      }
+
+      throwIfError(await supabase.from('assets').delete().eq('owner_user_id', userId), 'delete assets');
+      throwIfError(await supabase.from('profiles').delete().eq('user_id', userId), 'delete profile');
+
+      const authDelete = await supabase.auth.admin.deleteUser(userId);
+      if (authDelete.error) {
+        throw new Error(`delete auth user: ${authDelete.error.message}`);
+      }
+
+      return { deleted: true, slug: profile.slug };
+    },
   };
 }

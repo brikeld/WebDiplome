@@ -231,15 +231,16 @@
   padding: 0;
 }
 
-.lp-hero-title--link {
-  background: none;
-  border: none;
+.lp-hero-title-link {
+  all: unset;
   cursor: pointer;
-  font: inherit;
+  display: block;
+  width: 100%;
+  text-align: inherit;
   transition: opacity 0.15s ease;
 }
 
-.lp-hero-title--link:hover {
+.lp-hero-title-link:hover {
   opacity: 0.65;
 }
 

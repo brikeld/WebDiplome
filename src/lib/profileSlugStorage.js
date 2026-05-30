@@ -42,19 +42,13 @@ export function clearStoredProfileSlug() {
   }
 }
 
-/** Pick the profile to treat as "yours" on the landing page. */
+/** Pick the profile to treat as "yours" on the landing page (stored slug only). */
 export function resolveOwnedLandingProfile(profiles) {
   const list = Array.isArray(profiles) ? profiles.filter(Boolean) : [];
   if (list.length === 0) return null;
 
   const slug = readStoredProfileSlug();
-  if (slug) {
-    const found = list.find((p) => p?.slug === slug || p?.id === slug);
-    if (found) return found;
-  }
+  if (!slug) return null;
 
-  // Small demo: one public profile → treat as the visitor's profile.
-  if (list.length === 1) return list[0];
-
-  return null;
+  return list.find((p) => p?.slug === slug || p?.id === slug) ?? null;
 }

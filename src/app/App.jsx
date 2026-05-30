@@ -50,6 +50,7 @@ import {
   persistProfileSlug,
   readStoredProfileSlug,
   resolveOwnedLandingProfile,
+  clearStoredProfileSlug,
 } from '@/lib/profileSlugStorage.js';
 import { selectProfileBySlug } from '@/lib/profileDirectory.js';
 
@@ -789,7 +790,10 @@ export default function App() {
   );
 
   const handleLandingEnterProfile = useCallback(() => {
-    if (landingEnteringProfile || !profile) return;
+    const owned = landingOwnedProfile ?? profile;
+    if (landingEnteringProfile || !owned) return;
+    const slug = owned.slug || owned.id;
+    if (slug) persistProfileSlug(slug);
     setLandingEnteringProfile(true);
     if (landingEnterProfileTimerRef.current) clearTimeout(landingEnterProfileTimerRef.current);
     landingEnterProfileTimerRef.current = setTimeout(() => {
@@ -797,7 +801,7 @@ export default function App() {
       setLandingEnteringProfile(false);
       setMainView('home');
     }, LANDING_PROFILE_ENTRY_MS);
-  }, [landingEnteringProfile, profile]);
+  }, [landingEnteringProfile, landingOwnedProfile, profile]);
 
   const handleLandingBrowseFeed = useCallback(() => {
     setMainView('home');
@@ -862,12 +866,12 @@ export default function App() {
         }
         setAllProfiles(data);
         const owned = resolveOwnedLandingProfile(data);
+        if (readStoredProfileSlug() && !owned) {
+          clearStoredProfileSlug();
+        }
         setLandingOwnedProfile(owned);
-        const selected =
-          owned ?? selectProfileBySlug(data, selectedProfileSlug()) ?? null;
-        if (selected?.slug || selected?.id) {
-          persistProfileSlug(selected.slug || selected.id);
-          setProfile((prev) => mergeProfileFromApi(prev, selected));
+        if (owned) {
+          setProfile((prev) => mergeProfileFromApi(prev, owned));
         }
       } catch {
         if (cancelled) return;

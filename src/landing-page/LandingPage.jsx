@@ -241,14 +241,16 @@ export default function LandingPage({ profile, onEnterProfile, onBrowseFeed, onR
 
         {/* ── SCREEN 1: HERO ── */}
         <section className="lp-screen lp-hero" style={{ '--stagger-i': 0 }}>
-          <button
-            type="button"
-            className="lp-hero-title lp-hero-title--link"
-            onClick={() => onBrowseFeed?.()}
-            aria-label="Browse the public feed"
-          >
-            COMPLIANT
-          </button>
+          <h1 className="lp-hero-title">
+            <button
+              type="button"
+              className="lp-hero-title-link"
+              onClick={() => onBrowseFeed?.()}
+              aria-label="Browse the public feed"
+            >
+              COMPLIANT
+            </button>
+          </h1>
           <div className="lp-hero-footer">
             <div className="lp-hero-text">
               <h2 className="lp-hero-sub">
