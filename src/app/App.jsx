@@ -205,7 +205,7 @@ async function pollProfileUntilGenerationComplete(initialProfile, reloadProfileF
     if (!fresh) break;
     const bio = String(fresh.profileSummary || fresh.userDescription || '').trim();
     const posts = Array.isArray(fresh.personaPosts) ? fresh.personaPosts : [];
-    if (!hadBio && bio && posts.length > 0) return fresh;
+    if (!hadBio && bio) return fresh;
     if (posts.length > initialPostCount) return fresh;
     await sleep(pollMs);
   }
@@ -713,7 +713,7 @@ function AppInner({
   );
 
   return (
-    <PersonaBlurbsProvider profile={profile} accountFeaturesEnabled={accountFeaturesEnabled}>
+    <PersonaBlurbsProvider profile={displayProfile}>
     <div
       className={`page-outer persona-${personaKey} view-${mainView}`}
       style={{
@@ -747,6 +747,7 @@ function AppInner({
               <HomeTab
                 profile={profile}
                 feedProfiles={feedProfiles}
+                viewerProfile={accountFeaturesEnabled ? profile : null}
                 aiFeaturesEnabled={accountFeaturesEnabled}
                 isGeneratingPosts={postGen.phase === 'generating'}
                 highlightedPostId={highlightedPost?.id ?? null}

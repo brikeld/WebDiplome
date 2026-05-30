@@ -22,6 +22,19 @@ function mapJobRow(row) {
   };
 }
 
+function jobTypeFromRow(row) {
+  const payload = row?.request_payload && typeof row.request_payload === 'object'
+    ? row.request_payload
+    : {};
+  return payload.jobType || 'posts';
+}
+
+const INTERACTIVE_JOB_TYPES = new Set(['comments', 'blurbs', 'bio']);
+
+function jobPriority(row) {
+  return INTERACTIVE_JOB_TYPES.has(jobTypeFromRow(row)) ? 0 : 1;
+}
+
 export function createGenerationJobStore(supabase) {
   if (!supabase) throw new Error('Supabase service client required');
 
@@ -54,32 +67,57 @@ export function createGenerationJobStore(supabase) {
     },
 
     async claimNext(workerName) {
-      const next = throwIfError(
+      const staleBefore = new Date(Date.now() - 45 * 60 * 1000).toISOString();
+      throwIfError(
+        await supabase
+          .from('generation_jobs')
+          .update({
+            status: 'queued',
+            claimed_by: null,
+            claimed_at: null,
+            error: null,
+          })
+          .eq('status', 'claimed')
+          .lt('claimed_at', staleBefore),
+        'requeue stale generation jobs',
+      );
+
+      const queued = throwIfError(
         await supabase
           .from('generation_jobs')
           .select('*')
           .eq('status', 'queued')
           .order('created_at', { ascending: true })
-          .limit(1)
-          .maybeSingle(),
-        'read next generation job',
+          .limit(25),
+        'read queued generation jobs',
       );
-      if (!next) return null;
+      const list = Array.isArray(queued) ? queued.filter(Boolean) : [];
+      if (list.length === 0) return null;
 
-      return throwIfError(
-        await supabase
-          .from('generation_jobs')
-          .update({
-            status: 'claimed',
-            claimed_by: workerName,
-            claimed_at: new Date().toISOString(),
-          })
-          .eq('id', next.id)
-          .eq('status', 'queued')
-          .select('*')
-          .maybeSingle(),
-        'claim generation job',
-      );
+      list.sort((a, b) => {
+        const p = jobPriority(a) - jobPriority(b);
+        if (p !== 0) return p;
+        return String(a.created_at).localeCompare(String(b.created_at));
+      });
+
+      for (const next of list) {
+        const claimed = throwIfError(
+          await supabase
+            .from('generation_jobs')
+            .update({
+              status: 'claimed',
+              claimed_by: workerName,
+              claimed_at: new Date().toISOString(),
+            })
+            .eq('id', next.id)
+            .eq('status', 'queued')
+            .select('*')
+            .maybeSingle(),
+          'claim generation job',
+        );
+        if (claimed) return claimed;
+      }
+      return null;
     },
 
     async completeJob({ jobId, posts, result }) {

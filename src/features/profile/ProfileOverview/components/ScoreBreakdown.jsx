@@ -139,7 +139,7 @@ export default function ScoreBreakdown({
           const value = Math.max(0, Math.min(100, Number(scores?.[key]) || 0));
           const isDominant = key === domKey;
           const blurb = personaBlurbs?.[key];
-          const copy = blurb || (personaBlurbsLoading ? 'Generating from your harvest…' : description);
+          const copy = blurb || (personaBlurbsLoading ? 'Generating profile phrases…' : description);
 
           return (
             <div

@@ -61,6 +61,27 @@ export function mapSyncPayloadToProfileRow(payload, userId, slug) {
   };
 }
 
+export function mapPersonaBlurbsForApi(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const productivity = String(raw.productivity ?? raw.productivite ?? '').trim();
+  const security = String(raw.security ?? raw.securite ?? '').trim();
+  const social = String(raw.social ?? raw.popularite ?? raw.popularity ?? '').trim();
+  if (!productivity && !security && !social) return null;
+  return { productivity, security, social };
+}
+
+export function mapPersonaBlurbsForStorage(uiBlurbs) {
+  if (!uiBlurbs || typeof uiBlurbs !== 'object') return {};
+  return {
+    productivite: String(uiBlurbs.productivity ?? uiBlurbs.productivite ?? '').trim(),
+    securite: String(uiBlurbs.security ?? uiBlurbs.securite ?? '').trim(),
+    popularite: String(uiBlurbs.social ?? uiBlurbs.popularite ?? uiBlurbs.popularity ?? '').trim(),
+    productivity: String(uiBlurbs.productivity ?? uiBlurbs.productivite ?? '').trim(),
+    security: String(uiBlurbs.security ?? uiBlurbs.securite ?? '').trim(),
+    social: String(uiBlurbs.social ?? uiBlurbs.popularite ?? uiBlurbs.popularity ?? '').trim(),
+  };
+}
+
 export function mapProfileRowForApi(row, posts = []) {
   if (!row) return null;
   return {
@@ -79,12 +100,34 @@ export function mapProfileRowForApi(row, posts = []) {
     userDescription: row.profile_summary,
     wallpaperUrl: row.wallpaper_url,
     collectedAt: row.collected_at,
+    personaBlurbs: mapPersonaBlurbsForApi(row.persona_blurbs),
     personaPosts: posts,
   };
 }
 
+const POST_METADATA_KEYS = [
+  'inferenceChain',
+  'ingredients',
+  'highlights',
+  'thinking',
+  'chartType',
+  'textSliceType',
+  'compliantPersonaChange',
+  'compliantLowScore',
+];
+
+export function extractPostMetadata(post) {
+  if (!post || typeof post !== 'object') return {};
+  const meta = post.metadata && typeof post.metadata === 'object' ? { ...post.metadata } : {};
+  for (const key of POST_METADATA_KEYS) {
+    if (post[key] !== undefined && post[key] !== null) meta[key] = post[key];
+  }
+  return meta;
+}
+
 export function mapPostRowForApi(row) {
   if (!row) return null;
+  const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
   return {
     id: row.id,
     persona: row.persona,
@@ -94,6 +137,7 @@ export function mapPostRowForApi(row) {
     leaderboard: row.leaderboard ?? null,
     source: row.source,
     createdAt: row.created_at,
+    ...metadata,
   };
 }
 
@@ -106,6 +150,7 @@ export function mapPostForInsert(post, profileId, userId, source = 'sync') {
     sentiment: post?.sentiment === 'positive' || post?.sentiment === 'negative' ? post.sentiment : null,
     attached_asset: post?.attachedAsset ?? post?.attached_asset ?? null,
     leaderboard: post?.leaderboard ?? null,
+    metadata: extractPostMetadata(post),
     source,
     created_at: post?.createdAt ?? post?.created_at ?? new Date().toISOString(),
   };

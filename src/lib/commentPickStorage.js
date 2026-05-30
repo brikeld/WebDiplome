@@ -1,13 +1,17 @@
 const LS_PREFIX = 'comment-pick|';
 
-function storageKey(postId) {
-  return `${LS_PREFIX}${postId}`;
+function storageKey(viewerSlug, postId) {
+  const viewer = String(viewerSlug || 'anonymous').trim() || 'anonymous';
+  const post = String(postId || '').trim();
+  if (!post) return null;
+  return `${LS_PREFIX}${viewer}|${post}`;
 }
 
-export function loadCommentPick(postId) {
-  if (!postId) return null;
+export function loadCommentPick(viewerSlug, postId) {
+  const key = storageKey(viewerSlug, postId);
+  if (!key) return null;
   try {
-    const raw = sessionStorage.getItem(storageKey(postId));
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === 'object' ? parsed : null;
@@ -16,20 +20,41 @@ export function loadCommentPick(postId) {
   }
 }
 
-export function saveCommentPick(postId, suggestion) {
-  if (!postId || !suggestion) return;
+export function saveCommentPick(viewerSlug, postId, suggestion) {
+  const key = storageKey(viewerSlug, postId);
+  if (!key || !suggestion) return;
   try {
-    sessionStorage.setItem(storageKey(postId), JSON.stringify(suggestion));
+    localStorage.setItem(key, JSON.stringify(suggestion));
   } catch {
     /* ignore quota */
   }
 }
 
-export function clearCommentPick(postId) {
-  if (!postId) return;
+export function clearCommentPick(viewerSlug, postId) {
+  const key = storageKey(viewerSlug, postId);
+  if (!key) return;
   try {
-    sessionStorage.removeItem(storageKey(postId));
+    localStorage.removeItem(key);
   } catch {
     /* ignore */
   }
+}
+
+/** Legacy session-only picks (pre viewer scoping). */
+export function migrateLegacyCommentPick(viewerSlug, postId) {
+  if (!postId) return null;
+  try {
+    const legacyKey = `comment-pick|${postId}`;
+    const raw = sessionStorage.getItem(legacyKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      saveCommentPick(viewerSlug, postId, parsed);
+      sessionStorage.removeItem(legacyKey);
+      return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
 }

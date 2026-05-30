@@ -7,7 +7,7 @@ function storageKey(profileId) {
 export function loadPersonaBlurbs(profileId) {
   if (!profileId) return null;
   try {
-    const raw = sessionStorage.getItem(storageKey(profileId));
+    const raw = localStorage.getItem(storageKey(profileId));
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return null;
@@ -20,7 +20,7 @@ export function loadPersonaBlurbs(profileId) {
 export function savePersonaBlurbs(profileId, blurbs) {
   if (!profileId || !blurbs) return;
   try {
-    sessionStorage.setItem(storageKey(profileId), JSON.stringify(blurbs));
+    localStorage.setItem(storageKey(profileId), JSON.stringify(blurbs));
   } catch {
     /* ignore quota */
   }
@@ -29,7 +29,7 @@ export function savePersonaBlurbs(profileId, blurbs) {
 export function clearPersonaBlurbs(profileId) {
   if (!profileId) return;
   try {
-    sessionStorage.removeItem(storageKey(profileId));
+    localStorage.removeItem(storageKey(profileId));
   } catch {
     /* ignore */
   }

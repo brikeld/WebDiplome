@@ -3,6 +3,7 @@ import {
   buildProfileSlug,
   mapSyncPayloadToProfileRow,
   mapPostForInsert,
+  mapPersonaBlurbsForApi,
   slimProfilePayloadForStorage,
 } from '../server/lib/publicProfileMapping.js';
 
@@ -51,13 +52,28 @@ describe('public profile mapping', () => {
     expect(slim.personaPosts).toBeUndefined();
   });
 
-  it('maps posts for insert without losing attached assets or leaderboard data', () => {
+  it('maps stored persona blurbs for API', () => {
+    const blurbs = mapPersonaBlurbsForApi({
+      productivite: 'Focus king.',
+      securite: 'Locked down.',
+      popularite: 'Always online.',
+    });
+    expect(blurbs).toEqual({
+      productivity: 'Focus king.',
+      security: 'Locked down.',
+      social: 'Always online.',
+    });
+  });
+
+  it('maps posts for insert without losing attached assets, leaderboard, or metadata', () => {
     const post = mapPostForInsert({
       persona: 'securite',
       content: 'Firewall disabled.',
       sentiment: 'negative',
       attachedAsset: { kind: 'image', url: '/uploads/a.png' },
       leaderboard: { boardId: 'most_secure' },
+      inferenceChain: [{ step: 'data', value: 'signal' }],
+      chartType: 'app_usage',
       createdAt: '2026-05-29T11:00:00Z',
     }, 'profile-1', 'user-1', 'sync');
 
@@ -69,6 +85,10 @@ describe('public profile mapping', () => {
       sentiment: 'negative',
       attached_asset: { kind: 'image', url: '/uploads/a.png' },
       leaderboard: { boardId: 'most_secure' },
+      metadata: {
+        inferenceChain: [{ step: 'data', value: 'signal' }],
+        chartType: 'app_usage',
+      },
       source: 'sync',
       created_at: '2026-05-29T11:00:00Z',
     });

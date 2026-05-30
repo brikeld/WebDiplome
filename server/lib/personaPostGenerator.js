@@ -138,7 +138,7 @@ function resolveMaxTokens() {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-function buildChatBody({ model, systemPrompt, userPayload, imageData, docText, docFilename, maxTokens: _maxTokensIgnored, temperature = 0.7 }) {
+function buildChatBody({ model, systemPrompt, userPayload, imageData, docText, docFilename, maxTokens, temperature = 0.7 }) {
   let userContent;
   if (imageData) {
     userContent = [
@@ -160,7 +160,7 @@ function buildChatBody({ model, systemPrompt, userPayload, imageData, docText, d
     enable_thinking: false,
     response_format: { type: 'json_object' },
   };
-  const resolvedMaxTokens = resolveMaxTokens();
+  const resolvedMaxTokens = maxTokens ?? resolveMaxTokens();
   if (resolvedMaxTokens != null) body.max_tokens = resolvedMaxTokens;
   return body;
 }

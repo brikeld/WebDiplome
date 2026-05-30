@@ -2,7 +2,7 @@ import express from 'express';
 import { requireHostedUser, requireWorker } from '../lib/auth.js';
 
 import { slimProfilePayloadForStorage } from '../lib/publicProfileMapping.js';
-import { resolveAiJobProfileContext } from '../lib/aiJobProfile.js';
+import { resolveCommenterProfileContext, resolveSubjectProfileContext } from '../lib/aiJobProfile.js';
 
 function slimGenerationRequestPayload(payload) {
   if (!payload || typeof payload !== 'object') return {};
@@ -72,16 +72,20 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
 
   router.post('/comments/suggest', async (req, res) => {
     try {
-      const ctx = await resolveAiJobProfileContext(profileStore, req.body);
+      const ctx = await resolveCommenterProfileContext(profileStore, req.body, { jobStore });
       if (!ctx.profileId) {
-        return res.status(400).json({ error: 'profileSlug required (unknown profile)' });
+        return res.status(400).json({ error: 'viewerProfileSlug required (unknown viewer profile)' });
       }
+      const post = req.body?.post ?? {};
+      const postId = String(post?.id ?? post?.postId ?? '').trim();
       const job = await jobStore.createJob({
         userId: ctx.userId,
         profileId: ctx.profileId,
         requestPayload: {
           jobType: 'comments',
-          post: req.body?.post ?? {},
+          viewerProfileSlug: ctx.slug,
+          postId: postId || null,
+          post,
           allowedPersonas: req.body?.allowedPersonas ?? null,
           profile: ctx.profileForWorker,
           dataJson: ctx.dataJson,
@@ -95,16 +99,20 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
 
   router.post('/persona-blurbs/generate', async (req, res) => {
     try {
-      const ctx = await resolveAiJobProfileContext(profileStore, req.body);
+      const ctx = await resolveSubjectProfileContext(profileStore, req.body, { jobStore });
       if (!ctx.profileId) {
         return res.status(400).json({ error: 'profileSlug required (unknown profile)' });
+      }
+      if (ctx.personaBlurbs) {
+        return res.json({ success: true, blurbs: ctx.personaBlurbs, cached: true });
       }
       const job = await jobStore.createJob({
         userId: ctx.userId,
         profileId: ctx.profileId,
         requestPayload: {
           jobType: 'blurbs',
-          scores: req.body?.scores ?? {},
+          subjectProfileSlug: ctx.slug,
+          scores: req.body?.scores ?? ctx.profileForWorker?.personaScores ?? {},
           profile: ctx.profileForWorker,
           dataJson: ctx.dataJson,
         },
@@ -141,6 +149,7 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
           ...priorPayload,
           jobType: 'posts',
           profile: slimProfilePayloadForStorage(apiProfile ?? {}),
+          dataJson: priorPayload.dataJson ?? priorPayload.data_json ?? null,
           existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
         },
       });
@@ -183,6 +192,43 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
     }
   });
 
+  router.post('/worker/jobs/:id/progress', requireAiWorker, async (req, res) => {
+    try {
+      const jobRow = await jobStore.getJobById(req.params.id);
+      if (!jobRow) return res.status(404).json({ error: 'Job not found' });
+      if (jobRow.status !== 'claimed') {
+        return res.status(409).json({ error: 'Job not in progress' });
+      }
+      if (!jobRow.profile_id) {
+        return res.status(400).json({ error: 'Job has no profile_id' });
+      }
+
+      const profileSummary = req.body?.profileSummary ?? req.body?.profile_summary ?? '';
+      const posts = req.body?.posts ?? [];
+
+      if (String(profileSummary).trim()) {
+        await profileStore.updateProfileSummary({
+          profileId: jobRow.profile_id,
+          userId: jobRow.user_id,
+          profileSummary,
+        });
+      }
+
+      if (Array.isArray(posts) && posts.length > 0) {
+        await profileStore.appendPosts({
+          profileId: jobRow.profile_id,
+          userId: jobRow.user_id,
+          posts,
+          source: 'generated',
+        });
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   router.post('/worker/jobs/:id/complete', requireAiWorker, async (req, res) => {
     try {
       const jobRow = await jobStore.getJobById(req.params.id);
@@ -212,13 +258,20 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         }
       }
 
-      if (jobType === 'posts' && Array.isArray(posts) && posts.length > 0) {
+      if (jobType === 'posts' && Array.isArray(posts) && posts.length > 0 && !req.body?.finalizeOnly) {
         await profileStore.appendPosts({
           profileId: job.profile_id,
           userId: job.user_id,
           posts,
           source: 'generated',
         });
+      }
+
+      if (jobType === 'blurbs') {
+        const blurbs = result?.blurbs ?? null;
+        if (blurbs && job.profile_id) {
+          await profileStore.savePersonaBlurbs({ profileId: job.profile_id, blurbs });
+        }
       }
 
       res.json({ success: true });

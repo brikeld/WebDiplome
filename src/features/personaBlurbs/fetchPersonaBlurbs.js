@@ -1,8 +1,8 @@
-import { isHostedApiOrigin, profileSlugFromProfile, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
-import { canUseHostedAccountFeatures, isHostedAccountLinked, readLinkedProfileSlug } from '@/lib/hostedAccount.js';
-import { resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
+import { isHostedApiOrigin, pollGenerationJob, profileSlugFromProfile } from '@/lib/aiJobClient.js';
+import { resolveApiOrigin, resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
 
 const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
+const API_ORIGIN = resolveApiOrigin();
 
 /** @typedef {{ productivity?: string, security?: string, social?: string }} PersonaBlurbsUi */
 
@@ -14,37 +14,31 @@ function mapBlurbs(raw) {
   };
 }
 
+function hasAllBlurbs(blurbs) {
+  return blurbs?.productivity && blurbs?.security && blurbs?.social;
+}
+
 /**
+ * Fetch fixed persona blurbs for the profile page subject (not the viewer).
  * @param {{ productivity?: number, security?: number, social?: number }} scores
- * @returns {Promise<PersonaBlurbsUi>}
+ * @param {object} subjectProfile — profile being viewed
  */
-export async function fetchPersonaBlurbs(scores, profile) {
+export async function fetchPersonaBlurbs(scores, subjectProfile, { subjectProfileSlug } = {}) {
+  const slug = subjectProfileSlug || profileSlugFromProfile(subjectProfile);
   const body = {
+    profileSlug: slug,
     scores: {
       productivity: scores?.productivity,
       security: scores?.security,
       social: scores?.social ?? scores?.popularity,
     },
   };
-  const slimProfile = slimProfileForAiRequest(profile);
-  if (slimProfile) body.profile = slimProfile;
-  const profileSlug = profileSlugFromProfile(profile);
-  if (profileSlug) body.profileSlug = profileSlug;
 
-  if (isHostedApiOrigin()) {
-    if (!isHostedAccountLinked()) {
-      throw new Error('Open this profile from the Compliant app to generate persona blurbs.');
-    }
-    const linkedSlug = readLinkedProfileSlug();
-    if (!canUseHostedAccountFeatures(profile, linkedSlug)) {
-      throw new Error('Persona blurbs are only available on your linked profile.');
-    }
-    const result = await submitQueuedAiEndpoint('/api/persona-blurbs/generate', body);
-    const raw = result?.blurbs && typeof result.blurbs === 'object' ? result.blurbs : result;
-    return mapBlurbs(raw ?? {});
-  }
+  const endpoint = isHostedApiOrigin()
+    ? `${API_ORIGIN}/api/persona-blurbs/generate`
+    : `${GENERATE_API_ORIGIN}/api/persona-blurbs/generate`;
 
-  const res = await fetch(`${GENERATE_API_ORIGIN}/api/persona-blurbs/generate`, {
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -63,6 +57,14 @@ export async function fetchPersonaBlurbs(scores, profile) {
   }
 
   const data = await res.json();
+  if (data?.cached && hasAllBlurbs(mapBlurbs(data?.blurbs ?? {}))) {
+    return mapBlurbs(data.blurbs);
+  }
+  if (data?.jobId && isHostedApiOrigin()) {
+    const job = await pollGenerationJob(data.jobId);
+    const raw = job?.result?.blurbs ?? job?.result ?? {};
+    return mapBlurbs(raw);
+  }
   const raw = data?.blurbs && typeof data.blurbs === 'object' ? data.blurbs : {};
   return mapBlurbs(raw);
 }

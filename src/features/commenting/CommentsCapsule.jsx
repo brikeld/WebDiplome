@@ -9,9 +9,13 @@ import {
 import { getMockCommentsFor } from './commentingMock.js';
 import { fetchCommentSuggestions } from './fetchCommentSuggestions.js';
 import { LiveScoringContext } from '@/features/liveScoring/LiveScoringContext.jsx';
-import { usePersonaBlurbs } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import { getAllowedCommentPersonas } from '@/lib/personaScoreCompliance.js';
-import { loadCommentPick, saveCommentPick } from '@/lib/commentPickStorage.js';
+import {
+  loadCommentPick,
+  migrateLegacyCommentPick,
+  saveCommentPick,
+} from '@/lib/commentPickStorage.js';
+import { profileSlugFromProfile } from '@/lib/aiJobClient.js';
 
 export default function CommentsCapsule({
   post,
@@ -35,7 +39,10 @@ export default function CommentsCapsule({
   onOpenProfile,
   realComments,
 }) {
-  const [picked, setPicked] = useState(() => loadCommentPick(post.id));
+  const [picked, setPicked] = useState(() => {
+    const slug = profileSlugFromProfile(commenterProfile);
+    return loadCommentPick(slug, post.id) ?? migrateLegacyCommentPick(slug, post.id);
+  });
   const [originRect, setOriginRect] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
@@ -46,7 +53,7 @@ export default function CommentsCapsule({
   const commentBoostSessionRef = useRef(0);
   const commentBoostAppliedRef = useRef(false);
   const liveScoring = useContext(LiveScoringContext);
-  const personaBlurbs = usePersonaBlurbs();
+  const viewerSlug = profileSlugFromProfile(commenterProfile);
   const allowedCommentPersonas = useMemo(
     () => getAllowedCommentPersonas(liveScoring?.adjustedScores ?? {}),
     [liveScoring?.adjustedScores],
@@ -57,8 +64,10 @@ export default function CommentsCapsule({
     : 'all';
 
   useEffect(() => {
-    setPicked(loadCommentPick(post.id));
-  }, [post.id]);
+    setPicked(
+      loadCommentPick(viewerSlug, post.id) ?? migrateLegacyCommentPick(viewerSlug, post.id),
+    );
+  }, [post.id, viewerSlug]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -85,7 +94,7 @@ export default function CommentsCapsule({
 
     fetchCommentSuggestions(post, {
       allowedPersonas: commentsRestricted ? allowedCommentPersonas : undefined,
-      profile: commenterProfile,
+      viewerProfile: commenterProfile,
     })
       .then((rows) => {
         if (fetchGenRef.current !== gen) return;
@@ -101,12 +110,7 @@ export default function CommentsCapsule({
     return () => {
       fetchGenRef.current += 1;
     };
-  }, [isOpen, post.id, post.content, picked, commentsRestricted, restrictionsKey, commenterProfile, aiSuggestionsEnabled]);
-
-  useEffect(() => {
-    if (!isOpen || picked || !aiSuggestionsEnabled) return;
-    personaBlurbs?.ensureBlurbs?.();
-  }, [isOpen, picked, personaBlurbs, aiSuggestionsEnabled]);
+  }, [isOpen, post.id, post.content, picked, commentsRestricted, restrictionsKey, commenterProfile, aiSuggestionsEnabled, viewerSlug]);
 
   // Set max-height to measured scroll height when open
   useEffect(() => {
@@ -188,7 +192,7 @@ export default function CommentsCapsule({
     }
 
     setPicked(s);
-    saveCommentPick(post.id, s);
+    saveCommentPick(viewerSlug, post.id, s);
   };
 
   // Prefer real public comments from the hosted API; fall back to demo comments.

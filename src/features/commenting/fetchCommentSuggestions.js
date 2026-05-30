@@ -1,4 +1,8 @@
 import { hash } from '@/lib/commentMetaStrip.js';
+import {
+  loadCommentSuggestions,
+  saveCommentSuggestions,
+} from '@/lib/commentSuggestionsStorage.js';
 import { isHostedApiOrigin, profileSlugFromProfile, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
 import { canUseHostedAccountFeatures, isHostedAccountLinked, readLinkedProfileSlug } from '@/lib/hostedAccount.js';
 import { resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
@@ -66,9 +70,19 @@ function normalizeSuggestions(postId, raw, allowedPersonas) {
   return attachPlusValues(postId, ordered);
 }
 
-export async function fetchCommentSuggestions(post, { allowedPersonas, profile } = {}) {
+/**
+ * Comment suggestions are per logged-in viewer + post (not shared between users).
+ * @param {object} post — post being commented on
+ * @param {{ allowedPersonas?: string[], viewerProfile?: object }} options
+ */
+export async function fetchCommentSuggestions(post, { allowedPersonas, viewerProfile } = {}) {
+  const viewerSlug = profileSlugFromProfile(viewerProfile);
+  const cached = loadCommentSuggestions(viewerSlug, post.id);
+  if (cached?.length) return cached;
+
   const body = {
     post: {
+      id: post.id,
       content: post.content,
       persona: post.persona,
       attachedAsset: post.attachedAsset ?? null,
@@ -78,22 +92,30 @@ export async function fetchCommentSuggestions(post, { allowedPersonas, profile }
   if (Array.isArray(allowedPersonas) && allowedPersonas.length > 0 && allowedPersonas.length < 3) {
     body.allowedPersonas = allowedPersonas;
   }
-  const slimProfile = slimProfileForAiRequest(profile);
-  if (slimProfile) body.profile = slimProfile;
-  const profileSlug = profileSlugFromProfile(profile);
-  if (profileSlug) body.profileSlug = profileSlug;
+  const slimViewer = slimProfileForAiRequest(viewerProfile);
+  if (slimViewer) {
+    body.viewerProfile = slimViewer;
+    body.profile = slimViewer;
+  }
+  const viewerProfileSlug = profileSlugFromProfile(viewerProfile);
+  if (viewerProfileSlug) {
+    body.viewerProfileSlug = viewerProfileSlug;
+    body.profileSlug = viewerProfileSlug;
+  }
 
   if (isHostedApiOrigin()) {
     if (!isHostedAccountLinked()) {
       throw new Error('Open this profile from the Compliant app to use AI comments.');
     }
     const linkedSlug = readLinkedProfileSlug();
-    if (!canUseHostedAccountFeatures(profile, linkedSlug)) {
+    if (!canUseHostedAccountFeatures(viewerProfile, linkedSlug)) {
       throw new Error('AI comments are only available on your linked profile.');
     }
     const result = await submitQueuedAiEndpoint('/api/comments/suggest', body);
     const raw = Array.isArray(result?.suggestions) ? result.suggestions : [];
-    return normalizeSuggestions(post.id, raw, allowedPersonas);
+    const normalized = normalizeSuggestions(post.id, raw, allowedPersonas);
+    saveCommentSuggestions(viewerSlug, post.id, normalized);
+    return normalized;
   }
 
   const res = await fetch(`${GENERATE_API_ORIGIN}/api/comments/suggest`, {
@@ -116,5 +138,7 @@ export async function fetchCommentSuggestions(post, { allowedPersonas, profile }
 
   const data = await res.json();
   const raw = Array.isArray(data?.suggestions) ? data.suggestions : [];
-  return normalizeSuggestions(post.id, raw, allowedPersonas);
+  const normalized = normalizeSuggestions(post.id, raw, allowedPersonas);
+  saveCommentSuggestions(viewerSlug, post.id, normalized);
+  return normalized;
 }

@@ -3,6 +3,8 @@ import {
   mapPostForInsert,
   mapPostRowForApi,
   mapProfileRowForApi,
+  mapPersonaBlurbsForApi,
+  mapPersonaBlurbsForStorage,
   mapSyncPayloadToProfileRow,
 } from './publicProfileMapping.js';
 
@@ -138,17 +140,39 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     async updateProfileSummary({ profileId, userId, profileSummary }) {
       const summary = String(profileSummary ?? '').trim();
       if (!summary) return null;
+      let query = supabase
+        .from('profiles')
+        .update({ profile_summary: summary, updated_at: new Date().toISOString() })
+        .eq('id', profileId);
+      if (userId) query = query.eq('user_id', userId);
       const updated = throwIfError(
-        await supabase
-          .from('profiles')
-          .update({ profile_summary: summary, updated_at: new Date().toISOString() })
-          .eq('id', profileId)
-          .eq('user_id', userId)
-          .select('*')
-          .maybeSingle(),
+        await query.select('*').maybeSingle(),
         'update profile summary',
       );
       return updated ?? null;
+    },
+
+    async getPersonaBlurbs(profileId) {
+      const row = throwIfError(
+        await supabase.from('profiles').select('persona_blurbs').eq('id', profileId).maybeSingle(),
+        'read persona blurbs',
+      );
+      return mapPersonaBlurbsForApi(row?.persona_blurbs);
+    },
+
+    async savePersonaBlurbs({ profileId, blurbs }) {
+      const stored = mapPersonaBlurbsForStorage(blurbs);
+      if (!stored.productivite && !stored.securite && !stored.popularite) return null;
+      const updated = throwIfError(
+        await supabase
+          .from('profiles')
+          .update({ persona_blurbs: stored, updated_at: new Date().toISOString() })
+          .eq('id', profileId)
+          .select('persona_blurbs')
+          .maybeSingle(),
+        'save persona blurbs',
+      );
+      return mapPersonaBlurbsForApi(updated?.persona_blurbs);
     },
 
     async latestRelease(platform = 'mac') {

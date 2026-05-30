@@ -28,6 +28,15 @@ async function fetchJson(url, options = {}) {
   return json;
 }
 
+async function reportJobProgress(jobId, body) {
+  if (!jobId) return;
+  await fetchJson(`${API}/api/worker/jobs/${jobId}/progress`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+}
+
 async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
   if (!assetCandidate?.url) return null;
   const assetUrl = assetCandidate.url.startsWith('http')
@@ -110,7 +119,7 @@ async function rewritePostAssetUrls(posts) {
   return out;
 }
 
-async function processPostsJob(payload) {
+async function processPostsJob(payload, jobId) {
   const profile = payload.profile || {};
   const dataJson = resolveDataJson(payload);
   const user = payload.user || {};
@@ -126,6 +135,8 @@ async function processPostsJob(payload) {
 
   const existingBio = String(profile.profileSummary || profile.userDescription || '').trim();
   let profileSummary = existingBio;
+  let streamedPosts = false;
+
   if (!existingBio) {
     profileSummary = await generateUserSummary({
       baseUrl: LM_STUDIO_BASE_URL,
@@ -135,6 +146,10 @@ async function processPostsJob(payload) {
       retries: RETRIES,
       prompts,
     });
+    const bio = String(profileSummary || '').trim();
+    if (bio) {
+      await reportJobProgress(jobId, { profileSummary: bio });
+    }
   }
 
   const slotResults = await generatePersonaPosts({
@@ -149,6 +164,13 @@ async function processPostsJob(payload) {
     profile: { ...profile, profileSummary, userDescription: profileSummary },
     existingPosts,
     chartUploadDir: CHART_UPLOAD_DIR,
+    onEachPost: async (post) => {
+      if (!post?.content) return;
+      const [rewritten] = await rewritePostAssetUrls([post]);
+      if (!rewritten) return;
+      streamedPosts = true;
+      await reportJobProgress(jobId, { posts: [rewritten] });
+    },
   });
 
   const posts = await rewritePostAssetUrls(slotResults.filter(Boolean));
@@ -156,10 +178,11 @@ async function processPostsJob(payload) {
   return {
     posts,
     profileSummary: String(profileSummary || '').trim(),
+    finalizeOnly: streamedPosts,
   };
 }
 
-async function processBioJob(payload) {
+async function processBioJob(payload, jobId) {
   const dataJson = resolveDataJson(payload);
   const user = payload.user || {};
   const userPayload = buildUserPayload(user, dataJson);
@@ -172,9 +195,13 @@ async function processBioJob(payload) {
     retries: RETRIES,
     prompts,
   });
+  const bio = String(profileSummary || '').trim();
+  if (bio) {
+    await reportJobProgress(jobId, { profileSummary: bio });
+  }
   return {
-    profileSummary: String(profileSummary || '').trim(),
-    result: { profileSummary: String(profileSummary || '').trim() },
+    profileSummary: bio,
+    result: { profileSummary: bio },
   };
 }
 
@@ -228,14 +255,14 @@ async function processJob(job) {
 
   switch (jobType) {
     case 'bio':
-      return processBioJob(payload);
+      return processBioJob(payload, job.id);
     case 'comments':
       return processCommentsJob(payload);
     case 'blurbs':
       return processBlurbsJob(payload);
     case 'posts':
     default:
-      return processPostsJob(payload);
+      return processPostsJob(payload, job.id);
   }
 }
 
