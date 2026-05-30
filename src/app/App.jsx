@@ -45,20 +45,20 @@ import {
   mergePostsPrepend,
 } from '@/lib/mergePersonaPosts.js';
 import { prependPersonaPosts } from '@/lib/postsApi.js';
+import { resolveApiOrigin, resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
+import {
+  persistProfileSlug,
+  readStoredProfileSlug,
+  resolveOwnedLandingProfile,
+} from '@/lib/profileSlugStorage.js';
 import { selectProfileBySlug } from '@/lib/profileDirectory.js';
 
 function selectedProfileSlug() {
-  if (typeof window === 'undefined') return null;
-  return new URLSearchParams(window.location.search).get('profile');
+  return readStoredProfileSlug();
 }
 
-const API_ORIGIN =
-  (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
-  'http://localhost:3001';
-
-const GENERATE_API_ORIGIN =
-  (import.meta?.env?.VITE_GENERATE_API_ORIGIN && String(import.meta.env.VITE_GENERATE_API_ORIGIN)) ||
-  'http://localhost:3010';
+const API_ORIGIN = resolveApiOrigin();
+const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
 
 const PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 const PERSONA_ALIASES = {
@@ -207,6 +207,7 @@ function AppInner({
   setActiveTab,
   profile,
   setProfile,
+  allProfiles,
   personaOverride,
   setPersonaOverride,
   postGen,
@@ -282,6 +283,24 @@ function AppInner({
   const personaColor = PERSONA_COLORS[personaKey] ?? PERSONA_COLORS.productivity;
   const personaToggleLabel =
     personaKey === 'productivity' ? 'P' : personaKey === 'security' ? 'S' : '☺';
+
+  // "for you" feed = every profile's posts. Swap in the live merged `profile`
+  // (carries streaming reveals + client system posts) for the current user's row.
+  const feedProfiles = useMemo(() => {
+    const list = Array.isArray(allProfiles) ? allProfiles.filter(Boolean) : [];
+    if (!profile) return list;
+    const ownId = profile.slug ?? profile.id ?? null;
+    let replaced = false;
+    const merged = list.map((p) => {
+      if (ownId != null && (p?.slug === ownId || p?.id === ownId)) {
+        replaced = true;
+        return profile;
+      }
+      return p;
+    });
+    if (!replaced) merged.unshift(profile);
+    return merged;
+  }, [allProfiles, profile]);
   const updateTimerLabel = formatDashboardCountdown(updateRemainingMs);
 
   useEffect(() => {
@@ -554,6 +573,10 @@ function AppInner({
 
   const handleOpenProfile = useCallback(
     (tab = 'profile') => {
+      if (!profile) {
+        setMainView('landing');
+        return;
+      }
       setMainView('profile');
       setActiveTab(tab);
       setHighlightedPost(null);
@@ -564,7 +587,18 @@ function AppInner({
       setTellClosing(false);
       setTellExpanded(false);
     },
-    [],
+    [profile, setMainView, setActiveTab],
+  );
+
+  const handleSelectView = useCallback(
+    (view) => {
+      if (view === 'profile' && !profile) {
+        setMainView('landing');
+        return;
+      }
+      setMainView(view);
+    },
+    [profile, setMainView],
   );
 
   const dashboardLayout = getDashboardControlLayout({
@@ -599,13 +633,14 @@ function AppInner({
         </button>
       )}
       <div className="project-name">COMPLIANT</div>
-      <Sidebar mainView={mainView} onSelectView={setMainView} />
+      <Sidebar mainView={mainView} onSelectView={handleSelectView} />
       <div className="page">
         {mainView === 'home' && (
           <div className="main-col">
             <ScrollArea key="home" mode="home">
               <HomeTab
                 profile={profile}
+                feedProfiles={feedProfiles}
                 isGeneratingPosts={postGen.phase === 'generating'}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
@@ -619,7 +654,7 @@ function AppInner({
           </div>
         )}
 
-        {mainView === 'profile' && (
+        {mainView === 'profile' && profile && (
           <ProfileView
             profile={profile}
             personaColor={personaColor}
@@ -710,6 +745,7 @@ export default function App() {
   const [mainView, setMainView] = useState('landing');
   const [activeTab, setActiveTab] = useState('posts');
   const [profile, setProfile] = useState(null);
+  const [allProfiles, setAllProfiles] = useState([]);
   const [personaOverride, setPersonaOverride] = useState(null); // 'productivity' | 'popularity' | 'security' | null
   const [postGen, setPostGen] = useState(POST_GEN_IDLE);
   const [harvestPhase, setHarvestPhase] = useState('idle');
@@ -722,6 +758,7 @@ export default function App() {
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
   const prevMainViewRef = useRef(null);
   const [landingEnteringProfile, setLandingEnteringProfile] = useState(false);
+  const [landingOwnedProfile, setLandingOwnedProfile] = useState(null);
   const landingEnterProfileTimerRef = useRef(null);
 
   const cancelPersonaDeltasClear = useCallback(() => {
@@ -758,9 +795,13 @@ export default function App() {
     landingEnterProfileTimerRef.current = setTimeout(() => {
       landingEnterProfileTimerRef.current = null;
       setLandingEnteringProfile(false);
-      setMainView('profile');
+      setMainView('home');
     }, LANDING_PROFILE_ENTRY_MS);
   }, [landingEnteringProfile, profile]);
+
+  const handleLandingBrowseFeed = useCallback(() => {
+    setMainView('home');
+  }, []);
 
   useEffect(() => {
     if (mainView === 'profile' && prevMainViewRef.current !== 'profile') {
@@ -815,28 +856,40 @@ export default function App() {
         const data = await res.json();
         if (cancelled) return;
         if (!Array.isArray(data) || data.length === 0) {
+          setLandingOwnedProfile(null);
+          setAllProfiles([]);
           return;
         }
-        const selected = selectProfileBySlug(data, selectedProfileSlug()) ?? data[0];
-        setProfile((prev) => mergeProfileFromApi(prev, selected));
+        setAllProfiles(data);
+        const owned = resolveOwnedLandingProfile(data);
+        setLandingOwnedProfile(owned);
+        const selected =
+          owned ?? selectProfileBySlug(data, selectedProfileSlug()) ?? null;
+        if (selected?.slug || selected?.id) {
+          persistProfileSlug(selected.slug || selected.id);
+          setProfile((prev) => mergeProfileFromApi(prev, selected));
+        }
       } catch {
         if (cancelled) return;
       }
     };
 
     load();
-    const id = setInterval(load, 30_000);
+    // Poll quickly on landing/home so other users' newly generated posts appear in "for you".
+    const pollMs = mainView === 'landing' || mainView === 'home' ? 5_000 : 30_000;
+    const id = setInterval(load, pollMs);
     return () => {
       cancelled = true;
       clearInterval(id);
     };
-  }, [syncAccountDeletionState]);
+  }, [syncAccountDeletionState, mainView]);
 
   const reloadProfileFromApi = useCallback(async () => {
     const res = await fetch(`${API_ORIGIN}/api/profiles`);
     if (!res.ok) throw new Error('Failed to reload profile');
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
+    setAllProfiles(data);
     const incoming = selectProfileBySlug(data, selectedProfileSlug()) ?? data[0];
     let merged = incoming;
     setProfile((prev) => {
@@ -1150,8 +1203,9 @@ export default function App() {
     return (
       <>
         <LandingPage
-          profile={profile}
+          profile={landingOwnedProfile ?? profile}
           onEnterProfile={handleLandingEnterProfile}
+          onBrowseFeed={handleLandingBrowseFeed}
           profileEntryLoading={landingEnteringProfile}
         />
       </>
@@ -1168,6 +1222,7 @@ export default function App() {
           setActiveTab={setActiveTab}
           profile={profile}
           setProfile={setProfile}
+          allProfiles={allProfiles}
           personaOverride={personaOverride}
           setPersonaOverride={setPersonaOverride}
           postGen={postGen}

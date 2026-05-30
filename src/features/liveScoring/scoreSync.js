@@ -1,8 +1,6 @@
 // src/features/liveScoring/scoreSync.js
 
-const API_ORIGIN =
-  (import.meta?.env?.VITE_API_ORIGIN && String(import.meta.env.VITE_API_ORIGIN)) ||
-  'http://localhost:3001';
+import { API_ORIGIN } from '@/lib/apiClient.js';
 
 /**
  * Fire-and-forget: persists adjustedScores to the server.

@@ -14,34 +14,6 @@
     "_feedRevealSeq": 1780080748797
   },
   {
-    "id": "compliant-low-score-1780074257398-security",
-    "persona": "securite",
-    "createdAt": 1780074257398,
-    "content": "COMPLIANT notice for Brikeld Hoxha: your security score is at 18%. That is below the minimum the system expects. Some features are limited until you improve this persona.",
-    "compliantLowScore": {
-      "uiPersonaKey": "security",
-      "personaLabel": "Security",
-      "score": 18,
-      "userDisplayName": "Brikeld Hoxha"
-    },
-    "_feedKey": "compliant-low-score-1780074257398-security",
-    "_feedRevealSeq": 1780074257398
-  },
-  {
-    "id": "compliant-low-score-1780073962701-security",
-    "persona": "securite",
-    "createdAt": 1780073962701,
-    "content": "COMPLIANT notice for Brikeld Hoxha: your security score is at 18%. That is below the minimum the system expects. Some features are limited until you improve this persona.",
-    "compliantLowScore": {
-      "uiPersonaKey": "security",
-      "personaLabel": "Security",
-      "score": 18,
-      "userDisplayName": "Brikeld Hoxha"
-    },
-    "_feedKey": "compliant-low-score-1780073962701-security",
-    "_feedRevealSeq": 1780073962701
-  },
-  {
     "id": "compliant-persona-change-1780051667165-productivity-popularity",
     "persona": "popularity",
     "createdAt": 1780051667165,

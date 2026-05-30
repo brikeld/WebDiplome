@@ -181,7 +181,7 @@ function LandingHeroAccess({ profile, onEnterProfile, onRegister, profileEntryLo
           onClick={() => onEnterProfile?.()}
           disabled={profileEntryLoading}
           aria-busy={profileEntryLoading}
-          aria-label="Log in to your profile"
+          aria-label="Enter your profile feed"
         >
           <span
             className={`lp-hero-avatar-box${profileEntryLoading ? ' lp-hero-avatar-box--loading' : ''}`}
@@ -197,7 +197,7 @@ function LandingHeroAccess({ profile, onEnterProfile, onRegister, profileEntryLo
             )}
           </span>
           <span className="lp-hero-access-btn">
-            {profileEntryLoading ? 'Loading…' : 'Log in'}
+            {profileEntryLoading ? 'Loading…' : 'Enter feed'}
           </span>
         </button>
       </div>
@@ -213,7 +213,7 @@ function LandingHeroAccess({ profile, onEnterProfile, onRegister, profileEntryLo
   );
 }
 
-export default function LandingPage({ profile, onEnterProfile, onRegister, profileEntryLoading }) {
+export default function LandingPage({ profile, onEnterProfile, onBrowseFeed, onRegister, profileEntryLoading }) {
   const downloadRef = useRef(null);
   const [release, setRelease] = useState(null);
 
@@ -241,7 +241,14 @@ export default function LandingPage({ profile, onEnterProfile, onRegister, profi
 
         {/* ── SCREEN 1: HERO ── */}
         <section className="lp-screen lp-hero" style={{ '--stagger-i': 0 }}>
-          <h1 className="lp-hero-title">COMPLIANT</h1>
+          <button
+            type="button"
+            className="lp-hero-title lp-hero-title--link"
+            onClick={() => onBrowseFeed?.()}
+            aria-label="Browse the public feed"
+          >
+            COMPLIANT
+          </button>
           <div className="lp-hero-footer">
             <div className="lp-hero-text">
               <h2 className="lp-hero-sub">

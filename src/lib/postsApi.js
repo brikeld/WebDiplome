@@ -1,6 +1,6 @@
 import { postForPersistence } from './compliantSystemPosts.js';
 
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:3001';
+import { API_ORIGIN } from '@/lib/apiClient.js';
 
 export async function prependPersonaPosts(profileId, posts) {
   const payload = (Array.isArray(posts) ? posts : []).map(postForPersistence);

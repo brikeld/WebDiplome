@@ -20,7 +20,7 @@ const PERSONA_COLORS = {
   popularity: '#CCF847',
 };
 
-const API_ORIGIN = 'http://localhost:3001';
+import { API_ORIGIN } from '@/lib/apiClient.js';
 
 /**
  * Stable identifier for a post that survives a `reloadProfileFromApi` swap.
@@ -60,57 +60,54 @@ function resolveAttachedAsset(asset) {
   };
 }
 
-export default function PostsTab({
-  profile,
-  feedContext = 'home',
-  isGeneratingPosts = false,
-  hideInteractions = false,
-  highlightedPostId = null,
-  onHighlightPost,
-  onPostHide,
-  onPostTellMeMore,
-  tellMeMorePostId = null,
-  personaBadgePersona = null,
-  onOpenProfile,
-}) {
-  const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
-  const { isHidden, isRevealing, isLeaderboardSelfHidden } = useLiveScoring();
+const stablePct = (seed) => {
+  // Deterministic 1..5 (so it doesn't change every render).
+  let h = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return (h % 5) + 1;
+};
 
-  const posts = useMemo(() => {
-    if (!profile) return [];
-    const raw = profile.personaPosts ?? [];
-    const displayName = displayNameFromProfile(profile);
-    const avatarInitials = initialsFromProfile(profile);
-    const handle = machineHandleFromProfile(profile);
-    const resolvedPersonaBadgePersona = personaBadgePersona ?? resolveDominantPersonaKey(profile);
-    const avatarSrc = avatarSrcFromProfile(profile);
+const createdAtFallback = (i) => Date.now() - (i + 1) * 6 * 60 * 60 * 1000; // 6h steps
 
-    const enrichLeaderboardEntries = (entries) => {
-      if (!avatarSrc || !Array.isArray(entries)) return entries;
-      return entries.map((entry) =>
-        entry?.isUser && !entry?.avatarSrc
-          ? { ...entry, avatarSrc }
-          : entry,
-      );
-    };
+function postCreatedAtMs(createdAt) {
+  return typeof createdAt === 'number' ? createdAt : new Date(createdAt).getTime();
+}
 
-    const stablePct = (seed) => {
-      // Deterministic 1..5 (so it doesn't change every render)
-      let h = 0;
-      for (let i = 0; i < seed.length; i += 1) {
-        h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-      }
-      return (h % 5) + 1;
-    };
+function sortNewestFirst(a, b) {
+  const at = postCreatedAtMs(a.createdAt);
+  const bt = postCreatedAtMs(b.createdAt);
+  const cmp = (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
+  if (cmp !== 0) return cmp;
+  return (b._feedRevealSeq ?? 0) - (a._feedRevealSeq ?? 0);
+}
 
-    const createdAtFallback = (i) => Date.now() - (i + 1) * 6 * 60 * 60 * 1000; // 6h steps
+/** Map one profile's raw persona posts into enriched card models (unsorted). */
+function buildEnrichedPosts(profile, { personaBadgePersona }) {
+  if (!profile) return [];
+  const raw = profile.personaPosts ?? [];
+  const displayName = displayNameFromProfile(profile);
+  const avatarInitials = initialsFromProfile(profile);
+  const handle = machineHandleFromProfile(profile);
+  const resolvedPersonaBadgePersona = personaBadgePersona ?? resolveDominantPersonaKey(profile);
+  const avatarSrc = avatarSrcFromProfile(profile);
+  const authorSlug = profile.slug ?? profile.id ?? null;
 
-    const mapped = raw.map((p, i) => {
-      const isCompliantPersonaChange = Boolean(p.compliantPersonaChange);
-      const isCompliantLowScore = Boolean(p.compliantLowScore);
-      const isCompliantSystem = isCompliantPersonaChange || isCompliantLowScore;
-      return {
+  const enrichLeaderboardEntries = (entries) => {
+    if (!avatarSrc || !Array.isArray(entries)) return entries;
+    return entries.map((entry) =>
+      entry?.isUser && !entry?.avatarSrc ? { ...entry, avatarSrc } : entry,
+    );
+  };
+
+  return raw.map((p, i) => {
+    const isCompliantPersonaChange = Boolean(p.compliantPersonaChange);
+    const isCompliantLowScore = Boolean(p.compliantLowScore);
+    const isCompliantSystem = isCompliantPersonaChange || isCompliantLowScore;
+    return {
       id: postStableKey(p, i),
+      authorSlug,
       persona: p.persona,
       content: sanitizePostContent(p.content),
       noteColor: isCompliantSystem ? '#000' : (PERSONA_COLORS[p.persona] ?? '#2323FF'),
@@ -126,7 +123,7 @@ export default function PostsTab({
         p?.timestamp ??
         p?.time ??
         createdAtFallback(i),
-      systemDeltaPct: stablePct(`${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
+      systemDeltaPct: stablePct(`${authorSlug ?? ''}|${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
       attachedAsset: resolveAttachedAsset(p.attachedAsset ?? p.attached_asset),
       chartType: p.chartType ?? p.chart_type ?? null,
       inferenceChain: Array.isArray(p.inferenceChain) ? p.inferenceChain : null,
@@ -150,17 +147,44 @@ export default function PostsTab({
       _feedKey: p._feedKey ?? null,
       _feedRevealSeq: typeof p._feedRevealSeq === 'number' ? p._feedRevealSeq : 0,
     };
-    });
+  });
+}
+
+export default function PostsTab({
+  profile,
+  feedProfiles = null,
+  feedContext = 'home',
+  isGeneratingPosts = false,
+  hideInteractions = false,
+  highlightedPostId = null,
+  onHighlightPost,
+  onPostHide,
+  onPostTellMeMore,
+  tellMeMorePostId = null,
+  personaBadgePersona = null,
+  onOpenProfile,
+}) {
+  const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
+  const { isHidden, isRevealing, isLeaderboardSelfHidden } = useLiveScoring();
+
+  const posts = useMemo(() => {
+    // "for you" (home) aggregates every profile's posts; profile view shows only one author.
+    const aggregated =
+      feedContext === 'home' && Array.isArray(feedProfiles) && feedProfiles.length > 0;
+    const sources = aggregated ? feedProfiles : profile ? [profile] : [];
+    if (sources.length === 0) return [];
+
+    const multiAuthor = sources.length > 1;
+    const all = sources.flatMap((src) =>
+      buildEnrichedPosts(src, {
+        // Per-author badge in a multi-author feed; current theme persona otherwise.
+        personaBadgePersona: multiAuthor ? null : personaBadgePersona,
+      }),
+    );
 
     // Newest first; tie-break so staggered client posts keep order even if timestamps collide.
-    return mapped.sort((a, b) => {
-      const at = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
-      const bt = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
-      const cmp = (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
-      if (cmp !== 0) return cmp;
-      return (b._feedRevealSeq ?? 0) - (a._feedRevealSeq ?? 0);
-    });
-  }, [personaBadgePersona, profile]);
+    return all.sort(sortNewestFirst);
+  }, [feedContext, feedProfiles, personaBadgePersona, profile]);
 
   const list = (
     <div
@@ -179,7 +203,7 @@ export default function PostsTab({
       ) : null}
       {posts.map((p) => (
         <div
-          key={p._feedKey ?? p.id}
+          key={`${p.authorSlug ?? ''}:${p._feedKey ?? p.id}`}
           className={`post-card-shell${p._feedEnter ? ' post-card-shell--entering' : ''}`}
         >
           <PostCard

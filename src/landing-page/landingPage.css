@@ -231,6 +231,18 @@
   padding: 0;
 }
 
+.lp-hero-title--link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  transition: opacity 0.15s ease;
+}
+
+.lp-hero-title--link:hover {
+  opacity: 0.65;
+}
+
 .lp-hero-text {
   flex: 1 1 auto;
   min-width: 0;

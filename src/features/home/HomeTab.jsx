@@ -2,6 +2,7 @@ import PostsTab from '@/features/feed/PostsTab.jsx';
 
 export default function HomeTab({
   profile,
+  feedProfiles = null,
   isGeneratingPosts = false,
   highlightedPostId = null,
   onHighlightPost,
@@ -16,6 +17,7 @@ export default function HomeTab({
       <p className="home-top-label">for you</p>
       <PostsTab
         profile={profile}
+        feedProfiles={feedProfiles}
         feedContext="home"
         isGeneratingPosts={isGeneratingPosts}
         highlightedPostId={highlightedPostId}

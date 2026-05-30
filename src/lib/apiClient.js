@@ -1,4 +1,8 @@
-export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:3001';
+import { resolveApiOrigin } from './apiOrigin.js';
+
+export { resolveApiOrigin, resolveGenerateApiOrigin, DEFAULT_HOSTED_API_ORIGIN } from './apiOrigin.js';
+
+export const API_ORIGIN = resolveApiOrigin();
 
 export async function fetchJson(path, options = {}) {
   const res = await fetch(`${API_ORIGIN}${path}`, options);
