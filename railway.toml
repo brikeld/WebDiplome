@@ -6,3 +6,6 @@ dockerfilePath = "Dockerfile"
 startCommand = "node server.js"
 healthcheckPath = "/api/profiles"
 restartPolicyType = "ON_FAILURE"
+
+# Railway injects PORT at runtime. Set PORT=3001 in the dashboard Variables tab
+# and use the same port (3001) when generating the public domain.
