@@ -1,5 +1,13 @@
 import { generatePersonaPosts, generateUserSummary } from '../server/lib/personaPostGenerator.js';
 import { loadPrompts } from '../server/lib/prompts.js';
+import {
+  buildLmUserPayload,
+  compactHarvestDataForLm,
+} from '../server/lib/compactHarvestData.js';
+import {
+  capDocumentText,
+  prepareImageForLmVision,
+} from '../server/lib/lmAssetPrep.js';
 
 const API = String(process.env.WEBDIPLOME_API_ORIGIN || 'http://localhost:3001').replace(/\/$/, '');
 const TOKEN = String(process.env.AI_WORKER_TOKEN || '');
@@ -28,17 +36,29 @@ async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
   const buf = Buffer.from(await res.arrayBuffer());
   const mime = assetCandidate.mime || res.headers.get('content-type') || 'image/jpeg';
   if (String(mime).startsWith('image/')) {
+    const prepared = await prepareImageForLmVision(buf);
+    if (prepared) {
+      return {
+        persona: targetPersona || 'popularite',
+        asset: {
+          kind: 'image',
+          base64: prepared.base64,
+          mime: prepared.mime,
+          filename: assetCandidate.filename || 'asset',
+        },
+      };
+    }
     return {
       persona: targetPersona || 'popularite',
       asset: {
         kind: 'image',
-        base64: buf.toString('base64'),
-        mime,
         filename: assetCandidate.filename || 'asset',
+        mime,
+        textFallbackOnly: true,
       },
     };
   }
-  const text = buf.toString('utf8').slice(0, 8000);
+  const text = capDocumentText(buf.toString('utf8'));
   return {
     persona: targetPersona || 'productivite',
     asset: {
@@ -53,10 +73,10 @@ async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
 async function processJob(job) {
   const payload = job.request_payload || {};
   const profile = payload.profile || {};
-  const dataJson = payload.dataJson || payload.data_json || {};
+  const dataJson = compactHarvestDataForLm(payload.dataJson || payload.data_json || {});
   const user = payload.user || {};
   const existingPosts = Array.isArray(payload.existingPosts) ? payload.existingPosts : [];
-  const userPayload = JSON.stringify({ user, profile: dataJson });
+  const userPayload = buildLmUserPayload(user, dataJson);
   const prompts = await loadPrompts(process.cwd());
   const assetAssignment = await fetchAssetAsAssignment(
     Array.isArray(payload.assetCandidates) ? payload.assetCandidates[0] : null,

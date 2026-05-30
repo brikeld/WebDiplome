@@ -25,7 +25,7 @@ function formatLeaderboardTitle(title) {
   return text.toUpperCase();
 }
 
-function Row({ entry, hidden, revealing, onOpenProfile }) {
+function Row({ entry, hidden, revealing, authorSlug, onOpenProfile }) {
   const cls = [
     'leaderboard-row',
     entry.isUser ? 'leaderboard-row--self' : '',
@@ -43,7 +43,13 @@ function Row({ entry, hidden, revealing, onOpenProfile }) {
           className="leaderboard-row__avatar"
           imgClassName="leaderboard-row__avatar-img"
           initialsClassName="leaderboard-row__avatar-initials"
-          onOpenProfile={onOpenProfile ? () => onOpenProfile('profile') : undefined}
+          onOpenProfile={
+            onOpenProfile && authorSlug
+              ? () => onOpenProfile('profile', authorSlug)
+              : onOpenProfile
+                ? () => onOpenProfile('profile')
+                : undefined
+          }
           ariaLabel={entry.isUser ? 'View your profile' : `View ${name}'s profile`}
           avatarSrc={entry.isUser ? entry.avatarSrc : null}
           avatarInitials={entry.avatarInitials}
@@ -60,7 +66,7 @@ function Row({ entry, hidden, revealing, onOpenProfile }) {
   );
 }
 
-export default function LeaderboardBlock({ leaderboard, accentColor, onOpenProfile }) {
+export default function LeaderboardBlock({ leaderboard, accentColor, authorSlug, onOpenProfile }) {
   const { isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
   const reactId = useId();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
@@ -106,6 +112,7 @@ export default function LeaderboardBlock({ leaderboard, accentColor, onOpenProfi
             hidden={hiddenForEntry[i]}
             revealing={e.isUser && selfRevealing}
             onOpenProfile={onOpenProfile}
+            authorSlug={authorSlug}
           />
         ))}
       </ul>

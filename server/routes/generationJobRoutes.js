@@ -2,12 +2,18 @@ import express from 'express';
 import { requireHostedUser, requireWorker } from '../lib/auth.js';
 
 import { slimProfilePayloadForStorage } from '../lib/publicProfileMapping.js';
+import { compactHarvestDataForLm } from '../lib/compactHarvestData.js';
 
 function slimGenerationRequestPayload(payload) {
   if (!payload || typeof payload !== 'object') return {};
   const out = { ...payload };
   if (out.profile && typeof out.profile === 'object') {
     out.profile = slimProfilePayloadForStorage(out.profile);
+  }
+  const dataJson = out.dataJson ?? out.data_json;
+  if (dataJson && typeof dataJson === 'object') {
+    out.dataJson = compactHarvestDataForLm(dataJson);
+    delete out.data_json;
   }
   return out;
 }

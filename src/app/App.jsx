@@ -10,6 +10,7 @@ import { LANDING_PROFILE_ENTRY_MS } from '@/landing-page/landingProfileEntry.js'
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import {
   getPersonaScoresNormalized,
+  resolveDominantPersonaKey,
 } from '@/lib/profileUtils.js';
 import {
   DASHBOARD_UPDATE_INTERVAL_MS,
@@ -238,6 +239,7 @@ function AppInner({
   const [tellClosing, setTellClosing] = useState(false);
   const tellCloseTimerRef = useRef(null);
   const [hideBlocked, setHideBlocked] = useState(false);
+  const [viewedProfile, setViewedProfile] = useState(null);
   const previousLivePersonaRef = useRef(null);
   const previousPersonaScoresRef = useRef(null);
   const updateTimerStartRef = useRef(Date.now());
@@ -572,30 +574,73 @@ function AppInner({
     [],
   );
 
+  const ownProfileSlug = profile?.slug ?? profile?.id ?? null;
+  const displayProfile = viewedProfile ?? profile;
+  const displayPersonaKey = viewedProfile
+    ? resolveDominantPersonaKey(viewedProfile)
+    : personaKey;
+  const displayPersonaColor = PERSONA_COLORS[displayPersonaKey] ?? PERSONA_COLORS.productivity;
+
+  const resetProfileChrome = useCallback(() => {
+    setHighlightedPost(null);
+    setConfirmingHide(false);
+    setConfirmingUnhide(false);
+    setHideBlocked(false);
+    if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
+    setTellClosing(false);
+    setTellExpanded(false);
+  }, []);
+
   const handleOpenProfile = useCallback(
-    (tab = 'profile') => {
-      if (!profile) {
+    async (tab = 'profile', authorSlug = null) => {
+      const targetSlug = authorSlug || ownProfileSlug;
+      if (!targetSlug) {
         setMainView('landing');
         return;
       }
+
+      if (ownProfileSlug && targetSlug === ownProfileSlug) {
+        setViewedProfile(null);
+        setMainView('profile');
+        setActiveTab(tab);
+        resetProfileChrome();
+        return;
+      }
+
+      let target = (Array.isArray(allProfiles) ? allProfiles : []).find(
+        (p) => p?.slug === targetSlug || p?.id === targetSlug,
+      );
+      if (!target) {
+        try {
+          const res = await fetch(
+            `${API_ORIGIN}/api/profiles/${encodeURIComponent(targetSlug)}`,
+          );
+          if (res.ok) target = await res.json();
+        } catch (e) {
+          console.warn('[profile] fetch by slug failed', e?.message || e);
+        }
+      }
+      if (!target) {
+        setMainView('landing');
+        return;
+      }
+
+      setViewedProfile(target);
       setMainView('profile');
       setActiveTab(tab);
-      setHighlightedPost(null);
-      setConfirmingHide(false);
-      setConfirmingUnhide(false);
-      setHideBlocked(false);
-      if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
-      setTellClosing(false);
-      setTellExpanded(false);
+      resetProfileChrome();
     },
-    [profile, setMainView, setActiveTab],
+    [allProfiles, ownProfileSlug, resetProfileChrome, setActiveTab, setMainView],
   );
 
   const handleSelectView = useCallback(
     (view) => {
-      if (view === 'profile' && !profile) {
-        setMainView('landing');
-        return;
+      if (view === 'profile') {
+        if (!profile) {
+          setMainView('landing');
+          return;
+        }
+        setViewedProfile(null);
       }
       setMainView(view);
     },
@@ -655,16 +700,16 @@ function AppInner({
           </div>
         )}
 
-        {mainView === 'profile' && profile && (
+        {mainView === 'profile' && displayProfile && (
           <ProfileView
-            profile={profile}
-            personaColor={personaColor}
-            personaBadgePersona={personaKey}
+            profile={displayProfile}
+            personaColor={displayPersonaColor}
+            personaBadgePersona={displayPersonaKey}
             activeTab={activeTab}
             onTabChange={setActiveTab}
             onOpenProfile={handleOpenProfile}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
-            isGeneratingPosts={postGen.phase === 'generating'}
+            isGeneratingPosts={!viewedProfile && postGen.phase === 'generating'}
             generateApiOrigin={GENERATE_API_ORIGIN}
           />
         )}

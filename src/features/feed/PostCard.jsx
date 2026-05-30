@@ -110,6 +110,7 @@ export default function PostCard({
     handle,
     avatarInitials,
     avatarSrc,
+    authorSlug,
     personaBadgePersona,
     createdAt,
     systemDeltaPct = 1,
@@ -193,7 +194,9 @@ export default function PostCard({
               <ProfileAvatarLink
                 className="post-avatar"
                 imgClassName="post-avatar-img"
-                onOpenProfile={onOpenProfile ? () => onOpenProfile('profile') : undefined}
+                onOpenProfile={
+                  onOpenProfile ? () => onOpenProfile('profile', authorSlug) : undefined
+                }
                 ariaLabel={`View ${displayName}'s profile`}
                 avatarSrc={avatarSrc}
                 avatarInitials={avatarInitials}
@@ -260,6 +263,7 @@ export default function PostCard({
           <LeaderboardBlock
             leaderboard={leaderboard}
             accentColor={noteColor}
+            authorSlug={authorSlug}
             onOpenProfile={onOpenProfile}
           />
         ) : null}

@@ -676,8 +676,12 @@ function buildAssetSlot(baseUserPayload, assetAssignment) {
   if (!assetAssignment) return slot;
 
   const asset = assetAssignment.asset;
-  if (asset.kind === 'image') {
+  if (asset.kind === 'image' && !asset.textFallbackOnly && asset.base64) {
     slot.imageData = { base64: asset.base64, mime: asset.mime };
+    slot.promptKey = 'image';
+    slot.persona = 'popularite';
+  } else if (asset.kind === 'image') {
+    slot.userPayload = baseUserPayload + imageTextFallbackNote(asset.filename || 'image');
     slot.promptKey = 'image';
     slot.persona = 'popularite';
   } else {
