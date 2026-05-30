@@ -1,5 +1,6 @@
 import { hash } from '@/lib/commentMetaStrip.js';
-import { isHostedApiOrigin, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
+import { isHostedApiOrigin, profileSlugFromProfile, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
+import { canUseHostedAccountFeatures, isHostedAccountLinked, readLinkedProfileSlug } from '@/lib/hostedAccount.js';
 import { resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
 
 const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
@@ -79,8 +80,17 @@ export async function fetchCommentSuggestions(post, { allowedPersonas, profile }
   }
   const slimProfile = slimProfileForAiRequest(profile);
   if (slimProfile) body.profile = slimProfile;
+  const profileSlug = profileSlugFromProfile(profile);
+  if (profileSlug) body.profileSlug = profileSlug;
 
   if (isHostedApiOrigin()) {
+    if (!isHostedAccountLinked()) {
+      throw new Error('Open this profile from the Compliant app to use AI comments.');
+    }
+    const linkedSlug = readLinkedProfileSlug();
+    if (!canUseHostedAccountFeatures(profile, linkedSlug)) {
+      throw new Error('AI comments are only available on your linked profile.');
+    }
     const result = await submitQueuedAiEndpoint('/api/comments/suggest', body);
     const raw = Array.isArray(result?.suggestions) ? result.suggestions : [];
     return normalizeSuggestions(post.id, raw, allowedPersonas);

@@ -1,20 +1,26 @@
 const STORAGE_KEY = 'compliant_profile_slug';
 
-/** Slug from `?profile=` (persisted) or localStorage — links Electron sync to the web app. */
+/** Slug from `?profile=` in the current URL only (navigation hint, not ownership). */
+export function readViewProfileSlugFromUrl() {
+  if (typeof window === 'undefined') return null;
+  const fromUrl = new URLSearchParams(window.location.search).get('profile');
+  if (!fromUrl) return null;
+  const trimmed = fromUrl.trim();
+  return trimmed || null;
+}
+
+/** Slug from `?profile=` (persisted) or localStorage — legacy deep-link helper. */
 export function readStoredProfileSlug() {
   if (typeof window === 'undefined') return null;
 
-  const fromUrl = new URLSearchParams(window.location.search).get('profile');
+  const fromUrl = readViewProfileSlugFromUrl();
   if (fromUrl) {
-    const trimmed = fromUrl.trim();
-    if (trimmed) {
-      try {
-        localStorage.setItem(STORAGE_KEY, trimmed);
-      } catch {
-        /* ignore quota errors */
-      }
-      return trimmed;
+    try {
+      localStorage.setItem(STORAGE_KEY, fromUrl);
+    } catch {
+      /* ignore quota errors */
     }
+    return fromUrl;
   }
 
   try {
@@ -42,13 +48,10 @@ export function clearStoredProfileSlug() {
   }
 }
 
-/** Pick the profile to treat as "yours" on the landing page (stored slug only). */
-export function resolveOwnedLandingProfile(profiles) {
+/** Pick the profile owned by this browser (linked account slug only). */
+export function resolveOwnedLandingProfile(profiles, linkedSlug = null) {
   const list = Array.isArray(profiles) ? profiles.filter(Boolean) : [];
-  if (list.length === 0) return null;
+  if (list.length === 0 || !linkedSlug) return null;
 
-  const slug = readStoredProfileSlug();
-  if (!slug) return null;
-
-  return list.find((p) => p?.slug === slug || p?.id === slug) ?? null;
+  return list.find((p) => p?.slug === linkedSlug || p?.id === linkedSlug) ?? null;
 }

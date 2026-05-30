@@ -118,6 +118,38 @@ export function createGenerationJobStore(supabase) {
       );
     },
 
+    async hasActiveJob(profileId) {
+      const row = throwIfError(
+        await supabase
+          .from('generation_jobs')
+          .select('id')
+          .eq('profile_id', profileId)
+          .in('status', ['queued', 'claimed'])
+          .limit(1)
+          .maybeSingle(),
+        'check active generation job',
+      );
+      return Boolean(row);
+    },
+
+    async findLatestJobPayload(profileId, jobType = 'posts') {
+      const rows = throwIfError(
+        await supabase
+          .from('generation_jobs')
+          .select('request_payload, status, created_at')
+          .eq('profile_id', profileId)
+          .order('created_at', { ascending: false })
+          .limit(8),
+        'find latest generation job',
+      );
+      return (rows ?? []).find((row) => {
+        const payload = row?.request_payload && typeof row.request_payload === 'object'
+          ? row.request_payload
+          : {};
+        return (payload.jobType || 'posts') === jobType;
+      }) ?? null;
+    },
+
     mapJobRow,
   };
 }

@@ -28,6 +28,7 @@ export default function DashboardTimerRow({
   updateTimerLabel,
   updateRemainingMs,
   onGeneratePersonaPosts,
+  accountFeaturesEnabled = true,
 }) {
   const hidePersonaUiKey =
     hidePersonaUiKeyProp ??
@@ -274,8 +275,14 @@ export default function DashboardTimerRow({
         type="button"
         className={`${timerBaseClass}${idleTimerClass}`}
         style={idleTimerStyle}
-        disabled={postGen.loading || !profile}
+        disabled={postGen.loading || !profile || !accountFeaturesEnabled}
+        title={
+          !accountFeaturesEnabled
+            ? 'Open this profile from the Compliant app to generate updates'
+            : undefined
+        }
         onClick={() => {
+          if (!accountFeaturesEnabled) return;
           triggerCountdownPulse();
           onGeneratePersonaPosts();
         }}

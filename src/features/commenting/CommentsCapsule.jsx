@@ -28,6 +28,7 @@ export default function CommentsCapsule({
   commenterAvatarInitials,
   commenterPersonaBadgePersona,
   commenterProfile = null,
+  aiSuggestionsEnabled = true,
   onToggle,
   timeLabel,
   systemNoteLabel,
@@ -76,7 +77,7 @@ export default function CommentsCapsule({
   }, [isOpen, restrictionsKey, post.id]);
 
   useEffect(() => {
-    if (!isOpen || picked) return undefined;
+    if (!isOpen || picked || !aiSuggestionsEnabled) return undefined;
 
     const gen = fetchGenRef.current + 1;
     fetchGenRef.current = gen;
@@ -100,12 +101,12 @@ export default function CommentsCapsule({
     return () => {
       fetchGenRef.current += 1;
     };
-  }, [isOpen, post.id, post.content, picked, commentsRestricted, restrictionsKey, commenterProfile]);
+  }, [isOpen, post.id, post.content, picked, commentsRestricted, restrictionsKey, commenterProfile, aiSuggestionsEnabled]);
 
   useEffect(() => {
-    if (!isOpen || picked) return;
+    if (!isOpen || picked || !aiSuggestionsEnabled) return;
     personaBlurbs?.ensureBlurbs?.();
-  }, [isOpen, picked, personaBlurbs]);
+  }, [isOpen, picked, personaBlurbs, aiSuggestionsEnabled]);
 
   // Set max-height to measured scroll height when open
   useEffect(() => {

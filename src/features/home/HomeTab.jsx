@@ -3,6 +3,7 @@ import PostsTab from '@/features/feed/PostsTab.jsx';
 export default function HomeTab({
   profile,
   feedProfiles = null,
+  aiFeaturesEnabled = true,
   isGeneratingPosts = false,
   highlightedPostId = null,
   onHighlightPost,
@@ -18,6 +19,7 @@ export default function HomeTab({
       <PostsTab
         profile={profile}
         feedProfiles={feedProfiles}
+        aiFeaturesEnabled={aiFeaturesEnabled}
         feedContext="home"
         isGeneratingPosts={isGeneratingPosts}
         highlightedPostId={highlightedPostId}

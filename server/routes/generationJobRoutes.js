@@ -2,6 +2,7 @@ import express from 'express';
 import { requireHostedUser, requireWorker } from '../lib/auth.js';
 
 import { slimProfilePayloadForStorage } from '../lib/publicProfileMapping.js';
+import { resolveAiJobProfileContext } from '../lib/aiJobProfile.js';
 
 function slimGenerationRequestPayload(payload) {
   if (!payload || typeof payload !== 'object') return {};
@@ -71,14 +72,19 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
 
   router.post('/comments/suggest', async (req, res) => {
     try {
+      const ctx = await resolveAiJobProfileContext(profileStore, req.body);
+      if (!ctx.profileId) {
+        return res.status(400).json({ error: 'profileSlug required (unknown profile)' });
+      }
       const job = await jobStore.createJob({
-        userId: null,
-        profileId: null,
+        userId: ctx.userId,
+        profileId: ctx.profileId,
         requestPayload: {
           jobType: 'comments',
           post: req.body?.post ?? {},
           allowedPersonas: req.body?.allowedPersonas ?? null,
-          profile: req.body?.profile ?? null,
+          profile: ctx.profileForWorker,
+          dataJson: ctx.dataJson,
         },
       });
       res.json({ success: true, jobId: job.id, status: job.status });
@@ -89,13 +95,53 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
 
   router.post('/persona-blurbs/generate', async (req, res) => {
     try {
+      const ctx = await resolveAiJobProfileContext(profileStore, req.body);
+      if (!ctx.profileId) {
+        return res.status(400).json({ error: 'profileSlug required (unknown profile)' });
+      }
       const job = await jobStore.createJob({
-        userId: null,
-        profileId: null,
+        userId: ctx.userId,
+        profileId: ctx.profileId,
         requestPayload: {
           jobType: 'blurbs',
           scores: req.body?.scores ?? {},
-          profile: req.body?.profile ?? null,
+          profile: ctx.profileForWorker,
+          dataJson: ctx.dataJson,
+        },
+      });
+      res.json({ success: true, jobId: job.id, status: job.status });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.post('/generation-jobs/trigger-update', async (req, res) => {
+    try {
+      const slug = String(req.body?.profileSlug || '').trim();
+      const row = slug ? await profileStore.getProfileRowBySlug(slug) : null;
+      if (!row) return res.status(404).json({ error: 'Profile not found' });
+
+      if (await jobStore.hasActiveJob(row.id)) {
+        return res.json({ success: true, alreadyQueued: true });
+      }
+
+      const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
+      const priorPayload = latest?.request_payload;
+      if (!priorPayload || typeof priorPayload !== 'object') {
+        return res.status(400).json({
+          error: 'No prior generation job for this profile — open the Compliant desktop app first.',
+        });
+      }
+
+      const apiProfile = await profileStore.getProfileBySlug(slug);
+      const job = await jobStore.createJob({
+        userId: row.user_id,
+        profileId: row.id,
+        requestPayload: {
+          ...priorPayload,
+          jobType: 'posts',
+          profile: slimProfilePayloadForStorage(apiProfile ?? {}),
+          existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
         },
       });
       res.json({ success: true, jobId: job.id, status: job.status });

@@ -11,6 +11,8 @@ describe('generation job implementation', () => {
     expect(src).toContain("router.post('/comments/suggest'");
     expect(src).toContain("router.post('/persona-blurbs/generate'");
     expect(src).toContain("router.post('/profile/generate-summary'");
+    expect(src).toContain("router.post('/generation-jobs/trigger-update'");
+    expect(src).toContain('resolveAiJobProfileContext');
   });
 
   it('worker calls local LM Studio and hosted API', () => {

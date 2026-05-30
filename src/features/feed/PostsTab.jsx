@@ -153,6 +153,7 @@ function buildEnrichedPosts(profile, { personaBadgePersona }) {
 export default function PostsTab({
   profile,
   feedProfiles = null,
+  aiFeaturesEnabled = true,
   feedContext = 'home',
   isGeneratingPosts = false,
   hideInteractions = false,
@@ -208,7 +209,8 @@ export default function PostsTab({
         >
           <PostCard
             post={p}
-            commenterProfile={profile}
+            commenterProfile={aiFeaturesEnabled ? profile : null}
+            aiSuggestionsEnabled={aiFeaturesEnabled}
             hidePills={hideInteractions}
             isCommentsOpen={hideInteractions ? false : openCommentsPostIds.has(p.id)}
             onToggleComments={

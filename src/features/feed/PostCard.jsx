@@ -104,6 +104,7 @@ export default function PostCard({
   onHighlight,
   /** Logged-in viewer profile for hosted AI comment suggestions */
   commenterProfile = null,
+  aiSuggestionsEnabled = true,
 }) {
   const {
     content,
@@ -291,6 +292,7 @@ export default function PostCard({
             commenterAvatarInitials={DEMO_OTHER_COMMENTER.avatarInitials}
             commenterPersonaBadgePersona={DEMO_OTHER_COMMENTER.personaBadgePersona}
             commenterProfile={commenterProfile}
+            aiSuggestionsEnabled={aiSuggestionsEnabled}
             onOpenProfile={openAuthorProfile}
           />
         ) : null}

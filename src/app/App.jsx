@@ -49,6 +49,14 @@ import { prependPersonaPosts } from '@/lib/postsApi.js';
 import { resolveApiOrigin, resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
 import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
 import {
+  canUseHostedAccountFeatures,
+  clearHostedAccountStorage,
+  fetchLinkedProfile,
+  ingestHostedSessionFromHash,
+  isHostedAccountLinked,
+  readLinkedProfileSlug,
+} from '@/lib/hostedAccount.js';
+import {
   persistProfileSlug,
   readStoredProfileSlug,
   resolveOwnedLandingProfile,
@@ -247,6 +255,7 @@ function AppInner({
   personaDeltas,
   profileScoreReplayNonce,
   handleGeneratePersonaPosts,
+  linkedProfileSlug,
 }) {
   const {
     adjustedScores,
@@ -698,7 +707,13 @@ function AppInner({
   });
   const dashboardBusy = dashboardLayout.actionSlot !== 'timer';
 
+  const accountFeaturesEnabled = useMemo(
+    () => canUseHostedAccountFeatures(profile, linkedProfileSlug, { viewedProfile }),
+    [profile, linkedProfileSlug, viewedProfile],
+  );
+
   return (
+    <PersonaBlurbsProvider profile={profile} accountFeaturesEnabled={accountFeaturesEnabled}>
     <div
       className={`page-outer persona-${personaKey} view-${mainView}`}
       style={{
@@ -732,6 +747,7 @@ function AppInner({
               <HomeTab
                 profile={profile}
                 feedProfiles={feedProfiles}
+                aiFeaturesEnabled={accountFeaturesEnabled}
                 isGeneratingPosts={postGen.phase === 'generating'}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
@@ -796,6 +812,7 @@ function AppInner({
                 adjustedScores={adjustedScores}
                 postGen={postGen}
                 profile={profile}
+                accountFeaturesEnabled={accountFeaturesEnabled}
                 updateTimerLabel={updateTimerLabel}
                 updateRemainingMs={updateRemainingMs}
                 onGeneratePersonaPosts={handleGeneratePersonaPosts}
@@ -828,6 +845,7 @@ function AppInner({
         )}
       </div>
     </div>
+    </PersonaBlurbsProvider>
   );
 }
 
@@ -850,6 +868,7 @@ export default function App() {
   const prevMainViewRef = useRef(null);
   const [landingEnteringProfile, setLandingEnteringProfile] = useState(false);
   const [landingOwnedProfile, setLandingOwnedProfile] = useState(null);
+  const [linkedProfileSlug, setLinkedProfileSlug] = useState(() => readLinkedProfileSlug());
   const landingEnterProfileTimerRef = useRef(null);
 
   const cancelPersonaDeltasClear = useCallback(() => {
@@ -880,7 +899,7 @@ export default function App() {
   );
 
   const handleLandingEnterProfile = useCallback(() => {
-    const owned = landingOwnedProfile ?? profile;
+    const owned = landingOwnedProfile;
     if (landingEnteringProfile || !owned) return;
     const slug = owned.slug || owned.id;
     if (slug) persistProfileSlug(slug);
@@ -891,7 +910,7 @@ export default function App() {
       setLandingEnteringProfile(false);
       setMainView('home');
     }, LANDING_PROFILE_ENTRY_MS);
-  }, [landingEnteringProfile, landingOwnedProfile, profile]);
+  }, [landingEnteringProfile, landingOwnedProfile]);
 
   const handleLandingBrowseFeed = useCallback(() => {
     setMainView('home');
@@ -921,6 +940,9 @@ export default function App() {
       if (stateRes.ok) {
         const state = await stateRes.json();
         if (applyAccountDeletionFromServer(state?.lastDeletionAt)) {
+          clearHostedAccountStorage();
+          clearStoredProfileSlug();
+          setLinkedProfileSlug(null);
           setProfile(null);
           setMainView('landing');
           setPersonaOverride(null);
@@ -940,6 +962,25 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    (async () => {
+      ingestHostedSessionFromHash();
+      const linked = await fetchLinkedProfile();
+      if (cancelled || !linked) return;
+      const slug = linked.slug ?? linked.id;
+      if (slug) {
+        setLinkedProfileSlug(String(slug));
+        persistProfileSlug(slug);
+      }
+      setProfile((prev) => mergeProfileFromApi(prev, linked));
+      setLandingOwnedProfile(linked);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
 
     const load = async () => {
       if (await syncAccountDeletionState()) return;
@@ -955,8 +996,10 @@ export default function App() {
           return;
         }
         setAllProfiles(data);
-        const owned = resolveOwnedLandingProfile(data);
-        if (readStoredProfileSlug() && !owned) {
+        const owned = resolveOwnedLandingProfile(data, linkedProfileSlug);
+        if (linkedProfileSlug && !owned) {
+          /* linked account profile not in public list yet */
+        } else if (!linkedProfileSlug && readStoredProfileSlug() && !owned) {
           clearStoredProfileSlug();
         }
         setLandingOwnedProfile(owned);
@@ -976,7 +1019,7 @@ export default function App() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [syncAccountDeletionState, mainView]);
+  }, [syncAccountDeletionState, mainView, linkedProfileSlug]);
 
   const reloadProfileFromApi = useCallback(async () => {
     const res = await fetch(`${API_ORIGIN}/api/profiles`);
@@ -984,14 +1027,20 @@ export default function App() {
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
     setAllProfiles(data);
-    const incoming = selectProfileBySlug(data, selectedProfileSlug()) ?? data[0];
+    const hosted = isHostedApiOrigin();
+    const pickSlug = linkedProfileSlug || (hosted ? null : selectedProfileSlug());
+    const incoming = pickSlug
+      ? selectProfileBySlug(data, pickSlug)
+      : hosted
+        ? null
+        : data[0];
     let merged = incoming;
     setProfile((prev) => {
-      merged = mergeProfileFromApi(prev, incoming);
+      merged = incoming ? mergeProfileFromApi(prev, incoming) : prev;
       return merged;
     });
     return merged;
-  }, []);
+  }, [linkedProfileSlug]);
 
   const pollHarvestUntilDone = useCallback(async (scoresBefore) => {
     const start = Date.now();
@@ -1235,6 +1284,15 @@ export default function App() {
 
     const hosted = isHostedApiOrigin();
 
+    if (hosted && !isHostedAccountLinked()) {
+      setHarvestError('Open this profile from the Compliant app to generate updates.');
+      return;
+    }
+    if (hosted && !canUseHostedAccountFeatures(profile, linkedProfileSlug)) {
+      setHarvestError('Generation is only available on your linked profile.');
+      return;
+    }
+
     cancelPersonaDeltasClear();
     const scoresBefore = getPersonaScoresNormalized(profile);
     setHarvestError(null);
@@ -1279,6 +1337,21 @@ export default function App() {
     const scoresAfter = getPersonaScoresNormalized(freshProfile ?? {});
     setPersonaDeltas(computePersonaDeltas(scoresBefore, scoresAfter));
 
+    if (hosted) {
+      const slug = freshProfile?.slug ?? freshProfile?.id ?? profile?.slug ?? profile?.id;
+      if (slug) {
+        try {
+          await fetch(`${API_ORIGIN}/api/generation-jobs/trigger-update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profileSlug: slug }),
+          });
+        } catch {
+          /* Electron may have already queued the job */
+        }
+      }
+    }
+
     setPostGen({ loading: true, phase: 'deltas', error: null });
 
     if (hosted) {
@@ -1315,7 +1388,7 @@ export default function App() {
     return (
       <>
         <LandingPage
-          profile={landingOwnedProfile ?? profile}
+          profile={landingOwnedProfile}
           onEnterProfile={handleLandingEnterProfile}
           onBrowseFeed={handleLandingBrowseFeed}
           profileEntryLoading={landingEnteringProfile}
@@ -1326,26 +1399,25 @@ export default function App() {
 
   return (
     <LiveScoringProvider profile={profile}>
-      <PersonaBlurbsProvider profile={profile}>
-        <AppInner
-          mainView={mainView}
-          setMainView={setMainView}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          profile={profile}
-          setProfile={setProfile}
-          allProfiles={allProfiles}
-          personaOverride={personaOverride}
-          setPersonaOverride={setPersonaOverride}
-          postGen={postGen}
-          harvestPhase={harvestPhase}
-          harvestProgress={harvestProgress}
-          harvestError={harvestError}
-          personaDeltas={personaDeltas}
-          profileScoreReplayNonce={profileScoreReplayNonce}
-          handleGeneratePersonaPosts={handleGeneratePersonaPosts}
-        />
-      </PersonaBlurbsProvider>
+      <AppInner
+        mainView={mainView}
+        setMainView={setMainView}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        profile={profile}
+        setProfile={setProfile}
+        allProfiles={allProfiles}
+        personaOverride={personaOverride}
+        setPersonaOverride={setPersonaOverride}
+        postGen={postGen}
+        harvestPhase={harvestPhase}
+        harvestProgress={harvestProgress}
+        harvestError={harvestError}
+        personaDeltas={personaDeltas}
+        profileScoreReplayNonce={profileScoreReplayNonce}
+        handleGeneratePersonaPosts={handleGeneratePersonaPosts}
+        linkedProfileSlug={linkedProfileSlug}
+      />
     </LiveScoringProvider>
   );
 }

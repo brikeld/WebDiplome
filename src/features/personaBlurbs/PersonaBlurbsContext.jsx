@@ -14,7 +14,7 @@ function hasAllBlurbs(blurbs) {
   return blurbs?.productivity && blurbs?.security && blurbs?.social;
 }
 
-export function PersonaBlurbsProvider({ profile, children }) {
+export function PersonaBlurbsProvider({ profile, accountFeaturesEnabled = true, children }) {
   const profileId = profileIdFromProfile(profile);
   const { adjustedScores } = useLiveScoring();
   const [blurbs, setBlurbs] = useState(() => loadPersonaBlurbs(profileId));
@@ -29,6 +29,7 @@ export function PersonaBlurbsProvider({ profile, children }) {
   }, [profileId]);
 
   const ensureBlurbs = useCallback(() => {
+    if (!accountFeaturesEnabled) return;
     if (!profileId || inflightRef.current || hasAllBlurbs(blurbs)) return;
 
     const cached = loadPersonaBlurbs(profileId);
@@ -56,7 +57,7 @@ export function PersonaBlurbsProvider({ profile, children }) {
         inflightRef.current = false;
         setLoading(false);
       });
-  }, [profileId, blurbs, adjustedScores, profile]);
+  }, [profileId, blurbs, adjustedScores, profile, accountFeaturesEnabled]);
 
   const value = useMemo(
     () => ({

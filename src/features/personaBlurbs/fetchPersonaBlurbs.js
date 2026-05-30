@@ -1,4 +1,5 @@
-import { isHostedApiOrigin, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
+import { isHostedApiOrigin, profileSlugFromProfile, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
+import { canUseHostedAccountFeatures, isHostedAccountLinked, readLinkedProfileSlug } from '@/lib/hostedAccount.js';
 import { resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
 
 const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
@@ -27,8 +28,17 @@ export async function fetchPersonaBlurbs(scores, profile) {
   };
   const slimProfile = slimProfileForAiRequest(profile);
   if (slimProfile) body.profile = slimProfile;
+  const profileSlug = profileSlugFromProfile(profile);
+  if (profileSlug) body.profileSlug = profileSlug;
 
   if (isHostedApiOrigin()) {
+    if (!isHostedAccountLinked()) {
+      throw new Error('Open this profile from the Compliant app to generate persona blurbs.');
+    }
+    const linkedSlug = readLinkedProfileSlug();
+    if (!canUseHostedAccountFeatures(profile, linkedSlug)) {
+      throw new Error('Persona blurbs are only available on your linked profile.');
+    }
     const result = await submitQueuedAiEndpoint('/api/persona-blurbs/generate', body);
     const raw = result?.blurbs && typeof result.blurbs === 'object' ? result.blurbs : result;
     return mapBlurbs(raw ?? {});

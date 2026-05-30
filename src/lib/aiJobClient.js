@@ -19,6 +19,12 @@ export function slimProfileForAiRequest(profile) {
   return rest;
 }
 
+export function profileSlugFromProfile(profile) {
+  if (!profile || typeof profile !== 'object') return null;
+  const slug = profile.slug ?? profile.id;
+  return slug ? String(slug).trim() : null;
+}
+
 export async function pollGenerationJob(jobId, {
   pollMs = 2000,
   timeoutMs = 180000,
