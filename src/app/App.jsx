@@ -177,6 +177,33 @@ const PERSONA_DELTA_DISPLAY_MS = 7000;
 const PERSONA_RING_DELTA_CLEAR_MS = 15_000;
 const POST_GEN_IDLE = { loading: false, phase: 'idle', error: null };
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function pollProfileUntilGenerationComplete(initialProfile, reloadProfileFromApi, {
+  pollMs = 3000,
+  timeoutMs = 180000,
+} = {}) {
+  const initialPostCount = Array.isArray(initialProfile?.personaPosts)
+    ? initialProfile.personaPosts.length
+    : 0;
+  const hadBio = Boolean(
+    String(initialProfile?.profileSummary || initialProfile?.userDescription || '').trim(),
+  );
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const fresh = await reloadProfileFromApi();
+    if (!fresh) break;
+    const bio = String(fresh.profileSummary || fresh.userDescription || '').trim();
+    const posts = Array.isArray(fresh.personaPosts) ? fresh.personaPosts : [];
+    if (!hadBio && bio && posts.length > 0) return fresh;
+    if (posts.length > initialPostCount) return fresh;
+    await sleep(pollMs);
+  }
+  throw new Error('Generation timed out — is your AI PC worker running?');
+}
+
 function computePersonaDeltas(before, after) {
   if (!before || !after) return null;
   const keys = ['productivity', 'security', 'social'];
@@ -1179,13 +1206,34 @@ export default function App() {
     }
   }, [profile, reloadProfileFromApi, schedulePersonaDeltasClearAfterGenerate]);
 
+  const runBioAndPostGenerationRef = useRef(runBioAndPostGeneration);
+  useEffect(() => {
+    runBioAndPostGenerationRef.current = runBioAndPostGeneration;
+  }, [runBioAndPostGeneration]);
+
+  const autoPostGenProfileIdRef = useRef(null);
+
+  // Local dev only: after Electron syncs a bio with no posts, stream generation from :3010.
+  useEffect(() => {
+    if (isHostedApiOrigin()) return;
+    if (!profile || postGen.loading) return;
+    const profileId = profile.slug ?? profile.id;
+    if (!profileId || autoPostGenProfileIdRef.current === profileId) return;
+    const bio = String(profile.profileSummary || profile.userDescription || '').trim();
+    const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
+    if (!bio || posts.length > 0) return;
+    autoPostGenProfileIdRef.current = profileId;
+    setPostGen({ loading: true, phase: 'generating', error: null });
+    runBioAndPostGenerationRef.current(profile).catch((e) => {
+      autoPostGenProfileIdRef.current = null;
+      setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
+    });
+  }, [profile, postGen.loading]);
+
   const handleGeneratePersonaPosts = async () => {
     if (postGen.loading || harvestPhase === 'harvesting' || !profile) return;
 
-    if (isHostedApiOrigin()) {
-      setHarvestError('Post generation runs from the Compliant desktop app (Generate button). Keep your AI PC worker running.');
-      return;
-    }
+    const hosted = isHostedApiOrigin();
 
     cancelPersonaDeltasClear();
     const scoresBefore = getPersonaScoresNormalized(profile);
@@ -1232,6 +1280,25 @@ export default function App() {
     setPersonaDeltas(computePersonaDeltas(scoresBefore, scoresAfter));
 
     setPostGen({ loading: true, phase: 'deltas', error: null });
+
+    if (hosted) {
+      await new Promise((r) => setTimeout(r, PERSONA_DELTA_DISPLAY_MS));
+      setPostGen((prev) => {
+        if (!prev.loading || prev.phase !== 'deltas') return prev;
+        return { ...prev, phase: 'generating' };
+      });
+      try {
+        await pollProfileUntilGenerationComplete(freshProfile, reloadProfileFromApi);
+        await reloadProfileFromApi();
+        setPostGen(POST_GEN_IDLE);
+        schedulePersonaDeltasClearAfterGenerate();
+      } catch (e) {
+        setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
+        schedulePersonaDeltasClearAfterGenerate();
+      }
+      return;
+    }
+
     const generationPromise = runBioAndPostGeneration(freshProfile);
 
     await new Promise((r) => setTimeout(r, PERSONA_DELTA_DISPLAY_MS));
