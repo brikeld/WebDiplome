@@ -14,6 +14,18 @@
 
 This plan is intentionally an MVP for a short public critique/demo. It does not add Apple signing, automatic updates, private profiles, payments, moderation, or long-term analytics. The plan keeps local JSON mode working when Supabase environment variables are absent, so the existing local demo is not blocked while hosted mode is added.
 
+## Amendment (2026-05-30): Login-free plug-and-play accounts
+
+The original plan used email/password accounts (Tasks 4 and 9). This was changed to **anonymous, device-based identities** so the desktop app is true plug-and-play: a user only downloads the app and accepts consent — no email, no password.
+
+Implemented changes:
+- WebDiplome `server/routes/authRoutes.js`: added `POST /api/auth/anonymous` (`supabase.auth.signInAnonymously()`) and `POST /api/auth/refresh` (`refreshSession`). The `/signup` and `/login` routes remain for optional manual accounts but are no longer used by the app.
+- Electron `main.js`: `WEBDIPLOME_API_ORIGIN` / `WEBDIPLOME_BASE_URL` now default to the hosted Railway API (`https://webdiplome-production.up.railway.app`) instead of `localhost:3001`, so distributed builds work with no env vars. Override with `WEBDIPLOME_API_ORIGIN=http://localhost:3001` for local dev.
+- Electron `renderer/app.js`: removed the email/password screen flow. On startup the app silently calls `ensureAnonymousSession()`; `hostedFetch` auto-recovers from expired tokens via `reauthenticate()` (refresh token first, then a fresh anonymous account).
+- Electron `renderer/index.html`: removed `#screen-account`; consent copy states the device gets an anonymous public identity with no login.
+
+Operational requirement: **"Allow anonymous sign-ins" must be enabled** in the Supabase dashboard (Authentication → Sign In / Providers). RLS is unchanged — anonymous users are still real `auth.users` rows with `role = authenticated`, so owner-only writes and public reads work as before.
+
 ## File Structure
 
 ### WebDiplome
