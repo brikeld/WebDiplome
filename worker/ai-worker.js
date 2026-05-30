@@ -89,12 +89,32 @@ async function processJob(job) {
   return posts.filter(Boolean);
 }
 
+async function loop() {
+  console.log(`[worker] started — API ${API} — polling every ${POLL_MS / 1000}s`);
+  let idleTicks = 0;
+  for (;;) {
+    try {
+      const hadJob = await tick();
+      if (hadJob) idleTicks = 0;
+      else {
+        idleTicks += 1;
+        if (idleTicks === 1 || idleTicks % 12 === 0) {
+          console.log('[worker] waiting for generation jobs…');
+        }
+      }
+    } catch (err) {
+      console.error('[worker] tick failed:', err.message);
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+  }
+}
+
 async function tick() {
   if (!TOKEN) throw new Error('AI_WORKER_TOKEN is required');
   const { job } = await fetchJson(`${API}/api/worker/jobs/next?worker=${encodeURIComponent(WORKER_NAME)}`, {
     headers: headers(),
   });
-  if (!job) return;
+  if (!job) return false;
 
   try {
     const posts = await processJob(job);
@@ -112,17 +132,8 @@ async function tick() {
     }).catch(() => {});
     console.error(`[worker] failed ${job.id}:`, err.message);
   }
+  return true;
 }
 
-async function loop() {
-  for (;;) {
-    try {
-      await tick();
-    } catch (err) {
-      console.error('[worker] tick failed:', err.message);
-    }
-    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
-  }
-}
-
+// loop() is started at the bottom of this file
 loop();
