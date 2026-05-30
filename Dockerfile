@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 # Native deps for sharp (chart generation) on Linux
 RUN apt-get update && apt-get install -y --no-install-recommends \
