@@ -11,7 +11,18 @@ function throwIfError(result, label) {
   return result?.data;
 }
 
-export function createPublicProfileStore(supabase) {
+function parseWallpaperBase64(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  const match = raw.match(/^data:([^;]+);base64,(.+)$/i);
+  if (!match) return null;
+  const mime = match[1] || 'image/jpeg';
+  const buffer = Buffer.from(match[2], 'base64');
+  if (!buffer.length) return null;
+  return { mime, buffer };
+}
+
+export function createPublicProfileStore(supabase, { storageStore } = {}) {
   if (!supabase) throw new Error('Supabase service client required');
 
   async function findProfileByUserId(userId) {
@@ -34,6 +45,24 @@ export function createPublicProfileStore(supabase) {
     return (data ?? []).map(mapPostRowForApi);
   }
 
+  async function resolveWallpaperUrl(userId, payload, existing) {
+    const directUrl = String(payload?.wallpaperUrl ?? payload?.wallpaper_url ?? '').trim();
+    if (directUrl) return directUrl;
+
+    const parsed = parseWallpaperBase64(payload?.wallpaperBase64 ?? payload?.wallpaper_base64);
+    if (parsed && storageStore) {
+      const asset = await storageStore.uploadPublicAsset({
+        ownerUserId: userId,
+        buffer: parsed.buffer,
+        originalName: 'profile.jpg',
+        mimeType: parsed.mime,
+      });
+      return asset.url;
+    }
+
+    return existing?.wallpaper_url ?? null;
+  }
+
   return {
     async getProfileByUserId(userId) {
       const row = await findProfileByUserId(userId);
@@ -49,6 +78,7 @@ export function createPublicProfileStore(supabase) {
       if (!incomingSummary && existing?.profile_summary) {
         row.profile_summary = existing.profile_summary;
       }
+      row.wallpaper_url = await resolveWallpaperUrl(userId, payload, existing);
       const saved = throwIfError(
         await supabase.from('profiles').upsert(row, { onConflict: 'user_id' }).select('*').single(),
         'upsert profile',

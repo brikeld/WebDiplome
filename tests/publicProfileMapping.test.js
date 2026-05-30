@@ -3,6 +3,7 @@ import {
   buildProfileSlug,
   mapSyncPayloadToProfileRow,
   mapPostForInsert,
+  slimProfilePayloadForStorage,
 } from '../server/lib/publicProfileMapping.js';
 
 describe('public profile mapping', () => {
@@ -37,6 +38,17 @@ describe('public profile mapping', () => {
       wallpaper_url: 'https://cdn/wallpaper.jpg',
     });
     expect(row.raw_profile.firstname).toBe('Ada');
+  });
+
+  it('strips wallpaper base64 from stored raw_profile', () => {
+    const slim = slimProfilePayloadForStorage({
+      firstname: 'Ada',
+      wallpaperBase64: 'data:image/jpeg;base64,' + 'A'.repeat(5000),
+      personaPosts: [{ content: 'hi' }],
+    });
+    expect(slim.firstname).toBe('Ada');
+    expect(slim.wallpaperBase64).toBeUndefined();
+    expect(slim.personaPosts).toBeUndefined();
   });
 
   it('maps posts for insert without losing attached assets or leaderboard data', () => {

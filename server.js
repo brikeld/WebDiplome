@@ -82,11 +82,11 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 // When Supabase keys are present, mount the public multi-user demo API backed by
 // Supabase Postgres + Storage. Otherwise fall back to the local file-backed routes.
 if (serverConfig.hostedMode) {
-  const profileStore = createPublicProfileStore(supabaseClients.service);
   const storageStore = createStorageStore({
     supabase: supabaseClients.service,
     publicBaseUrl: serverConfig.publicBaseUrl,
   });
+  const profileStore = createPublicProfileStore(supabaseClients.service, { storageStore });
   const jobStore = createGenerationJobStore(supabaseClients.service);
 
   app.use('/api/auth', createAuthRoutes({ supabaseAnon: supabaseClients.anon }));

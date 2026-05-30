@@ -27,6 +27,17 @@ function displayNameFromPayload(payload) {
   return [first, last].filter(Boolean).join(' ') || 'Demo User';
 }
 
+/** Drop huge/redundant fields before persisting raw_profile (wallpaper → wallpaper_url only). */
+export function slimProfilePayloadForStorage(payload) {
+  if (!payload || typeof payload !== 'object') return {};
+  const out = { ...payload };
+  delete out.wallpaperBase64;
+  delete out.wallpaper_base64;
+  delete out.personaPosts;
+  delete out.persona_posts;
+  return out;
+}
+
 export function mapSyncPayloadToProfileRow(payload, userId, slug) {
   const first = String(payload?.firstname ?? payload?.firstName ?? '').trim();
   const last = String(payload?.lastname ?? payload?.lastName ?? '').trim();
@@ -44,7 +55,7 @@ export function mapSyncPayloadToProfileRow(payload, userId, slug) {
     dominant_persona: payload?.dominantPersona ?? payload?.dominant_persona ?? null,
     profile_summary: String(payload?.profileSummary ?? payload?.userDescription ?? '').trim(),
     wallpaper_url: payload?.wallpaperUrl ?? payload?.wallpaper_url ?? null,
-    raw_profile: payload && typeof payload === 'object' ? payload : {},
+    raw_profile: slimProfilePayloadForStorage(payload),
     collected_at: payload?.collectedAt ?? payload?.collected_at ?? null,
     updated_at: new Date().toISOString(),
   };

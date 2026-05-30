@@ -1,6 +1,17 @@
 import express from 'express';
 import { requireHostedUser, requireWorker } from '../lib/auth.js';
 
+import { slimProfilePayloadForStorage } from '../lib/publicProfileMapping.js';
+
+function slimGenerationRequestPayload(payload) {
+  if (!payload || typeof payload !== 'object') return {};
+  const out = { ...payload };
+  if (out.profile && typeof out.profile === 'object') {
+    out.profile = slimProfilePayloadForStorage(out.profile);
+  }
+  return out;
+}
+
 export function createGenerationJobRoutes({ config, supabaseService, profileStore, jobStore }) {
   const router = express.Router();
   const requireUser = requireHostedUser(supabaseService);
@@ -16,7 +27,7 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       const job = await jobStore.createJob({
         userId: req.authUser.id,
         profileId: profile.id,
-        requestPayload: req.body?.requestPayload ?? {},
+        requestPayload: slimGenerationRequestPayload(req.body?.requestPayload ?? {}),
       });
       res.json({ success: true, jobId: job.id, status: job.status });
     } catch (err) {

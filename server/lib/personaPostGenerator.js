@@ -130,7 +130,15 @@ async function fetchJsonWithTimeout(url, options, timeoutMs) {
   }
 }
 
-function buildChatBody({ model, systemPrompt, userPayload, imageData, docText, docFilename, maxTokens = 900, temperature = 0.7 }) {
+/** Omit max_tokens from API calls unless LM_STUDIO_MAX_TOKENS is set — LM Studio then uses your server UI limits (e.g. full context). */
+function resolveMaxTokens() {
+  const env = process.env.LM_STUDIO_MAX_TOKENS;
+  if (env == null || String(env).trim() === '') return null;
+  const n = parseInt(env, 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function buildChatBody({ model, systemPrompt, userPayload, imageData, docText, docFilename, maxTokens: _maxTokensIgnored, temperature = 0.7 }) {
   let userContent;
   if (imageData) {
     userContent = [
@@ -142,17 +150,19 @@ function buildChatBody({ model, systemPrompt, userPayload, imageData, docText, d
   } else {
     userContent = userPayload;
   }
-  return {
+  const body = {
     model,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userContent },
     ],
     temperature,
-    max_tokens: maxTokens,
     enable_thinking: false,
     response_format: { type: 'json_object' },
   };
+  const resolvedMaxTokens = resolveMaxTokens();
+  if (resolvedMaxTokens != null) body.max_tokens = resolvedMaxTokens;
+  return body;
 }
 
 async function lmChatCompletion({ baseUrl, timeoutMs, retries, body }) {
