@@ -35,10 +35,20 @@ export function createPublicProfileStore(supabase) {
   }
 
   return {
+    async getProfileByUserId(userId) {
+      const row = await findProfileByUserId(userId);
+      if (!row) return null;
+      return mapProfileRowForApi(row, await readPosts(row.id));
+    },
+
     async upsertProfileSync({ userId, payload, replacePosts = false }) {
       const existing = await findProfileByUserId(userId);
       const slug = existing?.slug ?? buildProfileSlug(payload?.firstname, payload?.lastname, userId);
       const row = mapSyncPayloadToProfileRow(payload, userId, slug);
+      const incomingSummary = String(payload?.profileSummary ?? payload?.userDescription ?? '').trim();
+      if (!incomingSummary && existing?.profile_summary) {
+        row.profile_summary = existing.profile_summary;
+      }
       const saved = throwIfError(
         await supabase.from('profiles').upsert(row, { onConflict: 'user_id' }).select('*').single(),
         'upsert profile',
@@ -93,6 +103,22 @@ export function createPublicProfileStore(supabase) {
         'append posts',
       );
       return (inserted ?? []).map(mapPostRowForApi);
+    },
+
+    async updateProfileSummary({ profileId, userId, profileSummary }) {
+      const summary = String(profileSummary ?? '').trim();
+      if (!summary) return null;
+      const updated = throwIfError(
+        await supabase
+          .from('profiles')
+          .update({ profile_summary: summary, updated_at: new Date().toISOString() })
+          .eq('id', profileId)
+          .eq('user_id', userId)
+          .select('*')
+          .maybeSingle(),
+        'update profile summary',
+      );
+      return updated ?? null;
     },
 
     async latestRelease(platform = 'mac') {

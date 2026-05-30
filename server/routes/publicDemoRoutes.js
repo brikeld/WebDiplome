@@ -26,6 +26,16 @@ export function createPublicDemoRoutes({ supabaseService, profileStore, storageS
     }
   });
 
+  router.get('/profile/me', requireUser, async (req, res) => {
+    try {
+      const profile = await profileStore.getProfileByUserId(req.authUser.id);
+      if (!profile) return res.status(404).json({ error: 'Profile not found' });
+      res.json({ success: true, profile });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   router.post('/profile/sync', requireUser, async (req, res) => {
     try {
       const profile = await profileStore.upsertProfileSync({

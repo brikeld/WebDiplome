@@ -86,7 +86,10 @@ async function processJob(job) {
     chartUploadDir: null,
   });
 
-  return posts.filter(Boolean);
+  return {
+    posts: posts.filter(Boolean),
+    profileSummary: String(profileSummary || '').trim(),
+  };
 }
 
 async function loop() {
@@ -117,11 +120,11 @@ async function tick() {
   if (!job) return false;
 
   try {
-    const posts = await processJob(job);
+    const { posts, profileSummary } = await processJob(job);
     await fetchJson(`${API}/api/worker/jobs/${job.id}/complete`, {
       method: 'POST',
       headers: headers(),
-      body: JSON.stringify({ posts }),
+      body: JSON.stringify({ posts, profileSummary }),
     });
     console.log(`[worker] completed ${job.id} with ${posts.length} posts`);
   } catch (err) {

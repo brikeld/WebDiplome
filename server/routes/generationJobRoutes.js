@@ -36,11 +36,20 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
 
   router.post('/worker/jobs/:id/complete', requireAiWorker, async (req, res) => {
     try {
-      const job = await jobStore.completeJob({ jobId: req.params.id, posts: req.body?.posts ?? [] });
+      const posts = req.body?.posts ?? [];
+      const profileSummary = req.body?.profileSummary ?? req.body?.profile_summary ?? '';
+      const job = await jobStore.completeJob({ jobId: req.params.id, posts });
+      if (profileSummary) {
+        await profileStore.updateProfileSummary({
+          profileId: job.profile_id,
+          userId: job.user_id,
+          profileSummary,
+        });
+      }
       await profileStore.appendPosts({
         profileId: job.profile_id,
         userId: job.user_id,
-        posts: req.body?.posts ?? [],
+        posts,
         source: 'generated',
       });
       res.json({ success: true });
