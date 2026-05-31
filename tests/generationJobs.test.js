@@ -8,6 +8,7 @@ describe('generation job implementation', () => {
     expect(src).toContain("router.post('/worker/jobs/:id/progress'");
     expect(src).toContain("router.post('/worker/jobs/:id/complete'");
     expect(src).toContain("router.post('/worker/jobs/:id/fail'");
+    expect(src).toContain("router.post('/worker/upload'");
     expect(src).toContain("router.get('/generation-jobs/:id'");
     expect(src).toContain("router.post('/comments/suggest'");
     expect(src).toContain("router.post('/persona-blurbs/generate'");

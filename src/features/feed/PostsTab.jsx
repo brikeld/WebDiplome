@@ -48,9 +48,13 @@ function postStableKey(p, fallbackIndex) {
 function resolveAttachedAsset(asset) {
   if (!asset || typeof asset !== 'object') return null;
   const kind = asset.kind === 'document' ? 'document' : 'image';
-  const url = asset.url ?? null;
+  let url = asset.url ?? null;
+  if (!url && asset.filename) url = `/uploads/${asset.filename}`;
+  if (url && !/^https?:\/\//i.test(url) && !url.startsWith('/')) {
+    url = `/uploads/${url}`;
+  }
   if (!url) return null;
-  const absolute = /^https?:\/\//i.test(url) ? url : `${API_ORIGIN}${url}`;
+  const absolute = /^https?:\/\//i.test(url) ? url : `${API_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
   return {
     kind,
     url: absolute,

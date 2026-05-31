@@ -1,8 +1,11 @@
 import express from 'express';
+import multer from 'multer';
 import { requireHostedUser, requireWorker } from '../lib/auth.js';
 
 import { slimProfilePayloadForStorage } from '../lib/publicProfileMapping.js';
 import { resolveCommenterProfileContext, resolveSubjectProfileContext } from '../lib/aiJobProfile.js';
+
+const workerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 function slimGenerationRequestPayload(payload) {
   if (!payload || typeof payload !== 'object') return {};
@@ -17,7 +20,7 @@ function slimGenerationRequestPayload(payload) {
   return out;
 }
 
-export function createGenerationJobRoutes({ config, supabaseService, profileStore, jobStore }) {
+export function createGenerationJobRoutes({ config, supabaseService, profileStore, jobStore, storageStore }) {
   const router = express.Router();
   const requireUser = requireHostedUser(supabaseService);
   const requireAiWorker = requireWorker(config);
@@ -218,6 +221,29 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         }),
       });
       res.json({ success: true, jobId: job.id, status: job.status });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.post('/worker/upload', requireAiWorker, workerUpload.single('file'), async (req, res) => {
+    try {
+      if (!storageStore) {
+        return res.status(503).json({ error: 'Storage not configured' });
+      }
+      if (!req.file) return res.status(400).json({ error: 'missing file' });
+      const ownerUserId = req.body?.userId ?? req.body?.user_id ?? null;
+      const asset = await storageStore.uploadPublicAsset({
+        ownerUserId,
+        buffer: req.file.buffer,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+      });
+      res.json({
+        filename: asset.filename,
+        url: asset.url,
+        mime: asset.mimeType,
+      });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

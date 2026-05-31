@@ -693,8 +693,8 @@ function buildAssetSlot(baseUserPayload, assetAssignment) {
   slot.attachedAsset = {
     kind: asset.kind,
     filename: asset.filename,
-    relativePath: null,
-    url: null,
+    relativePath: asset.relativePath ?? null,
+    url: asset.url ?? null,
     mime: asset.mime ?? 'application/octet-stream',
   };
 
@@ -747,7 +747,7 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
 
 // ─── Slot runner ───────────────────────────────────────────────────────────
 
-async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
+async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFallback = false }) {
   const promptCfg = SP[slot.promptKey] ?? DEFAULT_SLOT_PROMPTS.browser;
   const systemPrompt = injectInferenceChainInstruction(promptCfg.system);
   const maxTokens = Math.max(promptCfg.maxTokens || 900, 2100);
@@ -808,7 +808,7 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
     parsed = parsePostResponse(extractChoiceText(await lmChatCompletion({ baseUrl, timeoutMs, retries, body })), slot.persona);
   }
 
-  if (parsed.content && !postMetadataComplete(parsed)) {
+  if (parsed.content && !postMetadataComplete(parsed) && !preferMetadataFallback) {
     try {
       const extra = await fetchPostMetadataOnly({
         slot,
@@ -913,8 +913,10 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP }) {
  * @param {object|null} opts.profile              - WebDiplome profile (for chart builders needing scores/storage)
  * @param {object[]}    opts.existingPosts         - current posts array (for recency guard)
  * @param {string|null} [opts.chartUploadDir]     - absolute dir to write chart PNG
+ * @param {boolean}     [opts.skipLeaderboard]     - omit rank-change post (first setup)
+ * @param {boolean}     [opts.preferMetadataFallback] - skip extra LM call for inferenceChain metadata
  * @param {function}    [opts.onEachPost]
- * @returns {Promise<(object|null)[]>} four entries [text, asset, chart, leaderboard]; null = slot failed or (leaderboard) no rank change
+ * @returns {Promise<(object|null)[]>} up to four entries [text, asset, chart, leaderboard]
  */
 export async function generatePersonaPosts({
   baseUrl,
@@ -928,6 +930,8 @@ export async function generatePersonaPosts({
   profile,
   existingPosts = [],
   chartUploadDir,
+  skipLeaderboard = false,
+  preferMetadataFallback = false,
   onEachPost,
 }) {
   const SP = promptsParam?.slotPrompts ?? DEFAULT_SLOT_PROMPTS;
@@ -936,20 +940,21 @@ export async function generatePersonaPosts({
   const chartSlot = await buildChartSlot(dataJson, profile, userPayload, existingPosts, chartUploadDir, personaScores);
   const textSlot = buildTextSlot(dataJson, userPayload, existingPosts, SP, personaScores);
   const assetSlot = buildAssetSlot(userPayload, assetAssignment);
-  const leaderboardSlot = buildLeaderboardSlot(
-    dataJson, profile, userPayload, existingPosts, Date.now(),
-  );
+  const leaderboardSlot = skipLeaderboard
+    ? null
+    : buildLeaderboardSlot(dataJson, profile, userPayload, existingPosts, Date.now());
 
   const slots = [textSlot, assetSlot, chartSlot, leaderboardSlot]
     .map((s) => (s ? { ...s, _model: model } : null));
 
   const results = new Array(slots.length).fill(null);
+  const slotRunOpts = { baseUrl, timeoutMs, retries, SP, preferMetadataFallback };
 
   for (let index = 0; index < slots.length; index += 1) {
     const slot = slots[index];
     if (!slot) continue;
     try {
-      const post = await runSlot(slot, { baseUrl, timeoutMs, retries, SP });
+      const post = await runSlot(slot, slotRunOpts);
       if (!post?.content) continue;
       results[index] = post;
       if (typeof onEachPost === 'function') {

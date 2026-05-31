@@ -11,13 +11,6 @@ import {
   normalizeProfilePayload,
 } from './server/lib/profileNormalization.js';
 import {
-  getHarvestStatus,
-  requestHarvest,
-  markHarvestRunning,
-  pushHarvestProgress,
-  completeHarvest,
-  failHarvest,
-  ackHarvest,
   resetHarvestSession,
 } from './server/lib/harvestSession.js';
 import {
@@ -41,6 +34,7 @@ import { createStorageStore } from './server/lib/storageStore.js';
 import { buildPublicLeaderboards } from './server/lib/publicLeaderboards.js';
 import { createGenerationJobStore } from './server/lib/generationJobStore.js';
 import { createGenerationJobRoutes } from './server/routes/generationJobRoutes.js';
+import { createHarvestRoutes } from './server/routes/harvestRoutes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
@@ -75,8 +69,25 @@ await fs.mkdir(PROFILES_DIR, { recursive: true });
 await fs.mkdir(POSTS_DIR, { recursive: true });
 await fs.mkdir(UPLOADS_DIR, { recursive: true });
 
-// Serve uploaded media files
-app.use('/uploads', express.static(UPLOADS_DIR));
+// Harvest + account-state: always mounted (hosted web UI + Electron remote collect).
+app.use('/api', createHarvestRoutes());
+
+app.get('/api/account-state', async (_req, res) => {
+  try {
+    if (serverConfig.hostedMode) {
+      return res.json({ lastDeletionAt: 0, deletedProfileIds: [] });
+    }
+    const state = await readAccountState(PROFILES_DIR);
+    res.json(state);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Serve uploaded media files (local dev only; hosted uses Supabase Storage URLs).
+if (!serverConfig.hostedMode) {
+  app.use('/uploads', express.static(UPLOADS_DIR));
+}
 
 // ── Hosted (Supabase, multi-user) mode ──────────────────────────────────────
 // When Supabase keys are present, mount the public multi-user demo API backed by
@@ -101,6 +112,7 @@ if (serverConfig.hostedMode) {
     supabaseService: supabaseClients.service,
     profileStore,
     jobStore,
+    storageStore,
   }));
   console.log('[hosted] Supabase public demo routes enabled');
 } else {
@@ -224,16 +236,6 @@ app.post('/api/profile', async (req, res) => {
   }
 });
 
-// GET /api/account-state — deletion epoch for clearing browser live-scoring state
-app.get('/api/account-state', async (_req, res) => {
-  try {
-    const state = await readAccountState(PROFILES_DIR);
-    res.json(state);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // DELETE /api/account — wipe all profiles, posts, and harvest session (full reset)
 app.delete('/api/account', async (req, res) => {
   const body = req.body ?? {};
@@ -328,46 +330,6 @@ app.get('/api/profile/:id', async (req, res) => {
     }
     res.status(500).json({ error: err.message });
   }
-});
-
-// ── Harvest orchestration (WebDiplome UI ↔ Electron collector) ─────────────
-app.post('/api/harvest/request', (req, res) => {
-  const scoresBefore = req.body?.scoresBefore ?? req.body?.scores_before ?? null;
-  const dynamicOnly = req.body?.dynamicOnly ?? req.body?.dynamic_only ?? false;
-  const result = requestHarvest(scoresBefore, { dynamicOnly });
-  if (!result.ok) return res.status(409).json(result);
-  res.json({ success: true, ...getHarvestStatus() });
-});
-
-app.get('/api/harvest/status', (_req, res) => {
-  res.json(getHarvestStatus());
-});
-
-app.post('/api/harvest/running', (_req, res) => {
-  const result = markHarvestRunning();
-  if (!result.ok) return res.status(409).json(result);
-  res.json({ success: true, ...getHarvestStatus() });
-});
-
-app.post('/api/harvest/progress', (req, res) => {
-  pushHarvestProgress(req.body ?? {});
-  res.json({ success: true, ...getHarvestStatus() });
-});
-
-app.post('/api/harvest/complete', (req, res) => {
-  const scoresAfter = req.body?.scoresAfter ?? req.body?.scores_after ?? null;
-  completeHarvest(scoresAfter);
-  res.json({ success: true, ...getHarvestStatus() });
-});
-
-app.post('/api/harvest/error', (req, res) => {
-  failHarvest(req.body?.error || req.body?.message || 'Harvest failed');
-  res.json({ success: true, ...getHarvestStatus() });
-});
-
-app.post('/api/harvest/ack', (_req, res) => {
-  ackHarvest();
-  res.json({ success: true, ...getHarvestStatus() });
 });
 
 // POST /api/profile/:id/posts/prepend — persist system or generated posts at feed head

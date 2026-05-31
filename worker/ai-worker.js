@@ -5,6 +5,7 @@ import { generatePersonaPosts, generateUserSummary } from '../server/lib/persona
 import { generateCommentSuggestions } from '../server/lib/commentSuggestions.js';
 import { generatePersonaBlurbs } from '../server/lib/personaBlurbs.js';
 import { loadPrompts } from '../server/lib/prompts.js';
+import { buildLmUserPayload } from '../server/lib/compactHarvestData.js';
 import { ensureLmModelLoaded } from '../server/lib/lmStudioLoad.js';
 
 const API = String(process.env.WEBDIPLOME_API_ORIGIN || 'http://localhost:3001').replace(/\/$/, '');
@@ -47,11 +48,12 @@ async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
   if (!assetCandidate?.url) return null;
   const assetUrl = assetCandidate.url.startsWith('http')
     ? assetCandidate.url
-    : `${API}${assetCandidate.url}`;
+    : `${API}${assetCandidate.url.startsWith('/') ? '' : '/'}${assetCandidate.url}`;
   const res = await fetch(assetUrl);
   if (!res.ok) return null;
   const buf = Buffer.from(await res.arrayBuffer());
   const mime = assetCandidate.mime || res.headers.get('content-type') || 'image/jpeg';
+  const filename = assetCandidate.filename || path.basename(assetUrl.split('?')[0]) || 'asset';
   if (String(mime).startsWith('image/')) {
     return {
       persona: targetPersona || 'popularite',
@@ -59,7 +61,8 @@ async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
         kind: 'image',
         base64: buf.toString('base64'),
         mime,
-        filename: assetCandidate.filename || 'asset',
+        filename,
+        url: assetUrl,
       },
     };
   }
@@ -69,7 +72,8 @@ async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
       kind: 'document',
       text: buf.toString('utf8'),
       mime,
-      filename: assetCandidate.filename || 'document',
+      filename,
+      url: assetUrl,
     },
   };
 }
@@ -79,25 +83,25 @@ function resolveDataJson(payload) {
 }
 
 function buildUserPayload(user, dataJson) {
-  const u = user && typeof user === 'object' ? user : {};
-  if (dataJson && typeof dataJson === 'object' && Object.keys(dataJson).length > 0) {
-    return JSON.stringify({ user: u, profile: dataJson });
-  }
-  return JSON.stringify({ user: u });
+  return buildLmUserPayload(user, dataJson);
 }
 
-async function uploadFileToHostedApi(localPath, filename) {
-  const buf = await fs.readFile(localPath);
+async function uploadBufferToHostedApi(buffer, filename, mimeType, ownerUserId) {
   const form = new FormData();
-  form.append('file', new Blob([buf]), filename);
-  const res = await fetch(`${API}/api/upload`, { method: 'POST', body: form });
+  form.append('file', new Blob([buffer], { type: mimeType || 'application/octet-stream' }), filename);
+  if (ownerUserId) form.append('userId', String(ownerUserId));
+  const res = await fetch(`${API}/api/worker/upload`, {
+    method: 'POST',
+    headers: { 'x-ai-worker-token': TOKEN },
+    body: form,
+  });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.error || `Upload failed (${res.status})`);
-  const url = json.url || `/uploads/${json.filename || filename}`;
-  return url.startsWith('http') ? url : `${API}${url}`;
+  const url = json.url || (json.filename ? `${API}/uploads/${json.filename}` : null);
+  return url;
 }
 
-async function rewritePostAssetUrls(posts) {
+async function rewritePostAssetUrls(posts, ownerUserId) {
   const out = [];
   for (const post of posts) {
     const asset = post?.attachedAsset;
@@ -105,31 +109,59 @@ async function rewritePostAssetUrls(posts) {
       out.push(post);
       continue;
     }
-    const rel = asset.url || (asset.filename ? `/uploads/${asset.filename}` : null);
-    if (!rel || rel.startsWith('http')) {
+    if (asset.url && /^https?:\/\//i.test(asset.url)) {
       out.push(post);
       continue;
     }
-    const localPath = path.join(CHART_UPLOAD_DIR, asset.filename || path.basename(rel));
-    try {
-      await fs.access(localPath);
-      const hostedUrl = await uploadFileToHostedApi(localPath, asset.filename || path.basename(rel));
-      out.push({
-        ...post,
-        attachedAsset: { ...asset, url: hostedUrl },
-      });
-    } catch {
-      out.push(post);
+
+    const filename = asset.filename || (asset.url ? path.basename(String(asset.url)) : null);
+    const mime = asset.mime || 'image/png';
+    let hostedUrl = null;
+
+    if (filename) {
+      const localPath = path.join(CHART_UPLOAD_DIR, filename);
+      try {
+        await fs.access(localPath);
+        const buf = await fs.readFile(localPath);
+        hostedUrl = await uploadBufferToHostedApi(buf, filename, mime, ownerUserId);
+      } catch {
+        /* not a local chart file */
+      }
     }
+
+    if (!hostedUrl && asset.url) {
+      const rel = asset.url.startsWith('http')
+        ? asset.url
+        : `${API}${asset.url.startsWith('/') ? '' : '/'}${asset.url}`;
+      try {
+        const res = await fetch(rel);
+        if (res.ok) {
+          const buf = Buffer.from(await res.arrayBuffer());
+          hostedUrl = await uploadBufferToHostedApi(
+            buf,
+            filename || path.basename(rel.split('?')[0]) || 'asset.bin',
+            res.headers.get('content-type') || mime,
+            ownerUserId,
+          );
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+
+    out.push(hostedUrl
+      ? { ...post, attachedAsset: { ...asset, url: hostedUrl } }
+      : post);
   }
   return out;
 }
 
-async function processPostsJob(payload, jobId) {
+async function processPostsJob(payload, jobId, ownerUserId) {
   const profile = payload.profile || {};
   const dataJson = resolveDataJson(payload);
   const user = payload.user || {};
   const existingPosts = Array.isArray(payload.existingPosts) ? payload.existingPosts : [];
+  const isFirstGeneration = existingPosts.length === 0;
   const userPayload = buildUserPayload(user, dataJson);
   const prompts = await loadPrompts(process.cwd());
   const assetAssignment = await fetchAssetAsAssignment(
@@ -170,9 +202,11 @@ async function processPostsJob(payload, jobId) {
     profile: { ...profile, profileSummary, userDescription: profileSummary },
     existingPosts,
     chartUploadDir: CHART_UPLOAD_DIR,
+    skipLeaderboard: isFirstGeneration,
+    preferMetadataFallback: true,
     onEachPost: async (post) => {
       if (!post?.content) return;
-      const [rewritten] = await rewritePostAssetUrls([post]);
+      const [rewritten] = await rewritePostAssetUrls([post], ownerUserId);
       if (!rewritten) return;
       if (await reportJobProgress(jobId, { posts: [rewritten] })) {
         progressPostsSaved += 1;
@@ -180,7 +214,7 @@ async function processPostsJob(payload, jobId) {
     },
   });
 
-  const posts = await rewritePostAssetUrls(slotResults.filter(Boolean));
+  const posts = await rewritePostAssetUrls(slotResults.filter(Boolean), ownerUserId);
   const allPostsSavedViaProgress = posts.length > 0 && progressPostsSaved >= posts.length;
 
   return {
@@ -264,7 +298,7 @@ async function processJob(job) {
       return processBlurbsJob(payload);
     case 'posts':
     default:
-      return processPostsJob(payload, job.id);
+      return processPostsJob(payload, job.id, job.user_id ?? null);
   }
 }
 
