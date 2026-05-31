@@ -4,7 +4,7 @@ import {
   saveCommentSuggestions,
 } from '@/lib/commentSuggestionsStorage.js';
 import { isHostedApiOrigin, profileSlugFromProfile, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
-import { canUseHostedAccountFeatures, isHostedAccountLinked, readLinkedProfileSlug } from '@/lib/hostedAccount.js';
+import { canUseHostedAccountFeatures, readLinkedProfileSlug } from '@/lib/hostedAccount.js';
 import { resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
 
 const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
@@ -113,10 +113,10 @@ export async function fetchCommentSuggestions(post, { allowedPersonas, viewerPro
   }
 
   if (isHostedApiOrigin()) {
-    if (!isHostedAccountLinked()) {
-      throw new Error('Open this profile from the Compliant app to use AI comments.');
-    }
     const linkedSlug = readLinkedProfileSlug();
+    if (!linkedSlug) {
+      throw new Error('Open this profile from the Compliant app (View on web) to use AI comments.');
+    }
     if (!canUseHostedAccountFeatures(viewerProfile, linkedSlug)) {
       throw new Error('AI comments are only available on your linked profile.');
     }

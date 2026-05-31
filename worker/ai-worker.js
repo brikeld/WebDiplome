@@ -6,6 +6,10 @@ import { generateCommentSuggestions } from '../server/lib/commentSuggestions.js'
 import { generatePersonaBlurbs } from '../server/lib/personaBlurbs.js';
 import { loadPrompts } from '../server/lib/prompts.js';
 import { buildLmUserPayload } from '../server/lib/compactHarvestData.js';
+import {
+  nextAssetPersona,
+  pickUnusedAssetCandidate,
+} from '../server/lib/pickGenerationAsset.js';
 import { ensureLmModelLoaded } from '../server/lib/lmStudioLoad.js';
 
 const API = String(process.env.WEBDIPLOME_API_ORIGIN || 'http://localhost:3001').replace(/\/$/, '');
@@ -164,9 +168,13 @@ async function processPostsJob(payload, jobId, ownerUserId) {
   const isFirstGeneration = existingPosts.length === 0;
   const userPayload = buildUserPayload(user, dataJson);
   const prompts = await loadPrompts(process.cwd());
+  const assetCandidate = pickUnusedAssetCandidate(
+    Array.isArray(payload.assetCandidates) ? payload.assetCandidates : [],
+    existingPosts,
+  );
   const assetAssignment = await fetchAssetAsAssignment(
-    Array.isArray(payload.assetCandidates) ? payload.assetCandidates[0] : null,
-    payload.assetPersona || 'popularite',
+    assetCandidate,
+    payload.assetPersona || nextAssetPersona(existingPosts),
   );
 
   await fs.mkdir(CHART_UPLOAD_DIR, { recursive: true });

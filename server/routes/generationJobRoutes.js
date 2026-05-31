@@ -186,11 +186,12 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       }
 
       const apiProfile = await profileStore.getProfileBySlug(slug);
+      const { assetCandidates: _staleAssets, ...priorWithoutAssets } = priorPayload;
       const job = await jobStore.createJob({
         userId: row.user_id,
         profileId: row.id,
         requestPayload: {
-          ...priorPayload,
+          ...priorWithoutAssets,
           jobType: 'posts',
           profile: slimProfilePayloadForStorage(apiProfile ?? {}),
           dataJson: priorPayload.dataJson ?? priorPayload.data_json ?? null,

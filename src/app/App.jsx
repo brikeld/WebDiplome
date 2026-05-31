@@ -54,8 +54,9 @@ import {
   fetchLinkedProfile,
   hostedAuthHeaders,
   ingestHostedSessionFromHash,
-  isHostedAccountLinked,
+  readHostedSession,
   readLinkedProfileSlug,
+  resolveOwnedProfileForFeatures,
 } from '@/lib/hostedAccount.js';
 import {
   persistProfileSlug,
@@ -708,10 +709,18 @@ function AppInner({
   });
   const dashboardBusy = dashboardLayout.actionSlot !== 'timer';
 
-  const accountFeaturesEnabled = useMemo(
-    () => canUseHostedAccountFeatures(profile, linkedProfileSlug, { viewedProfile }),
-    [profile, linkedProfileSlug, viewedProfile],
-  );
+  const accountFeaturesEnabled = useMemo(() => {
+    const owned = resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug);
+    return canUseHostedAccountFeatures(owned, linkedProfileSlug, {
+      viewedProfile,
+      allProfiles,
+    });
+  }, [profile, allProfiles, linkedProfileSlug, viewedProfile]);
+
+  const viewerProfile = useMemo(() => {
+    if (!accountFeaturesEnabled) return null;
+    return resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug);
+  }, [accountFeaturesEnabled, profile, allProfiles, linkedProfileSlug]);
 
   return (
     <PersonaBlurbsProvider profile={displayProfile}>
@@ -748,7 +757,7 @@ function AppInner({
               <HomeTab
                 profile={profile}
                 feedProfiles={feedProfiles}
-                viewerProfile={accountFeaturesEnabled ? profile : null}
+                viewerProfile={viewerProfile}
                 aiFeaturesEnabled={accountFeaturesEnabled}
                 isGeneratingPosts={postGen.phase === 'generating'}
                 highlightedPostId={highlightedPost?.id ?? null}
@@ -966,6 +975,7 @@ export default function App() {
     let cancelled = false;
     (async () => {
       ingestHostedSessionFromHash();
+      if (!readHostedSession()?.access_token) return;
       const linked = await fetchLinkedProfile();
       if (cancelled || !linked) return;
       const slug = linked.slug ?? linked.id;
@@ -1011,6 +1021,13 @@ export default function App() {
               setLinkedProfileSlug(null);
               setProfile(null);
               setLandingOwnedProfile(null);
+              return;
+            }
+            const meJson = await meRes.json().catch(() => ({}));
+            const meProfile = meJson?.profile ?? null;
+            if (meProfile) {
+              setLandingOwnedProfile(meProfile);
+              setProfile((prev) => mergeProfileFromApi(prev, meProfile));
               return;
             }
           }
@@ -1059,17 +1076,24 @@ export default function App() {
     return merged;
   }, [linkedProfileSlug]);
 
-  const pollHarvestUntilDone = useCallback(async (scoresBefore) => {
+  const pollHarvestUntilDone = useCallback(async (scoresBefore, profileSlug) => {
+    const slug = String(profileSlug || '').trim();
+    if (!slug) throw new Error('Profile slug required for harvest');
+    const statusUrl = `${API_ORIGIN}/api/harvest/status?profileSlug=${encodeURIComponent(slug)}`;
     const start = Date.now();
     while (Date.now() - start < HARVEST_WAIT_MS) {
-      const res = await fetch(`${API_ORIGIN}/api/harvest/status`);
+      const res = await fetch(statusUrl);
       if (!res.ok) throw new Error('Harvest status unavailable');
       const st = await res.json();
       setHarvestProgress(st.progress ?? null);
       if (st.status === 'done') {
         const after = st.scoresAfter ?? getPersonaScoresNormalized(await reloadProfileFromApi());
         setPersonaDeltas(computePersonaDeltas(scoresBefore, after));
-        await fetch(`${API_ORIGIN}/api/harvest/ack`, { method: 'POST' });
+        await fetch(`${API_ORIGIN}/api/harvest/ack`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileSlug: slug }),
+        });
         return st;
       }
       if (st.status === 'error') {
@@ -1077,7 +1101,7 @@ export default function App() {
       }
       if (st.status === 'idle' && Date.now() - start > 8000) {
         throw new Error(
-          'Desktop collector not responding. Open the Compliant app on this machine, then try again.',
+          'Desktop collector not responding. Keep the Compliant app open on this machine, then try again.',
         );
       }
       await new Promise((r) => setTimeout(r, HARVEST_POLL_MS));
@@ -1300,12 +1324,20 @@ export default function App() {
     if (postGen.loading || harvestPhase === 'harvesting' || !profile) return;
 
     const hosted = isHostedApiOrigin();
+    const profileSlug = profile?.slug ?? profile?.id ?? linkedProfileSlug;
 
-    if (hosted && !isHostedAccountLinked()) {
-      setHarvestError('Open this profile from the Compliant app to generate updates.');
+    if (hosted && !profileSlug) {
+      setHarvestError('Open this profile from the Compliant app (View on web), then try again.');
       return;
     }
-    if (hosted && !canUseHostedAccountFeatures(profile, linkedProfileSlug)) {
+    if (
+      hosted
+      && !canUseHostedAccountFeatures(
+        resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug),
+        linkedProfileSlug,
+        { allProfiles },
+      )
+    ) {
       setHarvestError('Generation is only available on your linked profile.');
       return;
     }
@@ -1320,7 +1352,7 @@ export default function App() {
       const reqRes = await fetch(`${API_ORIGIN}/api/harvest/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scoresBefore, dynamicOnly: true }),
+        body: JSON.stringify({ scoresBefore, dynamicOnly: true, profileSlug }),
       });
       if (!reqRes.ok) {
         const errText = await reqRes.text().catch(() => '');
@@ -1334,14 +1366,18 @@ export default function App() {
         throw new Error(msg);
       }
 
-      await pollHarvestUntilDone(scoresBefore);
+      await pollHarvestUntilDone(scoresBefore, profileSlug);
       await reloadProfileFromApi();
     } catch (e) {
       setHarvestError(e?.message || 'Harvest failed');
       setHarvestPhase('idle');
       setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Harvest failed' });
       try {
-        await fetch(`${API_ORIGIN}/api/harvest/ack`, { method: 'POST' });
+        await fetch(`${API_ORIGIN}/api/harvest/ack`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileSlug }),
+        });
       } catch {
         /* ignore */
       }

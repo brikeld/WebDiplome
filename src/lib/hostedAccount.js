@@ -139,13 +139,28 @@ export function isOwnProfileForLinkedAccount(profile, linkedSlug) {
   return Boolean(slug && String(slug) === String(linkedSlug));
 }
 
+/** Best profile object for the linked account (React state or public directory). */
+export function resolveOwnedProfileForFeatures(profile, allProfiles, linkedSlug) {
+  if (profile && isOwnProfileForLinkedAccount(profile, linkedSlug)) return profile;
+  const list = Array.isArray(allProfiles) ? allProfiles.filter(Boolean) : [];
+  if (!linkedSlug || list.length === 0) return profile ?? null;
+  return (
+    list.find((p) => p?.slug === linkedSlug || p?.id === linkedSlug) ?? profile ?? null
+  );
+}
+
 /**
- * Interactive AI (generate, comments, blurbs) only when this browser has a linked
- * Compliant account and is acting on that profile — not for anonymous visitors.
+ * Interactive AI (Update, comments) on your own profile — not when browsing others.
+ * Requires a linked profile slug (from Compliant “View on web” or /api/profile/me).
  */
-export function canUseHostedAccountFeatures(profile, linkedSlug, { viewedProfile = null } = {}) {
+export function canUseHostedAccountFeatures(
+  profile,
+  linkedSlug,
+  { viewedProfile = null, allProfiles = null } = {},
+) {
   if (!isHostedApiOrigin()) return true;
-  if (!isHostedAccountLinked()) return false;
   if (viewedProfile) return false;
-  return isOwnProfileForLinkedAccount(profile, linkedSlug);
+  if (!linkedSlug) return false;
+  const owned = resolveOwnedProfileForFeatures(profile, allProfiles, linkedSlug);
+  return isOwnProfileForLinkedAccount(owned, linkedSlug);
 }

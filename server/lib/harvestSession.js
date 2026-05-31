@@ -1,4 +1,4 @@
-/** In-memory harvest job shared between WebDiplome UI and Electron collector. */
+/** Per-profile harvest jobs (web UI ↔ Electron on that user's machine). */
 
 const MAX_LOG_LINES = 120;
 
@@ -13,21 +13,38 @@ function emptyProgress() {
   return { step: 0, percent: 0, statusText: 'Initializing system scan…', lines: [] };
 }
 
-let session = {
-  status: 'idle',
-  scoresBefore: null,
-  scoresAfter: null,
-  dynamicOnly: false,
-  progress: emptyProgress(),
-  error: null,
-  updatedAt: Date.now(),
-};
+function emptySession() {
+  return {
+    status: 'idle',
+    scoresBefore: null,
+    scoresAfter: null,
+    dynamicOnly: false,
+    progress: emptyProgress(),
+    error: null,
+    updatedAt: Date.now(),
+  };
+}
 
-function touch() {
+/** @type {Map<string, ReturnType<typeof emptySession>>} */
+const sessions = new Map();
+
+function normalizeSlug(slug) {
+  const s = String(slug || '').trim();
+  return s || null;
+}
+
+function getSession(slug) {
+  const key = normalizeSlug(slug);
+  if (!key) return emptySession();
+  if (!sessions.has(key)) sessions.set(key, emptySession());
+  return sessions.get(key);
+}
+
+function touch(session) {
   session.updatedAt = Date.now();
 }
 
-function parseLine(line) {
+function parseLine(session, line) {
   let step = session.progress.step;
   for (const sp of STEP_PATTERNS) {
     if (sp.pattern.test(line) && sp.step > step) {
@@ -35,7 +52,6 @@ function parseLine(line) {
       break;
     }
   }
-  // Gradual ramp — step 4 is not 100% until completeHarvest().
   const STEP_PERCENT = { 0: 8, 1: 28, 2: 52, 3: 76, 4: 88 };
   const pct = STEP_PERCENT[step] ?? session.progress.percent;
   const match = STEP_PATTERNS.find((sp) => sp.step === step);
@@ -46,7 +62,7 @@ function parseLine(line) {
   };
 }
 
-export function getHarvestStatus() {
+function serializeSession(session) {
   return {
     status: session.status,
     scoresBefore: session.scoresBefore,
@@ -61,11 +77,20 @@ export function getHarvestStatus() {
   };
 }
 
-export function requestHarvest(scoresBefore, { dynamicOnly = false } = {}) {
+export function getHarvestStatus(profileSlug) {
+  return serializeSession(getSession(profileSlug));
+}
+
+export function requestHarvest(scoresBefore, { dynamicOnly = false, profileSlug = null } = {}) {
+  const key = normalizeSlug(profileSlug);
+  if (!key) return { ok: false, error: 'profileSlug required' };
+
+  const session = getSession(key);
   if (session.status === 'requested' || session.status === 'running') {
     return { ok: false, error: 'Harvest already in progress' };
   }
-  session = {
+
+  sessions.set(key, {
     status: 'requested',
     scoresBefore: scoresBefore ?? null,
     scoresAfter: null,
@@ -75,28 +100,31 @@ export function requestHarvest(scoresBefore, { dynamicOnly = false } = {}) {
       : emptyProgress(),
     error: null,
     updatedAt: Date.now(),
-  };
+  });
   return { ok: true };
 }
 
-export function markHarvestRunning() {
+export function markHarvestRunning(profileSlug) {
+  const session = getSession(profileSlug);
   if (session.status !== 'requested') return { ok: false };
   session.status = 'running';
   session.progress.statusText = 'Collecting data from your machine…';
-  touch();
+  touch(session);
   return { ok: true };
 }
 
-export function pushHarvestProgress({ line, statusText, percent, step, phase } = {}) {
+export function pushHarvestProgress(profileSlug, payload = {}) {
+  const session = getSession(profileSlug);
   if (session.status !== 'running' && session.status !== 'requested') return { ok: false };
   if (session.status === 'requested') session.status = 'running';
 
+  const { line, statusText, percent, step, phase } = payload;
   if (typeof line === 'string' && line.trim()) {
     session.progress.lines.push(line.trim());
     if (session.progress.lines.length > MAX_LOG_LINES) {
       session.progress.lines = session.progress.lines.slice(-MAX_LOG_LINES);
     }
-    const parsed = parseLine(line);
+    const parsed = parseLine(session, line);
     session.progress.step = parsed.step;
     session.progress.percent = parsed.percent;
     session.progress.statusText = parsed.statusText;
@@ -111,47 +139,43 @@ export function pushHarvestProgress({ line, statusText, percent, step, phase } =
     session.progress.percent = 95;
     session.progress.step = 4;
   }
-  touch();
+  touch(session);
   return { ok: true };
 }
 
-export function completeHarvest(scoresAfter) {
+export function completeHarvest(profileSlug, scoresAfter) {
+  const session = getSession(profileSlug);
   session.status = 'done';
   session.scoresAfter = scoresAfter ?? null;
   session.progress.percent = 100;
   session.progress.step = 4;
   session.progress.statusText = 'Collection complete.';
   session.error = null;
-  touch();
+  touch(session);
   return { ok: true };
 }
 
-export function failHarvest(error) {
+export function failHarvest(profileSlug, error) {
+  const session = getSession(profileSlug);
   session.status = 'error';
   session.error = error ? String(error) : 'Harvest failed';
-  touch();
+  touch(session);
   return { ok: true };
 }
 
-export function ackHarvest() {
+export function ackHarvest(profileSlug) {
+  const session = getSession(profileSlug);
   if (session.status === 'done' || session.status === 'error') {
-    session.status = 'idle';
-    session.error = null;
-    touch();
+    sessions.set(normalizeSlug(profileSlug), emptySession());
   }
   return { ok: true };
 }
 
-/** Clear in-memory harvest job after account deletion. */
-export function resetHarvestSession() {
-  session = {
-    status: 'idle',
-    scoresBefore: null,
-    scoresAfter: null,
-    dynamicOnly: false,
-    progress: emptyProgress(),
-    error: null,
-    updatedAt: Date.now(),
-  };
+export function resetHarvestSession(profileSlug = null) {
+  if (profileSlug) {
+    sessions.delete(normalizeSlug(profileSlug));
+  } else {
+    sessions.clear();
+  }
   return { ok: true };
 }
