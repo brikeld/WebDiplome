@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { resolveApiOrigin } from '@/lib/apiOrigin.js';
+import { readLinkedProfileSlug } from '@/lib/hostedAccount.js';
 
-const DEFAULT_GENERATE_API_ORIGIN =
-  (import.meta?.env?.VITE_GENERATE_API_ORIGIN && String(import.meta.env.VITE_GENERATE_API_ORIGIN)) ||
-  'http://localhost:3010';
+const API_ORIGIN = resolveApiOrigin();
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -79,10 +79,7 @@ function LeaderboardCard({ board }) {
   );
 }
 
-export default function LeaderboardsTab({
-  profile,
-  generateApiOrigin = DEFAULT_GENERATE_API_ORIGIN,
-}) {
+export default function LeaderboardsTab({ profile }) {
   const [leaderboards, setLeaderboards] = useState([]);
 
   useEffect(() => {
@@ -92,9 +89,13 @@ export default function LeaderboardsTab({
     }
 
     const controller = new AbortController();
+    const viewerSlug =
+      profile.slug ?? profile.id ?? readLinkedProfileSlug() ?? '';
+    const qs = viewerSlug ? `?viewerSlug=${encodeURIComponent(viewerSlug)}` : '';
+
     async function loadLeaderboards() {
       try {
-        const res = await fetch(`${generateApiOrigin}/api/leaderboards`, {
+        const res = await fetch(`${API_ORIGIN}/api/leaderboards${qs}`, {
           signal: controller.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -108,8 +109,12 @@ export default function LeaderboardsTab({
     }
 
     loadLeaderboards();
-    return () => controller.abort();
-  }, [generateApiOrigin, profile]);
+    const pollId = setInterval(loadLeaderboards, 30_000);
+    return () => {
+      controller.abort();
+      clearInterval(pollId);
+    };
+  }, [profile]);
 
   const grouped = useMemo(() => {
     const out = { productivite: [], securite: [], popularite: [] };

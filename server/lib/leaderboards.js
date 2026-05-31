@@ -5,8 +5,8 @@
  * is reproducible within a 10-minute "drift bucket".
  */
 
-import crypto from 'crypto';
 import { avatarSrcFromProfile } from '../../src/lib/profileUtils.js';
+import { seededFloat } from '../../src/lib/seededRandom.js';
 
 /** Diverse clone identities — no avatarSrc so they never show a photo. */
 export const CLONE_IDENTITIES = Object.freeze([
@@ -32,12 +32,6 @@ export const CLONE_DRIFT_BUCKET_MS = 10 * 60 * 1000;
 export function decay(nowHour, peakHour) {
   const delta = (Number(nowHour) - Number(peakHour)) * (Math.PI / 12);
   return Math.cos(delta);
-}
-
-function seededFloat(seedStr) {
-  const hex = crypto.createHash('sha256').update(seedStr).digest('hex').slice(0, 8);
-  // 32-bit unsigned int → [0, 1)
-  return parseInt(hex, 16) / 0x1_0000_0000;
 }
 
 /**

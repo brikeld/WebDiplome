@@ -50,10 +50,16 @@ export function createPublicDemoRoutes({ supabaseService, profileStore, storageS
     }
   });
 
-  router.get('/leaderboards', async (_req, res) => {
+  router.get('/leaderboards', async (req, res) => {
     try {
-      const profiles = await profileStore.listProfiles();
-      res.json({ success: true, leaderboards: buildLeaderboards(profiles) });
+      const profiles = await profileStore.listProfilesForLeaderboards();
+      const viewerSlug = String(
+        req.query.viewerSlug ?? req.query.viewer_slug ?? req.query.profileSlug ?? '',
+      ).trim() || null;
+      res.json({
+        success: true,
+        leaderboards: buildLeaderboards(profiles, 5, { viewerSlug }),
+      });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

@@ -20,6 +20,7 @@ const PERSONA_COLORS = {
   popularity: '#CCF847',
 };
 
+import { remixStoredLeaderboard } from '../../../server/lib/multiUserLeaderboards.js';
 import { API_ORIGIN } from '@/lib/apiClient.js';
 
 /**
@@ -88,7 +89,7 @@ function sortNewestFirst(a, b) {
 }
 
 /** Map one profile's raw persona posts into enriched card models (unsorted). */
-function buildEnrichedPosts(profile, { personaBadgePersona }) {
+function buildEnrichedPosts(profile, { personaBadgePersona, allProfilesForLeaderboards = null }) {
   if (!profile) return [];
   const raw = profile.personaPosts ?? [];
   const displayName = displayNameFromProfile(profile);
@@ -99,10 +100,16 @@ function buildEnrichedPosts(profile, { personaBadgePersona }) {
   const authorSlug = profile.slug ?? profile.id ?? null;
 
   const enrichLeaderboardEntries = (entries) => {
-    if (!avatarSrc || !Array.isArray(entries)) return entries;
-    return entries.map((entry) =>
-      entry?.isUser && !entry?.avatarSrc ? { ...entry, avatarSrc } : entry,
-    );
+    if (!Array.isArray(entries)) return entries;
+    return entries.map((entry) => {
+      if (entry?.avatarSrc) return entry;
+      if (entry?.source !== 'real' || !entry?.slug) return entry;
+      const match = (allProfilesForLeaderboards ?? []).find(
+        (p) => p?.slug === entry.slug || p?.id === entry.slug,
+      );
+      const src = match ? avatarSrcFromProfile(match) : null;
+      return src ? { ...entry, avatarSrc: src } : entry;
+    });
   };
 
   return raw.map((p, i) => {
@@ -136,17 +143,31 @@ function buildEnrichedPosts(profile, { personaBadgePersona }) {
       thinking: Array.isArray(p.thinking) ? p.thinking : null,
       compliantPersonaChange: p.compliantPersonaChange ?? null,
       compliantLowScore: p.compliantLowScore ?? null,
-      leaderboard: (p.leaderboard && Array.isArray(p.leaderboard.entries)) ? {
-        boardId: p.leaderboard.boardId,
-        title: p.leaderboard.title,
-        persona: p.leaderboard.persona ?? p.persona,
-        userRank: p.leaderboard.userRank,
-        previousUserRank: p.leaderboard.previousUserRank ?? null,
-        entries: enrichLeaderboardEntries(p.leaderboard.entries),
-        cloneHidden: Array.isArray(p.leaderboard.cloneHidden) ? p.leaderboard.cloneHidden : [false, false, false, false],
-        rationales: Array.isArray(p.leaderboard.rationales) ? p.leaderboard.rationales : null,
-        climbTip: typeof p.leaderboard.climbTip === 'string' ? p.leaderboard.climbTip : null,
-      } : null,
+      leaderboard: (p.leaderboard && Array.isArray(p.leaderboard.entries)) ? (() => {
+        const base = {
+          boardId: p.leaderboard.boardId,
+          title: p.leaderboard.title,
+          persona: p.leaderboard.persona ?? p.persona,
+          userRank: p.leaderboard.userRank,
+          previousUserRank: p.leaderboard.previousUserRank ?? null,
+          cloneHidden: Array.isArray(p.leaderboard.cloneHidden) ? p.leaderboard.cloneHidden : [false, false, false, false],
+          rationales: Array.isArray(p.leaderboard.rationales) ? p.leaderboard.rationales : null,
+          climbTip: typeof p.leaderboard.climbTip === 'string' ? p.leaderboard.climbTip : null,
+        };
+        const directory = allProfilesForLeaderboards?.length
+          ? allProfilesForLeaderboards
+          : [profile];
+        const remixed = remixStoredLeaderboard(
+          { ...base, entries: p.leaderboard.entries },
+          directory,
+          authorSlug,
+        );
+        return {
+          ...base,
+          userRank: remixed.userRank ?? base.userRank,
+          entries: enrichLeaderboardEntries(remixed.entries ?? p.leaderboard.entries),
+        };
+      })() : null,
       _feedEnter: !!p._feedEnter,
       _feedKey: p._feedKey ?? null,
       _feedRevealSeq: typeof p._feedRevealSeq === 'number' ? p._feedRevealSeq : 0,
@@ -185,6 +206,7 @@ export default function PostsTab({
       buildEnrichedPosts(src, {
         // Per-author badge in a multi-author feed; current theme persona otherwise.
         personaBadgePersona: multiAuthor ? null : personaBadgePersona,
+        allProfilesForLeaderboards: sources,
       }),
     );
 

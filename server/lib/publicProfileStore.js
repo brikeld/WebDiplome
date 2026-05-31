@@ -217,6 +217,19 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       return Promise.all((rows ?? []).map(async (row) => mapProfileRowForApi(row, await readPosts(row.id))));
     },
 
+    async listProfilesForLeaderboards() {
+      const rows = throwIfError(
+        await supabase.from('profiles').select('*').order('updated_at', { ascending: false }),
+        'list profiles for leaderboards',
+      );
+      return Promise.all(
+        (rows ?? []).map(async (row) => ({
+          ...mapProfileRowForApi(row, await readPosts(row.id)),
+          _harvest: row.raw_profile ?? {},
+        })),
+      );
+    },
+
     async getProfileBySlug(slug) {
       const row = throwIfError(
         await supabase.from('profiles').select('*').eq('slug', slug).maybeSingle(),

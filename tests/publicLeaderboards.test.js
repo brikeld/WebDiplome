@@ -9,6 +9,6 @@ describe('buildPublicLeaderboards', () => {
     ]);
     expect(boards[0].entries).toHaveLength(5);
     expect(boards[0].entries[0].source).toBe('real');
-    expect(boards[0].entries.some((e) => e.source === 'demo')).toBe(true);
+    expect(boards[0].entries.some((e) => e.source === 'bot')).toBe(true);
   });
 });

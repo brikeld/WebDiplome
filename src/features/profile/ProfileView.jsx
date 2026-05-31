@@ -55,10 +55,7 @@ export default function ProfileView({
                     />
                   )}
                   {displayTab === 'leaderboards' && (
-                    <LeaderboardsTab
-                      profile={profile}
-                      generateApiOrigin={generateApiOrigin}
-                    />
+                    <LeaderboardsTab profile={profile} />
                   )}
                 </div>
               </div>

@@ -26,8 +26,20 @@ export function formatRelativeTimeAgo(isoOrDate) {
   return `${day} days ago`;
 }
 
+import { resolveApiOrigin } from './apiOrigin.js';
+
+/** Absolute URL for avatars and uploads (hosted Supabase or local /uploads). */
+export function resolvePublicMediaUrl(src, apiOrigin = null) {
+  if (src == null || src === '') return null;
+  const s = String(src);
+  if (/^https?:\/\//i.test(s) || s.startsWith('data:')) return s;
+  const base = String(apiOrigin || resolveApiOrigin()).replace(/\/$/, '');
+  const path = s.startsWith('/') ? s : `/${s}`;
+  return `${base}${path}`;
+}
+
 /** Portrait URL used in profile header, post cards, and leaderboard self-rows. */
-export function avatarSrcFromProfile(p) {
+export function avatarSrcFromProfile(p, apiOrigin = null) {
   const src =
     p?.wallpaperBase64 ??
     p?.wallpaper_base64 ??
@@ -40,7 +52,9 @@ export function avatarSrcFromProfile(p) {
     p?.avatar_src ??
     null;
   if (src == null || src === '') return null;
-  return String(src);
+  const raw = String(src);
+  if (raw.startsWith('data:')) return raw;
+  return resolvePublicMediaUrl(raw, apiOrigin);
 }
 
 export function initialsFromProfile(p) {
