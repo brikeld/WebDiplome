@@ -1,3 +1,5 @@
+import { resolveApiOrigin } from './apiOrigin.js';
+
 /** e.g. "3 hours and 47 minutes ago" */
 export function formatRelativeTimeAgo(isoOrDate) {
   const d = new Date(isoOrDate);
@@ -25,8 +27,6 @@ export function formatRelativeTimeAgo(isoOrDate) {
   }
   return `${day} days ago`;
 }
-
-import { resolveApiOrigin } from './apiOrigin.js';
 
 /** Absolute URL for avatars and uploads (hosted Supabase or local /uploads). */
 export function resolvePublicMediaUrl(src, apiOrigin = null) {

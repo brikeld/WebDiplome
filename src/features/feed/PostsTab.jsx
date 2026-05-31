@@ -8,6 +8,7 @@ import {
   initialsFromProfile,
   machineHandleFromProfile,
   resolveDominantPersonaKey,
+  resolvePublicMediaUrl,
 } from '@/lib/profileUtils.js';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 
@@ -55,7 +56,7 @@ function resolveAttachedAsset(asset) {
     url = `/uploads/${url}`;
   }
   if (!url) return null;
-  const absolute = /^https?:\/\//i.test(url) ? url : `${API_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
+  const absolute = resolvePublicMediaUrl(url, API_ORIGIN);
   return {
     kind,
     url: absolute,

@@ -948,28 +948,32 @@ export default function App() {
   const syncAccountDeletionState = useCallback(async () => {
     try {
       const stateRes = await fetch(`${API_ORIGIN}/api/account-state`);
-      if (stateRes.ok) {
-        const state = await stateRes.json();
-        if (applyAccountDeletionFromServer(state?.lastDeletionAt)) {
-          clearHostedAccountStorage();
-          clearStoredProfileSlug();
-          setLinkedProfileSlug(null);
-          setProfile(null);
-          setMainView('landing');
-          setPersonaOverride(null);
-          setPersonaDeltas(null);
-          setPostGen(POST_GEN_IDLE);
-          setHarvestPhase('idle');
-          setHarvestError(null);
-          setHarvestProgress(null);
-          return true;
-        }
-      }
+      if (!stateRes.ok) return false;
+      const state = await stateRes.json();
+      // Live-scoring reset only — do not log out other users when someone else deletes.
+      applyAccountDeletionFromServer(state?.lastDeletionAt);
+
+      const mySlug = linkedProfileSlug || readLinkedProfileSlug();
+      const deleted = Array.isArray(state?.deletedProfileIds) ? state.deletedProfileIds : [];
+      if (!mySlug || !deleted.includes(String(mySlug))) return false;
+
+      clearHostedAccountStorage();
+      clearStoredProfileSlug();
+      setLinkedProfileSlug(null);
+      setProfile(null);
+      setMainView('landing');
+      setPersonaOverride(null);
+      setPersonaDeltas(null);
+      setPostGen(POST_GEN_IDLE);
+      setHarvestPhase('idle');
+      setHarvestError(null);
+      setHarvestProgress(null);
+      return true;
     } catch {
       /* ignore */
     }
     return false;
-  }, []);
+  }, [linkedProfileSlug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -990,6 +994,19 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  // Keep ?profile=slug in the URL for linked accounts (session survives polls / feed updates).
+  useEffect(() => {
+    if (!isHostedApiOrigin() || typeof window === 'undefined') return;
+    if (!readHostedSession()?.access_token) return;
+    const slug = linkedProfileSlug || readLinkedProfileSlug();
+    if (!slug) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('profile') === slug) return;
+    params.set('profile', slug);
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+    persistProfileSlug(slug);
+  }, [linkedProfileSlug, mainView]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1016,11 +1033,13 @@ export default function App() {
               headers: { ...hostedAuthHeaders() },
             }).catch(() => null);
             if (!meRes?.ok) {
-              clearHostedAccountStorage();
-              clearStoredProfileSlug();
-              setLinkedProfileSlug(null);
-              setProfile(null);
-              setLandingOwnedProfile(null);
+              if (meRes?.status === 401) {
+                clearHostedAccountStorage();
+                clearStoredProfileSlug();
+                setLinkedProfileSlug(null);
+                setProfile(null);
+                setLandingOwnedProfile(null);
+              }
               return;
             }
             const meJson = await meRes.json().catch(() => ({}));
@@ -1037,7 +1056,7 @@ export default function App() {
         setLandingOwnedProfile(owned);
         if (owned) {
           setProfile((prev) => mergeProfileFromApi(prev, owned));
-        } else if (linkedProfileSlug) {
+        } else if (linkedProfileSlug && !isHostedApiOrigin()) {
           setProfile(null);
         }
       } catch {

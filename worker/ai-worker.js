@@ -101,7 +101,10 @@ async function uploadBufferToHostedApi(buffer, filename, mimeType, ownerUserId) 
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.error || `Upload failed (${res.status})`);
-  const url = json.url || (json.filename ? `${API}/uploads/${json.filename}` : null);
+  const json = await res.json();
+  const url = json.url || null;
+  if (!url) throw new Error('worker upload missing url');
+  return url;
   return url;
 }
 

@@ -1,3 +1,5 @@
+import { normalizeAttachedAssetForApi, resolveHostedPublicUrl } from './publicMediaUrls.js';
+
 function cleanPart(value) {
   return String(value || '')
     .trim()
@@ -98,7 +100,7 @@ export function mapProfileRowForApi(row, posts = []) {
     dominantPersona: row.dominant_persona,
     profileSummary: row.profile_summary,
     userDescription: row.profile_summary,
-    wallpaperUrl: row.wallpaper_url,
+    wallpaperUrl: resolveHostedPublicUrl(row.wallpaper_url) ?? row.wallpaper_url ?? null,
     collectedAt: row.collected_at,
     personaBlurbs: mapPersonaBlurbsForApi(row.persona_blurbs),
     personaPosts: posts,
@@ -133,7 +135,7 @@ export function mapPostRowForApi(row) {
     persona: row.persona,
     content: row.content,
     sentiment: row.sentiment,
-    attachedAsset: row.attached_asset ?? null,
+    attachedAsset: normalizeAttachedAssetForApi(row.attached_asset ?? null),
     leaderboard: row.leaderboard ?? null,
     source: row.source,
     createdAt: row.created_at,
