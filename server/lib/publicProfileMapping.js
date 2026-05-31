@@ -92,6 +92,7 @@ export function mapProfileRowForApi(row, posts = []) {
     raw.wallpaperUrl ??
     raw.wallpaper_url ??
     null;
+  const resolvedWallpaper = resolveHostedPublicUrl(wallpaperCandidate) ?? null;
   return {
     id: row.slug,
     profileUuid: row.id,
@@ -106,7 +107,8 @@ export function mapProfileRowForApi(row, posts = []) {
     dominantPersona: row.dominant_persona,
     profileSummary: row.profile_summary,
     userDescription: row.profile_summary,
-    wallpaperUrl: resolveHostedPublicUrl(wallpaperCandidate) ?? null,
+    wallpaperUrl: resolvedWallpaper,
+    avatarUrl: resolvedWallpaper,
     collectedAt: row.collected_at,
     personaBlurbs: mapPersonaBlurbsForApi(row.persona_blurbs),
     personaPosts: posts,

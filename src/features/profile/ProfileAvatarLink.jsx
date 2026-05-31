@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 /**
  * Clickable profile portrait — navigates to the Profile view (main tab).
  */
@@ -11,11 +13,24 @@ export default function ProfileAvatarLink({
   avatarInitials,
   children,
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  useEffect(() => {
+    setImgFailed(false);
+  }, [avatarSrc]);
+  const showImg = Boolean(avatarSrc) && !imgFailed;
+  const showInitials = !showImg && avatarInitials != null && avatarInitials !== '';
+
   const inner = (
     <>
-      {avatarSrc ? (
-        <img className={imgClassName} src={avatarSrc} alt="" />
-      ) : avatarInitials != null && avatarInitials !== '' ? (
+      {showImg ? (
+        <img
+          className={imgClassName}
+          src={avatarSrc}
+          alt=""
+          referrerPolicy="no-referrer"
+          onError={() => setImgFailed(true)}
+        />
+      ) : showInitials ? (
         <span className={initialsClassName}>{avatarInitials}</span>
       ) : null}
       {children}

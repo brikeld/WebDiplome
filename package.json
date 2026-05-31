@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:web": "VITE_API_ORIGIN=\"http://localhost:3001\" VITE_GENERATE_API_ORIGIN=\"http://localhost:3010\" vite",
+    "dev:hosted": "VITE_API_ORIGIN=\"https://webdiplome-production.up.railway.app\" VITE_GENERATE_API_ORIGIN=\"https://webdiplome-production.up.railway.app\" vite",
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server.js",

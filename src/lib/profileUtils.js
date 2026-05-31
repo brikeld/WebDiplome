@@ -43,16 +43,16 @@ export function resolvePublicMediaUrl(src, apiOrigin = null) {
   });
 }
 
-/** Portrait URL used in profile header, post cards, and leaderboard self-rows. */
+/** Portrait URL used in profile header, post cards, and leaderboard rows. */
 export function avatarSrcFromProfile(p, apiOrigin = null) {
   const src =
+    p?.avatarUrl ??
+    p?.avatar_url ??
     p?.wallpaperBase64 ??
     p?.wallpaper_base64 ??
     p?.wallpaperUrl ??
     p?.wallpaper_url ??
     p?.wallpaper ??
-    p?.avatarUrl ??
-    p?.avatar_url ??
     p?.avatarSrc ??
     p?.avatar_src ??
     null;
