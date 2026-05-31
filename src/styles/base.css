@@ -47,10 +47,10 @@
   /* Legacy aliases */
   --post-font-primary: var(--post-body-size);
   --post-font-secondary: var(--post-handle-size);
-  --shell-inline-pad: 16px;
-  --shell-rail-inset: 16px;
-  --shell-rail-width: 88px;
-  --shell-rail-clearance: 18px;
+  --shell-inline-pad: 12px;
+  --shell-rail-inset: 12px;
+  --shell-rail-width: 64px;
+  --shell-rail-clearance: 10px;
 }
 
 .persona-badge {
@@ -525,11 +525,11 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 14px 10px;
-  min-height: 11.5rem;
+  gap: 8px;
+  padding: 10px 6px;
+  min-height: 9.5rem;
   border-radius: var(--radius-pill);
-  border: 3px solid var(--persona-accent, #759aef);
+  border: 2px solid var(--persona-accent, #759aef);
   background: transparent;
   box-sizing: border-box;
 }
@@ -539,16 +539,16 @@ body {
   border: 2px solid transparent;
   background: transparent;
   font-family: var(--font-sans);
-  font-size: 46px;
+  font-size: 34px;
   line-height: 1;
   color: rgba(0, 0, 0, 0.45);
   opacity: 1;
   cursor: pointer;
-  width: 3.5rem;
-  height: 3.5rem;
-  min-width: 3.5rem;
-  min-height: 3.5rem;
-  border-radius: 14px;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: 11px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -568,9 +568,9 @@ body {
 }
 
 .rail-btn.is-active {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 14px;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 11px;
   border-color: var(--persona-accent, #759aef);
   opacity: 1;
   color: #fff;
@@ -615,11 +615,12 @@ body {
   background-color: var(--card, #fff);
   /* Keep desktop shells clipped to viewport for stable composition. */
   overflow: hidden;
-  --home-shell-max-width: clamp(1320px, 92vw, 2200px);
-  /* Keep rail spacing deterministic to prevent overlap with feed capsule. */
-  --shell-rail-inset: 24px;
-  --shell-rail-width: 88px;
-  --shell-rail-clearance: 20px;
+  --home-shell-max-width: min(100%, 2200px);
+  /* Slimmer rail = more horizontal room for the two capsules. */
+  --shell-rail-inset: 12px;
+  --shell-rail-width: 64px;
+  --shell-rail-clearance: 10px;
+  --shell-inline-pad: 12px;
   /* Disabled by default: caused overlap on several desktop widths. */
   --shell-capsules-nudge-left: 0px;
   --left-capsule-extra-width: 0px;
@@ -639,26 +640,31 @@ body {
 .view-home .page,
 .view-profile .page {
   height: 100vh;
-  overflow: visible;
-  --right-rail-base-width: clamp(440px, 34vw, 760px);
+  overflow: hidden;
+  --shell-col-gap: clamp(12px, 1.4vw, 22px);
+  --shell-left-col-basis: clamp(580px, 52vw, 1100px);
+  --shell-right-col-basis: clamp(340px, 26vw, 620px);
   --dashboard-extra-width: 0px;
   max-width: var(--home-shell-max-width);
   flex-direction: row;
   align-items: stretch;
-  /* Keep the left column anchored; extra width goes to the right rail only. */
   justify-content: flex-start;
-  gap: clamp(16px, 1.8vw, 28px);
+  gap: var(--shell-col-gap);
+  box-sizing: border-box;
 }
 
 .view-home .main-col,
 .view-profile .main-col {
   flex: 0 0 auto;
-  flex-shrink: 0;
+  flex-shrink: 1;
   transform: none;
   --content-scale: 1;
   height: 100%;
-  min-height: 0;
-  width: clamp(680px, 60vw, 1360px);
+  min-width: 0;
+  width: min(
+    var(--shell-left-col-basis),
+    calc(100% - var(--shell-right-col-basis) - var(--shell-col-gap))
+  );
   margin-left: 0;
   display: flex;
   flex-direction: column;
@@ -667,8 +673,12 @@ body {
 .view-home .persona-side-panel,
 .view-profile .persona-side-panel {
   flex: 0 0 auto;
-  flex-shrink: 0;
-  width: calc(var(--right-rail-base-width) + var(--dashboard-extra-width));
+  flex-shrink: 1;
+  min-width: 0;
+  width: min(
+    calc(var(--shell-right-col-basis) + var(--dashboard-extra-width)),
+    calc(100% - var(--shell-left-col-basis) - var(--shell-col-gap))
+  );
   margin-right: 0;
   box-sizing: border-box;
   overflow: hidden;
@@ -752,21 +762,20 @@ body {
     --shell-capsules-nudge-left: 0px;
   }
 
+  .view-home .page,
+  .view-profile .page {
+    --shell-left-col-basis: clamp(540px, 50vw, 880px);
+    --shell-right-col-basis: clamp(320px, 24vw, 540px);
+  }
+
   .view-home .main-col,
   .view-profile .main-col {
-    flex: 0 0 auto;
-    flex-shrink: 0;
-    min-width: 0;
-    width: clamp(640px, 56vw, 920px);
     margin-left: 0;
     transform: none;
   }
 
   .view-home .persona-side-panel,
   .view-profile .persona-side-panel {
-    flex: 0 0 auto;
-    flex-shrink: 0;
-    width: clamp(400px, 32vw, 580px);
     margin-right: 0;
     transform: none;
   }
@@ -776,12 +785,9 @@ body {
 @media (max-width: 1350px) {
   .view-home .page,
   .view-profile .page {
-    gap: 16px;
-  }
-
-  .view-home .persona-side-panel,
-  .view-profile .persona-side-panel {
-    width: clamp(380px, 31vw, 520px);
+    --shell-col-gap: 14px;
+    --shell-left-col-basis: clamp(480px, 48vw, 760px);
+    --shell-right-col-basis: clamp(300px, 22vw, 460px);
   }
 
   .posts-capsule {
