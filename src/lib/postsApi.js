@@ -1,6 +1,8 @@
 import { postForPersistence } from './compliantSystemPosts.js';
 
 import { API_ORIGIN } from '@/lib/apiClient.js';
+import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
+import { hostedAuthHeaders } from '@/lib/hostedAccount.js';
 
 export async function prependPersonaPosts(profileId, posts) {
   const payload = (Array.isArray(posts) ? posts : []).map(postForPersistence);
@@ -10,7 +12,10 @@ export async function prependPersonaPosts(profileId, posts) {
     `${API_ORIGIN}/api/profile/${encodeURIComponent(profileId)}/posts/prepend`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(isHostedApiOrigin() ? hostedAuthHeaders() : {}),
+      },
       body: JSON.stringify({ posts: payload }),
     },
   );

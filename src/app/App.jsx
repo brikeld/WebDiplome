@@ -287,10 +287,13 @@ function AppInner({
 
   const profileId = useMemo(() => {
     if (!profile) return null;
+    if (isHostedApiOrigin()) {
+      return profile.slug ?? profile.id ?? null;
+    }
     const first = String(profile.firstname ?? '').trim().toLowerCase();
     const last = String(profile.lastname ?? '').trim().toLowerCase();
     return first && last ? `${first}-${last}` : null;
-  }, [profile?.firstname, profile?.lastname]);
+  }, [profile?.slug, profile?.id, profile?.firstname, profile?.lastname]);
 
   const prependCompliantPost = useCallback(
     (post) => {

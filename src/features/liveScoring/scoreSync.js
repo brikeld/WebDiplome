@@ -1,13 +1,14 @@
 // src/features/liveScoring/scoreSync.js
 
 import { API_ORIGIN } from '@/lib/apiClient.js';
+import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
 
 /**
  * Fire-and-forget: persists adjustedScores to the server.
  * Failures are logged but never thrown.
  */
 export async function syncScoreAdjustment(profileId, adjustedScores, baseScores) {
-  if (!profileId) return;
+  if (!profileId || isHostedApiOrigin()) return;
 
   // Net adjustments (what was applied on top of base)
   const scoreAdjustments = {

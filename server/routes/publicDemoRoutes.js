@@ -108,6 +108,30 @@ export function createPublicDemoRoutes({ supabaseService, profileStore, storageS
     }
   });
 
+  router.post('/profile/:slug/posts/prepend', requireUser, async (req, res) => {
+    try {
+      const slug = String(req.params.slug || '').trim();
+      const row = await profileStore.getProfileRowBySlug(slug);
+      if (!row) return res.status(404).json({ error: 'Profile not found' });
+      if (row.user_id !== req.authUser.id) {
+        return res.status(403).json({ error: 'Profile owner required' });
+      }
+      const posts = req.body?.posts;
+      if (!Array.isArray(posts) || posts.length === 0) {
+        return res.status(400).json({ error: 'posts array required' });
+      }
+      const inserted = await profileStore.appendPosts({
+        profileId: row.id,
+        userId: row.user_id,
+        posts,
+        source: 'system',
+      });
+      res.json({ success: true, count: inserted.length, posts: inserted });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   router.get('/app-releases/latest', async (req, res) => {
     try {
       const platform = String(req.query.platform || 'mac');
