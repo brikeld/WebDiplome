@@ -47,10 +47,10 @@
   /* Legacy aliases */
   --post-font-primary: var(--post-body-size);
   --post-font-secondary: var(--post-handle-size);
-  --shell-inline-pad: 12px;
-  --shell-rail-inset: 12px;
-  --shell-rail-width: 64px;
-  --shell-rail-clearance: 10px;
+  --shell-inline-pad: 16px;
+  --shell-rail-inset: 16px;
+  --shell-rail-width: 72px;
+  --shell-rail-clearance: 24px;
 }
 
 .persona-badge {
@@ -613,15 +613,13 @@ body {
 .page-outer.view-profile {
   height: 100vh;
   background-color: var(--card, #fff);
-  /* Keep desktop shells clipped to viewport for stable composition. */
   overflow: hidden;
-  --home-shell-max-width: min(100%, 2200px);
-  /* Slimmer rail = more horizontal room for the two capsules. */
-  --shell-rail-inset: 12px;
-  --shell-rail-width: 64px;
-  --shell-rail-clearance: 10px;
-  --shell-inline-pad: 12px;
-  /* Disabled by default: caused overlap on several desktop widths. */
+  --home-shell-max-width: 100%;
+  /* Thin sidebar, but keep a clear gap before the capsules. */
+  --shell-rail-inset: 16px;
+  --shell-rail-width: 72px;
+  --shell-rail-clearance: 26px;
+  --shell-inline-pad: 16px;
   --shell-capsules-nudge-left: 0px;
   --left-capsule-extra-width: 0px;
 }
@@ -641,10 +639,12 @@ body {
 .view-profile .page {
   height: 100vh;
   overflow: hidden;
-  --shell-col-gap: clamp(12px, 1.4vw, 22px);
-  --shell-left-col-basis: clamp(580px, 52vw, 1100px);
-  --shell-right-col-basis: clamp(340px, 26vw, 620px);
+  --shell-col-gap: clamp(14px, 1.6vw, 24px);
+  /* Left column flexes; right column keeps its target width. */
+  --shell-left-col-max: clamp(620px, 52vw, 1180px);
+  --shell-right-col-width: clamp(420px, 32vw, 720px);
   --dashboard-extra-width: 0px;
+  width: 100%;
   max-width: var(--home-shell-max-width);
   flex-direction: row;
   align-items: stretch;
@@ -655,16 +655,14 @@ body {
 
 .view-home .main-col,
 .view-profile .main-col {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   flex-shrink: 1;
   transform: none;
   --content-scale: 1;
   height: 100%;
   min-width: 0;
-  width: min(
-    var(--shell-left-col-basis),
-    calc(100% - var(--shell-right-col-basis) - var(--shell-col-gap))
-  );
+  max-width: var(--shell-left-col-max);
+  width: auto;
   margin-left: 0;
   display: flex;
   flex-direction: column;
@@ -672,13 +670,11 @@ body {
 
 .view-home .persona-side-panel,
 .view-profile .persona-side-panel {
-  flex: 0 0 auto;
-  flex-shrink: 1;
+  flex: 0 0 var(--shell-right-col-width);
+  flex-shrink: 0;
+  width: var(--shell-right-col-width);
+  max-width: var(--shell-right-col-width);
   min-width: 0;
-  width: min(
-    calc(var(--shell-right-col-basis) + var(--dashboard-extra-width)),
-    calc(100% - var(--shell-left-col-basis) - var(--shell-col-gap))
-  );
   margin-right: 0;
   box-sizing: border-box;
   overflow: hidden;
@@ -753,7 +749,7 @@ body {
 }
 
 /* ── RESPONSIVE: fluid two-column layout for 14" MacBook and similar (≤ 1660px) ──
-   Left column stays fixed-width; only the right rail narrows via clamp(). */
+   Right rail keeps priority width; left column absorbs any squeeze. */
 @media (max-width: 1660px) {
   .page-outer.view-home,
   .page-outer.view-profile {
@@ -764,20 +760,8 @@ body {
 
   .view-home .page,
   .view-profile .page {
-    --shell-left-col-basis: clamp(540px, 50vw, 880px);
-    --shell-right-col-basis: clamp(320px, 24vw, 540px);
-  }
-
-  .view-home .main-col,
-  .view-profile .main-col {
-    margin-left: 0;
-    transform: none;
-  }
-
-  .view-home .persona-side-panel,
-  .view-profile .persona-side-panel {
-    margin-right: 0;
-    transform: none;
+    --shell-left-col-max: clamp(560px, 50vw, 900px);
+    --shell-right-col-width: clamp(400px, 30vw, 580px);
   }
 }
 
@@ -786,8 +770,8 @@ body {
   .view-home .page,
   .view-profile .page {
     --shell-col-gap: 14px;
-    --shell-left-col-basis: clamp(480px, 48vw, 760px);
-    --shell-right-col-basis: clamp(300px, 22vw, 460px);
+    --shell-left-col-max: clamp(480px, 46vw, 760px);
+    --shell-right-col-width: clamp(360px, 28vw, 520px);
   }
 
   .posts-capsule {
