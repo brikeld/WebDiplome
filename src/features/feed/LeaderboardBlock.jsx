@@ -51,8 +51,8 @@ function Row({ entry, hidden, revealing, authorSlug, onOpenProfile }) {
                 : undefined
           }
           ariaLabel={entry.isUser ? 'View your profile' : `View ${name}'s profile`}
-          avatarSrc={entry.isUser ? entry.avatarSrc : null}
-          avatarInitials={entry.avatarInitials}
+          avatarSrc={entry.source === 'bot' ? null : (entry.avatarSrc || null)}
+          avatarInitials={entry.source === 'bot' ? entry.avatarInitials : null}
         />
         <span className="leaderboard-row__name">{name}</span>
         {entry.handle

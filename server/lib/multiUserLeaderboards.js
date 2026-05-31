@@ -15,6 +15,7 @@ import {
   initialsFromProfile,
   machineHandleFromProfile,
 } from '../../src/lib/profileUtils.js';
+import { resolveHostedPublicUrl } from './publicMediaUrls.js';
 import { seededFloat } from '../../src/lib/seededRandom.js';
 
 export const MIN_LEADERBOARD_ROWS = 5;
@@ -61,6 +62,22 @@ export function scoreProfileForBoard(board, profile, nowMs = Date.now()) {
   return scoreFromHarvest(board, harvest, profile, nowMs) ?? fallbackBoardScore(board, profile, nowMs);
 }
 
+function profileAvatarSrc(profile) {
+  const base64 = profile?.wallpaperBase64 ?? profile?.wallpaper_base64 ?? null;
+  if (base64 && String(base64).startsWith('data:')) return String(base64);
+
+  const candidate =
+    profile?.wallpaperUrl ??
+    profile?.wallpaper_url ??
+    null;
+  if (candidate) {
+    const resolved = resolveHostedPublicUrl(candidate);
+    if (resolved) return resolved;
+  }
+
+  return avatarSrcFromProfile(profile) || null;
+}
+
 function realUserEntry(profile, board, nowMs, highlightSlug) {
   const slug = profile?.slug ?? profile?.id ?? null;
   const { score, hint } = scoreProfileForBoard(board, profile, nowMs);
@@ -68,7 +85,7 @@ function realUserEntry(profile, board, nowMs, highlightSlug) {
     slug,
     name: displayNameFromProfile(profile),
     handle: machineHandleFromProfile(profile),
-    avatarSrc: avatarSrcFromProfile(profile) || null,
+    avatarSrc: profileAvatarSrc(profile),
     avatarInitials: initialsFromProfile(profile),
     score: Number(score) || 0,
     isUser: Boolean(highlightSlug && slug && String(slug) === String(highlightSlug)),

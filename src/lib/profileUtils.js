@@ -1,4 +1,6 @@
 import { resolveApiOrigin } from './apiOrigin.js';
+import { getPublicMediaConfig } from './publicMediaConfig.js';
+import { resolveUploadAssetUrl } from './uploadPublicUrl.js';
 
 /** e.g. "3 hours and 47 minutes ago" */
 export function formatRelativeTimeAgo(isoOrDate) {
@@ -33,9 +35,12 @@ export function resolvePublicMediaUrl(src, apiOrigin = null) {
   if (src == null || src === '') return null;
   const s = String(src);
   if (/^https?:\/\//i.test(s) || s.startsWith('data:')) return s;
-  const base = String(apiOrigin || resolveApiOrigin()).replace(/\/$/, '');
-  const path = s.startsWith('/') ? s : `/${s}`;
-  return `${base}${path}`;
+  const config = getPublicMediaConfig();
+  return resolveUploadAssetUrl(s, {
+    supabaseUrl: config?.supabaseUrl ?? null,
+    apiOrigin: apiOrigin || resolveApiOrigin(),
+    uploadsBucket: config?.uploadsBucket,
+  });
 }
 
 /** Portrait URL used in profile header, post cards, and leaderboard self-rows. */

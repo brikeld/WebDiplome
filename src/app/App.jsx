@@ -47,6 +47,7 @@ import {
 } from '@/lib/mergePersonaPosts.js';
 import { prependPersonaPosts } from '@/lib/postsApi.js';
 import { resolveApiOrigin, resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
+import { inferPublicMediaConfigFromProfiles } from '@/lib/publicMediaConfig.js';
 import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
 import {
   canUseHostedAccountFeatures,
@@ -1026,6 +1027,7 @@ export default function App() {
           return;
         }
         setAllProfiles(data);
+        inferPublicMediaConfigFromProfiles(data);
         const owned = resolveOwnedLandingProfile(data, linkedProfileSlug);
         if (linkedProfileSlug && !owned) {
           if (isHostedApiOrigin()) {
@@ -1080,6 +1082,7 @@ export default function App() {
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
     setAllProfiles(data);
+    inferPublicMediaConfigFromProfiles(data);
     const hosted = isHostedApiOrigin();
     const pickSlug = linkedProfileSlug || (hosted ? null : selectedProfileSlug());
     const incoming = pickSlug

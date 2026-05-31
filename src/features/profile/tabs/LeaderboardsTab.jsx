@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { resolveApiOrigin } from '@/lib/apiOrigin.js';
 import { readLinkedProfileSlug } from '@/lib/hostedAccount.js';
+import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 
 const API_ORIGIN = resolveApiOrigin();
 
@@ -60,16 +61,26 @@ function LeaderboardCard({ board }) {
       </header>
 
       <ol className="profile-leaderboard-card__rows" aria-label={`${board.title} standings`}>
-        {(board.entries || []).map((entry) => (
+        {(board.entries || []).map((entry) => {
+          const isBot = entry.source === 'bot';
+          return (
           <li
             key={`${board.boardId}-${entry.rank}-${entry.handle}-${entry.isUser ? 'self' : 'clone'}`}
             className={`profile-leaderboard-row${entry.isUser ? ' is-self' : ''}`}
           >
             <span className="profile-leaderboard-row__rank">{entry.rank}</span>
+            <ProfileAvatarLink
+              className="profile-leaderboard-row__avatar"
+              imgClassName="profile-leaderboard-row__avatar-img"
+              initialsClassName="profile-leaderboard-row__avatar-initials"
+              avatarSrc={isBot ? null : (entry.avatarSrc || null)}
+              avatarInitials={isBot ? entry.avatarInitials : null}
+            />
             <span className="profile-leaderboard-row__name">{entry.name}</span>
             <span className="profile-leaderboard-row__score">{formatScore(entry.score)}</span>
           </li>
-        ))}
+          );
+        })}
       </ol>
 
       {others.length > 0 && (

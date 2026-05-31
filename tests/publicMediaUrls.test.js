@@ -1,7 +1,17 @@
-import { describe, expect, it } from 'vitest';
-import { resolveHostedPublicUrl, normalizeAttachedAssetForApi } from '../server/lib/publicMediaUrls.js';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 describe('publicMediaUrls', () => {
+  let resolveHostedPublicUrl;
+  let normalizeAttachedAssetForApi;
+
+  beforeAll(async () => {
+    process.env.SUPABASE_URL = process.env.SUPABASE_URL || 'https://example.supabase.co';
+    vi.resetModules();
+    const mod = await import('../server/lib/publicMediaUrls.js');
+    resolveHostedPublicUrl = mod.resolveHostedPublicUrl;
+    normalizeAttachedAssetForApi = mod.normalizeAttachedAssetForApi;
+  });
+
   const hash = 'a'.repeat(64);
   const filename = `${hash}.jpg`;
 

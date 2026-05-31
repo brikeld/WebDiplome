@@ -2,12 +2,20 @@ import express from 'express';
 import multer from 'multer';
 import { requireHostedUser } from '../lib/auth.js';
 import { recordHostedAccountDeletion } from '../lib/hostedAccountDeletion.js';
+import { serverConfig } from '../lib/env.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 export function createPublicDemoRoutes({ supabaseService, profileStore, storageStore, buildLeaderboards }) {
   const router = express.Router();
   const requireUser = requireHostedUser(supabaseService);
+
+  router.get('/public-config', (_req, res) => {
+    res.json({
+      supabaseUrl: serverConfig.supabaseUrl || null,
+      uploadsBucket: 'uploads-public',
+    });
+  });
 
   router.get('/profiles', async (_req, res) => {
     try {

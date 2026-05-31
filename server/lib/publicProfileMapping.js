@@ -86,6 +86,12 @@ export function mapPersonaBlurbsForStorage(uiBlurbs) {
 
 export function mapProfileRowForApi(row, posts = []) {
   if (!row) return null;
+  const raw = row.raw_profile && typeof row.raw_profile === 'object' ? row.raw_profile : {};
+  const wallpaperCandidate =
+    row.wallpaper_url ??
+    raw.wallpaperUrl ??
+    raw.wallpaper_url ??
+    null;
   return {
     id: row.slug,
     profileUuid: row.id,
@@ -100,7 +106,7 @@ export function mapProfileRowForApi(row, posts = []) {
     dominantPersona: row.dominant_persona,
     profileSummary: row.profile_summary,
     userDescription: row.profile_summary,
-    wallpaperUrl: resolveHostedPublicUrl(row.wallpaper_url) ?? row.wallpaper_url ?? null,
+    wallpaperUrl: resolveHostedPublicUrl(wallpaperCandidate) ?? null,
     collectedAt: row.collected_at,
     personaBlurbs: mapPersonaBlurbsForApi(row.persona_blurbs),
     personaPosts: posts,

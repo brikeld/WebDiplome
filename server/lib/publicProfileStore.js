@@ -7,6 +7,7 @@ import {
   mapPersonaBlurbsForStorage,
   mapSyncPayloadToProfileRow,
 } from './publicProfileMapping.js';
+import { resolveHostedPublicUrl } from './publicMediaUrls.js';
 
 function throwIfError(result, label) {
   if (result?.error) throw new Error(`${label}: ${result.error.message}`);
@@ -156,9 +157,6 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
   }
 
   async function resolveWallpaperUrl(userId, payload, existing) {
-    const directUrl = String(payload?.wallpaperUrl ?? payload?.wallpaper_url ?? '').trim();
-    if (directUrl) return directUrl;
-
     const parsed = parseWallpaperBase64(payload?.wallpaperBase64 ?? payload?.wallpaper_base64);
     if (parsed && storageStore) {
       const asset = await storageStore.uploadPublicAsset({
@@ -170,7 +168,17 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       return asset.url;
     }
 
-    return existing?.wallpaper_url ?? null;
+    const directUrl = String(payload?.wallpaperUrl ?? payload?.wallpaper_url ?? '').trim();
+    if (directUrl) {
+      return resolveHostedPublicUrl(directUrl) ?? directUrl;
+    }
+
+    const existingUrl = existing?.wallpaper_url ?? null;
+    if (existingUrl) {
+      return resolveHostedPublicUrl(existingUrl) ?? existingUrl;
+    }
+
+    return null;
   }
 
   return {
