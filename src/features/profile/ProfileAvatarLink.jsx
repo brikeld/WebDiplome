@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Clickable profile portrait — navigates to the Profile view (main tab).
@@ -13,11 +13,17 @@ export default function ProfileAvatarLink({
   avatarInitials,
   children,
 }) {
+  const [imgSrc, setImgSrc] = useState(avatarSrc);
   const [imgFailed, setImgFailed] = useState(false);
+  const retriedRef = useRef(false);
+
   useEffect(() => {
+    setImgSrc(avatarSrc);
     setImgFailed(false);
+    retriedRef.current = false;
   }, [avatarSrc]);
-  const showImg = Boolean(avatarSrc) && !imgFailed;
+
+  const showImg = Boolean(imgSrc) && !imgFailed;
   const showInitials = !showImg && avatarInitials != null && avatarInitials !== '';
 
   const inner = (
@@ -25,10 +31,18 @@ export default function ProfileAvatarLink({
       {showImg ? (
         <img
           className={imgClassName}
-          src={avatarSrc}
+          src={imgSrc}
           alt=""
           referrerPolicy="no-referrer"
-          onError={() => setImgFailed(true)}
+          onError={() => {
+            if (!retriedRef.current && /^https?:\/\//i.test(String(imgSrc || ''))) {
+              retriedRef.current = true;
+              const base = String(imgSrc).split('?')[0];
+              setImgSrc(`${base}?retry=${Date.now()}`);
+              return;
+            }
+            setImgFailed(true);
+          }}
         />
       ) : showInitials ? (
         <span className={initialsClassName}>{avatarInitials}</span>
