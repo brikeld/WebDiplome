@@ -751,7 +751,7 @@ body {
 }
 
 /* ── RESPONSIVE: 14" MacBook and similar (≤ 1660px) ──
-   Wider right rail on laptop; left column yields first if space is tight. */
+   Slightly wider right rail; left column stays put, growth goes right only. */
 @media (max-width: 1660px) {
   .page-outer.view-home,
   .page-outer.view-profile {
@@ -762,8 +762,15 @@ body {
 
   .view-home .page,
   .view-profile .page {
+    justify-content: flex-start;
     --shell-left-col-max: clamp(520px, 46vw, 840px);
-    --shell-right-col-width: clamp(460px, 36vw, 640px);
+    --shell-right-col-width: clamp(478px, 37.5vw, 655px);
+  }
+
+  .view-home .main-col,
+  .view-profile .main-col {
+    flex: 0 0 auto;
+    flex-shrink: 0;
   }
 }
 
@@ -773,7 +780,7 @@ body {
   .view-profile .page {
     --shell-col-gap: 14px;
     --shell-left-col-max: clamp(460px, 42vw, 720px);
-    --shell-right-col-width: clamp(420px, 34vw, 560px);
+    --shell-right-col-width: clamp(440px, 35vw, 580px);
   }
 
   .posts-capsule {
