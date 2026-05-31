@@ -67,6 +67,8 @@ function profileAvatarSrc(profile) {
   if (base64 && String(base64).startsWith('data:')) return String(base64);
 
   const candidate =
+    profile?.avatarUrl ??
+    profile?.avatar_url ??
     profile?.wallpaperUrl ??
     profile?.wallpaper_url ??
     null;

@@ -91,6 +91,8 @@ export function mapProfileRowForApi(row, posts = []) {
     row.wallpaper_url ??
     raw.wallpaperUrl ??
     raw.wallpaper_url ??
+    raw.avatarUrl ??
+    raw.avatar_url ??
     null;
   const resolvedWallpaper = resolveHostedPublicUrl(wallpaperCandidate) ?? null;
   return {
