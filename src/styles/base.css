@@ -713,6 +713,10 @@ body {
 
 /* ── POSTS CAPSULE (one shell around all posts) ── */
 .posts-capsule {
+  /* Outer shell size unchanged; inner gutters control how wide each post reads. */
+  --posts-capsule-pad-x: 38px;
+  --post-card-gutter-x: 6px;
+  --post-meta-row-inset-x: 18px;
   box-sizing: border-box;
   width: 100%;
   border-radius: var(--capsule-radius);
@@ -721,7 +725,7 @@ body {
   border-color: var(--persona-accent, var(--border));
   border-width: var(--capsule-shell-border-width);
   overflow: hidden;
-  padding: 36px 50px 40px;
+  padding: 36px var(--posts-capsule-pad-x) 40px;
 }
 
   @media (max-width: 900px) {
@@ -782,7 +786,10 @@ body {
   }
 
   .posts-capsule {
-    padding: 26px 32px 28px;
+    --posts-capsule-pad-x: 24px;
+    --post-card-gutter-x: 4px;
+    --post-meta-row-inset-x: 14px;
+    padding: 26px var(--posts-capsule-pad-x) 28px;
   }
 
   .view-home .persona-side-panel .dashboard-capsule,
@@ -841,7 +848,7 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  padding: 0 16px;
+  padding: 0 var(--post-card-gutter-x, 6px);
   color: var(--ink);
 }
 
@@ -1169,7 +1176,7 @@ body {
   align-self: stretch;
   width: 100%;
   box-sizing: border-box;
-  padding: 0 28px;
+  padding: 0 var(--post-meta-row-inset-x, 18px);
 }
 
 .post-card-meta-row .post-meta-pill--time {
