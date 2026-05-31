@@ -47,6 +47,10 @@
   /* Legacy aliases */
   --post-font-primary: var(--post-body-size);
   --post-font-secondary: var(--post-handle-size);
+  --shell-inline-pad: 16px;
+  --shell-rail-inset: 16px;
+  --shell-rail-width: 88px;
+  --shell-rail-clearance: 18px;
 }
 
 .persona-badge {
@@ -83,15 +87,6 @@ html, body {
   scrollbar-width: none;
 }
 
-/* Widened main column pulls left via negative margin; allow that bleed past the
-   global horizontal clip only while home/profile are mounted (landing unchanged). */
-html:has(.page-outer.view-home),
-html:has(.page-outer.view-profile),
-body:has(.page-outer.view-home),
-body:has(.page-outer.view-profile) {
-  overflow-x: visible;
-}
-
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
   display: none;
@@ -120,10 +115,11 @@ body {
 .page {
   box-sizing: border-box;
   width: 100%;
-  /* Wider so the posts capsule has more horizontal real estate */
-  max-width: 1180px;
+  /* Desktop shell scales with viewport while staying bounded */
+  max-width: min(94vw, 2100px);
   margin: 0 auto;
-  padding: 16px 16px 16px 96px;
+  padding: 16px var(--shell-inline-pad) 16px
+    calc(var(--shell-rail-inset) + var(--shell-rail-width) + var(--shell-rail-clearance));
   min-height: 100vh;
   background: transparent;
   /* Center scaled .main-col so overflow clips symmetrically (fixes right-edge capsule clip) */
@@ -134,7 +130,7 @@ body {
 
 .sidebar {
   position: fixed;
-  left: 16px;
+  left: var(--shell-rail-inset);
   top: 50%;
   transform: translateY(-50%);
   z-index: 50;
@@ -501,7 +497,7 @@ body {
 
 .project-name {
   position: fixed;
-  left: 18px;
+  left: var(--shell-rail-inset);
   top: 18px;
   bottom: auto;
   z-index: 70;
@@ -617,16 +613,16 @@ body {
 .page-outer.view-profile {
   height: 100vh;
   background-color: var(--card, #fff);
-  /* Avoid overflow-x: visible + overflow-y: hidden (x resolves to auto and can
-     still clip). Full visible lets the widened capsule paint; height + inner
-     flex chains keep layout bounded. */
-  overflow: visible;
-  --home-shell-max-width: 1680px;
-  --home-shell-padding-left: 104px;
-  /* Nudge main feed + dashboard capsules left (not the sidebar nav) */
-  --shell-capsules-nudge-left: 20px;
-  --left-capsule-extra-width: 140px;
+  /* Keep desktop shells clipped to viewport for stable composition. */
+  overflow: hidden;
+  --home-shell-max-width: clamp(1320px, 92vw, 2200px);
+  /* Keep rail spacing deterministic to prevent overlap with feed capsule. */
   --shell-rail-inset: 24px;
+  --shell-rail-width: 88px;
+  --shell-rail-clearance: 20px;
+  /* Disabled by default: caused overlap on several desktop widths. */
+  --shell-capsules-nudge-left: 0px;
+  --left-capsule-extra-width: 0px;
 }
 
 .page-outer.view-home .sidebar,
@@ -644,39 +640,39 @@ body {
 .view-profile .page {
   height: 100vh;
   overflow: visible;
-  /* Right rail: wider panel bleeds right; left column unchanged (negative margin-right). */
-  --right-rail-base-width: 560px;
-  --dashboard-extra-width: 260px;
+  --right-rail-base-width: clamp(360px, 29vw, 620px);
+  --dashboard-extra-width: 0px;
   max-width: var(--home-shell-max-width);
   /* Row so the feed column and side panel sit naturally next to each other */
   flex-direction: row;
   align-items: stretch;
-  gap: 24px;
+  justify-content: center;
+  gap: clamp(16px, 1.8vw, 28px);
 }
 
 .view-home .main-col,
 .view-profile .main-col {
-  /* Fixed width only — do not flex-grow or shrink when the right rail width changes */
+  /* Keep feed and dashboard in stable proportion across desktop sizes. */
   flex: 0 0 auto;
-  flex-shrink: 0;
-  transform: translateX(calc(-1 * var(--shell-capsules-nudge-left, 0px)));
+  flex-shrink: 1;
+  transform: none;
   --content-scale: 1;
   height: 100%;
   min-height: 0;
-  width: calc(clamp(640px, 64vw, 980px) + var(--left-capsule-extra-width));
-  margin-left: calc(-1 * var(--left-capsule-extra-width));
+  width: clamp(680px, 60vw, 1360px);
+  margin-left: 0;
   display: flex;
   flex-direction: column;
 }
 
 .view-home .persona-side-panel,
 .view-profile .persona-side-panel {
-  flex-shrink: 0;
+  flex-shrink: 1;
   width: calc(var(--right-rail-base-width) + var(--dashboard-extra-width));
-  margin-right: calc(-1 * var(--dashboard-extra-width));
+  margin-right: 0;
   box-sizing: border-box;
   overflow: hidden;
-  transform: translateX(calc(-1 * var(--shell-capsules-nudge-left, 0px)));
+  transform: none;
 }
 
 .view-home .persona-side-panel .dashboard-capsule,
@@ -756,7 +752,7 @@ body {
 
   .view-home .main-col,
   .view-profile .main-col {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-width: 0;
     width: auto;
     margin-left: 0;
@@ -766,8 +762,8 @@ body {
   .view-home .persona-side-panel,
   .view-profile .persona-side-panel {
     flex: 0 0 auto;
-    flex-shrink: 0;
-    width: clamp(360px, 29vw, 500px);
+    flex-shrink: 1;
+    width: clamp(340px, 30vw, 500px);
     margin-right: 0;
     transform: none;
   }
@@ -782,7 +778,7 @@ body {
 
   .view-home .persona-side-panel,
   .view-profile .persona-side-panel {
-    width: clamp(300px, 27vw, 380px);
+    width: clamp(300px, 29vw, 420px);
   }
 
   .posts-capsule {

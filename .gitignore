@@ -8,6 +8,11 @@ dist/
 **/*.ttf
 **/*.otf
 **/*.eot
+!src/fonts/AvantGarde/woff2/AvantGardeITCbyBT-Bold.woff2
+!src/fonts/AvantGarde/woff2/AvantGardeITCbyBT-Book.woff2
+!src/fonts/AvantGarde/woff2/AvantGardeITCbyBT-BookOblique.woff2
+!src/fonts/AvantGarde/woff2/AvantGardeITCbyBT-Demi.woff2
+!src/fonts/AvantGarde/woff2/AvantGardeITCbyBT-DemiOblique.woff2
 
 # User uploads (served from /uploads; do not commit binary media)
 public/uploads/
