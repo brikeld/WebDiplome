@@ -21,6 +21,9 @@ export default function ProfileHeader({
   onOpenProfile,
 }) {
   const name = displayNameFromProfile(profile ?? {});
+  const firstName = String(profile?.firstname ?? '').trim();
+  const lastName = String(profile?.lastname ?? '').trim();
+  const useSplitName = Boolean(firstName && lastName);
   const initials = initialsFromProfile(profile ?? {});
   const avatarSrc = avatarSrcFromProfile(profile);
   const handle = machineHandleFromProfile(profile ?? {});
@@ -57,16 +60,32 @@ export default function ProfileHeader({
           <div className="profile-hero-main">
             <div className="profile-hero-left">
               <div className="profile-name-handle-stack">
-                <div className="profile-name-row">
-                  <div className="profile-name-lg">{name}</div>
-                  <span className="profile-hero-badge-slot">
-                    <PersonaBadge
-                      persona={personaBadgePersona}
-                      profile={profile ?? {}}
-                      className="profile-hero-persona-badge"
-                    />
-                  </span>
-                </div>
+                {useSplitName ? (
+                  <div className="profile-name-stack profile-name-stack--split">
+                    <span className="profile-name-line profile-name-line--first">{firstName}</span>
+                    <div className="profile-name-row profile-name-row--last">
+                      <span className="profile-name-line profile-name-line--last">{lastName}</span>
+                      <span className="profile-hero-badge-slot">
+                        <PersonaBadge
+                          persona={personaBadgePersona}
+                          profile={profile ?? {}}
+                          className="profile-hero-persona-badge"
+                        />
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="profile-name-row">
+                    <div className="profile-name-lg">{name}</div>
+                    <span className="profile-hero-badge-slot">
+                      <PersonaBadge
+                        persona={personaBadgePersona}
+                        profile={profile ?? {}}
+                        className="profile-hero-persona-badge"
+                      />
+                    </span>
+                  </div>
+                )}
                 <div className="profile-handle-row">
                   <div className="profile-handle-lg">{handle}</div>
                 </div>

@@ -640,21 +640,20 @@ body {
 .view-profile .page {
   height: 100vh;
   overflow: visible;
-  --right-rail-base-width: clamp(360px, 29vw, 620px);
+  --right-rail-base-width: clamp(440px, 34vw, 760px);
   --dashboard-extra-width: 0px;
   max-width: var(--home-shell-max-width);
-  /* Row so the feed column and side panel sit naturally next to each other */
   flex-direction: row;
   align-items: stretch;
-  justify-content: center;
+  /* Keep the left column anchored; extra width goes to the right rail only. */
+  justify-content: flex-start;
   gap: clamp(16px, 1.8vw, 28px);
 }
 
 .view-home .main-col,
 .view-profile .main-col {
-  /* Keep feed and dashboard in stable proportion across desktop sizes. */
   flex: 0 0 auto;
-  flex-shrink: 1;
+  flex-shrink: 0;
   transform: none;
   --content-scale: 1;
   height: 100%;
@@ -667,7 +666,8 @@ body {
 
 .view-home .persona-side-panel,
 .view-profile .persona-side-panel {
-  flex-shrink: 1;
+  flex: 0 0 auto;
+  flex-shrink: 0;
   width: calc(var(--right-rail-base-width) + var(--dashboard-extra-width));
   margin-right: 0;
   box-sizing: border-box;
@@ -743,9 +743,7 @@ body {
 }
 
 /* ── RESPONSIVE: fluid two-column layout for 14" MacBook and similar (≤ 1660px) ──
-   The bleed design (negative margins + oversized columns) is built for ~1680px+.
-   Below that threshold we switch the left col to flex:1 and give the right panel
-   a viewport-relative clamp width so both always fit without overflow. */
+   Left column stays fixed-width; only the right rail narrows via clamp(). */
 @media (max-width: 1660px) {
   .page-outer.view-home,
   .page-outer.view-profile {
@@ -756,9 +754,10 @@ body {
 
   .view-home .main-col,
   .view-profile .main-col {
-    flex: 1 1 0;
+    flex: 0 0 auto;
+    flex-shrink: 0;
     min-width: 0;
-    width: auto;
+    width: clamp(640px, 56vw, 920px);
     margin-left: 0;
     transform: none;
   }
@@ -766,8 +765,8 @@ body {
   .view-home .persona-side-panel,
   .view-profile .persona-side-panel {
     flex: 0 0 auto;
-    flex-shrink: 1;
-    width: clamp(340px, 30vw, 500px);
+    flex-shrink: 0;
+    width: clamp(400px, 32vw, 580px);
     margin-right: 0;
     transform: none;
   }
@@ -782,7 +781,7 @@ body {
 
   .view-home .persona-side-panel,
   .view-profile .persona-side-panel {
-    width: clamp(300px, 29vw, 420px);
+    width: clamp(380px, 31vw, 520px);
   }
 
   .posts-capsule {
