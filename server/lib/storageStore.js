@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import path from 'path';
 import { serverConfig } from './env.js';
+import { normalizeImageBufferForWeb } from './normalizeImageBuffer.js';
 
 const MIME_EXT = new Map([
   ['image/jpeg', '.jpg'],
@@ -13,9 +14,11 @@ const MIME_EXT = new Map([
   ['text/markdown', '.md'],
 ]);
 
-export function filenameForBuffer(buffer, originalName = '', mimeType = '') {
+const IMAGE_MIME_PREFIX = 'image/';
+
+export function filenameForBuffer(buffer, originalName = '', mimeType = '', extOverride = null) {
   const hash = crypto.createHash('sha256').update(buffer).digest('hex');
-  const mimeExt = MIME_EXT.get(String(mimeType || '').toLowerCase()) || '';
+  const mimeExt = extOverride || MIME_EXT.get(String(mimeType || '').toLowerCase()) || '';
   const origExt = path.extname(String(originalName || '')).toLowerCase();
   return `${hash}${mimeExt || origExt}`;
 }
@@ -28,12 +31,27 @@ export function createStorageStore({ supabase, bucket = 'uploads-public', config
   if (!supabase) throw new Error('Supabase service client required');
 
   return {
-    async uploadPublicAsset({ ownerUserId, buffer, originalName, mimeType }) {
-      const filename = filenameForBuffer(buffer, originalName, mimeType);
+    async uploadPublicAsset({ ownerUserId, buffer, originalName, mimeType, normalizeImage = true }) {
+      let payload = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+      let outMime = mimeType || 'application/octet-stream';
+      let extOverride = null;
+
+      if (normalizeImage && String(outMime).startsWith(IMAGE_MIME_PREFIX)) {
+        try {
+          const normalized = await normalizeImageBufferForWeb(payload);
+          payload = normalized.buffer;
+          outMime = normalized.mimeType;
+          extOverride = normalized.ext;
+        } catch (err) {
+          console.warn('[storage] image normalize failed, storing raw', err?.message || err);
+        }
+      }
+
+      const filename = filenameForBuffer(payload, originalName, outMime, extOverride);
       const objectPath = filename;
       const upload = await supabase.storage
         .from(bucket)
-        .upload(objectPath, buffer, { contentType: mimeType || 'application/octet-stream', upsert: true });
+        .upload(objectPath, payload, { contentType: outMime, upsert: true });
       if (upload.error) throw new Error(`storage upload: ${upload.error.message}`);
 
       const row = {
@@ -41,8 +59,8 @@ export function createStorageStore({ supabase, bucket = 'uploads-public', config
         sha256: filename.split('.')[0],
         bucket,
         path: objectPath,
-        mime_type: mimeType || 'application/octet-stream',
-        size_bytes: buffer.length,
+        mime_type: outMime,
+        size_bytes: payload.length,
       };
       const inserted = await supabase.from('assets').upsert(row, { onConflict: 'bucket,path' }).select('*').single();
       if (inserted.error) throw new Error(`asset row: ${inserted.error.message}`);

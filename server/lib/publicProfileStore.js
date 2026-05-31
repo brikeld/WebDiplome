@@ -8,6 +8,7 @@ import {
   mapSyncPayloadToProfileRow,
 } from './publicProfileMapping.js';
 import { resolveHostedPublicUrl } from './publicMediaUrls.js';
+import { repairProfileWallpaperIfNeeded } from './repairProfileWallpaper.js';
 
 function throwIfError(result, label) {
   if (result?.error) throw new Error(`${label}: ${result.error.message}`);
@@ -181,6 +182,15 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     return null;
   }
 
+  async function ensureWebSafeWallpaper(row) {
+    if (!row?.wallpaper_url || !storageStore) return row;
+    const repaired = await repairProfileWallpaperIfNeeded(row, { storageStore, supabase });
+    if (repaired && repaired !== row.wallpaper_url) {
+      return { ...row, wallpaper_url: repaired };
+    }
+    return row;
+  }
+
   return {
     async getProfileByUserId(userId) {
       const row = await findProfileByUserId(userId);
@@ -222,7 +232,8 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         await supabase.from('profiles').select('*').order('updated_at', { ascending: false }),
         'list profiles',
       );
-      return Promise.all((rows ?? []).map(async (row) => mapProfileRowForApi(row, await readPosts(row.id))));
+      const safeRows = await Promise.all((rows ?? []).map((row) => ensureWebSafeWallpaper(row)));
+      return Promise.all(safeRows.map(async (row) => mapProfileRowForApi(row, await readPosts(row.id))));
     },
 
     async listProfilesForLeaderboards() {
@@ -244,7 +255,8 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         'get profile',
       );
       if (!row) return null;
-      return mapProfileRowForApi(row, await readPosts(row.id));
+      const safe = await ensureWebSafeWallpaper(row);
+      return mapProfileRowForApi(safe, await readPosts(safe.id));
     },
 
     async getProfileRowBySlug(slug) {
