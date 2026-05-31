@@ -14,6 +14,7 @@
     "worker:ai": "node worker/ai-worker.js",
     "servers": "concurrently -n data,gen -c cyan,magenta \"node server.js\" \"node server-generate.js\"",
     "dedupe:uploads": "node scripts/dedupe-uploads.js",
+    "purge:hosted": "node scripts/purge-hosted-profile.js",
     "test": "vitest run",
     "deploy:api": "fly deploy",
     "deploy:web": "fly deploy --config fly.web.toml"

@@ -47,6 +47,114 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     return (data ?? []).map(mapPostRowForApi);
   }
 
+  /** Remove all posts, jobs, assets, and profile row for one hosted account. */
+  async function purgeProfileData({ userId, profileId, slug = null }) {
+    if (profileId) {
+      throwIfError(
+        await supabase.from('generation_jobs').delete().eq('profile_id', profileId),
+        'delete generation jobs by profile',
+      );
+      throwIfError(
+        await supabase.from('posts').delete().eq('profile_id', profileId),
+        'delete posts by profile',
+      );
+    }
+    if (userId) {
+      throwIfError(
+        await supabase.from('generation_jobs').delete().eq('user_id', userId),
+        'delete generation jobs by user',
+      );
+      throwIfError(
+        await supabase.from('posts').delete().eq('user_id', userId),
+        'delete posts by user',
+      );
+
+      const assets = throwIfError(
+        await supabase.from('assets').select('bucket, path').eq('owner_user_id', userId),
+        'list assets',
+      );
+
+      const byBucket = new Map();
+      for (const asset of assets ?? []) {
+        if (!asset?.bucket || !asset?.path) continue;
+        if (!byBucket.has(asset.bucket)) byBucket.set(asset.bucket, []);
+        byBucket.get(asset.bucket).push(asset.path);
+      }
+      for (const [bucket, paths] of byBucket) {
+        await supabase.storage.from(bucket).remove(paths);
+      }
+
+      throwIfError(await supabase.from('assets').delete().eq('owner_user_id', userId), 'delete assets');
+      throwIfError(await supabase.from('profiles').delete().eq('user_id', userId), 'delete profile');
+    }
+
+    return { userId, profileId, slug };
+  }
+
+  /** Posts whose profile row was removed without cascade (legacy cleanup). */
+  async function deleteOrphanPosts() {
+    const profiles = throwIfError(
+      await supabase.from('profiles').select('id'),
+      'list profile ids',
+    );
+    const validIds = new Set((profiles ?? []).map((row) => row.id));
+    const posts = throwIfError(
+      await supabase.from('posts').select('id, profile_id'),
+      'list posts for orphan check',
+    );
+    const orphanIds = (posts ?? [])
+      .filter((row) => row?.id && !validIds.has(row.profile_id))
+      .map((row) => row.id);
+    if (orphanIds.length === 0) return 0;
+    throwIfError(
+      await supabase.from('posts').delete().in('id', orphanIds),
+      'delete orphan posts',
+    );
+    return orphanIds.length;
+  }
+
+  /** Delete by public slug (admin cleanup). */
+  async function deleteProfileBySlug(slug) {
+    const needle = String(slug || '').trim();
+    if (!needle) throw new Error('slug required');
+
+    const row = throwIfError(
+      await supabase.from('profiles').select('*').eq('slug', needle).maybeSingle(),
+      'find profile by slug',
+    );
+    if (!row) {
+      const orphansRemoved = await deleteOrphanPosts();
+      return { deleted: false, slug: needle, reason: 'profile not found', orphansRemoved };
+    }
+
+    await purgeProfileData({ userId: row.user_id, profileId: row.id, slug: row.slug });
+
+    const authDelete = await supabase.auth.admin.deleteUser(row.user_id);
+    if (authDelete.error) {
+      throw new Error(`delete auth user: ${authDelete.error.message}`);
+    }
+
+    return { deleted: true, slug: row.slug, profileId: row.id, userId: row.user_id };
+  }
+
+  /** Delete all profiles + posts matching a name prefix (e.g. `jane-doe`). */
+  async function deleteProfilesByNamePrefix(firstname, lastname) {
+    const base = buildProfileSlug(firstname, lastname, null).replace(/-+$/, '');
+    const pattern = `${base}%`;
+    const rows = throwIfError(
+      await supabase.from('profiles').select('*').like('slug', pattern),
+      'list profiles by name prefix',
+    );
+    const list = Array.isArray(rows) ? rows.filter(Boolean) : [];
+    const results = [];
+    for (const row of list) {
+      await purgeProfileData({ userId: row.user_id, profileId: row.id, slug: row.slug });
+      await supabase.auth.admin.deleteUser(row.user_id).catch(() => null);
+      results.push({ slug: row.slug, userId: row.user_id });
+    }
+    return { deleted: results.length, profiles: results, prefix: pattern };
+  }
+
   async function resolveWallpaperUrl(userId, payload, existing) {
     const directUrl = String(payload?.wallpaperUrl ?? payload?.wallpaper_url ?? '').trim();
     if (directUrl) return directUrl;
@@ -216,39 +324,27 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     async deleteAccountForUser(userId) {
       const profile = await findProfileByUserId(userId);
       if (!profile) {
+        await purgeProfileData({ userId, profileId: null });
         await supabase.auth.admin.deleteUser(userId).catch(() => null);
         return { deleted: false, slug: null };
       }
 
-      const profileId = profile.id;
-      const slug = profile.slug;
-
-      const assets = throwIfError(
-        await supabase.from('assets').select('bucket, path').eq('owner_user_id', userId),
-        'list assets',
-      );
-
-      const byBucket = new Map();
-      for (const asset of assets ?? []) {
-        if (!asset?.bucket || !asset?.path) continue;
-        if (!byBucket.has(asset.bucket)) byBucket.set(asset.bucket, []);
-        byBucket.get(asset.bucket).push(asset.path);
-      }
-      for (const [bucket, paths] of byBucket) {
-        await supabase.storage.from(bucket).remove(paths);
-      }
-
-      throwIfError(await supabase.from('assets').delete().eq('owner_user_id', userId), 'delete assets');
-      throwIfError(await supabase.from('generation_jobs').delete().eq('user_id', userId), 'delete generation jobs');
-      throwIfError(await supabase.from('posts').delete().eq('user_id', userId), 'delete posts');
-      throwIfError(await supabase.from('profiles').delete().eq('user_id', userId), 'delete profile');
+      await purgeProfileData({
+        userId,
+        profileId: profile.id,
+        slug: profile.slug,
+      });
 
       const authDelete = await supabase.auth.admin.deleteUser(userId);
       if (authDelete.error) {
         throw new Error(`delete auth user: ${authDelete.error.message}`);
       }
 
-      return { deleted: true, slug, profileId };
+      return { deleted: true, slug: profile.slug, profileId: profile.id };
     },
+
+    deleteProfileBySlug,
+    deleteProfilesByNamePrefix,
+    deleteOrphanPosts,
   };
 }
