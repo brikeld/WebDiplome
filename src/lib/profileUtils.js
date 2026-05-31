@@ -1,5 +1,6 @@
 import { resolveApiOrigin } from './apiOrigin.js';
 import { getPublicMediaConfig } from './publicMediaConfig.js';
+import { avatarUrlForSlug, pickProfileMediaUrl } from './publicAvatarRegistry.js';
 import { resolveUploadAssetUrl } from './uploadPublicUrl.js';
 
 /** e.g. "3 hours and 47 minutes ago" */
@@ -45,20 +46,20 @@ export function resolvePublicMediaUrl(src, apiOrigin = null) {
 
 /** Portrait URL used in profile header, post cards, and leaderboard rows. */
 export function avatarSrcFromProfile(p, apiOrigin = null) {
+  const slug = p?.slug ?? p?.id ?? null;
+  const fromRegistry = slug ? avatarUrlForSlug(slug) : null;
+
   const src =
-    p?.avatarUrl ??
-    p?.avatar_url ??
+    fromRegistry ??
+    pickProfileMediaUrl(p) ??
     p?.wallpaperBase64 ??
     p?.wallpaper_base64 ??
-    p?.wallpaperUrl ??
-    p?.wallpaper_url ??
-    p?.wallpaper ??
-    p?.avatarSrc ??
-    p?.avatar_src ??
     null;
+
   if (src == null || src === '') return null;
-  const raw = String(src);
-  if (raw.startsWith('data:')) return raw;
+  const raw = String(src).trim();
+  if (!raw || raw === 'null' || raw === 'undefined') return null;
+  if (raw.startsWith('data:') || /^https?:\/\//i.test(raw)) return raw;
   return resolvePublicMediaUrl(raw, apiOrigin);
 }
 

@@ -48,6 +48,10 @@ import {
 import { prependPersonaPosts } from '@/lib/postsApi.js';
 import { resolveApiOrigin, resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
 import { inferPublicMediaConfigFromProfiles } from '@/lib/publicMediaConfig.js';
+import {
+  ingestProfileAvatars,
+  normalizeProfilesFromApi,
+} from '@/lib/publicAvatarRegistry.js';
 import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
 import {
   canUseHostedAccountFeatures,
@@ -663,6 +667,7 @@ function AppInner({
         try {
           const res = await fetch(
             `${API_ORIGIN}/api/profiles/${encodeURIComponent(targetSlug)}`,
+            { cache: 'no-store' },
           );
           if (res.ok) target = await res.json();
         } catch (e) {
@@ -677,8 +682,8 @@ function AppInner({
         setMainView('landing');
         return;
       }
-
-      setViewedProfile(target);
+      ingestProfileAvatars([target]);
+      setViewedProfile(normalizeProfilesFromApi([target])[0] ?? target);
       setMainView('profile');
       setActiveTab(tab);
       resetProfileChrome();
@@ -1019,19 +1024,22 @@ export default function App() {
       if (await syncAccountDeletionState()) return;
 
       try {
-        const res = await fetch(`${API_ORIGIN}/api/profiles`);
+        const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
         if (!res.ok) throw new Error('failed');
         const data = await res.json();
         if (cancelled) return;
         if (!Array.isArray(data) || data.length === 0) {
           setLandingOwnedProfile(null);
           setAllProfiles([]);
+          ingestProfileAvatars([]);
           setProfile(null);
           return;
         }
-        setAllProfiles(data);
-        inferPublicMediaConfigFromProfiles(data);
-        const owned = resolveOwnedLandingProfile(data, linkedProfileSlug);
+        const normalized = normalizeProfilesFromApi(data);
+        ingestProfileAvatars(normalized);
+        setAllProfiles(normalized);
+        inferPublicMediaConfigFromProfiles(normalized);
+        const owned = resolveOwnedLandingProfile(normalized, linkedProfileSlug);
         if (linkedProfileSlug && !owned) {
           if (isHostedApiOrigin()) {
             const meRes = await fetch(`${API_ORIGIN}/api/profile/me`, {
@@ -1080,16 +1088,18 @@ export default function App() {
   }, [syncAccountDeletionState, mainView, linkedProfileSlug]);
 
   const reloadProfileFromApi = useCallback(async () => {
-    const res = await fetch(`${API_ORIGIN}/api/profiles`);
+    const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to reload profile');
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
-    setAllProfiles(data);
-    inferPublicMediaConfigFromProfiles(data);
+    const normalized = normalizeProfilesFromApi(data);
+    ingestProfileAvatars(normalized);
+    setAllProfiles(normalized);
+    inferPublicMediaConfigFromProfiles(normalized);
     const hosted = isHostedApiOrigin();
     const pickSlug = linkedProfileSlug || (hosted ? null : selectedProfileSlug());
     const incoming = pickSlug
-      ? selectProfileBySlug(data, pickSlug)
+      ? selectProfileBySlug(normalized, pickSlug)
       : hosted
         ? null
         : data[0];
