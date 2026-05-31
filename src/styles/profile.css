@@ -534,8 +534,6 @@ button.profile-last-analysis-pill:disabled {
   background: var(--persona-accent, #759aef);
   border: none;
   gap: 12px;
-  container-type: inline-size;
-  container-name: profile-rail;
 }
 
 .profile-rail-capsule .profile-header-stack {
@@ -544,57 +542,51 @@ button.profile-last-analysis-pill:disabled {
   flex: 0 0 auto;
 }
 
-.profile-rail-capsule .profile-name-handle-stack {
-  margin-top: -6px;
-  max-width: 100%;
-  /* Nested inline-size containers collapse when the flex column is squeezed. */
-  container-type: normal;
-}
-
 .profile-rail-capsule .profile-hero-capsule {
-  --profile-hero-scale: 1;
-  --profile-rings-scale: 1;
+  --profile-hero-scale: 1.12;
+  --profile-rings-scale: 1.14;
   --profile-ring-photo-ratio: 0.32;
-  /* Leave room for the text column — 44cqw was starving name/bio/handle. */
-  --profile-score-size-max: clamp(5.25rem, 30cqw, 7.75rem);
-  --profile-rail-text-shift: 0px;
-  --profile-rail-rings-gutter: clamp(2px, 1cqw, 6px);
-  --profile-rail-text-gap: clamp(6px, 1.8cqw, 12px);
+  --profile-score-size-max: 22rem;
+  --profile-rail-text-shift: 28px;
+  --profile-rail-rings-gutter: 10px;
+  --profile-rail-text-gap: 14px;
   margin-top: 0;
   background: var(--card, #fff);
   border: none;
 }
 
+.profile-rail-capsule .profile-name-handle-stack {
+  container-type: inline-size;
+  container-name: profile-rail-name;
+}
+
 .profile-rail-capsule .profile-name-lg {
   color: #000;
-  font-size: clamp(20px, 5.2cqw, 34px);
+  /* One line, no ellipsis: never larger than the text column can carry. */
+  font-size: max(
+    26px,
+    min(
+      calc(33px * 1.3 * 1.1 * var(--profile-hero-scale, 1)),
+      calc(100cqw / 8)
+    )
+  );
   letter-spacing: -0.02em;
-  line-height: 1.08;
-  white-space: normal;
-  overflow-wrap: break-word;
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: normal;
   word-break: normal;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
 }
 
 .profile-rail-capsule .profile-name-row {
-  flex-wrap: wrap;
-  align-items: center;
-  row-gap: 4px;
-  overflow-wrap: break-word;
+  flex-wrap: nowrap;
+  overflow: visible;
+  overflow-wrap: normal;
   word-break: normal;
-}
-
-.profile-rail-capsule .profile-hero-badge-slot {
-  margin-left: 0;
-  margin-top: 0;
-}
-
-.profile-rail-capsule .profile-hero-badge-slot .persona-badge {
-  --persona-badge-size: clamp(22px, 5.4cqw, 30px);
-  --persona-badge-border: max(2px, calc(var(--persona-badge-size) * 0.1));
-  font-size: calc(var(--persona-badge-size) * 0.46);
 }
 
 .profile-rail-capsule .profile-bio,
@@ -604,9 +596,6 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-handle-lg {
   color: rgba(0, 0, 0, 0.72);
-  font-size: clamp(12px, 3cqw, 16px);
-  overflow-wrap: break-word;
-  word-break: normal;
 }
 
 .profile-rail-capsule .profile-follow-item,
@@ -615,30 +604,23 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-hero-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(8px, 2.2cqw, 16px);
-  padding: clamp(12px, 3cqw, 18px) clamp(8px, 2.2cqw, 16px);
+  align-items: stretch;
+  padding-right: 20px;
+  padding-top: calc(var(--profile-hero-vert-pad) - 4px);
+  padding-bottom: calc(var(--profile-hero-vert-pad) + 6px);
 }
 
 .profile-rail-capsule .profile-hero-left {
   --profile-block-gap: var(--profile-rail-text-gap);
-  width: auto;
-  min-width: 0;
-  flex: unset;
   align-self: stretch;
-  justify-content: center;
-  transform: none;
-  padding-left: clamp(2px, 1cqw, 8px);
-  padding-top: 0;
+  justify-content: flex-start;
+  transform: translateY(var(--profile-rail-text-shift));
   gap: var(--profile-block-gap);
 }
 
-.profile-rail-capsule .profile-handle-row,
-.profile-rail-capsule .profile-bio {
-  overflow-wrap: break-word;
-  word-break: normal;
+.profile-rail-capsule .profile-name-handle-stack {
+  margin-top: -6px;
+  max-width: 100%;
 }
 
 .profile-rail-capsule .profile-handle-row {
@@ -650,28 +632,24 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-follow-icon {
-  width: clamp(16px, 4.2cqw, 26px);
-  height: clamp(16px, 4.2cqw, 26px);
+  width: calc(26px * var(--profile-hero-scale, 1));
+  height: calc(26px * var(--profile-hero-scale, 1));
 }
 
 .profile-rail-capsule .profile-follow-num {
-  font-size: clamp(13px, 3.4cqw, 18px);
+  font-size: calc(17px * 1.1 * var(--profile-hero-scale, 1));
 }
 
 .profile-rail-capsule .profile-bio {
-  margin-top: clamp(4px, 1.2cqw, 8px);
+  margin-top: 8px;
   padding-top: 0;
-  font-size: clamp(14px, 3.8cqw, 21px);
-  line-height: 1.32;
 }
 
 .profile-rail-capsule .profile-score-avatar {
   flex: 0 0 auto;
   align-self: center;
-  justify-self: end;
   box-sizing: content-box;
   padding: var(--profile-rail-rings-gutter);
-  max-width: 36cqw;
 }
 
 /* Tab grid fills all space below the profile card */
@@ -686,10 +664,10 @@ button.profile-last-analysis-pill:disabled {
   grid-template-areas:
     "profile profile profile"
     "posts leaderboards leaderboards";
-  gap: clamp(10px, 3.2cqw, 24px);
-  padding: clamp(8px, 3cqw, 20px);
-  place-items: stretch;
-  align-content: stretch;
+  gap: 28px;
+  padding: 20px;
+  place-items: center;
+  align-content: center;
   background: transparent;
   border: none;
 }
@@ -699,11 +677,11 @@ button.profile-last-analysis-pill:disabled {
   height: 100%;
   min-height: 0;
   margin: 0;
-  padding: clamp(6px, 1.6cqw, 10px) clamp(4px, 1.2cqw, 8px);
-  border: clamp(2px, 0.55cqw, 4px) solid transparent;
-  border-radius: clamp(14px, 3.6cqw, 20px);
+  padding: 10px 8px;
+  border: 4px solid transparent;
+  border-radius: 20px;
   background: #fff;
-  font-size: clamp(16px, 4.8cqw, 34px);
+  font-size: clamp(28px, 4vw, 42px);
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.02em;
@@ -713,9 +691,6 @@ button.profile-last-analysis-pill:disabled {
   text-align: center;
   color: #000;
   cursor: pointer;
-  overflow-wrap: break-word;
-  word-break: normal;
-  hyphens: auto;
   transition:
     border-color 0.42s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
@@ -735,13 +710,12 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .tabs-row--rail .tab:nth-child(2) {
   grid-area: profile;
-  font-size: clamp(22px, 6.4cqw, 50px);
+  font-size: clamp(36px, 5vw, 58px);
 }
 
 .profile-rail-capsule .tabs-row--rail .tab:nth-child(3) {
   grid-area: leaderboards;
-  font-size: clamp(13px, 3.8cqw, 28px);
-  letter-spacing: -0.03em;
+  font-size: clamp(24px, 3.4vw, 38px);
 }
 
 .profile-rail-capsule .tabs-row--rail .tab:hover:not(.active) {
@@ -972,77 +946,49 @@ button.profile-last-analysis-pill:disabled {
   width: 100%;
 }
 
-/* ── Profile left pane: scale overview cards to available column width ── */
-.view-profile .profile-content-capsule {
-  container-type: inline-size;
-  container-name: profile-content;
-}
-
-@container profile-content (min-width: 0) {
-  .po-stack,
-  .po-stack .po-modal {
-    --po-fs-lg: clamp(22px, 3.2cqw, 30px);
-    --po-fs-md: clamp(17px, 2.5cqw, 22px);
-    --po-fs-sm: clamp(14px, 2cqw, 18px);
+/* ── RESPONSIVE: profile rail hero scaling (≤ 1660px) ──
+   Right panel narrows from 560px to ~440px, so we shrink the score rings to
+   preserve enough room for the name / bio text column. */
+@media (max-width: 1660px) {
+  .profile-rail-capsule .profile-hero-capsule {
+    --profile-hero-scale: 0.85;
+    --profile-rings-scale: 0.85;
+    --profile-score-size-max: 11rem;
+    --profile-rail-rings-gutter: 5px;
+    --profile-rail-text-gap: 10px;
   }
 
-  .po-card {
-    padding: clamp(16px, 2.8cqw, 24px) clamp(16px, 3cqw, 26px);
-    border-radius: clamp(24px, 4cqw, 32px);
-  }
-
-  .po-grid {
-    gap: clamp(12px, 2cqw, 18px);
-  }
-
-  .po-persona-stack {
-    gap: clamp(14px, 2.4cqw, 22px);
-  }
-
-  .po-persona-stack-ring.dashboard-ring-card--stack {
-    width: clamp(96px, 17cqw, 140px);
-    min-width: 0;
-  }
-
-  .po-persona-stack-ring .dashboard-ring-score {
-    font-size: clamp(18px, 3.2cqw, 24px);
-  }
-}
-
-/* ── Profile rail: stack hero on very narrow side panels ── */
-@container profile-rail (max-width: 420px) {
   .profile-rail-capsule .profile-hero-main {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
-  }
-
-  .profile-rail-capsule .profile-hero-left {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .profile-rail-capsule .profile-score-avatar {
-    grid-column: 1;
-    grid-row: 2;
-    justify-self: center;
-    --profile-score-size-max: clamp(5.5rem, 52cqw, 7.5rem);
-    max-width: 58cqw;
+    gap: 16px;
+    padding-right: 14px;
   }
 
   .profile-rail-capsule .tabs-row--rail {
-    grid-template-rows: minmax(0, 1fr) minmax(0, 0.92fr);
+    gap: 18px;
+    padding: 14px;
   }
 }
 
-/* Legacy viewport fallbacks (when container queries are unavailable) */
-@media (max-width: 1660px) {
-  .profile-rail-capsule .profile-hero-capsule {
-    --profile-score-size-max: clamp(5rem, 28cqw, 7.25rem);
-  }
-}
-
+/* ── RESPONSIVE: profile rail hero scaling (≤ 1350px) ── */
 @media (max-width: 1350px) {
   .profile-rail-capsule .profile-hero-capsule {
-    --profile-score-size-max: clamp(4.75rem, 26cqw, 6.75rem);
+    --profile-hero-scale: 0.78;
+    --profile-rings-scale: 0.78;
+    --profile-score-size-max: 9rem;
+    --profile-rail-rings-gutter: 4px;
+  }
+
+  .profile-rail-capsule .profile-hero-main {
+    gap: 12px;
+    padding-right: 10px;
+  }
+
+  .profile-rail-capsule .tabs-row--rail {
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .profile-rail-capsule .tabs-row--rail .tab {
+    font-size: clamp(22px, 3.2vw, 36px);
   }
 }

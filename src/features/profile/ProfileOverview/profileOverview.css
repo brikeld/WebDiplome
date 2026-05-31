@@ -1102,7 +1102,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: clamp(14px, 2.4cqw, 26px);
+  gap: clamp(18px, 2.5vw, 26px);
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -1116,8 +1116,8 @@
 
 .po-persona-stack-ring.dashboard-ring-card--stack {
   flex: 0 0 auto;
-  width: clamp(96px, 17cqw, 152px);
-  min-width: 0;
+  width: clamp(120px, 16vw, 152px);
+  min-width: 120px;
   gap: 0;
   grid-template-rows: 1fr;
   cursor: default;
@@ -1144,7 +1144,7 @@
 
 .po-persona-stack-ring .dashboard-ring-score {
   grid-row: 1;
-  font-size: clamp(18px, 3.2cqw, 26px);
+  font-size: clamp(20px, 2.4vw, 26px);
   max-width: 72%;
 }
 
