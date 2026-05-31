@@ -220,6 +220,9 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         return { deleted: false, slug: null };
       }
 
+      const profileId = profile.id;
+      const slug = profile.slug;
+
       const assets = throwIfError(
         await supabase.from('assets').select('bucket, path').eq('owner_user_id', userId),
         'list assets',
@@ -236,6 +239,8 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       }
 
       throwIfError(await supabase.from('assets').delete().eq('owner_user_id', userId), 'delete assets');
+      throwIfError(await supabase.from('generation_jobs').delete().eq('user_id', userId), 'delete generation jobs');
+      throwIfError(await supabase.from('posts').delete().eq('user_id', userId), 'delete posts');
       throwIfError(await supabase.from('profiles').delete().eq('user_id', userId), 'delete profile');
 
       const authDelete = await supabase.auth.admin.deleteUser(userId);
@@ -243,7 +248,7 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         throw new Error(`delete auth user: ${authDelete.error.message}`);
       }
 
-      return { deleted: true, slug: profile.slug };
+      return { deleted: true, slug, profileId };
     },
   };
 }

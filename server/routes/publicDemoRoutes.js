@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { requireHostedUser } from '../lib/auth.js';
+import { recordHostedAccountDeletion } from '../lib/hostedAccountDeletion.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -113,6 +114,9 @@ export function createPublicDemoRoutes({ supabaseService, profileStore, storageS
   router.delete('/account', requireUser, async (req, res) => {
     try {
       const result = await profileStore.deleteAccountForUser(req.authUser.id);
+      if (result?.deleted && result?.slug) {
+        recordHostedAccountDeletion(result.slug);
+      }
       res.json({ success: true, ...result });
     } catch (err) {
       res.status(500).json({ error: err.message });

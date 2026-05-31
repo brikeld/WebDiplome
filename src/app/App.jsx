@@ -52,6 +52,7 @@ import {
   canUseHostedAccountFeatures,
   clearHostedAccountStorage,
   fetchLinkedProfile,
+  hostedAuthHeaders,
   ingestHostedSessionFromHash,
   isHostedAccountLinked,
   readLinkedProfileSlug,
@@ -994,18 +995,33 @@ export default function App() {
         if (!Array.isArray(data) || data.length === 0) {
           setLandingOwnedProfile(null);
           setAllProfiles([]);
+          setProfile(null);
           return;
         }
         setAllProfiles(data);
         const owned = resolveOwnedLandingProfile(data, linkedProfileSlug);
         if (linkedProfileSlug && !owned) {
-          /* linked account profile not in public list yet */
+          if (isHostedApiOrigin()) {
+            const meRes = await fetch(`${API_ORIGIN}/api/profile/me`, {
+              headers: { ...hostedAuthHeaders() },
+            }).catch(() => null);
+            if (!meRes?.ok) {
+              clearHostedAccountStorage();
+              clearStoredProfileSlug();
+              setLinkedProfileSlug(null);
+              setProfile(null);
+              setLandingOwnedProfile(null);
+              return;
+            }
+          }
         } else if (!linkedProfileSlug && readStoredProfileSlug() && !owned) {
           clearStoredProfileSlug();
         }
         setLandingOwnedProfile(owned);
         if (owned) {
           setProfile((prev) => mergeProfileFromApi(prev, owned));
+        } else if (linkedProfileSlug) {
+          setProfile(null);
         }
       } catch {
         if (cancelled) return;

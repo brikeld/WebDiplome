@@ -18,6 +18,7 @@ import {
   deleteAllAccountData,
   recordAccountDeletion,
 } from './server/lib/accountDeletion.js';
+import { getHostedAccountState } from './server/lib/hostedAccountDeletion.js';
 import {
   readPostsForId,
   writePostsForId,
@@ -75,7 +76,7 @@ app.use('/api', createHarvestRoutes());
 app.get('/api/account-state', async (_req, res) => {
   try {
     if (serverConfig.hostedMode) {
-      return res.json({ lastDeletionAt: 0, deletedProfileIds: [] });
+      return res.json(getHostedAccountState());
     }
     const state = await readAccountState(PROFILES_DIR);
     res.json(state);
