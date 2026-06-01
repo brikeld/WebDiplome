@@ -52,7 +52,14 @@ import {
   ingestProfileAvatars,
   normalizeProfilesFromApi,
 } from '@/lib/publicAvatarRegistry.js';
-import { isHostedApiOrigin, pollGenerationJob } from '@/lib/aiJobClient.js';
+import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
+import { createFeedSpectatorRevealController } from '@/lib/feedSpectatorReveals.js';
+import { runHostedPostGenerationWithReveal } from '@/lib/hostedPostGeneration.js';
+import {
+  createPostFeedRevealQueue,
+  POST_REVEAL_GAP_MS,
+  sleep as feedRevealSleep,
+} from '@/lib/postFeedRevealQueue.js';
 import {
   canUseHostedAccountFeatures,
   clearHostedAccountStorage,
@@ -179,11 +186,6 @@ function formatLastAnalysis(profile) {
   return `${Math.max(1, totalSeconds)}s ago`;
 }
 
-/** Settled "rest" window each newly-revealed post stays in view before the next one arrives. */
-const POST_REVEAL_GAP_MS = 2200;
-/** Must match the entering shell animation duration in `src/styles/base.css`. */
-const POST_FEED_ENTER_ANIM_MS = 700;
-const INTER_REVEAL_PAUSE_MS = Math.max(POST_REVEAL_GAP_MS, POST_FEED_ENTER_ANIM_MS + 200);
 const HARVEST_POLL_MS = 450;
 const HARVEST_WAIT_MS = 12 * 60 * 1000;
 /** How long persona delta lines stay visible (generation runs in parallel). */
@@ -193,47 +195,11 @@ const PERSONA_RING_DELTA_CLEAR_MS = 15_000;
 const POST_GEN_IDLE = { loading: false, phase: 'idle', error: null };
 
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return feedRevealSleep(ms);
 }
 
-async function pollProfileUntilGenerationComplete(initialProfile, reloadProfileFromApi, {
-  pollMs = 3000,
-  timeoutMs = 180000,
-  jobId = null,
-} = {}) {
-  if (jobId) {
-    await pollGenerationJob(jobId, { pollMs: 2000, timeoutMs });
-    const fresh = await reloadProfileFromApi();
-    return fresh ?? initialProfile;
-  }
-
-  const initialPostCount = Array.isArray(initialProfile?.personaPosts)
-    ? initialProfile.personaPosts.length
-    : 0;
-  const hadBio = Boolean(
-    String(initialProfile?.profileSummary || initialProfile?.userDescription || '').trim(),
-  );
-  const start = Date.now();
-  let lastCount = initialPostCount;
-  let stablePolls = 0;
-  while (Date.now() - start < timeoutMs) {
-    const fresh = await reloadProfileFromApi();
-    if (!fresh) break;
-    const bio = String(fresh.profileSummary || fresh.userDescription || '').trim();
-    const posts = Array.isArray(fresh.personaPosts) ? fresh.personaPosts : [];
-    if (!hadBio && bio) return fresh;
-    if (posts.length > initialPostCount) {
-      if (posts.length === lastCount) {
-        stablePolls += 1;
-        if (stablePolls >= 2) return fresh;
-      } else {
-        stablePolls = 0;
-        lastCount = posts.length;
-      }
-    }
-    await sleep(pollMs);
-  }
-  throw new Error('Generation timed out — is your AI PC worker running?');
+function isFeedGenerationPhase(phase) {
+  return phase === 'generating';
 }
 
 function computePersonaDeltas(before, after) {
@@ -882,7 +848,7 @@ function AppInner({
                   fallbackPersona={personaKey}
                   personaAccent={personaColor}
                   personaPastel={PERSONA_PASTEL_COLORS[personaKey] ?? PERSONA_PASTEL_COLORS.security}
-                  holdLoadingOverlay={postGen.loading}
+                  holdLoadingOverlay={postGen.loading && isFeedGenerationPhase(postGen.phase)}
                 />
               </div>
             </div>
@@ -916,6 +882,10 @@ export default function App() {
   const [harvestError, setHarvestError] = useState(null);
   const [personaDeltas, setPersonaDeltas] = useState(null);
   const streamPostsBaselineRef = useRef([]);
+  const spectateRevealRef = useRef(null);
+  if (!spectateRevealRef.current) {
+    spectateRevealRef.current = createFeedSpectatorRevealController({ setAllProfiles });
+  }
   const personaDeltasClearRef = useRef(null);
   /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
@@ -1107,12 +1077,14 @@ export default function App() {
                 directory.unshift(meProfile);
               }
               setAllProfiles(directory);
+              spectateRevealRef.current?.ingestProfiles(directory);
               return;
             }
           }
         }
 
         setAllProfiles(normalized);
+        spectateRevealRef.current?.ingestProfiles(normalized);
         const owned = resolveOwnedLandingProfile(normalized, linkedProfileSlug);
         if (!linkedProfileSlug && readStoredProfileSlug() && !owned) {
           clearStoredProfileSlug();
@@ -1130,7 +1102,7 @@ export default function App() {
 
     load();
     // Poll quickly on landing/home so other users' newly generated posts appear in "for you".
-    const pollMs = mainView === 'landing' || mainView === 'home' ? 5_000 : 30_000;
+    const pollMs = mainView === 'landing' || mainView === 'home' ? 2_000 : 30_000;
     const id = setInterval(load, pollMs);
     return () => {
       cancelled = true;
@@ -1138,7 +1110,7 @@ export default function App() {
     };
   }, [syncAccountDeletionState, mainView, linkedProfileSlug]);
 
-  const reloadProfileFromApi = useCallback(async () => {
+  const reloadProfileFromApi = useCallback(async ({ skipPostsMerge = false } = {}) => {
     const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to reload profile');
     const data = await res.json();
@@ -1146,6 +1118,7 @@ export default function App() {
     const normalized = normalizeProfilesFromApi(data);
     ingestProfileAvatars(normalized);
     setAllProfiles(normalized);
+    spectateRevealRef.current?.ingestProfiles(normalized);
     inferPublicMediaConfigFromProfiles(normalized);
     const hosted = isHostedApiOrigin();
     const pickSlug = linkedProfileSlug || (hosted ? null : selectedProfileSlug());
@@ -1156,11 +1129,23 @@ export default function App() {
         : data[0];
     let merged = incoming;
     setProfile((prev) => {
-      merged = incoming ? mergeProfileFromApi(prev, incoming) : prev;
+      if (skipPostsMerge && prev && incoming) {
+        merged = { ...incoming, personaPosts: prev.personaPosts ?? [] };
+      } else {
+        merged = incoming ? mergeProfileFromApi(prev, incoming) : prev;
+      }
       return merged;
     });
     return merged;
   }, [linkedProfileSlug]);
+
+  useEffect(() => {
+    const skip =
+      postGen.loading && isFeedGenerationPhase(postGen.phase)
+        ? linkedProfileSlug ?? profile?.slug ?? profile?.id ?? null
+        : null;
+    spectateRevealRef.current?.setSkipSlug(skip);
+  }, [postGen.loading, postGen.phase, linkedProfileSlug, profile?.slug, profile?.id]);
 
   const pollHarvestUntilDone = useCallback(async (scoresBefore, profileSlug) => {
     const slug = String(profileSlug || '').trim();
@@ -1237,64 +1222,20 @@ export default function App() {
     }
 
     const baseline = streamPostsBaselineRef.current;
-    // Reveal in ARRIVAL order, not slotIndex order. Server stamps each post's
-    // createdAt at completion, so first-arrived = oldest createdAt. Revealing
-    // in arrival order means each new reveal has a strictly newer createdAt
-    // than what's already shown → the sort by createdAt desc consistently
-    // places the just-revealed post at the top of the feed, and matches the
-    // order returned by the server after reloadProfileFromApi (no post-reveal
-    // reorder snap).
-    const arrivalQueue = [];
-    let streamDone = false;
-
-    const revealPromise = (async () => {
-      const batch = [];
-      let revealedCount = 0;
-      let nextIndex = 0;
-
-      while (true) {
-        while (nextIndex >= arrivalQueue.length && !streamDone) {
-          await new Promise((r) => setTimeout(r, 40));
-        }
-        if (nextIndex >= arrivalQueue.length) break;
-
-        if (revealedCount > 0) {
-          await new Promise((r) => setTimeout(r, INTER_REVEAL_PAUSE_MS));
-        }
-
-        const raw = arrivalQueue[nextIndex];
-        nextIndex += 1;
-        revealedCount += 1;
-
-        const key =
-          typeof crypto !== 'undefined' && crypto.randomUUID
-            ? crypto.randomUUID()
-            : `feed-${Date.now()}-${revealedCount}`;
-        const { _feedEnter: _fe, _feedKey: _fk, ...rest } = raw;
-        const post = {
-          ...rest,
-          _feedKey: key,
-          _feedRevealSeq: revealedCount,
-        };
-        batch.push(post);
-
-        const batchForProfile = batch.map((p, i) => ({
-          ...p,
-          _feedEnter: i === batch.length - 1,
-        }));
-
+    const revealQueue = createPostFeedRevealQueue({
+      gapMs: POST_REVEAL_GAP_MS,
+      getBaseline: () => streamPostsBaselineRef.current,
+      onPostsChange: (personaPosts) => {
         flushSync(() => {
-          setProfile((prev) => {
-            if (!prev) return prev;
-            return { ...prev, personaPosts: [...batchForProfile, ...baseline] };
-          });
+          setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
         });
-      }
-    })();
+      },
+    });
+    revealQueue.markBaseline(baseline);
 
     const enqueueArrivedPost = (post) => {
       if (!post || typeof post !== 'object') return;
-      arrivalQueue.push(post);
+      revealQueue.enqueue([post]);
     };
 
     try {
@@ -1369,16 +1310,12 @@ export default function App() {
         }
       }
 
-      streamDone = true;
-      await revealPromise;
+      await revealQueue.waitUntilIdle();
       await reloadProfileFromApi();
-      setPostGen(POST_GEN_IDLE);
       schedulePersonaDeltasClearAfterGenerate();
     } catch (e) {
-      streamDone = true;
-      await revealPromise.catch(() => {});
-      setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
-      schedulePersonaDeltasClearAfterGenerate();
+      await revealQueue.waitUntilIdle().catch(() => {});
+      throw e;
     }
   }, [profile, reloadProfileFromApi, schedulePersonaDeltasClearAfterGenerate]);
 
@@ -1476,6 +1413,8 @@ export default function App() {
     const scoresAfter = getPersonaScoresNormalized(freshProfile ?? {});
     setPersonaDeltas(computePersonaDeltas(scoresBefore, scoresAfter));
 
+    setPostGen({ loading: true, phase: 'deltas', error: null });
+
     let generationJobId = null;
     if (hosted) {
       const slug = freshProfile?.slug ?? freshProfile?.id ?? profile?.slug ?? profile?.id;
@@ -1496,29 +1435,23 @@ export default function App() {
       }
     }
 
-    setPostGen({ loading: true, phase: 'deltas', error: null });
+    streamPostsBaselineRef.current = Array.isArray(freshProfile?.personaPosts)
+      ? freshProfile.personaPosts
+      : [];
 
-    if (hosted) {
-      await new Promise((r) => setTimeout(r, PERSONA_DELTA_DISPLAY_MS));
-      setPostGen((prev) => {
-        if (!prev.loading || prev.phase !== 'deltas') return prev;
-        return { ...prev, phase: 'generating' };
-      });
-      try {
-        await pollProfileUntilGenerationComplete(freshProfile, reloadProfileFromApi, {
+    const generationPromise = hosted
+      ? runHostedPostGenerationWithReveal({
+          initialProfile: freshProfile,
           jobId: generationJobId,
-        });
-        await reloadProfileFromApi();
-        setPostGen(POST_GEN_IDLE);
-        schedulePersonaDeltasClearAfterGenerate();
-      } catch (e) {
-        setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
-        schedulePersonaDeltasClearAfterGenerate();
-      }
-      return;
-    }
-
-    const generationPromise = runBioAndPostGeneration(freshProfile);
+          reloadProfileFromApi,
+          getBaselinePosts: () => streamPostsBaselineRef.current,
+          applyRevealedPosts: (personaPosts) => {
+            flushSync(() => {
+              setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
+            });
+          },
+        })
+      : runBioAndPostGeneration(freshProfile);
 
     await new Promise((r) => setTimeout(r, PERSONA_DELTA_DISPLAY_MS));
 
@@ -1527,7 +1460,14 @@ export default function App() {
       return { ...prev, phase: 'generating' };
     });
 
-    await generationPromise;
+    try {
+      await generationPromise;
+      setPostGen(POST_GEN_IDLE);
+      schedulePersonaDeltasClearAfterGenerate();
+    } catch (e) {
+      setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
+      schedulePersonaDeltasClearAfterGenerate();
+    }
   };
 
   if (mainView === 'landing') {

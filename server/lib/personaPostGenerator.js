@@ -950,24 +950,25 @@ export async function generatePersonaPosts({
   const results = new Array(slots.length).fill(null);
   const slotRunOpts = { baseUrl, timeoutMs, retries, SP, preferMetadataFallback };
 
-  for (let index = 0; index < slots.length; index += 1) {
-    const slot = slots[index];
-    if (!slot) continue;
-    try {
-      const post = await runSlot(slot, slotRunOpts);
-      if (!post?.content) continue;
-      results[index] = post;
-      if (typeof onEachPost === 'function') {
-        try {
-          await Promise.resolve(onEachPost(post, { slotIndex: index }));
-        } catch (e) {
-          console.error('[personaPostGenerator] onEachPost failed:', e?.message || e);
+  await Promise.all(
+    slots.map(async (slot, index) => {
+      if (!slot) return;
+      try {
+        const post = await runSlot(slot, slotRunOpts);
+        if (!post?.content) return;
+        results[index] = post;
+        if (typeof onEachPost === 'function') {
+          try {
+            await Promise.resolve(onEachPost(post, { slotIndex: index }));
+          } catch (e) {
+            console.error('[personaPostGenerator] onEachPost failed:', e?.message || e);
+          }
         }
+      } catch (err) {
+        console.error(`[personaPostGenerator] slot ${slot.id} failed:`, err?.message || err);
       }
-    } catch (err) {
-      console.error(`[personaPostGenerator] slot ${slot.id} failed:`, err?.message || err);
-    }
-  }
+    }),
+  );
 
   return results;
 }
