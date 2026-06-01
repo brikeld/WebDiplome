@@ -48,7 +48,10 @@ function PersonaRow({ label, value, delta, color, copy, isDominant, isPending })
         <span className="profile-rail-persona-row__score" aria-label={`${label} ${value} percent`}>
           <span className="profile-rail-persona-row__value">{value}%</span>
           {ringDelta ? (
-            <span className={`profile-rail-persona-row__delta profile-rail-persona-row__delta--${ringDelta.mod}`}>
+            <span
+              className={`profile-rail-persona-row__delta profile-rail-persona-row__delta--${ringDelta.mod}`}
+              style={{ color }}
+            >
               {ringDelta.text}
             </span>
           ) : null}

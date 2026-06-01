@@ -984,11 +984,6 @@ button.profile-last-analysis-pill:disabled {
   font-size: var(--profile-rail-tab-font);
   font-weight: 700;
   line-height: 1;
-  color: rgba(0, 0, 0, 0.55);
-}
-
-.profile-rail-capsule .profile-rail-persona-row__delta--up {
-  color: #000;
 }
 
 .profile-rail-capsule .profile-rail-persona-row__copy {
