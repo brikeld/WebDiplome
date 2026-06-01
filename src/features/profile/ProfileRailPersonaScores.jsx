@@ -76,14 +76,7 @@ export default function ProfileRailPersonaScores({ profile }) {
   const deltas = profileData.scoreDrift?.deltas ?? null;
 
   return (
-    <section
-      className="profile-rail-persona-scores"
-      aria-labelledby="profile-rail-persona-scores-title"
-    >
-      <h3 id="profile-rail-persona-scores-title" className="profile-rail-persona-scores__title">
-        persona scores
-      </h3>
-
+    <section className="profile-rail-persona-scores" aria-label="Persona scores">
       <div className="profile-rail-persona-scores__list">
         {PERSONAS.map(({ key, label, fallback }) => {
           const value = Math.max(0, Math.min(100, Math.round(Number(profileData.scores?.[key]) || 0)));

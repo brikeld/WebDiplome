@@ -819,18 +819,6 @@ button.profile-last-analysis-pill:disabled {
   box-sizing: border-box;
 }
 
-.profile-rail-capsule .profile-rail-persona-scores__title {
-  flex: 0 0 auto;
-  margin: 0;
-  font-family: var(--font-avant), var(--font-sans);
-  font-size: var(--profile-rail-bio-label-size);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  text-transform: lowercase;
-  color: #000;
-}
-
 .profile-rail-capsule .profile-rail-persona-scores__list {
   flex: 1 1 auto;
   min-height: 0;
