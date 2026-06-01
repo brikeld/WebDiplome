@@ -11,6 +11,10 @@ import {
   resolvePublicMediaUrl,
 } from '@/lib/profileUtils.js';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
+import { personaUiColor } from '@/lib/personaColors.js';
+
+/** Keep in sync with the `feed-top-flash` animation in base.css. */
+const FEED_FLASH_MS = 1100;
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -186,6 +190,7 @@ export default function PostsTab({
   aiFeaturesEnabled = true,
   feedContext = 'home',
   isGeneratingPosts = false,
+  postRevealFlash = null,
   hideInteractions = false,
   highlightedPostId = null,
   onHighlightPost,
@@ -200,6 +205,31 @@ export default function PostsTab({
   const [placeholderMounted, setPlaceholderMounted] = useState(isGeneratingPosts);
   const [placeholderLeaving, setPlaceholderLeaving] = useState(false);
   const placeholderTimerRef = useRef(null);
+
+  // Flash the matching persona accent at the top of the feed each time a post
+  // is revealed, mirroring the flash on the generate button so the two read as
+  // connected. Only in the live home feed.
+  const flashNonce = postRevealFlash?.nonce ?? 0;
+  const [feedFlash, setFeedFlash] = useState(null);
+  const feedFlashTimerRef = useRef(null);
+  useEffect(() => {
+    if (!flashNonce || feedContext !== 'home') return undefined;
+    setFeedFlash({ nonce: flashNonce, color: personaUiColor(postRevealFlash?.persona) });
+    if (feedFlashTimerRef.current) clearTimeout(feedFlashTimerRef.current);
+    feedFlashTimerRef.current = setTimeout(() => {
+      setFeedFlash(null);
+      feedFlashTimerRef.current = null;
+    }, FEED_FLASH_MS);
+    return undefined;
+    // Retrigger only on nonce changes; persona is read fresh each bump.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flashNonce]);
+  useEffect(
+    () => () => {
+      if (feedFlashTimerRef.current) clearTimeout(feedFlashTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (placeholderTimerRef.current) {
@@ -252,6 +282,14 @@ export default function PostsTab({
         isGeneratingPosts ? ' posts-tab--generating' : ''
       }`}
     >
+      {feedFlash ? (
+        <div
+          key={feedFlash.nonce}
+          className="feed-top-flash"
+          style={{ '--flash-color': feedFlash.color }}
+          aria-hidden
+        />
+      ) : null}
       {placeholderMounted ? (
         <div
           className={`posts-generating-placeholder${

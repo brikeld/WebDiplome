@@ -261,6 +261,7 @@ function AppInner({
   linkedProfileSlug,
   tryDeferCompliant,
   updateSessionActive,
+  postRevealFlash,
 }) {
   const {
     adjustedScores,
@@ -808,6 +809,7 @@ function AppInner({
                 viewerProfile={viewerProfile}
                 aiFeaturesEnabled={accountFeaturesEnabled}
                 isGeneratingPosts={postGen.phase === 'generating'}
+                postRevealFlash={postRevealFlash}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
                 onPostHide={handlePostHideClick}
@@ -865,6 +867,7 @@ function AppInner({
                 updateTimerLabel={updateTimerLabel}
                 updateRemainingMs={updateRemainingMs}
                 onGeneratePersonaPosts={handleGeneratePersonaPosts}
+                postRevealFlash={postRevealFlash}
               />
 
               <div className="dashboard-tell-row">
@@ -908,6 +911,9 @@ export default function App() {
   const [harvestProgress, setHarvestProgress] = useState(null);
   const [harvestError, setHarvestError] = useState(null);
   const [personaDeltas, setPersonaDeltas] = useState(null);
+  // Bumps once per revealed post; drives the synced accent flash on the
+  // generate button and the feed top so users link the two.
+  const [postRevealFlash, setPostRevealFlash] = useState({ persona: null, nonce: 0 });
   const streamPostsBaselineRef = useRef([]);
   const generationSessionActiveRef = useRef(false);
   const [updateSessionActive, setUpdateSessionActive] = useState(false);
@@ -964,6 +970,18 @@ export default function App() {
   useEffect(() => {
     dismissGeneratingUiRef.current = dismissGeneratingUi;
   }, [dismissGeneratingUi]);
+
+  const handlePostRevealed = useCallback((persona) => {
+    setPostRevealFlash((prev) => ({
+      persona: persona ?? prev.persona,
+      nonce: prev.nonce + 1,
+    }));
+  }, []);
+
+  const handlePostRevealedRef = useRef(handlePostRevealed);
+  useEffect(() => {
+    handlePostRevealedRef.current = handlePostRevealed;
+  }, [handlePostRevealed]);
 
   useEffect(() => () => cancelPersonaDeltasClear(), [cancelPersonaDeltasClear]);
 
@@ -1299,6 +1317,7 @@ export default function App() {
       gapMs: POST_REVEAL_GAP_MS,
       getBaseline: () => streamPostsBaselineRef.current,
       onFirstReveal: () => dismissGeneratingUiRef.current(),
+      onPostRevealed: (persona) => handlePostRevealedRef.current?.(persona),
       // No flushSync: the 2s gap between reveals already prevents update
       // coalescing, and forcing synchronous renders here stalls the main
       // thread when the feed has 50+ cards — which in turn blocks the
@@ -1316,7 +1335,10 @@ export default function App() {
 
     // Watchdog: if no chunk arrives for this long, abort so the generation flow
     // can settle and re-enable the trigger button instead of hanging forever.
-    const STREAM_IDLE_TIMEOUT_MS = 60000;
+    // The server keeps the stream open until its slowest LM slot settles; if
+    // that stalls, we abort and the caller's finally reloads the posts the
+    // server already persisted.
+    const STREAM_IDLE_TIMEOUT_MS = 45000;
     const abortCtrl = new AbortController();
     let idleTimer = null;
     const armIdleWatchdog = () => {
@@ -1568,6 +1590,7 @@ export default function App() {
           reloadProfileFromApi,
           getBaselinePosts: () => streamPostsBaselineRef.current,
           onDismissGeneratingUi: dismissGeneratingUi,
+          onPostRevealed: handlePostRevealed,
           applyRevealedPosts: (personaPosts) => {
             setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
           },
@@ -1581,11 +1604,20 @@ export default function App() {
       setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
       schedulePersonaDeltasClearAfterGenerate();
     } finally {
+      // End the session BEFORE the reconciling reload so forcePostsMerge wins
+      // (preserveClientPosts is gated on this ref).
       generationSessionActiveRef.current = false;
       setUpdateSessionActive(false);
       flushDeferredCompliant();
-      // Safety: if any code path skipped the try/catch resets above,
-      // ensure the generate button can be re-clicked.
+      // Always pull the server's canonical post list. The reveal stream can
+      // error, abort, or time out while the worker still wrote the posts to
+      // disk — without this, the user had to manually reload to see them.
+      try {
+        await reloadProfileFromApi({ forcePostsMerge: true });
+      } catch {
+        /* network hiccup — next background poll will reconcile */
+      }
+      // Safety: guarantee the generate button is clickable again on every path.
       setPostGen((prev) => (prev.loading ? { loading: false, phase: 'idle', error: prev.error ?? null } : prev));
     }
   };
@@ -1625,6 +1657,7 @@ export default function App() {
         linkedProfileSlug={linkedProfileSlug}
         tryDeferCompliant={tryDeferCompliant}
         updateSessionActive={updateSessionActive}
+        postRevealFlash={postRevealFlash}
       />
     </LiveScoringProvider>
   );

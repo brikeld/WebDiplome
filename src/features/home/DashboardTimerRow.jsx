@@ -3,6 +3,10 @@ import HarvestScreen from '@/features/harvest/HarvestScreen.jsx';
 import PersonaDeltaSummary from '@/features/harvest/PersonaDeltaSummary.jsx';
 import GeneratingContentLabel from '@/features/harvest/GeneratingContentLabel.jsx';
 import { personaToUiKey, resolveHideContentPersona } from '@/lib/personaScoreCompliance.js';
+import { personaUiColor } from '@/lib/personaColors.js';
+
+/** Keep in sync with `post-reveal-flash` in harvest.css. */
+const ACTION_FLASH_MS = 1100;
 
 export default function DashboardTimerRow({
   highlightedPost,
@@ -29,6 +33,7 @@ export default function DashboardTimerRow({
   updateRemainingMs,
   onGeneratePersonaPosts,
   accountFeaturesEnabled = true,
+  postRevealFlash = null,
 }) {
   const hidePersonaUiKey =
     hidePersonaUiKeyProp ??
@@ -156,6 +161,31 @@ export default function DashboardTimerRow({
       }`
     : '';
   const idleTimerStyle = { '--persona-accent': personaColor };
+
+  // Latch the per-reveal accent flash so it can also play on the idle timer
+  // button — the generating screen is dismissed after the first post, so
+  // posts 2+ land while this button is showing. Mirrors the feed-top flash.
+  const flashNonce = postRevealFlash?.nonce ?? 0;
+  const [actionFlash, setActionFlash] = useState(null);
+  const actionFlashTimerRef = useRef(null);
+  useEffect(() => {
+    if (!flashNonce) return undefined;
+    setActionFlash({ nonce: flashNonce, color: personaUiColor(postRevealFlash?.persona) });
+    if (actionFlashTimerRef.current) clearTimeout(actionFlashTimerRef.current);
+    actionFlashTimerRef.current = setTimeout(() => {
+      setActionFlash(null);
+      actionFlashTimerRef.current = null;
+    }, ACTION_FLASH_MS);
+    return undefined;
+    // Retrigger only on nonce changes; persona is read fresh each bump.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flashNonce]);
+  useEffect(
+    () => () => {
+      if (actionFlashTimerRef.current) clearTimeout(actionFlashTimerRef.current);
+    },
+    [],
+  );
 
   const renderTimerSlot = () => {
     if (hideBlockedVisible) {
@@ -333,7 +363,7 @@ export default function DashboardTimerRow({
           className={`${timerBaseClass} dashboard-timer-card--action-status dashboard-timer-card--generating`}
           aria-busy="true"
         >
-          <GeneratingContentLabel />
+          <GeneratingContentLabel revealFlash={postRevealFlash} />
         </div>
       );
     }
@@ -357,6 +387,14 @@ export default function DashboardTimerRow({
           onGeneratePersonaPosts();
         }}
       >
+        {actionFlash ? (
+          <span
+            key={actionFlash.nonce}
+            className="dashboard-timer-card__post-flash"
+            style={{ '--flash-color': actionFlash.color }}
+            aria-hidden
+          />
+        ) : null}
         <span className="dashboard-update-timer" aria-label={`Next update in ${updateTimerLabel}`}>
           <span className="dashboard-update-label">Next update in</span>
           <span

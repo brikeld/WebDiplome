@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isCompliantSystemPost } from '../src/lib/mergePersonaPosts.js';
 import { createPostFeedRevealQueue, POST_REVEAL_GAP_MS } from '../src/lib/postFeedRevealQueue.js';
 
@@ -43,5 +43,32 @@ describe('createPostFeedRevealQueue', () => {
       { content: 'new-b', createdAt: 3, persona: 'popularite' },
     ];
     expect(queue.countNewGeneratedInApi(apiPosts)).toBe(2);
+  });
+
+  describe('onPostRevealed (animation bridge)', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('fires once per revealed post with its persona, spaced by the gap', async () => {
+      vi.useFakeTimers();
+      const revealed = [];
+      const queue = createPostFeedRevealQueue({
+        gapMs: 10,
+        getBaseline: () => [],
+        onPostsChange: () => {},
+        onPostRevealed: (persona) => revealed.push(persona),
+      });
+      queue.markBaseline([]);
+      queue.enqueue([
+        { content: 'a', createdAt: 1, persona: 'securite' },
+        { content: 'b', createdAt: 2, persona: 'popularite' },
+      ]);
+      // First reveal happens synchronously (no leading gap).
+      expect(revealed).toEqual(['securite']);
+      // Second reveal only after the configured gap elapses.
+      await vi.advanceTimersByTimeAsync(10);
+      expect(revealed).toEqual(['securite', 'popularite']);
+    });
   });
 });

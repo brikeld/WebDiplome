@@ -6,6 +6,7 @@ export default function HomeTab({
   viewerProfile = null,
   aiFeaturesEnabled = true,
   isGeneratingPosts = false,
+  postRevealFlash = null,
   highlightedPostId = null,
   onHighlightPost,
   onPostHide,
@@ -24,6 +25,7 @@ export default function HomeTab({
         aiFeaturesEnabled={aiFeaturesEnabled}
         feedContext="home"
         isGeneratingPosts={isGeneratingPosts}
+        postRevealFlash={postRevealFlash}
         highlightedPostId={highlightedPostId}
         onHighlightPost={onHighlightPost}
         onPostHide={onPostHide}

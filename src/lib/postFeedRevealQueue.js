@@ -27,6 +27,7 @@ export function createPostFeedRevealQueue({
   onPostsChange,
   getBaseline,
   onFirstReveal,
+  onPostRevealed,
 }) {
   const revealedKeys = new Set();
   const baselineKeys = new Set();
@@ -101,6 +102,13 @@ export function createPostFeedRevealQueue({
       if (!firstRevealFired) {
         firstRevealFired = true;
         onFirstReveal?.();
+      }
+      // Notify listeners (button + feed) that a post of this persona just
+      // entered, so they can flash the matching accent in sync.
+      try {
+        onPostRevealed?.(raw?.persona ?? null);
+      } catch {
+        /* a flash listener must never break the reveal pipeline */
       }
       flushToUi();
       scheduleEnterDone(feedKey);
