@@ -2364,7 +2364,13 @@ body {
 .dashboard-capsule--figma .tell-more-pill,
 .dashboard-capsule--figma .tell-more-pill--idle {
   --tell-pill-radius: var(--capsule-radius);
+  --tell-pill-border: 0;
+  border: none;
   border-radius: var(--tell-pill-radius);
+}
+
+.dashboard-capsule--figma.is-tell-closing {
+  border-color: transparent;
 }
 
 .dashboard-capsule--figma.is-tell-expanded .tell-more-pill--expanded,

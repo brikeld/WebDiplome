@@ -1153,7 +1153,7 @@
   flex-direction: column;
   gap: var(--lb-gap, 14px);
   background: var(--tell-pill-pastel, #bccdf5);
-  animation: tell-load-life 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: tell-load-life 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   pointer-events: none;
   box-sizing: border-box;
 }

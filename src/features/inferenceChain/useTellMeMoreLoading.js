@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export const TELL_ME_MORE_LOADING_MS = 1500;
+export const TELL_ME_MORE_LOADING_MS = 2500;
 
 /**
  * Brief skeleton phase when Tell-Me-More opens or its source post changes.
