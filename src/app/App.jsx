@@ -281,6 +281,7 @@ function AppInner({
   const [tellExpanded, setTellExpanded] = useState(false);
   const [tellClosing, setTellClosing] = useState(false);
   const tellCloseTimerRef = useRef(null);
+  const tellThemePostRef = useRef(null);
   const [hideBlocked, setHideBlocked] = useState(false);
   const [viewedProfile, setViewedProfile] = useState(null);
   const previousLivePersonaRef = useRef(null);
@@ -494,6 +495,27 @@ function AppInner({
   useEffect(() => () => {
     if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    if (highlightedPost) tellThemePostRef.current = highlightedPost;
+  }, [highlightedPost]);
+
+  const tellDisplayPost =
+    highlightedPost ?? (tellClosing ? tellThemePostRef.current : null);
+
+  const dashboardCapsuleStyle = useMemo(() => {
+    const base = { '--persona-accent': personaColor };
+    const themePost = tellDisplayPost;
+    if (!themePost) return base;
+    const pk = String(themePost.persona ?? personaKey).toLowerCase();
+    const uiKey = PERSONA_ALIASES[pk] ?? pk;
+    return {
+      ...base,
+      '--tell-pill-accent': themePost.noteColor ?? PERSONA_COLORS[uiKey] ?? personaColor,
+      '--tell-pill-pastel':
+        PERSONA_PASTEL_COLORS[pk] ?? PERSONA_PASTEL_COLORS[uiKey] ?? PERSONA_PASTEL_COLORS.security,
+    };
+  }, [tellDisplayPost, personaColor, personaKey]);
 
   const handleHighlightPost = useCallback((post) => {
     const isDeselect = highlightedPost?.id === post.id;
@@ -802,17 +824,7 @@ function AppInner({
             <p className="dashboard-top-label">dashboard</p>
             <div
               className={`dashboard-capsule dashboard-capsule--figma${tellExpanded ? ' is-tell-expanded' : ''}${tellClosing ? ' is-tell-closing' : ''}`}
-              style={(() => {
-                const base = { '--persona-accent': personaColor };
-                if (!tellExpanded || !highlightedPost) return base;
-                const pk = String(highlightedPost.persona ?? personaKey).toLowerCase();
-                return {
-                  ...base,
-                  '--tell-pill-accent': highlightedPost.noteColor ?? personaColor,
-                  '--tell-pill-pastel':
-                    PERSONA_PASTEL_COLORS[pk] ?? PERSONA_PASTEL_COLORS.security,
-                };
-              })()}
+              style={dashboardCapsuleStyle}
             >
               <DashboardTimerRow
                 highlightedPost={highlightedPost}
@@ -842,7 +854,7 @@ function AppInner({
 
               <div className="dashboard-tell-row">
                 <TellMeMorePill
-                  highlightedPost={highlightedPost}
+                  highlightedPost={tellDisplayPost}
                   expanded={tellExpanded}
                   closing={tellClosing}
                   fallbackPersona={personaKey}

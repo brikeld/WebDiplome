@@ -52,8 +52,11 @@ export default function DashboardTimerRow({
 
   const COUNTDOWN_PULSE_MS = 5000;
   const [countdownPulseOn, setCountdownPulseOn] = useState(false);
+  const [secondPulseOn, setSecondPulseOn] = useState(false);
   const prevRemainingMsRef = useRef(updateRemainingMs);
+  const prevSecondRef = useRef(null);
   const pulseEndTimerRef = useRef(null);
+  const secondPulseTimerRef = useRef(null);
 
   const triggerCountdownPulse = useCallback(() => {
     if (!idleTimerActive) return;
@@ -68,6 +71,7 @@ export default function DashboardTimerRow({
   useEffect(
     () => () => {
       if (pulseEndTimerRef.current) clearTimeout(pulseEndTimerRef.current);
+      if (secondPulseTimerRef.current) clearTimeout(secondPulseTimerRef.current);
     },
     [],
   );
@@ -75,6 +79,8 @@ export default function DashboardTimerRow({
   useEffect(() => {
     if (!idleTimerActive) {
       setCountdownPulseOn(false);
+      setSecondPulseOn(false);
+      prevSecondRef.current = null;
       return;
     }
     const prev = prevRemainingMsRef.current;
@@ -83,6 +89,17 @@ export default function DashboardTimerRow({
     if (crossedZero) {
       triggerCountdownPulse();
     }
+
+    const seconds = Math.max(0, Math.ceil(updateRemainingMs / 1000));
+    if (prevSecondRef.current !== null && prevSecondRef.current !== seconds) {
+      setSecondPulseOn(true);
+      if (secondPulseTimerRef.current) clearTimeout(secondPulseTimerRef.current);
+      secondPulseTimerRef.current = setTimeout(() => {
+        setSecondPulseOn(false);
+        secondPulseTimerRef.current = null;
+      }, 480);
+    }
+    prevSecondRef.current = seconds;
   }, [updateRemainingMs, idleTimerActive, triggerCountdownPulse]);
 
   const idleTimerClass = idleTimerActive
@@ -289,7 +306,13 @@ export default function DashboardTimerRow({
       >
         <span className="dashboard-update-timer" aria-label={`Next update in ${updateTimerLabel}`}>
           <span className="dashboard-update-label">Next update in</span>
-          <span className="dashboard-update-time">{updateTimerLabel}</span>
+          <span
+            className={`dashboard-update-time${
+              secondPulseOn ? ' dashboard-update-time--second-pulse' : ''
+            }`}
+          >
+            {updateTimerLabel}
+          </span>
         </span>
         {postGen.error ? (
           <span className="generate-posts-error" role="alert">
