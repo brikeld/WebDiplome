@@ -24,9 +24,9 @@ describe('createPostFeedRevealQueue', () => {
     expect(queue.allNewGeneratedRevealed(apiWithCompliant)).toBe(true);
   });
 
-  it('uses default gap near 2.5s', () => {
-    expect(POST_REVEAL_GAP_MS).toBeGreaterThanOrEqual(2000);
-    expect(POST_REVEAL_GAP_MS).toBeLessThanOrEqual(3000);
+  it('uses default gap near 2s', () => {
+    expect(POST_REVEAL_GAP_MS).toBeGreaterThanOrEqual(1800);
+    expect(POST_REVEAL_GAP_MS).toBeLessThanOrEqual(2500);
   });
 
   it('counts new generated posts against the marked baseline', () => {

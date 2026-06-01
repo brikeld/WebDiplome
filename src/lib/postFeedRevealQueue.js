@@ -1,9 +1,9 @@
 import { postIdentityKey, isCompliantSystemPost } from '@/lib/mergePersonaPosts.js';
 
-/** Pause between revealing consecutive posts (2–3s target). */
-export const POST_REVEAL_GAP_MS = 2500;
+/** Pause between revealing consecutive posts. */
+export const POST_REVEAL_GAP_MS = 2000;
 /** Must match `.post-card-shell--entering` in `src/styles/base.css`. */
-export const POST_FEED_ENTER_ANIM_MS = 700;
+export const POST_FEED_ENTER_ANIM_MS = 900;
 
 export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -53,15 +53,18 @@ export function createPostFeedRevealQueue({
     revealedBatch = [];
   };
 
+  // Each revealed post animates independently for POST_FEED_ENTER_ANIM_MS.
+  // Tracking per-post `done` (via enterDoneKeys) rather than `isLatest in batch`
+  // ensures every newly revealed post gets the entering class for its full
+  // animation, not just the most-recent one.
   const flushToUi = () => {
     const baseline = getBaseline() ?? [];
-    const batchForProfile = revealedBatch.map((p, i) => {
+    const batchForProfile = revealedBatch.map((p) => {
       const done = Boolean(p._feedKey && enterDoneKeys.has(p._feedKey));
-      const isLatest = i === revealedBatch.length - 1;
       return {
         ...p,
-        _feedEnter: isLatest && !done,
-        _feedEnterDone: done || !isLatest,
+        _feedEnter: !done,
+        _feedEnterDone: done,
       };
     });
     onPostsChange([...batchForProfile, ...baseline]);

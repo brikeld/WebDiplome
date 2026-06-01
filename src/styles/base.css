@@ -952,23 +952,30 @@ body {
 }
 
 .post-card-shell--entering {
-  animation: post-card-feed-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: opacity, transform;
+  animation: post-card-feed-enter 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform, filter;
 }
 
 .post-card-shell--entered {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
+  filter: none;
 }
 
 @keyframes post-card-feed-enter {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-28px) scale(0.985);
+    filter: blur(6px);
   }
-  to {
+  60% {
     opacity: 1;
-    transform: translateY(0);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 

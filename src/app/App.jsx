@@ -1315,6 +1315,24 @@ export default function App() {
       revealQueue.enqueue([post]);
     };
 
+    // Watchdog: if no chunk arrives for this long, abort so the generation flow
+    // can settle and re-enable the trigger button instead of hanging forever.
+    const STREAM_IDLE_TIMEOUT_MS = 60000;
+    const abortCtrl = new AbortController();
+    let idleTimer = null;
+    const armIdleWatchdog = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        try { abortCtrl.abort(); } catch { /* ignore */ }
+      }, STREAM_IDLE_TIMEOUT_MS);
+    };
+    const disarmIdleWatchdog = () => {
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+        idleTimer = null;
+      }
+    };
+
     try {
       const res = await fetch(`${GENERATE_API_ORIGIN}/api/posts/generate-stream`, {
         method: 'POST',
@@ -1323,6 +1341,7 @@ export default function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({}),
+        signal: abortCtrl.signal,
       });
       if (!res.ok) {
         const errText = await res.text().catch(() => '');
@@ -1357,9 +1376,11 @@ export default function App() {
         }
       };
 
+      armIdleWatchdog();
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        armIdleWatchdog();
         buf += dec.decode(value, { stream: true });
         let nl;
         while ((nl = buf.indexOf('\n')) >= 0) {
@@ -1368,6 +1389,7 @@ export default function App() {
           processLine(line);
         }
       }
+      disarmIdleWatchdog();
 
       const tail = buf.trim();
       if (tail) {
@@ -1394,6 +1416,8 @@ export default function App() {
     } catch (e) {
       await revealQueue.waitUntilIdle().catch(() => {});
       throw e;
+    } finally {
+      disarmIdleWatchdog();
     }
   }, [profile, reloadProfileFromApi, schedulePersonaDeltasClearAfterGenerate]);
 
@@ -1563,6 +1587,9 @@ export default function App() {
       generationSessionActiveRef.current = false;
       setUpdateSessionActive(false);
       flushDeferredCompliant();
+      // Safety: if any code path skipped the try/catch resets above,
+      // ensure the generate button can be re-clicked.
+      setPostGen((prev) => (prev.loading ? { loading: false, phase: 'idle', error: prev.error ?? null } : prev));
     }
   };
 
