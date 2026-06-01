@@ -2181,40 +2181,45 @@ body {
   flex: 1 1 auto;
   flex-direction: column;
   justify-content: center;
-  gap: clamp(10px, 1.2vh, 14px);
+  align-items: center;
+  gap: clamp(8px, 1vh, 12px);
   min-height: 0;
+  padding-top: clamp(6px, 0.75vh, 10px);
 }
 
 .dashboard-timer-card--idle-countdown .dashboard-update-label {
-  font-size: clamp(18px, 2vw, 26px);
-  font-weight: 900;
-  letter-spacing: 0.01em;
-  line-height: 1.05;
+  font-size: clamp(15px, 1.45vw, 20px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
   text-transform: none;
 }
 
 .dashboard-timer-card--idle-countdown .dashboard-update-time {
-  min-width: clamp(112px, 10vw, 160px);
-  margin-top: 0.1em;
-  padding: 0.38em 0.52em 0.46em;
-  font-size: clamp(32px, 3.8vw, 48px);
+  min-width: clamp(88px, 8vw, 120px);
+  padding: 0.42em 0.55em 0.34em;
+  font-size: clamp(22px, 2.35vw, 30px);
   line-height: 1;
   align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: var(--dashboard-timer-time-radius, 20px);
   background: var(--persona-accent, #759aef);
   color: #000;
+  transform: translateY(0.07em);
 }
 
 @keyframes dashboard-timer-second-pulse {
   0% {
-    transform: scale(1);
+    transform: translateY(0.07em) scale(1);
   }
   40% {
-    transform: scale(1.055);
+    transform: translateY(0.07em) scale(1.055);
   }
   100% {
-    transform: scale(1);
+    transform: translateY(0.07em) scale(1);
   }
 }
 

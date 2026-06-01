@@ -1195,7 +1195,8 @@
    skeleton bars sit inside the same content rect the real UI lives in. */
 .tell-more-pill--expanded .tell-load,
 .inference-panel:not(.inference-panel--leaderboard) .tell-load {
-  padding: 0;
+  padding: clamp(28px, 3.2vh, 40px) clamp(16px, 1.8vw, 24px) clamp(14px, 1.6vh, 20px);
+  box-sizing: border-box;
 }
 
 .tell-load__skel {
