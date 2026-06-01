@@ -185,7 +185,7 @@ export function profilePostCount(profile) {
   return profilePosts(profile).length;
 }
 
-export function profileRankingCount(profile) {
+export function profileRankingCountFromPosts(profile) {
   const boardIds = new Set();
 
   profilePosts(profile).forEach((post, index) => {
@@ -201,6 +201,25 @@ export function profileRankingCount(profile) {
   });
 
   return boardIds.size;
+}
+
+function boardHasUserRank(board) {
+  const rank = board?.userRank ?? board?.user_rank;
+  if (rank == null || rank === '') return false;
+  return Number.isFinite(Number(rank));
+}
+
+/** Boards where the profile has a live standing (matches Leaderboards tab). */
+export function leaderboardPresenceCount(leaderboards) {
+  if (!Array.isArray(leaderboards)) return 0;
+  return leaderboards.filter((board) => boardHasUserRank(board)).length;
+}
+
+export function profileRankingCount(profile, { leaderboards = null, leaderboardsReady = false } = {}) {
+  if (leaderboardsReady && Array.isArray(leaderboards)) {
+    return leaderboardPresenceCount(leaderboards);
+  }
+  return profileRankingCountFromPosts(profile);
 }
 
 export function getGlobalScore(p) {

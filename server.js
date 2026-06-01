@@ -377,6 +377,42 @@ app.post('/api/profile/:id/posts/prepend', async (req, res) => {
   }
 });
 
+async function loadLocalProfilesForLeaderboards() {
+  const files = (await fs.readdir(PROFILES_DIR)).filter((f) => f.endsWith('.json'));
+  return Promise.all(
+    files.map(async (file) => {
+      const id = String(file).replace(/\.json$/i, '');
+      const filepath = path.join(PROFILES_DIR, file);
+      const raw = await fs.readFile(filepath, 'utf8');
+      const data = JSON.parse(raw);
+      const posts = await readPostsForId(id);
+      return {
+        ...data,
+        id: data.id ?? id,
+        slug: data.slug ?? id,
+        personaPosts: posts,
+        _harvest: data,
+      };
+    }),
+  );
+}
+
+// GET /api/leaderboards — live standings for every board (local file-backed mode)
+app.get('/api/leaderboards', async (req, res) => {
+  try {
+    const profiles = await loadLocalProfilesForLeaderboards();
+    const viewerSlug = String(
+      req.query.viewerSlug ?? req.query.viewer_slug ?? req.query.profileSlug ?? '',
+    ).trim() || null;
+    res.json({
+      success: true,
+      leaderboards: buildPublicLeaderboards(profiles, 5, { viewerSlug }),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // DELETE /api/posts/:id — remove one post by createdAt from a profile's post array
 app.delete('/api/posts/:id', async (req, res) => {
   const id = req.params.id;

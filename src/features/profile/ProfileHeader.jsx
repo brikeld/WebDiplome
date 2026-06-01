@@ -1,6 +1,7 @@
 import MainScoreStyle from '@/features/profile/MainScoreStyle.jsx';
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
+import { useProfileLeaderboards } from '@/features/profile/useProfileLeaderboards.js';
 import {
   avatarSrcFromProfile,
   displayNameFromProfile,
@@ -44,7 +45,8 @@ export default function ProfileHeader({
   const handle = machineHandleFromProfile(profile ?? {});
   const centerScore = getCenterDisplayScore(profile ?? {});
   const postCount = profilePostCount(profile ?? {});
-  const rankingCount = profileRankingCount(profile ?? {});
+  const { leaderboards, ready: leaderboardsReady } = useProfileLeaderboards(profile);
+  const rankingCount = profileRankingCount(profile ?? {}, { leaderboards, leaderboardsReady });
 
   const bio = profileBioText(profile ?? {});
   const postLabel = `${postCount} ${postCount === 1 ? 'post' : 'posts'}`;

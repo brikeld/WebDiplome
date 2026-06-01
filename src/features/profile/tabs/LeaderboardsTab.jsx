@@ -1,9 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { resolveApiOrigin } from '@/lib/apiOrigin.js';
-import { readLinkedProfileSlug } from '@/lib/hostedAccount.js';
+import { useMemo } from 'react';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
-
-const API_ORIGIN = resolveApiOrigin();
+import { useProfileLeaderboards } from '@/features/profile/useProfileLeaderboards.js';
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -86,41 +83,7 @@ function LeaderboardCard({ board }) {
 }
 
 export default function LeaderboardsTab({ profile }) {
-  const [leaderboards, setLeaderboards] = useState([]);
-
-  useEffect(() => {
-    if (!profile) {
-      setLeaderboards([]);
-      return undefined;
-    }
-
-    const controller = new AbortController();
-    const viewerSlug =
-      profile.slug ?? profile.id ?? readLinkedProfileSlug() ?? '';
-    const qs = viewerSlug ? `?viewerSlug=${encodeURIComponent(viewerSlug)}` : '';
-
-    async function loadLeaderboards() {
-      try {
-        const res = await fetch(`${API_ORIGIN}/api/leaderboards${qs}`, {
-          signal: controller.signal,
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (!controller.signal.aborted) {
-          setLeaderboards(Array.isArray(json.leaderboards) ? json.leaderboards : []);
-        }
-      } catch (err) {
-        if (err?.name !== 'AbortError') setLeaderboards([]);
-      }
-    }
-
-    loadLeaderboards();
-    const pollId = setInterval(loadLeaderboards, 30_000);
-    return () => {
-      controller.abort();
-      clearInterval(pollId);
-    };
-  }, [profile]);
+  const { leaderboards } = useProfileLeaderboards(profile);
 
   const grouped = useMemo(() => {
     const out = { productivite: [], securite: [], popularite: [] };
