@@ -2197,13 +2197,49 @@ body {
   }
 }
 
+/* Idle countdown — persona-filled pill (matches post hide / meta pill language) */
+.dashboard-timer-card--persona-pill {
+  background: var(--persona-accent, #759aef);
+  border: 2px solid #000;
+  border-radius: var(--radius-pill);
+  padding: clamp(10px, 1.2vh, 14px) clamp(14px, 1.5vw, 18px);
+  color: #000;
+}
+
+.dashboard-timer-card--persona-pill .dashboard-update-timer {
+  flex-direction: column;
+  gap: clamp(6px, 0.75vh, 10px);
+}
+
+.dashboard-timer-card--persona-pill .dashboard-update-label {
+  font-size: clamp(12px, 1.15vw, 15px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  line-height: 1.1;
+}
+
+.dashboard-timer-card--persona-pill .dashboard-update-time {
+  background: transparent;
+  border: none;
+  min-width: 0;
+  padding: 0;
+  font-size: clamp(22px, 2.5vw, 32px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.dashboard-timer-card--persona-pill.dashboard-timer-card--countdown-pulse,
 .dashboard-timer-card--idle-countdown.dashboard-timer-card--countdown-pulse {
   animation: dashboard-timer-countdown-active 5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+.dashboard-timer-card--persona-pill.dashboard-timer-card--countdown-pulse .dashboard-update-time,
 .dashboard-timer-card--idle-countdown.dashboard-timer-card--countdown-pulse .dashboard-update-time {
   animation: dashboard-timer-countdown-time-pulse 1.25s ease-in-out 0s 4;
 }
+
+/* Legacy idle countdown — oversized type (unused by default timer) */
 
 .dashboard-update-timer {
   flex: 1 1 auto;

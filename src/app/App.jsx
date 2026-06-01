@@ -612,6 +612,17 @@ function AppInner({
     ],
   );
 
+  const handlePostTellMeMoreClick = useCallback((post) => {
+    if (!post) return;
+    setHighlightedPost(post);
+    setHideBlocked(false);
+    setConfirmingHide(false);
+    setConfirmingUnhide(false);
+    if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
+    setTellClosing(false);
+    setTellExpanded(true);
+  }, []);
+
   const ownProfileSlug = profile?.slug ?? profile?.id ?? null;
   const displayProfile = viewedProfile ?? profile;
   const displayPersonaKey = viewedProfile
@@ -763,6 +774,8 @@ function AppInner({
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
                 onPostHide={handlePostHideClick}
+                onPostTellMeMore={handlePostTellMeMoreClick}
+                tellMeMorePostId={tellExpanded ? (highlightedPost?.id ?? null) : null}
                 personaBadgePersona={personaKey}
                 onOpenProfile={handleOpenProfile}
               />

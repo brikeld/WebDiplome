@@ -86,7 +86,7 @@ export default function DashboardTimerRow({
   }, [updateRemainingMs, idleTimerActive, triggerCountdownPulse]);
 
   const idleTimerClass = idleTimerActive
-    ? ` dashboard-timer-card--idle-countdown${
+    ? ` dashboard-timer-card--persona-pill${
         countdownPulseOn ? ' dashboard-timer-card--countdown-pulse' : ''
       }`
     : '';

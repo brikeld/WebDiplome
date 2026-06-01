@@ -9,6 +9,8 @@ export default function HomeTab({
   highlightedPostId = null,
   onHighlightPost,
   onPostHide,
+  onPostTellMeMore,
+  tellMeMorePostId = null,
   personaBadgePersona = null,
   onOpenProfile,
 }) {
@@ -25,6 +27,8 @@ export default function HomeTab({
         highlightedPostId={highlightedPostId}
         onHighlightPost={onHighlightPost}
         onPostHide={onPostHide}
+        onPostTellMeMore={onPostTellMeMore}
+        tellMeMorePostId={tellMeMorePostId}
         personaBadgePersona={personaBadgePersona}
         onOpenProfile={onOpenProfile}
       />

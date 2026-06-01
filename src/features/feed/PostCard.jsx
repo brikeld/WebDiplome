@@ -6,6 +6,7 @@ import { isPdfDocumentAsset } from '@/lib/attachmentKind.js';
 import { shouldApplyPostImageFx } from '@/lib/shouldApplyPostImageFx.js';
 import CommentsToggle from '@/features/commenting/CommentsToggle.jsx';
 import PostHideToggle from '@/features/feed/PostHideToggle.jsx';
+import PostTellMeMoreToggle from '@/features/feed/PostTellMeMoreToggle.jsx';
 import CommentsCapsule from '@/features/commenting/CommentsCapsule.jsx';
 import { DEMO_OTHER_COMMENTER } from '@/lib/demoCommentIdentity.js';
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
@@ -105,7 +106,9 @@ export default function PostCard({
   isCommentsOpen = false,
   onToggleComments,
   onHide,
+  onTellMeMore,
   onOpenProfile,
+  tellMeMoreActive = false,
   isHidden = false,
   isRevealing = false,
   hidePills = false,
@@ -339,6 +342,15 @@ export default function PostCard({
                 onClick={(e) => {
                   e.stopPropagation();
                   onHide();
+                }}
+              />
+            ) : null}
+            {onTellMeMore ? (
+              <PostTellMeMoreToggle
+                isActive={tellMeMoreActive}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTellMeMore();
                 }}
               />
             ) : null}

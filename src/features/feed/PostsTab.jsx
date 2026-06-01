@@ -189,6 +189,8 @@ export default function PostsTab({
   highlightedPostId = null,
   onHighlightPost,
   onPostHide,
+  onPostTellMeMore,
+  tellMeMorePostId = null,
   personaBadgePersona = null,
   onOpenProfile,
 }) {
@@ -273,6 +275,10 @@ export default function PostsTab({
             isHighlighted={!hideInteractions && highlightedPostId !== null && highlightedPostId === p.id}
             onHighlight={() => onHighlightPost?.(p)}
             onHide={hideInteractions || !onPostHide ? undefined : () => onPostHide(p)}
+            onTellMeMore={
+              hideInteractions || !onPostTellMeMore ? undefined : () => onPostTellMeMore(p)
+            }
+            tellMeMoreActive={tellMeMorePostId === p.id}
             onOpenProfile={onOpenProfile}
           />
         </div>
