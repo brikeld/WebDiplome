@@ -4,7 +4,33 @@ import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { usePersonaBlurbs } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import { PERSONA_UI_COLORS } from '@/lib/personaColors.js';
 import { buildProfileOverviewData } from '@/lib/profileOverviewData.js';
-import { normalizeRailDominant, orderRailPersonasByDominant } from '@/features/profile/railPersonas.js';
+import { clampRailBlurb } from '@/features/profile/railBlurb.js';
+
+const PERSONAS = [
+  {
+    key: 'productivity',
+    label: 'Productivity',
+    fallback: 'Code output, file activity and focused active hours.',
+  },
+  {
+    key: 'security',
+    label: 'Security',
+    fallback: 'System protection: SIP, FileVault, Gatekeeper and update hygiene.',
+  },
+  {
+    key: 'social',
+    label: 'Social',
+    fallback: 'Communication apps, network exposure and public activity.',
+  },
+];
+
+function normalizeDominant(key) {
+  const k = String(key ?? '').toLowerCase();
+  if (k === 'social' || k === 'popularite' || k === 'popularity') return 'social';
+  if (k === 'productivite') return 'productivity';
+  if (k === 'securite') return 'security';
+  return k;
+}
 
 function PersonaRow({ label, value, delta, color, copy, isDominant, isPending }) {
   const ringDelta = formatRingDelta(delta);
@@ -45,23 +71,19 @@ export default function ProfileRailPersonaScores({ profile }) {
     [profile, adjustedScores, dominantPersona],
   );
 
-  const orderedPersonas = useMemo(
-    () => orderRailPersonasByDominant(profileData?.dominantPersona),
-    [profileData?.dominantPersona],
-  );
-
   if (!profileData) return null;
 
-  const domKey = normalizeRailDominant(profileData.dominantPersona);
+  const domKey = normalizeDominant(profileData.dominantPersona);
   const deltas = profileData.scoreDrift?.deltas ?? null;
 
   return (
     <section className="profile-rail-persona-scores" aria-label="Persona scores">
       <div className="profile-rail-persona-scores__list">
-        {orderedPersonas.map(({ key, label, fallback }) => {
+        {PERSONAS.map(({ key, label, fallback }) => {
           const value = Math.max(0, Math.min(100, Math.round(Number(profileData.scores?.[key]) || 0)));
           const blurb = blurbs?.[key];
-          const copy = blurb || (loading ? 'Generating profile phrases…' : fallback);
+          const raw = blurb || (loading ? 'Generating profile phrases…' : fallback);
+          const copy = loading && !blurb ? raw : clampRailBlurb(raw);
 
           return (
             <PersonaRow
