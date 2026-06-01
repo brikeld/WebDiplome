@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { flushSync } from 'react-dom';
 import Sidebar from '@/layout/Sidebar.jsx';
 import ScrollArea from '@/layout/ScrollArea.jsx';
 import ProfileView from '@/features/profile/ProfileView.jsx';
@@ -1283,13 +1282,11 @@ export default function App() {
         const sumJson = await sumRes.json();
         const bio = sumJson.profileSummary ?? sumJson.userDescription ?? '';
         if (bio) {
-          flushSync(() => {
-            setProfile((prev) =>
-              prev
-                ? { ...prev, profileSummary: bio, userDescription: bio }
-                : prev,
-            );
-          });
+          setProfile((prev) =>
+            prev
+              ? { ...prev, profileSummary: bio, userDescription: bio }
+              : prev,
+          );
         }
       } catch (e) {
         setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Bio generation failed' });
@@ -1302,10 +1299,12 @@ export default function App() {
       gapMs: POST_REVEAL_GAP_MS,
       getBaseline: () => streamPostsBaselineRef.current,
       onFirstReveal: () => dismissGeneratingUiRef.current(),
+      // No flushSync: the 2s gap between reveals already prevents update
+      // coalescing, and forcing synchronous renders here stalls the main
+      // thread when the feed has 50+ cards — which in turn blocks the
+      // stream reader from draining further posts.
       onPostsChange: (personaPosts) => {
-        flushSync(() => {
-          setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
-        });
+        setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
       },
     });
     revealQueue.markBaseline(baseline);
@@ -1570,9 +1569,7 @@ export default function App() {
           getBaselinePosts: () => streamPostsBaselineRef.current,
           onDismissGeneratingUi: dismissGeneratingUi,
           applyRevealedPosts: (personaPosts) => {
-            flushSync(() => {
-              setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
-            });
+            setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
           },
         });
       } else {

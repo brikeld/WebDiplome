@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef } from 'react';
+import { lazy, memo, Suspense, useEffect, useRef } from 'react';
 import PostImage from './PostImage.jsx';
 import PostDocument from './PostDocument.jsx';
 import LeaderboardBlock from './LeaderboardBlock.jsx';
@@ -101,7 +101,7 @@ function CompliantLowScoreLead({ notice, fallbackContent }) {
   );
 }
 
-export default function PostCard({
+function PostCard({
   post,
   isCommentsOpen = false,
   onToggleComments,
@@ -361,3 +361,83 @@ export default function PostCard({
     </article>
   );
 }
+
+// `buildEnrichedPosts` creates fresh attachedAsset/leaderboard objects on
+// every parent render, so referential equality fails even when nothing
+// meaningful changed. Compare by content fields for those.
+function attachedAssetEqual(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.url === b.url && a.kind === b.kind && a.filename === b.filename;
+}
+
+function leaderboardEqual(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.boardId !== b.boardId) return false;
+  if (a.userRank !== b.userRank) return false;
+  if (a.previousUserRank !== b.previousUserRank) return false;
+  if (!Array.isArray(a.entries) || !Array.isArray(b.entries)) return false;
+  if (a.entries.length !== b.entries.length) return false;
+  for (let i = 0; i < a.entries.length; i += 1) {
+    const x = a.entries[i];
+    const y = b.entries[i];
+    if (x === y) continue;
+    if (!x || !y) return false;
+    if (x.slug !== y.slug || x.score !== y.score || x.avatarSrc !== y.avatarSrc) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function postShallowEqual(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.id === b.id
+    && a.content === b.content
+    && a.persona === b.persona
+    && a.noteColor === b.noteColor
+    && a.displayName === b.displayName
+    && a.handle === b.handle
+    && a.avatarSrc === b.avatarSrc
+    && a.avatarInitials === b.avatarInitials
+    && a.authorSlug === b.authorSlug
+    && a.personaBadgePersona === b.personaBadgePersona
+    && a.createdAt === b.createdAt
+    && a.systemDeltaPct === b.systemDeltaPct
+    && a.chartType === b.chartType
+    && attachedAssetEqual(a.attachedAsset, b.attachedAsset)
+    && leaderboardEqual(a.leaderboard, b.leaderboard)
+    && a.inferenceChain === b.inferenceChain
+    && a.ingredients === b.ingredients
+    && a.highlights === b.highlights
+    && a.thinking === b.thinking
+    && a.compliantPersonaChange === b.compliantPersonaChange
+    && a.compliantLowScore === b.compliantLowScore
+    && a.compliantJoin === b.compliantJoin
+  );
+}
+
+// Callbacks (onToggleComments, onHide, …) are inline arrows recreated on
+// every parent render. They close over stable setters + `post.id`, so their
+// identity changes are irrelevant to what the card visually displays. Skip
+// them here; the visible behaviour depends only on the props below.
+function arePostCardPropsEqual(prev, next) {
+  return (
+    prev.isCommentsOpen === next.isCommentsOpen
+    && prev.isHidden === next.isHidden
+    && prev.isRevealing === next.isRevealing
+    && prev.hidePills === next.hidePills
+    && prev.pillsMode === next.pillsMode
+    && prev.isHighlightable === next.isHighlightable
+    && prev.isHighlighted === next.isHighlighted
+    && prev.tellMeMoreActive === next.tellMeMoreActive
+    && prev.aiSuggestionsEnabled === next.aiSuggestionsEnabled
+    && prev.commenterProfile === next.commenterProfile
+    && postShallowEqual(prev.post, next.post)
+  );
+}
+
+export default memo(PostCard, arePostCardPropsEqual);
