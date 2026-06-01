@@ -1,6 +1,7 @@
 import ScrollArea from '@/layout/ScrollArea.jsx';
 import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
 import TabBar from '@/features/profile/TabBar.jsx';
+import ProfileRailPersonaScores from '@/features/profile/ProfileRailPersonaScores.jsx';
 import ProfileTab from '@/features/profile/ProfileTab.jsx';
 import PostsTab from '@/features/feed/PostsTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
@@ -79,6 +80,7 @@ export default function ProfileView({
             onOpenProfile={onOpenProfile}
             variant="rail"
           />
+          <ProfileRailPersonaScores profile={profile} />
           <TabBar
             variant="rail"
             activeTab={activeTab}
