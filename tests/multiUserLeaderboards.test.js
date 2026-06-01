@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { buildMultiUserLeaderboards } from '../server/lib/multiUserLeaderboards.js';
+import {
+  buildMultiUserLeaderboards,
+  dedupeProfilesForLeaderboards,
+} from '../server/lib/multiUserLeaderboards.js';
 
 describe('buildMultiUserLeaderboards', () => {
   const ada = {
@@ -38,6 +41,34 @@ describe('buildMultiUserLeaderboards', () => {
     const boards = buildMultiUserLeaderboards([ada, grace, ...extras]);
     expect(boards[0].entries).toHaveLength(5);
     expect(boards[0].entries.every((e) => e.source === 'real')).toBe(true);
+  });
+
+  it('dedupes the same person when machine_name repeats (re-sync / second signup)', () => {
+    const older = {
+      slug: 'brikeld-hoxha-aaaa1111',
+      firstname: 'Brikeld',
+      lastname: 'Hoxha',
+      machineName: 'MacBook-Air',
+      updated_at: '2026-01-01T00:00:00.000Z',
+      globalScore: 70,
+      personaScores: { productivity: 70, security: 60, social: 50 },
+    };
+    const newer = {
+      slug: 'brikeld-hoxha-bbbb2222',
+      firstname: 'Brikeld',
+      lastname: 'Hoxha',
+      machineName: 'MacBook-Air',
+      updated_at: '2026-06-01T00:00:00.000Z',
+      globalScore: 80,
+      personaScores: { productivity: 75, security: 65, social: 55 },
+    };
+    const deduped = dedupeProfilesForLeaderboards([older, newer, grace]);
+    expect(deduped.filter((p) => p.firstname === 'Brikeld')).toHaveLength(1);
+    expect(deduped.find((p) => p.firstname === 'Brikeld')?.slug).toBe('brikeld-hoxha-bbbb2222');
+
+    const boards = buildMultiUserLeaderboards([older, newer, grace], { viewerSlug: 'brikeld-hoxha-bbbb2222' });
+    const names = boards[0].entries.filter((e) => e.source === 'real').map((e) => e.name);
+    expect(names.filter((n) => n.includes('Brikeld'))).toHaveLength(1);
   });
 
   it('replaces bot slots as new real users join', () => {

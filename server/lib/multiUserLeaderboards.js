@@ -20,6 +20,56 @@ import { seededFloat } from '../../src/lib/seededRandom.js';
 
 export const MIN_LEADERBOARD_ROWS = 5;
 
+function profileUpdatedAtMs(profile) {
+  const raw =
+    profile?.updatedAt ??
+    profile?.updated_at ??
+    profile?.collectedAt ??
+    profile?.collected_at ??
+    null;
+  if (!raw) return 0;
+  const t = new Date(raw).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
+
+/**
+ * One row per person in standings: newest profile wins when user_id, slug, or
+ * machine_name repeats (common after re-sync / second signup on the same Mac).
+ */
+export function dedupeProfilesForLeaderboards(profiles) {
+  const sorted = [...(Array.isArray(profiles) ? profiles : [])]
+    .filter(Boolean)
+    .sort((a, b) => profileUpdatedAtMs(b) - profileUpdatedAtMs(a));
+
+  const seenUser = new Set();
+  const seenMachine = new Set();
+  const seenSlug = new Set();
+  const out = [];
+
+  for (const p of sorted) {
+    const uid = p?.userId ?? p?.user_id ?? null;
+    const machine = String(p?.machineName ?? p?.machine_name ?? '').trim().toLowerCase();
+    const slug = String(p?.slug ?? p?.id ?? '').trim();
+
+    if (uid) {
+      const key = String(uid);
+      if (seenUser.has(key)) continue;
+      seenUser.add(key);
+    }
+    if (machine) {
+      if (seenMachine.has(machine)) continue;
+      seenMachine.add(machine);
+    }
+    if (slug) {
+      if (seenSlug.has(slug)) continue;
+      seenSlug.add(slug);
+    }
+    out.push(p);
+  }
+
+  return out;
+}
+
 const PERSONA_UI_KEYS = {
   productivite: 'productivity',
   securite: 'security',
@@ -159,9 +209,10 @@ export function buildMultiUserLeaderboards(profiles, opts = {}) {
     nowMs = Date.now(),
   } = opts;
   const highlightSlug = authorSlug ?? viewerSlug ?? null;
+  const uniqueProfiles = dedupeProfilesForLeaderboards(profiles);
 
   return BOARDS.map((board) =>
-    assembleBoard(board, profiles, { highlightSlug, minimumRows, nowMs }),
+    assembleBoard(board, uniqueProfiles, { highlightSlug, minimumRows, nowMs }),
   );
 }
 
