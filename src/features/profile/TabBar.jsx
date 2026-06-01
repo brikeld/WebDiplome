@@ -32,7 +32,7 @@ export default function TabBar({
             variant === 'rail'
               ? undefined
               : activeTab === t.id
-                ? { background: personaColor }
+                ? { background: '#000', color: personaColor }
                 : undefined
           }
         >

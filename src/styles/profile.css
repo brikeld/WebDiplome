@@ -1063,9 +1063,9 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .tabs-row--rail .tab.active {
-  background: #fff !important;
-  color: #000 !important;
-  border-color: var(--persona-accent, #759aef);
+  background: #000 !important;
+  color: var(--persona-accent, #759aef) !important;
+  border-color: #000;
   font-weight: 700;
   transform: scale(1.02);
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.08);
