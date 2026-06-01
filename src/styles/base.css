@@ -361,7 +361,7 @@ body {
 
 /* 3 persona ring cards below the dashboard capsule */
 .dashboard-rings {
-  flex: 0 0 clamp(122px, 16vh, 152px);
+  flex: 0 0 clamp(148px, 19vh, 184px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
@@ -426,8 +426,8 @@ body {
   justify-self: center;
   align-self: center;
   display: block;
-  width: clamp(70px, 6.8vw, 88px);
-  height: clamp(70px, 6.8vw, 88px);
+  width: clamp(86px, 8.4vw, 108px);
+  height: clamp(86px, 8.4vw, 108px);
   z-index: 1;
 }
 
