@@ -4,6 +4,7 @@ import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { usePersonaBlurbs } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import { PERSONA_UI_COLORS } from '@/lib/personaColors.js';
 import { buildProfileOverviewData } from '@/lib/profileOverviewData.js';
+import { clampRailBlurb } from '@/features/profile/railBlurb.js';
 
 const PERSONAS = [
   {
@@ -81,7 +82,8 @@ export default function ProfileRailPersonaScores({ profile }) {
         {PERSONAS.map(({ key, label, fallback }) => {
           const value = Math.max(0, Math.min(100, Math.round(Number(profileData.scores?.[key]) || 0)));
           const blurb = blurbs?.[key];
-          const copy = blurb || (loading ? 'Generating profile phrases…' : fallback);
+          const raw = blurb || (loading ? 'Generating profile phrases…' : fallback);
+          const copy = loading && !blurb ? raw : clampRailBlurb(raw);
 
           return (
             <PersonaRow

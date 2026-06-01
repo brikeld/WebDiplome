@@ -714,14 +714,20 @@ body {
 }
 
 .view-home .posts-capsule,
-.view-profile .profile-content-capsule,
-.view-profile .profile-rail-capsule,
-.view-profile .dashboard-capsule.profile-rail-capsule {
+.view-profile .profile-content-capsule {
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
+  width: 100%;
+}
+
+.view-profile .profile-rail-capsule,
+.view-profile .dashboard-capsule.profile-rail-capsule {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
   width: 100%;
 }
 
@@ -731,9 +737,7 @@ body {
 }
 
 .view-home .posts-capsule::-webkit-scrollbar,
-.view-profile .profile-content-capsule::-webkit-scrollbar,
-.view-profile .profile-rail-capsule::-webkit-scrollbar,
-.view-profile .dashboard-capsule.profile-rail-capsule::-webkit-scrollbar {
+.view-profile .profile-content-capsule::-webkit-scrollbar {
   display: none;
 }
 
