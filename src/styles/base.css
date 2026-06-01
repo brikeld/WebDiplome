@@ -641,6 +641,9 @@ body {
   --shell-col-gap: clamp(14px, 1.6vw, 24px);
   --shell-left-col-max: clamp(620px, 52vw, 1180px);
   --shell-right-col-width: clamp(420px, 32vw, 720px);
+  --shell-left-outward-bleed: 0px;
+  --shell-right-outward-bleed: 0px;
+  --shell-right-col-total: calc(var(--shell-right-col-width) + var(--shell-right-outward-bleed));
   --dashboard-extra-width: 0px;
   width: 100%;
   max-width: var(--home-shell-max-width);
@@ -660,24 +663,27 @@ body {
   --content-scale: 1;
   height: 100%;
   min-width: 0;
-  max-width: var(--shell-left-col-max);
+  max-width: calc(var(--shell-left-col-max) + var(--shell-left-outward-bleed));
   width: min(
-    var(--shell-left-col-max),
-    calc(100% - var(--shell-right-col-width) - var(--shell-col-gap))
+    calc(var(--shell-left-col-max) + var(--shell-left-outward-bleed)),
+    calc(
+      100% - var(--shell-right-col-total) - var(--shell-col-gap)
+      + var(--shell-left-outward-bleed)
+    )
   );
-  margin-left: 0;
+  margin-left: calc(-1 * var(--shell-left-outward-bleed));
   display: flex;
   flex-direction: column;
 }
 
 .view-home .persona-side-panel,
 .view-profile .persona-side-panel {
-  flex: 0 0 var(--shell-right-col-width);
+  flex: 0 0 var(--shell-right-col-total);
   flex-shrink: 0;
-  width: var(--shell-right-col-width);
-  max-width: var(--shell-right-col-width);
+  width: var(--shell-right-col-total);
+  max-width: var(--shell-right-col-total);
   min-width: 0;
-  margin-right: 0;
+  margin-right: calc(-1 * var(--shell-right-outward-bleed));
   box-sizing: border-box;
   overflow: hidden;
   transform: none;
@@ -751,7 +757,7 @@ body {
 }
 
 /* ── RESPONSIVE: 14" MacBook and similar (≤ 1660px) ──
-   Slightly wider right rail; left column stays put, growth goes right only. */
+   Outward bleed: left capsule grows left, right grows right; inner gap unchanged. */
 @media (max-width: 1660px) {
   .page-outer.view-home,
   .page-outer.view-profile {
@@ -763,8 +769,10 @@ body {
   .view-home .page,
   .view-profile .page {
     justify-content: flex-start;
-    --shell-left-col-max: clamp(520px, 46vw, 840px);
-    --shell-right-col-width: clamp(478px, 37.5vw, 655px);
+    --shell-left-outward-bleed: 22px;
+    --shell-right-outward-bleed: 26px;
+    --shell-left-col-max: clamp(528px, 46.5vw, 848px);
+    --shell-right-col-width: clamp(492px, 38vw, 668px);
   }
 
   .view-home .main-col,
@@ -779,8 +787,10 @@ body {
   .view-home .page,
   .view-profile .page {
     --shell-col-gap: 14px;
-    --shell-left-col-max: clamp(460px, 42vw, 720px);
-    --shell-right-col-width: clamp(440px, 35vw, 580px);
+    --shell-left-outward-bleed: 18px;
+    --shell-right-outward-bleed: 22px;
+    --shell-left-col-max: clamp(468px, 42.5vw, 728px);
+    --shell-right-col-width: clamp(448px, 35.5vw, 588px);
   }
 
   .posts-capsule {
