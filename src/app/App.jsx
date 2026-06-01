@@ -756,6 +756,12 @@ function AppInner({
     postPhase: postGen.phase,
   });
   const dashboardBusy = dashboardLayout.actionSlot !== 'timer';
+  const feedPostsRevealing = useMemo(
+    () => (profile?.personaPosts ?? []).some((p) => (p._feedRevealSeq ?? 0) > 0),
+    [profile?.personaPosts],
+  );
+  const showFeedGeneratingPlaceholder =
+    postGen.phase === 'generating' && !feedPostsRevealing;
 
   const accountFeaturesEnabled = useMemo(() => {
     const owned = resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug);
@@ -807,7 +813,7 @@ function AppInner({
                 feedProfiles={feedProfiles}
                 viewerProfile={viewerProfile}
                 aiFeaturesEnabled={accountFeaturesEnabled}
-                isGeneratingPosts={postGen.phase === 'generating'}
+                isGeneratingPosts={showFeedGeneratingPlaceholder}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
                 onPostHide={handlePostHideClick}
@@ -829,7 +835,7 @@ function AppInner({
             onTabChange={setActiveTab}
             onOpenProfile={handleOpenProfile}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
-            isGeneratingPosts={!viewedProfile && postGen.phase === 'generating'}
+            isGeneratingPosts={!viewedProfile && showFeedGeneratingPlaceholder}
             generateApiOrigin={GENERATE_API_ORIGIN}
           />
         )}
@@ -918,6 +924,7 @@ export default function App() {
     spectateRevealRef.current = createFeedSpectatorRevealController({ setAllProfiles });
   }
   const personaDeltasClearRef = useRef(null);
+  const dismissGeneratingUiRef = useRef(() => {});
   /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
   const prevMainViewRef = useRef(null);
@@ -952,6 +959,17 @@ export default function App() {
       personaDeltasClearRef.current = null;
     }, PERSONA_RING_DELTA_CLEAR_MS);
   }, [cancelPersonaDeltasClear]);
+
+  const dismissGeneratingUi = useCallback(() => {
+    setPostGen((prev) => {
+      if (!prev.loading || prev.phase !== 'generating') return prev;
+      return { ...prev, phase: 'idle' };
+    });
+  }, []);
+
+  useEffect(() => {
+    dismissGeneratingUiRef.current = dismissGeneratingUi;
+  }, [dismissGeneratingUi]);
 
   useEffect(() => () => cancelPersonaDeltasClear(), [cancelPersonaDeltasClear]);
 
@@ -1289,10 +1307,9 @@ export default function App() {
     const revealQueue = createPostFeedRevealQueue({
       gapMs: POST_REVEAL_GAP_MS,
       getBaseline: () => streamPostsBaselineRef.current,
+      onFirstReveal: () => dismissGeneratingUiRef.current(),
       onPostsChange: (personaPosts) => {
-        flushSync(() => {
-          setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
-        });
+        setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
       },
     });
     revealQueue.markBaseline(baseline);
@@ -1375,6 +1392,7 @@ export default function App() {
       }
 
       await revealQueue.waitUntilIdle();
+      dismissGeneratingUiRef.current();
       await reloadProfileFromApi({ forcePostsMerge: true });
       schedulePersonaDeltasClearAfterGenerate();
     } catch (e) {
@@ -1401,10 +1419,14 @@ export default function App() {
     if (!bio || posts.length > 0) return;
     autoPostGenProfileIdRef.current = profileId;
     setPostGen({ loading: true, phase: 'generating', error: null });
-    runBioAndPostGenerationRef.current(profile).catch((e) => {
-      autoPostGenProfileIdRef.current = null;
-      setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
-    });
+    runBioAndPostGenerationRef.current(profile)
+      .then(() => {
+        setPostGen(POST_GEN_IDLE);
+      })
+      .catch((e) => {
+        autoPostGenProfileIdRef.current = null;
+        setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
+      });
   }, [profile, postGen.loading]);
 
   const handleGeneratePersonaPosts = async () => {
@@ -1516,10 +1538,9 @@ export default function App() {
           jobId: generationJobId,
           reloadProfileFromApi,
           getBaselinePosts: () => streamPostsBaselineRef.current,
+          onDismissGeneratingUi: dismissGeneratingUi,
           applyRevealedPosts: (personaPosts) => {
-            flushSync(() => {
-              setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
-            });
+            setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
           },
         })
       : runBioAndPostGeneration(freshProfile);

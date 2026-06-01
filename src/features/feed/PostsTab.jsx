@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import PostCard from './PostCard.jsx';
 import { sanitizePostContent } from '@/lib/postContent.js';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
@@ -197,6 +197,34 @@ export default function PostsTab({
 }) {
   const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
   const { isHidden, isRevealing, isLeaderboardSelfHidden } = useLiveScoring();
+  const [placeholderMounted, setPlaceholderMounted] = useState(isGeneratingPosts);
+  const [placeholderLeaving, setPlaceholderLeaving] = useState(false);
+  const placeholderTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (placeholderTimerRef.current) {
+      clearTimeout(placeholderTimerRef.current);
+      placeholderTimerRef.current = null;
+    }
+    if (isGeneratingPosts) {
+      setPlaceholderMounted(true);
+      setPlaceholderLeaving(false);
+      return undefined;
+    }
+    if (!placeholderMounted) return undefined;
+    setPlaceholderLeaving(true);
+    placeholderTimerRef.current = setTimeout(() => {
+      placeholderTimerRef.current = null;
+      setPlaceholderMounted(false);
+      setPlaceholderLeaving(false);
+    }, 420);
+    return () => {
+      if (placeholderTimerRef.current) {
+        clearTimeout(placeholderTimerRef.current);
+        placeholderTimerRef.current = null;
+      }
+    };
+  }, [isGeneratingPosts, placeholderMounted]);
 
   const posts = useMemo(() => {
     // "for you" (home) aggregates every profile's posts; profile view shows only one author.
@@ -224,10 +252,12 @@ export default function PostsTab({
         isGeneratingPosts ? ' posts-tab--generating' : ''
       }`}
     >
-      {isGeneratingPosts ? (
+      {placeholderMounted ? (
         <div
-          className="posts-generating-placeholder"
-          aria-busy="true"
+          className={`posts-generating-placeholder${
+            placeholderLeaving ? ' posts-generating-placeholder--leaving' : ''
+          }`}
+          aria-busy={!placeholderLeaving}
           aria-label="Generating posts"
         >
           <div className="posts-generating-spinner" aria-hidden />
@@ -235,8 +265,10 @@ export default function PostsTab({
       ) : null}
       {posts.map((p) => (
         <div
-          key={`${p.authorSlug ?? ''}:${p._feedKey ?? p.id}`}
-          className={`post-card-shell${p._feedEnter ? ' post-card-shell--entering' : ''}`}
+          key={`${p.authorSlug ?? ''}:${p.id}`}
+          className={`post-card-shell${
+            p._feedEnter ? ' post-card-shell--entering' : p._feedEnterDone ? ' post-card-shell--entered' : ''
+          }`}
         >
           <PostCard
             post={p}

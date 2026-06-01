@@ -18,7 +18,12 @@ function stripFeedClientMeta(post) {
 /**
  * Staggered feed reveals: each post prepended with `_feedEnter` animation.
  */
-export function createPostFeedRevealQueue({ gapMs = POST_REVEAL_GAP_MS, onPostsChange, getBaseline }) {
+export function createPostFeedRevealQueue({
+  gapMs = POST_REVEAL_GAP_MS,
+  onPostsChange,
+  getBaseline,
+  onFirstReveal,
+}) {
   const revealedKeys = new Set();
   const baselineKeys = new Set();
   const pendingKeys = new Set();
@@ -27,11 +32,13 @@ export function createPostFeedRevealQueue({ gapMs = POST_REVEAL_GAP_MS, onPostsC
   let drainPromise = null;
   let revealSeq = 0;
   let revealedBatch = [];
+  let firstRevealFired = false;
 
   const markBaseline = (posts) => {
     revealedKeys.clear();
     baselineKeys.clear();
     enterDoneKeys.clear();
+    firstRevealFired = false;
     for (const p of Array.isArray(posts) ? posts : []) {
       const key = postIdentityKey(p);
       if (key) {
@@ -84,6 +91,10 @@ export function createPostFeedRevealQueue({ gapMs = POST_REVEAL_GAP_MS, onPostsC
         _feedKey: feedKey,
         _feedRevealSeq: revealSeq,
       });
+      if (!firstRevealFired) {
+        firstRevealFired = true;
+        onFirstReveal?.();
+      }
       flushToUi();
       scheduleEnterDone(feedKey);
     }

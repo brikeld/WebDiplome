@@ -30,12 +30,14 @@ export async function runHostedPostGenerationWithReveal({
   reloadProfileFromApi,
   applyRevealedPosts,
   getBaselinePosts,
+  onDismissGeneratingUi,
   pollMs = 1000,
   timeoutMs = 180000,
 }) {
   const queue = createPostFeedRevealQueue({
     getBaseline: getBaselinePosts,
     onPostsChange: applyRevealedPosts,
+    onFirstReveal: onDismissGeneratingUi,
   });
   queue.markBaseline(getBaselinePosts());
 
@@ -50,6 +52,7 @@ export async function runHostedPostGenerationWithReveal({
       if (job.status === 'complete') {
         jobDone = true;
         expectedRevealKeys = expectedGeneratedKeysFromJobPosts(job.posts);
+        onDismissGeneratingUi?.();
       } else if (job.status === 'failed') {
         jobFailed = job.error || 'AI job failed';
         break;
