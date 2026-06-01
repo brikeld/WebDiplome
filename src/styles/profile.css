@@ -529,23 +529,23 @@ button.profile-last-analysis-pill:disabled {
 
 /* Left pane shell matches Home: .home-top-label + .posts-capsule (see home.css, base.css) */
 
-/* Right rail: one layout for all viewports (windowed + fullscreen) */
+/* Right rail: card scales with height; tabs stay modest and sit on the bottom */
 .profile-rail-capsule.dashboard-capsule {
-  container-type: inline-size;
+  container-type: inline-size size;
   container-name: profile-rail;
-  --profile-rail-section-gap: clamp(12px, 2.8cqw, 20px);
-  --profile-rail-inner-pad-y: clamp(26px, 6.5cqw, 42px);
-  --profile-rail-inner-pad-x: clamp(18px, 4.6cqw, 32px);
-  --profile-rail-name-size: clamp(36px, 11.5cqw, 72px);
-  --profile-rail-bio-label-size: clamp(18px, 4.8cqw, 26px);
-  --profile-rail-bio-size: clamp(15px, 4.2cqw, 22px);
-  --profile-rail-badge-size: clamp(26px, 6.8cqw, 38px);
-  --profile-rail-stat-icon: clamp(20px, 5.4cqw, 30px);
-  --profile-rail-stat-num: clamp(18px, 4.8cqw, 28px);
-  --profile-rail-tab-min-h: clamp(40px, 11cqw, 52px);
-  --profile-rail-tab-font: clamp(14px, 4cqw, 20px);
-  --profile-rail-ring-size: clamp(5.75rem, 24cqw, 8.5rem);
-  --profile-rail-ring-gap: clamp(12px, 3.2cqw, 22px);
+  --profile-rail-section-gap: clamp(12px, calc(2.4cqw + 0.35cqh), 24px);
+  --profile-rail-inner-pad-y: clamp(26px, calc(5.5cqw + 1.25cqh), 56px);
+  --profile-rail-inner-pad-x: clamp(18px, 4.6cqw, 34px);
+  --profile-rail-name-size: clamp(36px, calc(10.5cqw + 0.9cqh), 84px);
+  --profile-rail-bio-label-size: clamp(18px, calc(4.6cqw + 0.35cqh), 28px);
+  --profile-rail-bio-size: clamp(15px, calc(4cqw + 0.4cqh), 24px);
+  --profile-rail-badge-size: clamp(26px, calc(6.4cqw + 0.35cqh), 42px);
+  --profile-rail-stat-icon: clamp(20px, calc(5.2cqw + 0.25cqh), 34px);
+  --profile-rail-stat-num: clamp(18px, calc(4.6cqw + 0.3cqh), 32px);
+  --profile-rail-tab-h: clamp(40px, 7.5cqw, 48px);
+  --profile-rail-tab-font: clamp(14px, 3.6cqw, 18px);
+  --profile-rail-ring-size: clamp(5.75rem, calc(22cqw + 1.75cqh), 10rem);
+  --profile-rail-ring-gap: clamp(12px, calc(3cqw + 0.35cqh), 26px);
   display: flex;
   flex-direction: column;
   background: var(--persona-accent, #759aef);
@@ -565,7 +565,8 @@ button.profile-last-analysis-pill:disabled {
 .profile-rail-capsule .profile-header-stack {
   margin-bottom: 0;
   padding-bottom: 0;
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -579,11 +580,13 @@ button.profile-last-analysis-pill:disabled {
   --profile-score-size: var(--profile-rail-ring-size);
   --profile-score-size-max: var(--profile-rail-ring-size);
   --profile-rail-text-gap: var(--profile-rail-section-gap);
-  flex: 0 0 auto;
+  flex: 1 1 0;
   width: 100%;
   min-height: 0;
   height: auto;
   margin-top: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--card, #fff);
   border: none;
   border-radius: var(--radius-post-surface);
@@ -591,17 +594,17 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-hero-main {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto auto auto;
-  align-content: start;
+  align-content: space-between;
   align-items: start;
   gap: var(--profile-rail-section-gap) var(--profile-rail-ring-gap);
   box-sizing: border-box;
   width: 100%;
   min-height: 0;
-  height: auto;
+  height: 100%;
   padding: var(--profile-rail-inner-pad-y) var(--profile-rail-inner-pad-x);
 }
 
@@ -742,7 +745,7 @@ button.profile-last-analysis-pill:disabled {
   font-size: var(--profile-rail-bio-size);
   font-style: oblique;
   font-weight: 600;
-  line-height: 1.28;
+  line-height: clamp(1.28, calc(1.22 + 0.08cqh), 1.42);
   color: #000;
   margin: 0;
   width: 100%;
@@ -763,28 +766,27 @@ button.profile-last-analysis-pill:disabled {
   padding: clamp(4px, 1.2cqw, 8px);
 }
 
-/* Tabs fill all space below the profile card (no void under Leaderboards) */
+/* Fixed-height tabs pinned to capsule bottom (no void under Leaderboards) */
 .profile-rail-capsule .tabs-row--rail {
-  flex: 1 1 0;
-  min-height: 0;
-  margin: 0;
-  display: grid;
-  grid-template-rows: repeat(3, minmax(var(--profile-rail-tab-min-h), 1fr));
+  flex: 0 0 auto;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
   gap: var(--profile-rail-section-gap);
   padding: 0;
   align-items: stretch;
-  align-content: stretch;
   background: transparent;
   border: none;
 }
 
 .profile-rail-capsule .tabs-row--rail .tab {
+  flex: 0 0 auto;
   width: 100%;
-  min-height: var(--profile-rail-tab-min-h);
-  height: 100%;
-  max-height: none;
+  height: var(--profile-rail-tab-h);
+  min-height: var(--profile-rail-tab-h);
+  max-height: var(--profile-rail-tab-h);
   margin: 0;
-  padding: clamp(8px, 2cqw, 12px) clamp(10px, 2.6cqw, 16px);
+  padding: clamp(6px, 1.6cqw, 10px) clamp(10px, 2.6cqw, 16px);
   border: clamp(2px, 0.55cqw, 3px) solid transparent;
   border-radius: clamp(11px, 3cqw, 16px);
   background: #fff;
