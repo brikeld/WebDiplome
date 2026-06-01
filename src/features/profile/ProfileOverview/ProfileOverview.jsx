@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import './profileOverview.css';
 import { buildProfileOverviewData } from '@/lib/profileOverviewData.js';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import PoCard from './components/PoCard.jsx';
-import ScoreBreakdown from './components/ScoreBreakdown.jsx';
 import ScoreDrift from './components/ScoreDrift.jsx';
 import ActivityPatterns from './components/ActivityPatterns.jsx';
 import TechStack from './components/TechStack.jsx';
@@ -14,15 +13,8 @@ import LocationInference from './components/LocationInference.jsx';
 import DigitalEnvironment from './components/DigitalEnvironment.jsx';
 import HarvestFreshness from './components/HarvestFreshness.jsx';
 import PostFootprint from './components/PostFootprint.jsx';
-import { usePersonaBlurbs } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
-
 export default function ProfileOverview({ profile }) {
   const { adjustedScores, dominantPersona, isHidden, isLeaderboardSelfHidden } = useLiveScoring();
-  const { blurbs: personaBlurbs, loading: personaBlurbsLoading, ensureBlurbs } = usePersonaBlurbs() ?? {};
-
-  useEffect(() => {
-    ensureBlurbs?.();
-  }, [ensureBlurbs]);
 
   const profileData = useMemo(
     () => buildProfileOverviewData(profile, { adjustedScores, dominantPersona }),
@@ -77,23 +69,6 @@ export default function ProfileOverview({ profile }) {
 
   return (
     <div className="po-stack" style={{ '--persona-accent': profileData.personaAccent }}>
-      <PoCard
-        eyebrow="Behavioral mix"
-        title="Persona scores"
-        persona={dom}
-        mode="static"
-        className="po-card--scores"
-      >
-        <ScoreBreakdown
-          scores={profileData.scores}
-          dominantPersona={dom}
-          deltas={profileData.scoreDrift?.deltas}
-          personaBlurbs={personaBlurbs}
-          personaBlurbsLoading={personaBlurbsLoading}
-          variant="stack"
-        />
-      </PoCard>
-
       <PoCard
         eyebrow="Live vs harvest"
         title="Score drift"
