@@ -56,6 +56,10 @@ import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
 import { createFeedSpectatorRevealController } from '@/lib/feedSpectatorReveals.js';
 import { runHostedPostGenerationWithReveal } from '@/lib/hostedPostGeneration.js';
 import {
+  attachApiPersonaPosts,
+  mergeProfilePreservePosts,
+} from '@/lib/profileReload.js';
+import {
   createPostFeedRevealQueue,
   POST_REVEAL_GAP_MS,
   sleep as feedRevealSleep,
@@ -1440,7 +1444,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scoresBefore, dynamicOnly: true, profileSlug }),
       });
-      if (!reqRes.ok) {
+      if (!reqRes.ok && reqRes.status !== 409) {
         const errText = await reqRes.text().catch(() => '');
         let msg = `Harvest request failed (${reqRes.status})`;
         try {
@@ -1451,6 +1455,7 @@ export default function App() {
         }
         throw new Error(msg);
       }
+      // 409 = harvest already running (double-click or retry) — join via poll.
 
       await pollHarvestUntilDone(scoresBefore, profileSlug);
       await reloadProfileFromApi();

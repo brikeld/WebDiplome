@@ -8,14 +8,19 @@ export async function prependPersonaPosts(profileId, posts) {
   const payload = (Array.isArray(posts) ? posts : []).map(postForPersistence);
   if (payload.length === 0) return [];
 
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(isHostedApiOrigin() ? hostedAuthHeaders() : {}),
+  };
+  if (isHostedApiOrigin() && !headers.Authorization) {
+    return payload;
+  }
+
   const res = await fetch(
     `${API_ORIGIN}/api/profile/${encodeURIComponent(profileId)}/posts/prepend`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(isHostedApiOrigin() ? hostedAuthHeaders() : {}),
-      },
+      headers,
       body: JSON.stringify({ posts: payload }),
     },
   );
