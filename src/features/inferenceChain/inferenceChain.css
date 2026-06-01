@@ -147,18 +147,25 @@
   height: 100%;
   width: 100%;
   min-height: 0;
+  align-items: stretch;
+  justify-content: stretch;
 }
 
 .tell-more-pill--idle .tell-load {
   position: relative;
   inset: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   height: 100%;
   width: 100%;
+  min-height: 0;
   background: transparent;
-  justify-content: center;
+  justify-content: stretch;
   align-items: stretch;
-  padding: clamp(18px, 2vw, 28px);
+  padding: clamp(20px, 2.4vw, 32px);
   box-sizing: border-box;
+  gap: clamp(11px, 1.45vh, 16px);
 }
 
 /* ── State 1: normal (legacy) ── */
@@ -1156,31 +1163,31 @@
   inset: auto;
   animation: none;
   opacity: 1;
-  gap: clamp(8px, 1vh, 12px);
   background: transparent;
 }
 
 .tell-load--compact {
-  --lb-gap: clamp(8px, 1vh, 12px);
-  --lb-radius: clamp(10px, 1vw, 14px);
+  --lb-gap: clamp(11px, 1.45vh, 16px);
+  --lb-radius: clamp(12px, 1.15vw, 16px);
 }
 
-/* Idle capsule bars — fixed heights so the group centers vertically */
+/* Idle bars fill the capsule — same proportions as the expanded loading overlay */
 .tell-more-pill--idle .tell-load--compact .tell-load__skel {
-  flex: 0 0 auto;
-  height: clamp(16px, 2.4vh, 24px);
+  flex: 1 1 0;
+  min-height: clamp(22px, 3.5vh, 40px);
+  height: auto;
 }
 
 .tell-more-pill--idle .tell-load--compact .tell-load__skel:nth-child(1) {
-  height: clamp(22px, 3.2vh, 32px);
+  flex-grow: 2.4;
 }
 
 .tell-more-pill--idle .tell-load--compact .tell-load__skel:nth-child(2) {
-  height: clamp(18px, 2.6vh, 26px);
+  flex-grow: 1.8;
 }
 
 .tell-more-pill--idle .tell-load--compact .tell-load__skel:nth-child(3) {
-  height: clamp(14px, 2vh, 20px);
+  flex-grow: 1.2;
 }
 
 /* Normal-post inference panel has its own padding (22/24/20). The overlay
