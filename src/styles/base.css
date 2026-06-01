@@ -773,7 +773,7 @@ body {
   .view-home .page,
   .view-profile .page {
     justify-content: flex-start;
-    --shell-left-outward-bleed: 22px;
+    --shell-left-outward-bleed: 30px;
     --shell-right-outward-bleed: 26px;
     --shell-left-col-max: clamp(528px, 46.5vw, 848px);
     --shell-right-col-width: clamp(492px, 38vw, 668px);
@@ -791,7 +791,7 @@ body {
   .view-home .page,
   .view-profile .page {
     --shell-col-gap: 14px;
-    --shell-left-outward-bleed: 18px;
+    --shell-left-outward-bleed: 26px;
     --shell-right-outward-bleed: 22px;
     --shell-left-col-max: clamp(468px, 42.5vw, 728px);
     --shell-right-col-width: clamp(448px, 35.5vw, 588px);
