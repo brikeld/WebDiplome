@@ -783,8 +783,8 @@ body {
     justify-content: flex-start;
     --shell-left-outward-bleed: 30px;
     --shell-right-outward-bleed: 26px;
-    --shell-left-col-max: clamp(600px, 58vw, 980px);
-    --shell-right-col-width: clamp(360px, 26vw, 560px);
+    --shell-left-col-max: clamp(552px, 51vw, 920px);
+    --shell-right-col-width: clamp(440px, 34vw, 648px);
   }
 
   .view-home .main-col,
@@ -808,8 +808,8 @@ body {
     --shell-col-gap: 14px;
     --shell-left-outward-bleed: 26px;
     --shell-right-outward-bleed: 22px;
-    --shell-left-col-max: clamp(540px, 54vw, 880px);
-    --shell-right-col-width: clamp(340px, 28vw, 500px);
+    --shell-left-col-max: clamp(500px, 48vw, 820px);
+    --shell-right-col-width: clamp(420px, 33vw, 580px);
   }
 
   .view-home .main-col,
