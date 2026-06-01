@@ -13,6 +13,10 @@ import {
   createCompliantJoinPost,
   hasCompliantJoinPost,
 } from './compliantSystemPosts.js';
+import {
+  dedupeProfilesWithMergedPosts,
+  mergeSiblingPostsForProfile,
+} from './hostedProfileDedupe.js';
 
 function throwIfError(result, label) {
   if (result?.error) throw new Error(`${label}: ${result.error.message}`);
@@ -51,6 +55,21 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       'read posts',
     );
     return (data ?? []).map(mapPostRowForApi);
+  }
+
+  async function listAllProfilesWithPosts() {
+    const rows = throwIfError(
+      await supabase.from('profiles').select('*').order('updated_at', { ascending: false }),
+      'list profiles',
+    );
+    const safeRows = await Promise.all((rows ?? []).map((row) => ensureWebSafeWallpaper(row)));
+    return Promise.all(
+      safeRows.map(async (row) => mapProfileRowForApi(row, await readPosts(row.id))),
+    );
+  }
+
+  function withMergedSiblingPosts(profile, directory) {
+    return mergeSiblingPostsForProfile(profile, directory);
   }
 
   /** Remove all posts, jobs, assets, and profile row for one hosted account. */
@@ -199,7 +218,10 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     async getProfileByUserId(userId) {
       const row = await findProfileByUserId(userId);
       if (!row) return null;
-      return mapProfileRowForApi(row, await readPosts(row.id));
+      const directory = await listAllProfilesWithPosts();
+      const safe = await ensureWebSafeWallpaper(row);
+      const api = mapProfileRowForApi(safe, await readPosts(safe.id));
+      return withMergedSiblingPosts(api, directory);
     },
 
     async upsertProfileSync({ userId, payload, replacePosts = false }) {
@@ -253,12 +275,8 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     },
 
     async listProfiles() {
-      const rows = throwIfError(
-        await supabase.from('profiles').select('*').order('updated_at', { ascending: false }),
-        'list profiles',
-      );
-      const safeRows = await Promise.all((rows ?? []).map((row) => ensureWebSafeWallpaper(row)));
-      return Promise.all(safeRows.map(async (row) => mapProfileRowForApi(row, await readPosts(row.id))));
+      const mapped = await listAllProfilesWithPosts();
+      return dedupeProfilesWithMergedPosts(mapped);
     },
 
     async listProfilesForLeaderboards() {
@@ -266,11 +284,15 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         await supabase.from('profiles').select('*').order('updated_at', { ascending: false }),
         'list profiles for leaderboards',
       );
+      const directory = await listAllProfilesWithPosts();
       return Promise.all(
-        (rows ?? []).map(async (row) => ({
-          ...mapProfileRowForApi(row, await readPosts(row.id)),
-          _harvest: row.raw_profile ?? {},
-        })),
+        (rows ?? []).map(async (row) => {
+          const api = {
+            ...mapProfileRowForApi(row, await readPosts(row.id)),
+            _harvest: row.raw_profile ?? {},
+          };
+          return withMergedSiblingPosts(api, directory);
+        }),
       );
     },
 
@@ -281,7 +303,9 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       );
       if (!row) return null;
       const safe = await ensureWebSafeWallpaper(row);
-      return mapProfileRowForApi(safe, await readPosts(safe.id));
+      const directory = await listAllProfilesWithPosts();
+      const api = mapProfileRowForApi(safe, await readPosts(safe.id));
+      return withMergedSiblingPosts(api, directory);
     },
 
     async getProfileRowBySlug(slug) {

@@ -1054,33 +1054,49 @@ export default function App() {
         }
         const normalized = normalizeProfilesFromApi(data);
         ingestProfileAvatars(normalized);
-        setAllProfiles(normalized);
         inferPublicMediaConfigFromProfiles(normalized);
-        const owned = resolveOwnedLandingProfile(normalized, linkedProfileSlug);
-        if (linkedProfileSlug && !owned) {
-          if (isHostedApiOrigin()) {
-            const meRes = await fetch(`${API_ORIGIN}/api/profile/me`, {
-              headers: { ...hostedAuthHeaders() },
-            }).catch(() => null);
-            if (!meRes?.ok) {
-              if (meRes?.status === 401) {
-                clearHostedAccountStorage();
-                clearStoredProfileSlug();
-                setLinkedProfileSlug(null);
-                setProfile(null);
-                setLandingOwnedProfile(null);
-              }
-              return;
+
+        if (isHostedApiOrigin() && readHostedSession()?.access_token) {
+          const meRes = await fetch(`${API_ORIGIN}/api/profile/me`, {
+            headers: { ...hostedAuthHeaders() },
+          }).catch(() => null);
+          if (!meRes?.ok) {
+            if (meRes?.status === 401) {
+              clearHostedAccountStorage();
+              clearStoredProfileSlug();
+              setLinkedProfileSlug(null);
+              setProfile(null);
+              setLandingOwnedProfile(null);
             }
+          } else {
             const meJson = await meRes.json().catch(() => ({}));
             const meProfile = meJson?.profile ?? null;
             if (meProfile) {
+              const meSlug = String(meProfile.slug ?? meProfile.id ?? '').trim();
+              if (meSlug) {
+                setLinkedProfileSlug(meSlug);
+                persistProfileSlug(meSlug);
+              }
               setLandingOwnedProfile(meProfile);
               setProfile((prev) => mergeProfileFromApi(prev, meProfile));
+              const directory = [...normalized];
+              const idx = directory.findIndex(
+                (p) => p?.slug === meSlug || p?.id === meSlug,
+              );
+              if (idx >= 0) {
+                directory[idx] = mergeProfileFromApi(directory[idx], meProfile);
+              } else {
+                directory.unshift(meProfile);
+              }
+              setAllProfiles(directory);
               return;
             }
           }
-        } else if (!linkedProfileSlug && readStoredProfileSlug() && !owned) {
+        }
+
+        setAllProfiles(normalized);
+        const owned = resolveOwnedLandingProfile(normalized, linkedProfileSlug);
+        if (!linkedProfileSlug && readStoredProfileSlug() && !owned) {
           clearStoredProfileSlug();
         }
         setLandingOwnedProfile(owned);
