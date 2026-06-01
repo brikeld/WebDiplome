@@ -558,11 +558,16 @@ button.profile-last-analysis-pill:disabled {
   box-sizing: border-box;
 }
 
+.profile-rail-capsule.dashboard-capsule::after {
+  content: '';
+  flex: 1 1 0;
+  min-height: 0;
+}
+
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule {
   gap: var(--profile-rail-section-gap);
   padding: clamp(20px, 5.5cqw, 28px) clamp(18px, 4.6cqw, 30px)
     var(--profile-rail-section-gap);
-  overflow: hidden;
 }
 
 /* Laptop: narrower rail width — retune cqw/cqh so type/rings match post-column scale */
@@ -802,123 +807,7 @@ button.profile-last-analysis-pill:disabled {
   padding: clamp(4px, 1.2cqw, 8px);
 }
 
-/* Persona scores fill remaining rail height (black panel below tabs) */
-.profile-rail-capsule .profile-rail-persona-scores {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--profile-rail-card-gap);
-  margin: 0;
-  padding: clamp(16px, 4.5cqw, 26px) clamp(14px, 3.8cqw, 24px);
-  background: #000;
-  border-radius: var(--radius-post-surface);
-  color: #fff;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores__title {
-  flex: 0 0 auto;
-  margin: 0;
-  font-family: var(--font-avant), var(--font-sans);
-  font-size: var(--profile-rail-bio-label-size);
-  font-weight: 700;
-  font-style: normal;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  text-transform: lowercase;
-  color: #fff;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores__body {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack--rail {
-  gap: var(--profile-rail-card-gap);
-  width: 100%;
-  height: 100%;
-  justify-content: space-evenly;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-row {
-  gap: clamp(8px, 2.2cqw, 12px);
-  align-items: center;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring.dashboard-ring-card--stack {
-  width: clamp(3.35rem, 14cqw, 4.65rem);
-  min-width: 0;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring.dashboard-ring-card--stack::before {
-  border-radius: clamp(10px, 2.8cqw, 16px);
-  opacity: 0.92;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring .dashboard-ring-svg {
-  width: 82%;
-  max-width: none;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring .dashboard-ring-svg circle:first-of-type {
-  stroke: rgba(255, 255, 255, 0.22);
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring .dashboard-ring-svg circle:nth-of-type(2) {
-  stroke: var(--ring-accent, #fff);
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .dashboard-ring-score,
-.profile-rail-capsule .profile-rail-persona-scores .dashboard-ring-score > span:first-child {
-  color: #fff;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .dashboard-ring-score-pct {
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .dashboard-ring-delta {
-  font-size: var(--profile-rail-tab-font);
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-text {
-  gap: clamp(2px, 0.6cqw, 6px);
-  padding-top: 0;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-score-row-label {
-  font-size: var(--profile-rail-bio-label-size);
-  font-weight: 700;
-  line-height: 1.1;
-  color: #fff;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-secondary {
-  font-size: var(--profile-rail-bio-size);
-  font-weight: 600;
-  line-height: 1.25;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-secondary--pending {
-  opacity: 0.55;
-  font-style: italic;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-row--dominant .po-score-row-label {
-  text-decoration: underline;
-  text-decoration-color: var(--persona-accent, #759aef);
-  text-underline-offset: 3px;
-}
-
-/* Tabs sit directly under the profile card */
+/* Tabs sit directly under the card; ::after on capsule absorbs bottom slack */
 .profile-rail-capsule .tabs-row--rail {
   flex: 0 0 auto;
   margin: 0;

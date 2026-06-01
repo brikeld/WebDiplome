@@ -130,44 +130,6 @@ export default function ScoreBreakdown({
   personaBlurbsLoading = false,
   variant = 'card',
 }) {
-  if (variant === 'rail') {
-    const domKey = normalizeDominant(dominantPersona);
-
-    return (
-      <div className="po-persona-stack po-persona-stack--rail">
-        {PERSONA_RINGS.map(({ key, label, description }) => {
-          const value = Math.max(0, Math.min(100, Number(scores?.[key]) || 0));
-          const isDominant = key === domKey;
-          const blurb = personaBlurbs?.[key];
-          const copy = blurb || (personaBlurbsLoading ? 'Generating profile phrases…' : description);
-
-          return (
-            <div
-              key={key}
-              className={`po-persona-stack-row${isDominant ? ' po-persona-stack-row--dominant' : ''}`}
-            >
-              <StackRing
-                value={value}
-                color={PERSONA_UI_COLORS[key]}
-                label={label}
-                delta={deltas?.[key]}
-              />
-              <div className="po-persona-stack-text">
-                <span className="po-score-row-label">
-                  {label}
-                  <i className="po-score-dot" style={{ background: PERSONA_UI_COLORS[key] }} />
-                </span>
-                <p className={`po-secondary${personaBlurbsLoading && !blurb ? ' po-secondary--pending' : ''}`}>
-                  {copy}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
   if (variant === 'stack') {
     const domKey = normalizeDominant(dominantPersona);
 
