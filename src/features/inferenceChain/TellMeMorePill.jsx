@@ -43,6 +43,8 @@ export default function TellMeMorePill({
   expanded,
   closing = false,
   fallbackPersona = 'security',
+  personaAccent = null,
+  personaPastel = null,
 }) {
   const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
   const postPersonaKey = String(highlightedPost?.persona ?? mainPersonaKey).toLowerCase();
@@ -50,17 +52,18 @@ export default function TellMeMorePill({
   const postAccent =
     highlightedPost?.noteColor ?? PERSONA_ACCENT[postUiKey] ?? PERSONA_ACCENT.security;
   const postPastel = PERSONA_PASTEL[postUiKey] ?? PERSONA_PASTEL.security;
-  const accent = highlightedPost
-    ? postAccent
-    : PERSONA_ACCENT[mainPersonaKey] ?? PERSONA_ACCENT.security;
-  const pastel = highlightedPost
-    ? postPastel
-    : PERSONA_PASTEL[mainPersonaKey] ?? PERSONA_PASTEL.security;
+  const mainAccent =
+    personaAccent ?? PERSONA_ACCENT[mainPersonaKey] ?? PERSONA_ACCENT.security;
+  const mainPastel =
+    personaPastel ?? PERSONA_PASTEL[mainPersonaKey] ?? PERSONA_PASTEL.security;
+  const accent = highlightedPost ? postAccent : mainAccent;
+  const pastel = highlightedPost ? postPastel : mainPastel;
   const label = PERSONA_LABEL[postPersonaKey] ?? 'Social';
 
   const pillStyle = {
     '--tell-pill-accent': accent,
     '--tell-pill-pastel': pastel,
+    '--lb-acc': accent,
   };
 
   if (expanded && highlightedPost) {

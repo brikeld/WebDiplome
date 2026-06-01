@@ -8,9 +8,9 @@ const DEFAULT_BARS = [
 ];
 
 const COMPACT_BARS = [
-  { height: '32%' },
-  { height: '24%' },
-  { height: '16%', solid: true },
+  { height: '36%' },
+  { height: '28%' },
+  { height: '20%', solid: true },
 ];
 
 export default function TellMeMoreLoadingOverlay({

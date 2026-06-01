@@ -1797,8 +1797,8 @@ body {
 }
 
 .dashboard-tell-row {
-  flex: 0 0 auto;
-  min-height: 0;
+  flex: 1.35 1 0;
+  min-height: clamp(100px, 14vh, 148px);
   width: 100%;
   display: flex;
 }

@@ -833,6 +833,8 @@ function AppInner({
                   expanded={tellExpanded}
                   closing={tellClosing}
                   fallbackPersona={personaKey}
+                  personaAccent={personaColor}
+                  personaPastel={PERSONA_PASTEL_COLORS[personaKey] ?? PERSONA_PASTEL_COLORS.security}
                 />
               </div>
             </div>
