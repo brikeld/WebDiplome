@@ -619,7 +619,7 @@ body {
   --shell-rail-width: 72px;
   --shell-rail-clearance: 34px;
   --shell-inline-pad: 16px;
-  --shell-capsules-nudge-left: 0px;
+  --shell-capsules-nudge-left: 24px;
   --left-capsule-extra-width: 0px;
 }
 
@@ -638,6 +638,10 @@ body {
 .view-profile .page {
   height: 100vh;
   overflow: hidden;
+  padding-left: calc(
+    var(--shell-rail-inset) + var(--shell-rail-width) + var(--shell-rail-clearance)
+    + var(--shell-capsules-nudge-left)
+  );
   --shell-col-gap: clamp(14px, 1.6vw, 24px);
   --shell-left-col-max: clamp(620px, 52vw, 1180px);
   --shell-right-col-width: clamp(420px, 32vw, 720px);
@@ -763,7 +767,7 @@ body {
   .page-outer.view-profile {
     --left-capsule-extra-width: 0px;
     --dashboard-extra-width: 0px;
-    --shell-capsules-nudge-left: 0px;
+    --shell-capsules-nudge-left: 30px;
   }
 
   .view-home .page,
