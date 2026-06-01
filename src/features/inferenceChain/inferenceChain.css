@@ -137,7 +137,26 @@
   transition: opacity 240ms ease, color 240ms ease;
 }
 
-/* ── State 1: normal ── */
+/* ── State: idle — compact shimmer strip (always loading) ── */
+.tell-more-pill--idle {
+  cursor: default;
+  pointer-events: none;
+  background: var(--tell-pill-pastel, #bccdf5);
+  border-color: var(--tell-pill-accent, #759aef);
+  height: clamp(52px, 6.8vh, 72px);
+  min-height: clamp(52px, 6.8vh, 72px);
+  max-height: clamp(52px, 6.8vh, 72px);
+  flex: 0 0 auto;
+}
+
+.tell-more-pill--idle .tell-load {
+  position: relative;
+  inset: auto;
+  height: 100%;
+  width: 100%;
+}
+
+/* ── State 1: normal (legacy) ── */
 .tell-more-pill--normal .tell-more-pill__icon {
   opacity: 0.5;
   transform: scale(0.94);
@@ -1125,6 +1144,20 @@
   animation: tell-load-life 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   pointer-events: none;
   box-sizing: border-box;
+}
+
+.tell-load--loop {
+  position: relative;
+  inset: auto;
+  animation: none;
+  opacity: 1;
+  padding: clamp(8px, 0.95vw, 12px);
+  gap: clamp(5px, 0.65vh, 8px);
+}
+
+.tell-load--compact {
+  --lb-gap: clamp(4px, 0.55vh, 7px);
+  --lb-radius: clamp(8px, 0.85vw, 11px);
 }
 
 /* Normal-post inference panel has its own padding (22/24/20). The overlay

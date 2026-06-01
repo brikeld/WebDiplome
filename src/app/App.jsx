@@ -278,7 +278,6 @@ function AppInner({
   const [confirmingHide, setConfirmingHide] = useState(false);
   const [confirmingUnhide, setConfirmingUnhide] = useState(false);
   const [highlightedPost, setHighlightedPost] = useState(null);
-  const [selectionPulseFlip, setSelectionPulseFlip] = useState(false);
   const [tellExpanded, setTellExpanded] = useState(false);
   const [tellClosing, setTellClosing] = useState(false);
   const tellCloseTimerRef = useRef(null);
@@ -498,14 +497,18 @@ function AppInner({
 
   const handleHighlightPost = useCallback((post) => {
     const isDeselect = highlightedPost?.id === post.id;
-    setHighlightedPost(isDeselect ? null : post);
-    if (!isDeselect) {
-      setSelectionPulseFlip((prev) => !prev);
+    if (isDeselect) {
+      setHighlightedPost(null);
+      closeTell();
+      return;
     }
+    setHighlightedPost(post);
     setConfirmingHide(false);
     setConfirmingUnhide(false);
     setHideBlocked(false);
-    closeTell(); // play close animation when selection changes
+    if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
+    setTellClosing(false);
+    setTellExpanded(true);
   }, [highlightedPost?.id, closeTell]);
 
   const highlightedPostIsHidden = highlightedPost
@@ -546,6 +549,7 @@ function AppInner({
     }
     setConfirmingHide(false);
     setHighlightedPost(null);
+    closeTell();
   };
 
   const handleConfirmUnhide = () => {
@@ -558,6 +562,7 @@ function AppInner({
     }
     setConfirmingUnhide(false);
     setHighlightedPost(null);
+    closeTell();
   };
 
   const handleCancelHide = () => {
@@ -605,20 +610,6 @@ function AppInner({
       isHidden,
       isLeaderboardSelfHidden,
     ],
-  );
-
-  const handlePostTellMeMoreClick = useCallback(
-    (post) => {
-      if (!post) return;
-      setHighlightedPost(post);
-      setHideBlocked(false);
-      setConfirmingHide(false);
-      setConfirmingUnhide(false);
-      if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
-      setTellClosing(false);
-      setTellExpanded(true);
-    },
-    [],
   );
 
   const ownProfileSlug = profile?.slug ?? profile?.id ?? null;
@@ -772,8 +763,6 @@ function AppInner({
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
                 onPostHide={handlePostHideClick}
-                onPostTellMeMore={handlePostTellMeMoreClick}
-                tellMeMorePostId={tellExpanded ? (highlightedPost?.id ?? null) : null}
                 personaBadgePersona={personaKey}
                 onOpenProfile={handleOpenProfile}
               />
@@ -841,15 +830,8 @@ function AppInner({
               <div className="dashboard-tell-row">
                 <TellMeMorePill
                   highlightedPost={highlightedPost}
-                  selectionPulseFlip={selectionPulseFlip}
                   expanded={tellExpanded}
                   closing={tellClosing}
-                  onExpand={() => {
-                    if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
-                    setTellClosing(false);
-                    setTellExpanded(true);
-                  }}
-                  disabled={dashboardBusy}
                   fallbackPersona={personaKey}
                 />
               </div>

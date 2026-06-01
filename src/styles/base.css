@@ -1782,8 +1782,8 @@ body {
   grid-template-columns: 1fr;
   gap: var(--dashboard-btn-gap, 10px);
   width: 100%;
-  /* ~1.1fr of capsule — scales with viewport like the original grid row */
-  flex: 1.1 1 0;
+  /* Fills remaining capsule height when tell-me-more is a compact idle strip. */
+  flex: 1 1 0;
   min-height: var(--dashboard-actions-min-h, clamp(172px, 21vh, 232px));
   height: auto;
   /* Clipping happens only while tell-me-more is collapsing (see inferenceChain.css). */
@@ -1797,10 +1797,16 @@ body {
 }
 
 .dashboard-tell-row {
-  flex: 2.25 1 0;
+  flex: 0 0 auto;
   min-height: 0;
   width: 100%;
   display: flex;
+}
+
+.dashboard-capsule--figma.is-tell-expanded .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-closing .dashboard-tell-row {
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 .dashboard-action-pill {
@@ -2321,7 +2327,7 @@ body {
 }
 
 .dashboard-capsule--figma .tell-more-pill,
-.dashboard-capsule--figma .tell-more-pill--armed {
+.dashboard-capsule--figma .tell-more-pill--idle {
   --tell-pill-radius: var(--capsule-radius);
   border-radius: var(--tell-pill-radius);
 }
