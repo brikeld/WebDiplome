@@ -542,6 +542,9 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-card-pad: var(--profile-rail-card-pad-top) var(--profile-rail-card-pad-right)
     var(--profile-rail-card-pad-bottom) var(--profile-rail-card-pad-left);
   --profile-rail-icons-to-bio-gap: clamp(15px, 3.8cqw, 24px);
+  --profile-rail-text-offset-y: clamp(10px, 2.2cqw, 16px);
+  --profile-rail-follow-offset-y: clamp(4px, 1cqw, 8px);
+  --profile-rail-bio-extra-offset-y: clamp(6px, 1.5cqw, 10px);
   --profile-rail-inner-pad-y: var(--profile-rail-card-pad-top);
   --profile-rail-inner-pad-x: var(--profile-rail-card-pad-left);
   --profile-rail-inner-pad-right: var(--profile-rail-card-pad-right);
@@ -617,20 +620,6 @@ button.profile-last-analysis-pill:disabled {
     --profile-rail-ring-size: clamp(8.15rem, 31cqw, 10.5rem);
     --profile-rail-ring-center-factor: 0.57;
     --profile-rail-ring-gap: clamp(7px, 2cqw, 12px);
-  }
-
-  .profile-rail-capsule .profile-follow-row {
-    margin-top: clamp(8px, 2cqw, 12px);
-  }
-
-  .profile-rail-capsule .profile-bio-block {
-    margin-top: max(
-      0px,
-      calc(
-        var(--profile-rail-icons-to-bio-gap) - var(--profile-rail-card-gap) +
-          clamp(8px, 2cqw, 12px)
-      )
-    );
   }
 
   .profile-rail-capsule .profile-follow-item--button {
@@ -721,14 +710,14 @@ button.profile-last-analysis-pill:disabled {
   grid-row: 1;
   width: 100%;
   min-width: 0;
-  margin-top: 0;
+  margin-top: var(--profile-rail-text-offset-y, 0px);
 }
 
 .profile-rail-capsule .profile-follow-row {
   grid-column: 1;
   grid-row: 2;
   gap: clamp(12px, 3.2cqw, 20px);
-  margin-top: 0;
+  margin-top: var(--profile-rail-follow-offset-y, 0px);
 }
 
 .profile-rail-capsule .profile-bio-block {
@@ -741,7 +730,10 @@ button.profile-last-analysis-pill:disabled {
   gap: clamp(5px, 1.3cqw, 8px);
   margin-top: max(
     0px,
-    calc(var(--profile-rail-icons-to-bio-gap) - var(--profile-rail-card-gap))
+    calc(
+      var(--profile-rail-icons-to-bio-gap) - var(--profile-rail-card-gap) +
+        var(--profile-rail-bio-extra-offset-y, 0px)
+    )
   );
   width: 100%;
   min-width: 0;
