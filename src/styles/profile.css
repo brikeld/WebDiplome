@@ -529,24 +529,25 @@ button.profile-last-analysis-pill:disabled {
 
 /* Left pane shell matches Home: .home-top-label + .posts-capsule (see home.css, base.css) */
 
-/* Right rail: card scales with height; tabs stay modest and sit on the bottom */
+/* Right rail: card + tabs grouped; spare height sinks below Leaderboards */
 .profile-rail-capsule.dashboard-capsule {
   container-type: inline-size size;
   container-name: profile-rail;
-  --profile-rail-section-gap: clamp(12px, 2.8cqw, 20px);
-  --profile-rail-card-gap: clamp(12px, 2.8cqw, 20px);
-  --profile-rail-inner-pad-y: clamp(26px, calc(5.5cqw + 1.25cqh), 56px);
-  --profile-rail-inner-pad-x: clamp(18px, 4.6cqw, 34px);
-  --profile-rail-name-size: clamp(36px, calc(10.5cqw + 0.9cqh), 84px);
-  --profile-rail-bio-label-size: clamp(18px, calc(4.6cqw + 0.35cqh), 28px);
-  --profile-rail-bio-size: clamp(15px, calc(4cqw + 0.4cqh), 24px);
-  --profile-rail-badge-size: clamp(26px, calc(6.4cqw + 0.35cqh), 42px);
-  --profile-rail-stat-icon: clamp(20px, calc(5.2cqw + 0.25cqh), 34px);
-  --profile-rail-stat-num: clamp(18px, calc(4.6cqw + 0.3cqh), 32px);
-  --profile-rail-tab-h: clamp(40px, 7.5cqw, 48px);
-  --profile-rail-tab-font: clamp(14px, 3.6cqw, 18px);
-  --profile-rail-ring-size: clamp(5.75rem, calc(22cqw + 1.75cqh), 10rem);
-  --profile-rail-ring-gap: clamp(12px, calc(3cqw + 0.35cqh), 26px);
+  --profile-rail-section-gap: clamp(14px, 3.2cqw, 22px);
+  --profile-rail-card-gap: clamp(12px, 2.6cqw, 18px);
+  --profile-rail-icons-to-bio-gap: clamp(18px, 5.2cqw, 32px);
+  --profile-rail-inner-pad-y: clamp(28px, calc(6cqw + 1cqh), 52px);
+  --profile-rail-inner-pad-x: clamp(18px, 4.8cqw, 34px);
+  --profile-rail-name-size: clamp(38px, calc(11cqw + 0.75cqh), 80px);
+  --profile-rail-bio-label-size: clamp(20px, calc(5.4cqw + 0.3cqh), 32px);
+  --profile-rail-bio-size: clamp(16px, calc(4.8cqw + 0.35cqh), 26px);
+  --profile-rail-badge-size: clamp(26px, calc(6.8cqw + 0.3cqh), 42px);
+  --profile-rail-stat-icon: clamp(20px, calc(5.4cqw + 0.2cqh), 34px);
+  --profile-rail-stat-num: clamp(18px, calc(4.8cqw + 0.25cqh), 32px);
+  --profile-rail-tab-h: clamp(44px, 8.5cqw, 54px);
+  --profile-rail-tab-font: clamp(15px, 4.2cqw, 20px);
+  --profile-rail-ring-size: clamp(6rem, calc(23cqw + 1.5cqh), 9.75rem);
+  --profile-rail-ring-gap: clamp(12px, calc(3.2cqw + 0.25cqh), 26px);
   display: flex;
   flex-direction: column;
   background: var(--persona-accent, #759aef);
@@ -555,6 +556,12 @@ button.profile-last-analysis-pill:disabled {
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
+}
+
+.profile-rail-capsule.dashboard-capsule::after {
+  content: '';
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule {
@@ -628,8 +635,11 @@ button.profile-last-analysis-pill:disabled {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: clamp(4px, 1.1cqw, 8px);
-  margin-top: 0;
+  gap: clamp(6px, 1.6cqw, 10px);
+  margin-top: max(
+    0px,
+    calc(var(--profile-rail-icons-to-bio-gap) - var(--profile-rail-card-gap))
+  );
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -760,10 +770,10 @@ button.profile-last-analysis-pill:disabled {
   padding: clamp(4px, 1.2cqw, 8px);
 }
 
-/* Fixed-height tabs pinned to capsule bottom (no void under Leaderboards) */
+/* Tabs sit directly under the card; ::after on capsule absorbs bottom slack */
 .profile-rail-capsule .tabs-row--rail {
   flex: 0 0 auto;
-  margin-top: auto;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: var(--profile-rail-section-gap);
