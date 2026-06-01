@@ -35,10 +35,9 @@ import {
 import {
   createCompliantLowScorePost,
   createCompliantPersonaChangePost,
-  findLowScorePostForPersona,
   stripLowScorePostsForPersona,
 } from '@/lib/compliantSystemPosts.js';
-import { markLowScoreFired } from '@/lib/compliantLowScoreStorage.js';
+import { markLowScoreFired, loadLowScoreFiredPersonas } from '@/lib/compliantLowScoreStorage.js';
 import {
   isCompliantPersonaChangePost,
   mergePersonaPostsFromApi,
@@ -422,23 +421,27 @@ function AppInner({
       { ui: 'security', key: 'security' },
       { ui: 'popularity', key: 'social' },
     ];
-    const existingPosts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
+    // Personas that have already been reminded (persisted across sessions).
+    // A reminder fires once per genuine above→below crossing; while a persona
+    // stays below the threshold we do NOT keep re-adding the notice (that was
+    // the disappear/reappear flicker after each generation). It is fine for the
+    // notice to not be visible — we just never nag with a duplicate.
+    const firedPersonas = loadLowScoreFiredPersonas(profileId);
 
     const ensureLowScorePost = (ui, key, prevScores) => {
       const score = Math.max(0, Math.min(100, Number(adjustedScores[key]) || 0));
       const rounded = Math.round(score);
       if (rounded >= PERSONA_SCORE_RESTRICT_THRESHOLD) return;
 
-      const existing = findLowScorePostForPersona(existingPosts, ui);
       const wasAbove =
         prevScores !== null &&
         (Number(prevScores[key]) || 0) >= PERSONA_SCORE_RESTRICT_THRESHOLD;
-      const needsPost = !existing || wasAbove;
+      const alreadyFired = firedPersonas.includes(ui);
 
-      if (!needsPost) {
-        markLowScoreFired(profileId, ui);
-        return;
-      }
+      // Fire on a fresh drop (was above, now below) or the very first time we
+      // ever observe this persona below threshold. Otherwise stay silent.
+      const needsPost = wasAbove || !alreadyFired;
+      if (!needsPost) return;
 
       prependCompliantLowScorePost(
         ui,
@@ -808,7 +811,7 @@ function AppInner({
                 feedProfiles={feedProfiles}
                 viewerProfile={viewerProfile}
                 aiFeaturesEnabled={accountFeaturesEnabled}
-                isGeneratingPosts={postGen.phase === 'generating'}
+                isGeneratingPosts={postGen.phase === 'generating' && !postGen.firstRevealed}
                 postRevealFlash={postRevealFlash}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
@@ -831,7 +834,7 @@ function AppInner({
             onTabChange={setActiveTab}
             onOpenProfile={handleOpenProfile}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
-            isGeneratingPosts={!viewedProfile && postGen.phase === 'generating'}
+            isGeneratingPosts={!viewedProfile && postGen.phase === 'generating' && !postGen.firstRevealed}
             generateApiOrigin={GENERATE_API_ORIGIN}
           />
         )}
@@ -960,10 +963,14 @@ export default function App() {
     }, PERSONA_RING_DELTA_CLEAR_MS);
   }, [cancelPersonaDeltasClear]);
 
+  // First reveal: retract the in-feed placeholder spinner only. The dashboard
+  // "Generating content" screen intentionally stays up (phase remains
+  // 'generating') until every post has finished revealing — it is dismissed by
+  // the final setPostGen(POST_GEN_IDLE) in the generation handler.
   const dismissGeneratingUi = useCallback(() => {
     setPostGen((prev) => {
-      if (!prev.loading || prev.phase !== 'generating') return prev;
-      return { ...prev, phase: 'idle' };
+      if (!prev.loading || prev.phase !== 'generating' || prev.firstRevealed) return prev;
+      return { ...prev, firstRevealed: true };
     });
   }, []);
 
@@ -1459,7 +1466,7 @@ export default function App() {
     const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
     if (!bio || posts.length > 0) return;
     autoPostGenProfileIdRef.current = profileId;
-    setPostGen({ loading: true, phase: 'generating', error: null });
+    setPostGen({ loading: true, phase: 'generating', error: null, firstRevealed: false });
     runBioAndPostGenerationRef.current(profile)
       .then(() => {
         setPostGen(POST_GEN_IDLE);
@@ -1580,7 +1587,7 @@ export default function App() {
 
     setPostGen((prev) => {
       if (!prev.loading || prev.phase !== 'deltas') return prev;
-      return { ...prev, phase: 'generating' };
+      return { ...prev, phase: 'generating', firstRevealed: false };
     });
 
     try {
