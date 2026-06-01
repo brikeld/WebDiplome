@@ -529,69 +529,74 @@ button.profile-last-analysis-pill:disabled {
 
 /* Left pane shell matches Home: .home-top-label + .posts-capsule (see home.css, base.css) */
 
-/* Right rail: persona-filled shell (dashboard-capsule) + inverted inner chrome */
+/* Right rail: one layout for all viewports (windowed + fullscreen) */
 .profile-rail-capsule.dashboard-capsule {
   container-type: inline-size;
   container-name: profile-rail;
   --profile-rail-section-gap: clamp(12px, 2.8cqw, 20px);
-  --profile-rail-inner-pad-y: clamp(28px, 7cqw, 46px);
+  --profile-rail-inner-pad-y: clamp(26px, 6.5cqw, 42px);
   --profile-rail-inner-pad-x: clamp(18px, 4.6cqw, 32px);
-  --profile-rail-name-size: clamp(38px, 12cqw, 76px);
-  --profile-rail-bio-label-size: clamp(19px, 5.1cqw, 28px);
-  --profile-rail-bio-size: clamp(16px, 4.5cqw, 24px);
-  --profile-rail-badge-size: clamp(28px, 7.4cqw, 42px);
-  --profile-rail-stat-icon: clamp(22px, 5.8cqw, 32px);
-  --profile-rail-stat-num: clamp(19px, 5cqw, 30px);
-  --profile-rail-tab-min-h: clamp(38px, 11cqw, 56px);
-  --profile-rail-tab-font: clamp(14px, 4.2cqw, 22px);
+  --profile-rail-name-size: clamp(36px, 11.5cqw, 72px);
+  --profile-rail-bio-label-size: clamp(18px, 4.8cqw, 26px);
+  --profile-rail-bio-size: clamp(15px, 4.2cqw, 22px);
+  --profile-rail-badge-size: clamp(26px, 6.8cqw, 38px);
+  --profile-rail-stat-icon: clamp(20px, 5.4cqw, 30px);
+  --profile-rail-stat-num: clamp(18px, 4.8cqw, 28px);
+  --profile-rail-tab-min-h: clamp(40px, 11cqw, 52px);
+  --profile-rail-tab-max-h: clamp(48px, 12.5cqw, 60px);
+  --profile-rail-tab-font: clamp(14px, 4cqw, 20px);
+  --profile-rail-ring-size: clamp(5.75rem, 24cqw, 8.5rem);
+  --profile-rail-ring-gap: clamp(12px, 3.2cqw, 22px);
+  display: flex;
+  flex-direction: column;
   background: var(--persona-accent, #759aef);
   border: none;
   gap: var(--profile-rail-section-gap);
   min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .profile-rail-capsule .profile-header-stack {
   margin-bottom: 0;
   padding-bottom: 0;
-  flex: 1 1 0;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
 }
 
-/* Laptop / narrow rail: card grows to fill rail (14" layout) */
 .profile-rail-capsule .profile-hero-capsule {
   container-type: inline-size;
   container-name: profile-hero;
   --profile-hero-scale: 1;
   --profile-rings-scale: 1;
   --profile-ring-photo-ratio: 0.3;
-  --profile-score-size: clamp(9rem, 40cqw, 14rem);
-  --profile-score-size-max: clamp(9rem, 40cqw, 14rem);
+  --profile-score-size: var(--profile-rail-ring-size);
+  --profile-score-size-max: var(--profile-rail-ring-size);
   --profile-rail-text-gap: var(--profile-rail-section-gap);
-  flex: 1 1 0;
+  flex: 0 0 auto;
   width: 100%;
-  min-height: clamp(300px, 60cqw, 500px);
+  min-height: 0;
+  height: auto;
   margin-top: 0;
   background: var(--card, #fff);
   border: none;
   border-radius: var(--radius-post-surface);
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .profile-rail-capsule .profile-hero-main {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto auto auto;
   align-content: start;
   align-items: start;
-  gap: var(--profile-rail-section-gap) clamp(10px, 2.6cqw, 18px);
+  gap: var(--profile-rail-section-gap) var(--profile-rail-ring-gap);
   box-sizing: border-box;
-  min-height: 100%;
+  width: 100%;
+  min-height: 0;
+  height: auto;
   padding: var(--profile-rail-inner-pad-y) var(--profile-rail-inner-pad-x);
 }
 
@@ -753,11 +758,11 @@ button.profile-last-analysis-pill:disabled {
   padding: clamp(4px, 1.2cqw, 8px);
 }
 
-/* Rail tabs: same section gap as card ↔ buttons; scales with rail width */
+/* Tabs absorb extra rail height (fullscreen) — same gap token as card ↔ buttons */
 .profile-rail-capsule .tabs-row--rail {
-  flex: 0 0 auto;
-  margin-top: 0;
-  margin-bottom: 0;
+  flex: 1 1 0;
+  min-height: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: var(--profile-rail-section-gap);
@@ -768,14 +773,15 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .tabs-row--rail .tab {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   width: 100%;
-  height: auto;
   min-height: var(--profile-rail-tab-min-h);
+  max-height: var(--profile-rail-tab-max-h);
+  height: auto;
   margin: 0;
-  padding: clamp(7px, 1.9cqw, 13px) clamp(10px, 2.6cqw, 18px);
+  padding: clamp(8px, 2cqw, 12px) clamp(10px, 2.6cqw, 16px);
   border: clamp(2px, 0.55cqw, 3px) solid transparent;
-  border-radius: clamp(11px, 3cqw, 17px);
+  border-radius: clamp(11px, 3cqw, 16px);
   background: #fff;
   font-size: var(--profile-rail-tab-font);
   font-weight: 700;
@@ -816,150 +822,12 @@ button.profile-last-analysis-pill:disabled {
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.08);
 }
 
-/* Narrow rail: keep leaderboards readable without oversized buttons */
+/* Narrow rail: leaderboards label can wrap */
 @container profile-rail (max-width: 460px) {
   .profile-rail-capsule .tabs-row--rail .tab:nth-child(3) {
     white-space: normal;
     line-height: 1.05;
     font-size: clamp(13px, 3.6cqw, 16px);
-    min-height: clamp(38px, 10.5cqw, 48px);
-  }
-}
-
-/* Wide rail via container (when supported) */
-@container profile-rail (min-width: 600px) {
-  .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-section-gap: clamp(14px, 3.2cqw, 22px);
-    --profile-rail-inner-pad-y: clamp(32px, 7.5cqw, 48px);
-    --profile-rail-inner-pad-x: clamp(22px, 5.4cqw, 38px);
-    --profile-rail-name-size: clamp(46px, 14.5cqw, 100px);
-    --profile-rail-bio-label-size: clamp(23px, 6.2cqw, 36px);
-    --profile-rail-bio-size: clamp(19px, 5.6cqw, 32px);
-    --profile-rail-badge-size: clamp(34px, 9cqw, 50px);
-    --profile-rail-stat-icon: clamp(28px, 7.4cqw, 40px);
-    --profile-rail-stat-num: clamp(23px, 6.2cqw, 38px);
-    --profile-rail-tab-min-h: clamp(50px, 14cqw, 72px);
-    --profile-rail-tab-font: clamp(17px, 5.2cqw, 28px);
-  }
-
-  .profile-rail-capsule .profile-header-stack {
-    flex: 0 0 auto;
-  }
-
-  .profile-rail-capsule .profile-hero-capsule {
-    flex: 0 0 auto;
-    width: 100%;
-    min-height: 0;
-    height: auto;
-    --profile-score-size: clamp(11.5rem, 52cqw, 20rem);
-    --profile-score-size-max: clamp(11.5rem, 52cqw, 20rem);
-  }
-
-  .profile-rail-capsule .profile-hero-main {
-    flex: 0 0 auto;
-    width: 100%;
-    min-height: 0;
-    height: auto;
-  }
-
-  .profile-rail-capsule .profile-bio {
-    line-height: 1.34;
-  }
-
-  .profile-rail-capsule .tabs-row--rail {
-    flex: 0 0 auto;
-    margin-top: auto;
-  }
-
-  .profile-rail-capsule .tabs-row--rail .tab {
-    padding: clamp(10px, 2.4cqw, 16px) clamp(12px, 3cqw, 20px);
-  }
-}
-
-@container profile-rail (min-width: 680px) {
-  .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-name-size: clamp(48px, 15cqw, 104px);
-    --profile-rail-bio-size: clamp(20px, 5.8cqw, 34px);
-    --profile-rail-tab-min-h: clamp(52px, 14.5cqw, 76px);
-    --profile-rail-tab-font: clamp(18px, 5.4cqw, 30px);
-  }
-
-  .profile-rail-capsule .profile-hero-capsule {
-    --profile-score-size: clamp(12rem, 54cqw, 21rem);
-    --profile-score-size-max: clamp(12rem, 54cqw, 21rem);
-  }
-}
-
-/*
- * Desktop / 2K (viewport ≥1680px): reliable fallback when container queries do not
- * match. Fixes empty white band below bio (min-height:100% + flex grow) and scales
- * type, rings, and tab buttons. 14" MacBook (≤1512px) keeps laptop rules above.
- */
-@media (min-width: 1680px) {
-  .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule {
-    --profile-rail-section-gap: clamp(14px, 0.85vw, 22px);
-    --profile-rail-inner-pad-y: clamp(32px, 2vw, 50px);
-    --profile-rail-inner-pad-x: clamp(22px, 1.35vw, 40px);
-    --profile-rail-name-size: clamp(46px, 3.6vw, 104px);
-    --profile-rail-bio-label-size: clamp(23px, 1.45vw, 36px);
-    --profile-rail-bio-size: clamp(19px, 1.25vw, 34px);
-    --profile-rail-badge-size: clamp(34px, 2.1vw, 52px);
-    --profile-rail-stat-icon: clamp(28px, 1.75vw, 42px);
-    --profile-rail-stat-num: clamp(23px, 1.45vw, 40px);
-    --profile-rail-tab-min-h: clamp(50px, 3.1vw, 76px);
-    --profile-rail-tab-font: clamp(17px, 1.1vw, 30px);
-    gap: var(--profile-rail-section-gap);
-    padding: clamp(22px, 1.35vw, 30px);
-  }
-
-  .view-profile .profile-rail-capsule .profile-header-stack {
-    flex: 0 0 auto;
-  }
-
-  .view-profile .profile-rail-capsule .profile-hero-capsule {
-    flex: 0 0 auto;
-    width: 100%;
-    min-height: 0;
-    max-height: none;
-    height: auto;
-    --profile-score-size: clamp(11.5rem, 14vw, 21rem);
-    --profile-score-size-max: clamp(11.5rem, 14vw, 21rem);
-  }
-
-  .view-profile .profile-rail-capsule .profile-hero-main {
-    flex: 0 0 auto;
-    width: 100%;
-    min-height: 0;
-    max-height: none;
-    height: auto;
-  }
-
-  .view-profile .profile-rail-capsule .profile-bio {
-    line-height: 1.34;
-  }
-
-  .view-profile .profile-rail-capsule .tabs-row--rail {
-    flex: 0 0 auto;
-    margin-top: auto;
-    gap: var(--profile-rail-section-gap);
-  }
-
-  .view-profile .profile-rail-capsule .tabs-row--rail .tab {
-    padding: clamp(10px, 0.65vw, 16px) clamp(12px, 0.8vw, 20px);
-  }
-}
-
-@media (min-width: 2200px) {
-  .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule {
-    --profile-rail-name-size: clamp(50px, 3.8vw, 108px);
-    --profile-rail-bio-size: clamp(20px, 1.35vw, 36px);
-    --profile-rail-tab-min-h: clamp(54px, 3.3vw, 80px);
-    --profile-rail-tab-font: clamp(18px, 1.15vw, 32px);
-  }
-
-  .view-profile .profile-rail-capsule .profile-hero-capsule {
-    --profile-score-size: clamp(12.5rem, 15vw, 22rem);
-    --profile-score-size-max: clamp(12.5rem, 15vw, 22rem);
   }
 }
 
