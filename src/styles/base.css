@@ -1797,9 +1797,9 @@ body {
   grid-template-columns: 1fr;
   gap: var(--dashboard-btn-gap, 10px);
   width: 100%;
-  /* Timer row — shorter so tell-me-more gets more vertical space */
-  flex: 0.85 1 0;
-  min-height: clamp(128px, 15vh, 176px);
+  /* Timer row — flex/min-height tuned via .dashboard-capsule--figma tokens */
+  flex: var(--dashboard-timer-flex, 0.85) 1 0;
+  min-height: var(--dashboard-actions-min-h, clamp(128px, 15vh, 176px));
   height: auto;
   /* Clipping happens only while tell-me-more is collapsing (see inferenceChain.css). */
   transition:
@@ -1818,10 +1818,14 @@ body {
   display: flex;
 }
 
-/* Idle tell-me-more — larger share when timer is compact */
+/* Idle tell-me-more — smaller than timer row; scales with --tell-idle-scale */
+.dashboard-capsule--figma:not(.is-tell-expanded):not(.is-tell-closing) {
+  --tell-idle-scale: 0.88;
+}
+
 .dashboard-capsule--figma:not(.is-tell-expanded):not(.is-tell-closing) .dashboard-tell-row {
-  flex: 3.15 1 0;
-  min-height: clamp(220px, 30vh, 340px);
+  flex: var(--dashboard-tell-idle-flex, 3.15) 1 0;
+  min-height: var(--dashboard-tell-idle-min-h, clamp(220px, 30vh, 340px));
 }
 
 .dashboard-capsule--figma.is-tell-expanded .dashboard-tell-row,
@@ -2352,12 +2356,15 @@ body {
   border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
 }
 
-/* Fills the dashboard capsule: timer row (~0.85) + Tell-Me-More (~3.15).
-   Flex weights give tell-me-more more height when the timer is compact. */
+/* Fills the dashboard capsule: timer row + idle Tell-Me-More (flex tokens below).
+   Timer is taller so harvest / generating copy is not clipped; idle tell shrinks proportionally. */
 .dashboard-capsule--figma {
   --dashboard-btn-gap: 10px;
   --dashboard-pad: 18px;
-  --dashboard-actions-min-h: clamp(128px, 15vh, 176px);
+  --dashboard-timer-flex: 1.12;
+  --dashboard-tell-idle-flex: 2.62;
+  --dashboard-actions-min-h: clamp(152px, 17.5vh, 204px);
+  --dashboard-tell-idle-min-h: clamp(188px, 25vh, 288px);
   --dashboard-timer-radius: 28px;
   --dashboard-timer-time-radius: 20px;
   --dashboard-shell-radius: var(--capsule-radius);
