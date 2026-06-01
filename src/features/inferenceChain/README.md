@@ -6,10 +6,10 @@ Reveals the 4-step algorithmic reasoning chain (`data → classify → infer →
 
 | File | Purpose |
 | --- | --- |
-| `TellMeMorePill.jsx` | Dashboard pill button. Mirrors the hide-pill state machine (`normal` / `armed` / `nudge` / `expanded`). When expanded it renders the panel. |
+| `TellMeMorePill.jsx` | Dashboard capsule. Idle shimmer until a feed post is highlighted; expands into the inference panel. |
 | `InferenceChainPanel.jsx` | The expanded view: header + 4 step rows + close button. Falls back to "Analysis not available for this post." when the chain is missing or malformed. |
 | `inferenceChainSteps.jsx` | Step-row primitives. `StepRow` for DATA/CLASSIFY, `InferStepRow` (bias note), `GenerateStepRow` (quote framing). |
-| `inferenceChain.css` | All styles for the pill states, expansion animation, and the panel internals. Re-uses the visual grammar of `.dashboard-hide-pill` (radii, glow cadence, nudge wiggle). |
+| `inferenceChain.css` | Styles for the idle shimmer, expansion animation, and panel internals. |
 
 ## How it ties into the rest of the app
 
@@ -21,9 +21,8 @@ Reveals the 4-step algorithmic reasoning chain (`data → classify → infer →
 
 | State | Trigger | Visual |
 | --- | --- | --- |
-| `normal` | no post highlighted | pastel fill, accent border, icon @ 50% opacity |
-| `armed` | post highlighted | bumped radius, accent-glow pulse, icon @ 100% |
-| `nudge` | clicked with no selection | wiggle + "Select a post first" pill |
-| `expanded` | clicked while armed | panel slides into the dashboard capsule, replaces primary + tell rows |
+| `idle` | no Tell me more panel open | compact shimmer loading strip |
+| `expanded` | post highlighted + Tell me more opened | panel fills the dashboard capsule |
+| `closing` | user closes the panel | brief fade-out before returning to idle |
 
 If a post predates this feature, the panel shows the fallback empty state without breaking the rest of the dashboard.

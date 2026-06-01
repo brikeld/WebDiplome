@@ -180,7 +180,7 @@ function LandingHeroAccess({ profile, onEnterProfile, onRegister, profileEntryLo
           onClick={() => onEnterProfile?.()}
           disabled={profileEntryLoading}
           aria-busy={profileEntryLoading}
-          aria-label="Enter your profile feed"
+          aria-label="Enter COMPLIANT"
         >
           <span
             className={`lp-hero-avatar-box${profileEntryLoading ? ' lp-hero-avatar-box--loading' : ''}`}
@@ -196,7 +196,7 @@ function LandingHeroAccess({ profile, onEnterProfile, onRegister, profileEntryLo
             )}
           </span>
           <span className="lp-hero-access-btn">
-            {profileEntryLoading ? 'Loading…' : 'Enter feed'}
+            {profileEntryLoading ? 'Loading…' : 'enter COMPLIANT'}
           </span>
         </button>
       </div>

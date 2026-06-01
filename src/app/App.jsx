@@ -283,6 +283,7 @@ function AppInner({
   const tellCloseTimerRef = useRef(null);
   const tellThemePostRef = useRef(null);
   const [hideBlocked, setHideBlocked] = useState(false);
+  const [personaRingWiggle, setPersonaRingWiggle] = useState({ key: null, nonce: 0 });
   const [viewedProfile, setViewedProfile] = useState(null);
   const previousLivePersonaRef = useRef(null);
   const previousPersonaScoresRef = useRef(null);
@@ -619,6 +620,10 @@ function AppInner({
       if (!canHideContentForScores(hidePersona, adjustedScores)) {
         setConfirmingHide(false);
         setHideBlocked(true);
+        setPersonaRingWiggle({
+          key: personaToUiKey(hidePersona),
+          nonce: Date.now(),
+        });
         return;
       }
 
@@ -869,6 +874,8 @@ function AppInner({
                 dominantPersona={personaKey}
                 deltas={personaDeltas}
                 onRingClick={cyclePersona}
+                wigglePersonaKey={personaRingWiggle.key}
+                wiggleNonce={personaRingWiggle.nonce}
               />
           </aside>
         )}
@@ -937,7 +944,8 @@ export default function App() {
     landingEnterProfileTimerRef.current = setTimeout(() => {
       landingEnterProfileTimerRef.current = null;
       setLandingEnteringProfile(false);
-      setMainView('home');
+      setActiveTab('profile');
+      setMainView('profile');
     }, LANDING_PROFILE_ENTRY_MS);
   }, [landingEnteringProfile, landingOwnedProfile]);
 

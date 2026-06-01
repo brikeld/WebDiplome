@@ -1,7 +1,7 @@
 /**
  * Dashboard "Tell me more" capsule.
  *
- * Collapsed: compact shimmer (always loading) — select a post in the feed to expand.
+ * Collapsed: compact shimmer loading state. Expands when a feed post is highlighted.
  * Expanded: InferenceChainPanel for the highlighted post.
  */
 
@@ -88,7 +88,7 @@ export default function TellMeMorePill({
       style={pillStyle}
       role="status"
       aria-live="polite"
-      aria-label="Tell me more — select a post in the feed"
+      aria-label="Tell me more — loading analysis"
     >
       <TellMeMoreLoadingOverlay loop compact />
     </div>

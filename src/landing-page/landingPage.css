@@ -55,7 +55,8 @@
   justify-content: space-between;
   padding-left: 0;
   padding-right: 0;
-  padding-top: 0;
+  padding-top: clamp(20px, 3.5vh, 48px);
+  overflow: visible;
 }
 
 /* ── HERO: tagline + profile access (shared bottom row) ────────────────────── */
@@ -225,7 +226,7 @@
 .lp-hero-title {
   font-size: var(--lp-hero-size);
   font-weight: 800;
-  line-height: 0.88;
+  line-height: 0.92;
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: #000;
@@ -234,7 +235,7 @@
   width: 100%;
   text-align: center;
   margin: 0;
-  padding: 0;
+  padding: clamp(8px, 1.2vh, 16px) 0 0;
 }
 
 .lp-hero-title-link {

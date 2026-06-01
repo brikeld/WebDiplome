@@ -420,6 +420,21 @@ body {
   outline-offset: 3px;
 }
 
+@keyframes dashboard-ring-wiggle {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  12%      { transform: translateX(-6px) rotate(-1.2deg); }
+  24%      { transform: translateX(5px) rotate(1deg); }
+  36%      { transform: translateX(-4px) rotate(-0.6deg); }
+  48%      { transform: translateX(4px) rotate(0.6deg); }
+  60%      { transform: translateX(-2px) rotate(-0.3deg); }
+  72%      { transform: translateX(2px) rotate(0.2deg); }
+  84%      { transform: translateX(-1px); }
+}
+
+.dashboard-ring-card--wiggle {
+  animation: dashboard-ring-wiggle 460ms ease-in-out 1;
+}
+
 .dashboard-ring-svg {
   grid-row: 2;
   grid-column: 1;

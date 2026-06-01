@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { personaPercentToRingFill } from '@/lib/profileUtils.js';
 import { PERSONA_UI_COLORS, PERSONA_UI_LABELS } from '@/lib/personaColors.js';
 
@@ -35,9 +35,19 @@ export default function DashboardPersonaRings({
   dominantPersona = 'productivity',
   deltas = null,
   onRingClick,
+  wigglePersonaKey = null,
+  wiggleNonce = 0,
   className = '',
 }) {
   const dom = normalizeDominant(dominantPersona);
+  const [wiggleKey, setWiggleKey] = useState(null);
+
+  useEffect(() => {
+    if (!wigglePersonaKey || !wiggleNonce) return undefined;
+    setWiggleKey(wigglePersonaKey);
+    const timer = setTimeout(() => setWiggleKey(null), 480);
+    return () => clearTimeout(timer);
+  }, [wigglePersonaKey, wiggleNonce]);
 
   const order = useMemo(() => {
     const others = PERSONA_KEYS.filter((k) => k !== dom);
@@ -60,7 +70,9 @@ export default function DashboardPersonaRings({
 
         const sharedProps = {
           'data-persona-ring': k,
-          className: `dashboard-ring-card${isDominantRing ? ' dashboard-ring-card--dominant' : ''}`,
+          className: `dashboard-ring-card${isDominantRing ? ' dashboard-ring-card--dominant' : ''}${
+            wiggleKey === k ? ' dashboard-ring-card--wiggle' : ''
+          }`,
           style: { '--ring-accent': ringColor },
           'aria-label': `${PERSONA_UI_LABELS[k] ?? k} ${value}%`,
         };
