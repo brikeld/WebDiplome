@@ -75,11 +75,15 @@ export default function ProfileRailPersonaScores({ profile }) {
 
   const domKey = normalizeDominant(profileData.dominantPersona);
   const deltas = profileData.scoreDrift?.deltas ?? null;
+  const orderedPersonas = [
+    ...PERSONAS.filter(({ key }) => key === domKey),
+    ...PERSONAS.filter(({ key }) => key !== domKey),
+  ];
 
   return (
     <section className="profile-rail-persona-scores" aria-label="Persona scores">
       <div className="profile-rail-persona-scores__list">
-        {PERSONAS.map(({ key, label, fallback }) => {
+        {orderedPersonas.map(({ key, label, fallback }) => {
           const value = Math.max(0, Math.min(100, Math.round(Number(profileData.scores?.[key]) || 0)));
           const blurb = blurbs?.[key];
           const raw = blurb || (loading ? 'Generating profile phrases…' : fallback);
