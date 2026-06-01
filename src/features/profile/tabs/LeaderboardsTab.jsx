@@ -43,7 +43,6 @@ function ordinalSuffix(rank) {
 }
 
 function LeaderboardCard({ board }) {
-  const others = (board.entries || []).filter((entry) => !entry.isUser);
   const rank = Number(board.userRank);
   const hasRank = Number.isFinite(rank);
 
@@ -82,10 +81,6 @@ function LeaderboardCard({ board }) {
           );
         })}
       </ol>
-
-      {others.length > 0 && (
-        <p className="profile-leaderboard-card__hint">{board.hint}</p>
-      )}
     </article>
   );
 }

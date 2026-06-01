@@ -678,6 +678,14 @@ body {
   margin-left: calc(-1 * var(--shell-left-outward-bleed));
   display: flex;
   flex-direction: column;
+  /* Post scale tokens (full size at ≥1661px / large desktop) */
+  --post-body-size: 26px;
+  --post-avatar-size: 10.5rem;
+  --post-name-size: 14px;
+  --post-handle-size: 11px;
+  --post-meta-pill-size: 16px;
+  --post-meta-pill-icon-size: 22px;
+  --post-meta-comment-icon-size: 28px;
 }
 
 .view-home .persona-side-panel,
@@ -761,7 +769,7 @@ body {
 }
 
 /* ── RESPONSIVE: 14" MacBook and similar (≤ 1660px) ──
-   Outward bleed: left capsule grows left, right grows right; inner gap unchanged. */
+   Wider posts column + slightly smaller type so density matches large desktop. */
 @media (max-width: 1660px) {
   .page-outer.view-home,
   .page-outer.view-profile {
@@ -775,14 +783,21 @@ body {
     justify-content: flex-start;
     --shell-left-outward-bleed: 30px;
     --shell-right-outward-bleed: 26px;
-    --shell-left-col-max: clamp(528px, 46.5vw, 848px);
-    --shell-right-col-width: clamp(492px, 38vw, 668px);
+    --shell-left-col-max: clamp(600px, 58vw, 980px);
+    --shell-right-col-width: clamp(360px, 26vw, 560px);
   }
 
   .view-home .main-col,
   .view-profile .main-col {
     flex: 0 0 auto;
     flex-shrink: 0;
+    --post-body-size: clamp(21px, calc(0.42vw + 15.5px), 26px);
+    --post-avatar-size: clamp(8.5rem, calc(0.75vw + 7.25rem), 10.5rem);
+    --post-name-size: clamp(12px, calc(0.1vw + 11.5px), 14px);
+    --post-handle-size: clamp(10px, calc(0.06vw + 9.6px), 11px);
+    --post-meta-pill-size: clamp(14px, calc(0.12vw + 13.2px), 16px);
+    --post-meta-pill-icon-size: clamp(19px, calc(0.18vw + 17px), 22px);
+    --post-meta-comment-icon-size: clamp(24px, calc(0.22vw + 22px), 28px);
   }
 }
 
@@ -793,15 +808,21 @@ body {
     --shell-col-gap: 14px;
     --shell-left-outward-bleed: 26px;
     --shell-right-outward-bleed: 22px;
-    --shell-left-col-max: clamp(468px, 42.5vw, 728px);
-    --shell-right-col-width: clamp(448px, 35.5vw, 588px);
+    --shell-left-col-max: clamp(540px, 54vw, 880px);
+    --shell-right-col-width: clamp(340px, 28vw, 500px);
+  }
+
+  .view-home .main-col,
+  .view-profile .main-col {
+    --post-body-size: clamp(20px, calc(0.5vw + 14px), 24px);
+    --post-avatar-size: clamp(8rem, calc(0.9vw + 6.5rem), 9.75rem);
   }
 
   .posts-capsule {
-    --posts-capsule-pad-x: 24px;
-    --post-card-gutter-x: 4px;
-    --post-meta-row-inset-x: 14px;
-    padding: 26px var(--posts-capsule-pad-x) 28px;
+    --posts-capsule-pad-x: 30px;
+    --post-card-gutter-x: 5px;
+    --post-meta-row-inset-x: 16px;
+    padding: 28px var(--posts-capsule-pad-x) 32px;
   }
 
   .view-home .persona-side-panel .dashboard-capsule,
@@ -1436,8 +1457,8 @@ body {
   border: none;
   border-radius: var(--radius-post-surface);
   padding: 12px 12px 10px 12px;
-  /* Header band fits large square avatar */
-  min-height: 12.25rem;
+  /* Header band fits square avatar at current scale */
+  min-height: calc(var(--post-avatar-size) + 1.75rem);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -2424,15 +2445,6 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
   font-weight: 800;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.profile-leaderboard-card__hint {
-  margin: auto 0 0;
-  color: #000;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.25;
-  opacity: 0.8;
 }
 
 .profile-leaderboards-stack {
