@@ -562,6 +562,16 @@ body {
   line-height: 1;
 }
 
+.rail-btn__glyph-icon {
+  display: block;
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.rail-btn--profile .rail-btn__glyph-icon {
+  transform: translateY(0.04em);
+}
+
 .rail-btn--profile .rail-btn__glyph {
   /* Optical centering for the profile glyph inside the selected rect. */
   transform: translate(-0.02em, -0.01em);
@@ -1570,6 +1580,17 @@ body {
   border-radius: var(--radius-post-surface);
 }
 
+.user-silhouette-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.profile-avatar-link .user-silhouette-icon,
+.post-avatar .user-silhouette-icon {
+  width: 58%;
+  height: 58%;
+}
+
 .profile-avatar-link.post-avatar {
   position: relative;
 }
@@ -1763,7 +1784,7 @@ body {
   width: 100%;
   /* ~1.1fr of capsule — scales with viewport like the original grid row */
   flex: 1.1 1 0;
-  min-height: var(--dashboard-actions-min-h, clamp(128px, 15vh, 168px));
+  min-height: var(--dashboard-actions-min-h, clamp(172px, 21vh, 232px));
   height: auto;
   /* Clipping happens only while tell-me-more is collapsing (see inferenceChain.css). */
   transition:
@@ -1853,7 +1874,7 @@ body {
   padding: clamp(16px, 2vw, 24px) clamp(18px, 2.2vw, 28px);
   background: var(--card, #fff);
   border: 2px solid var(--hide-pill-accent, var(--persona-accent, #759aef));
-  border-radius: var(--capsule-radius);
+  border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
   min-height: 0;
   height: 100%;
   animation: hide-confirm-enter 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -1864,7 +1885,7 @@ body {
 }
 
 .dashboard-capsule--figma .dashboard-timer-card--confirm {
-  border-radius: var(--capsule-radius);
+  border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
 }
 
 .dashboard-hide-confirm__body {
@@ -2020,7 +2041,7 @@ body {
   justify-content: center;
   gap: clamp(10px, 1.2vw, 14px);
   padding: clamp(14px, 1.8vh, 20px);
-  border-radius: var(--capsule-radius);
+  border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
   overflow: hidden;
   background: var(--card, #fff);
 }
@@ -2029,7 +2050,7 @@ body {
   height: 100%;
   min-height: 0;
   padding: clamp(10px, 1.2vh, 14px) clamp(12px, 1.4vw, 16px);
-  border-radius: var(--capsule-radius);
+  border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2046,7 +2067,7 @@ body {
   text-align: left;
   text-transform: none;
   overflow: hidden;
-  border-radius: var(--capsule-radius);
+  border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
 }
 
 .dashboard-timer-card--action-update .dashboard-update-timer {
@@ -2061,28 +2082,28 @@ body {
 
 /* Idle countdown only — confirm / harvest / generating keep compact type */
 .dashboard-timer-card--idle-countdown.dashboard-timer-card--action-update {
-  padding: clamp(8px, 1vh, 12px) clamp(10px, 1.2vw, 14px);
+  padding: clamp(16px, 2vh, 24px) clamp(18px, 2vw, 26px);
 }
 
 .dashboard-timer-card--idle-countdown .dashboard-update-timer {
   flex: 1 1 auto;
   justify-content: center;
-  gap: clamp(14px, 1.8vh, 22px);
+  gap: clamp(18px, 2.4vh, 28px);
   min-height: 100%;
 }
 
 .dashboard-timer-card--idle-countdown .dashboard-update-label {
-  font-size: clamp(20px, 2.2vw, 30px);
+  font-size: clamp(30px, 3.6vw, 48px);
   font-weight: 900;
   letter-spacing: 0.01em;
   line-height: 1.05;
 }
 
 .dashboard-timer-card--idle-countdown .dashboard-update-time {
-  min-width: clamp(128px, 12vw, 172px);
-  padding: 0.34em 0.62em 0.38em;
-  font-size: clamp(36px, 4.6vw, 58px);
-  line-height: 0.92;
+  min-width: clamp(168px, 16vw, 240px);
+  padding: 0.32em 0.58em 0.36em;
+  font-size: clamp(52px, 6.8vw, 84px);
+  line-height: 0.9;
   align-self: center;
 }
 
@@ -2185,7 +2206,7 @@ body {
 .dashboard-update-label {
   color: #000;
   font-family: var(--font-avant);
-  font-size: clamp(18px, 2vw, 27px);
+  font-size: clamp(24px, 2.8vw, 38px);
   font-weight: 900;
   letter-spacing: 0;
   line-height: 1;
@@ -2197,14 +2218,14 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: clamp(112px, 10vw, 142px);
+  min-width: clamp(148px, 14vw, 200px);
   padding: 0.28em 0.56em 0.32em;
   border: 2px solid #000;
-  border-radius: 999px;
+  border-radius: var(--dashboard-timer-time-radius, 22px);
   background: var(--persona-accent, #759aef);
   color: #000;
   font-family: var(--font-avant);
-  font-size: clamp(28px, 3.4vw, 44px);
+  font-size: clamp(40px, 5.2vw, 68px);
   font-weight: 900;
   letter-spacing: 0;
   line-height: 0.9;
@@ -2221,7 +2242,7 @@ body {
   padding: 0;
   min-height: 0;
   overflow: hidden;
-  border-radius: var(--capsule-radius);
+  border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
 }
 
 /* Fills the dashboard capsule: HIDE/UPDATE row (~1.1) + Tell-Me-More (~2.25).
@@ -2230,7 +2251,9 @@ body {
 .dashboard-capsule--figma {
   --dashboard-btn-gap: 10px;
   --dashboard-pad: 18px;
-  --dashboard-actions-min-h: clamp(128px, 15vh, 168px);
+  --dashboard-actions-min-h: clamp(172px, 21vh, 232px);
+  --dashboard-timer-radius: 28px;
+  --dashboard-timer-time-radius: 20px;
   --dashboard-shell-radius: var(--capsule-radius);
   flex: 1 1 0;
   min-height: 0;
@@ -2292,7 +2315,7 @@ body {
   background: var(--card, #fff);
   color: #000;
   border: 2px solid #000;
-  border-radius: var(--capsule-radius);
+  border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
   cursor: default;
   text-transform: none;
 }
@@ -2433,6 +2456,15 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
   justify-content: center;
   width: 100%;
   height: 100%;
+}
+
+.profile-leaderboard-row__avatar-initials.user-silhouette-icon {
+  width: 62%;
+  height: 62%;
+  color: #fff;
+}
+
+.profile-leaderboard-row__avatar-initials:not(.user-silhouette-icon) {
   font-size: 10px;
   font-weight: 900;
   line-height: 1;

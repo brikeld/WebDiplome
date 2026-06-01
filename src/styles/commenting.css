@@ -306,6 +306,12 @@
   justify-self: start;
 }
 
+.commenting-comment-avatar .user-silhouette-icon {
+  width: 58%;
+  height: 58%;
+  color: color-mix(in srgb, var(--comment-accent, var(--persona-accent, #759aef)) 85%, #fff);
+}
+
 .commenting-comment-avatar-img {
   width: 100%;
   height: 100%;

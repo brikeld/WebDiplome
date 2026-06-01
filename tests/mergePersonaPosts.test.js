@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   isCompliantSystemPost,
+  keepLatestJoinPostOnly,
   keepLatestLowScorePostPerPersona,
   keepLatestPersonaChangePostOnly,
   mergePersonaPostsFromApi,
@@ -10,7 +11,16 @@ import {
 describe('mergePersonaPosts', () => {
   it('detects compliant system posts', () => {
     expect(isCompliantSystemPost({ compliantLowScore: { uiPersonaKey: 'security' } })).toBe(true);
+    expect(isCompliantSystemPost({ compliantJoin: { userDisplayName: 'Alex' } })).toBe(true);
     expect(isCompliantSystemPost({ content: 'hello' })).toBe(false);
+  });
+
+  it('keeps only the latest join system post', () => {
+    const older = { id: 'join-old', createdAt: 100, compliantJoin: { userDisplayName: 'A' } };
+    const newer = { id: 'join-new', createdAt: 200, compliantJoin: { userDisplayName: 'A' } };
+    const merged = keepLatestJoinPostOnly([older, newer]);
+    expect(merged.filter((p) => p.compliantJoin)).toHaveLength(1);
+    expect(merged.find((p) => p.compliantJoin)?.id).toBe('join-new');
   });
 
   it('dedupes by stable post id', () => {

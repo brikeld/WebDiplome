@@ -1,7 +1,11 @@
 /** Client-side post list merge — mirrors server/lib/postsMerge.js with system-post awareness. */
 
+export function isCompliantJoinPost(post) {
+  return Boolean(post?.compliantJoin);
+}
+
 export function isCompliantSystemPost(post) {
-  return Boolean(post?.compliantPersonaChange || post?.compliantLowScore);
+  return Boolean(post?.compliantPersonaChange || post?.compliantLowScore || post?.compliantJoin);
 }
 
 export function isCompliantPersonaChangePost(post) {
@@ -39,6 +43,26 @@ export function keepLatestPersonaChangePostOnly(posts) {
   return posts.filter((p) => !isCompliantPersonaChangePost(p) || postIdentityKey(p) === latestKey);
 }
 
+/** At most one COMPLIANT join notice — keeps the newest by createdAt. */
+export function keepLatestJoinPostOnly(posts) {
+  if (!Array.isArray(posts) || posts.length === 0) return posts ?? [];
+
+  let latest = null;
+  let latestMs = -1;
+  for (const p of posts) {
+    if (!isCompliantJoinPost(p)) continue;
+    const ms = postCreatedAtMs(p);
+    if (ms > latestMs) {
+      latestMs = ms;
+      latest = p;
+    }
+  }
+  if (!latest) return posts;
+
+  const latestKey = postIdentityKey(latest);
+  return posts.filter((p) => !isCompliantJoinPost(p) || postIdentityKey(p) === latestKey);
+}
+
 /** At most one low-score notice per UI persona — keeps the newest by createdAt. */
 export function keepLatestLowScorePostPerPersona(posts) {
   if (!Array.isArray(posts) || posts.length === 0) return posts ?? [];
@@ -62,7 +86,9 @@ export function keepLatestLowScorePostPerPersona(posts) {
 }
 
 function dedupeCompliantSystemPosts(posts) {
-  return keepLatestLowScorePostPerPersona(keepLatestPersonaChangePostOnly(posts));
+  return keepLatestLowScorePostPerPersona(
+    keepLatestPersonaChangePostOnly(keepLatestJoinPostOnly(posts)),
+  );
 }
 
 export function postIdentityKey(post) {

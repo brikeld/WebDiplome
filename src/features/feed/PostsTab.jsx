@@ -116,7 +116,8 @@ function buildEnrichedPosts(profile, { personaBadgePersona, allProfilesForLeader
   return raw.map((p, i) => {
     const isCompliantPersonaChange = Boolean(p.compliantPersonaChange);
     const isCompliantLowScore = Boolean(p.compliantLowScore);
-    const isCompliantSystem = isCompliantPersonaChange || isCompliantLowScore;
+    const isCompliantJoin = Boolean(p.compliantJoin);
+    const isCompliantSystem = isCompliantPersonaChange || isCompliantLowScore || isCompliantJoin;
     return {
       id: postStableKey(p, i),
       authorSlug,
@@ -144,6 +145,7 @@ function buildEnrichedPosts(profile, { personaBadgePersona, allProfilesForLeader
       thinking: Array.isArray(p.thinking) ? p.thinking : null,
       compliantPersonaChange: p.compliantPersonaChange ?? null,
       compliantLowScore: p.compliantLowScore ?? null,
+      compliantJoin: p.compliantJoin ?? null,
       leaderboard: (p.leaderboard && Array.isArray(p.leaderboard.entries)) ? (() => {
         const base = {
           boardId: p.leaderboard.boardId,
@@ -253,14 +255,23 @@ export default function PostsTab({
                     })
             }
             isHidden={
-              p.compliantPersonaChange || p.compliantLowScore
+              p.compliantPersonaChange || p.compliantLowScore || p.compliantJoin
                 ? false
                 : p.leaderboard
                   ? isLeaderboardSelfHidden(p.leaderboard.boardId)
                   : isHidden(normalizePostHideKey(p.createdAt))
             }
-            isRevealing={p.compliantPersonaChange || p.compliantLowScore ? false : isRevealing(normalizePostHideKey(p.createdAt))}
-            isHighlightable={!hideInteractions && !p.compliantPersonaChange && !p.compliantLowScore}
+            isRevealing={
+              p.compliantPersonaChange || p.compliantLowScore || p.compliantJoin
+                ? false
+                : isRevealing(normalizePostHideKey(p.createdAt))
+            }
+            isHighlightable={
+              !hideInteractions
+              && !p.compliantPersonaChange
+              && !p.compliantLowScore
+              && !p.compliantJoin
+            }
             isHighlighted={!hideInteractions && highlightedPostId !== null && highlightedPostId === p.id}
             onHighlight={() => onHighlightPost?.(p)}
             onHide={hideInteractions || !onPostHide ? undefined : () => onPostHide(p)}

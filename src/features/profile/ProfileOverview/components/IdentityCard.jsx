@@ -1,4 +1,5 @@
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
+import UserSilhouetteIcon from '@/features/identity/UserSilhouetteIcon.jsx';
 import PersonaPill from './PersonaPill.jsx';
 import KeyValue from './KeyValue.jsx';
 import { PERSONA_UI_LABELS } from '@/lib/personaColors.js';
@@ -23,9 +24,7 @@ function Avatar({ profile, size }) {
         {profile.avatarSrc ? (
           <img className="po-avatar-img" src={profile.avatarSrc} alt="" />
         ) : (
-          <span className="po-avatar-fallback" aria-hidden>
-            {String(profile.username ?? '?').charAt(0)}
-          </span>
+          <UserSilhouetteIcon className="po-avatar-fallback" aria-hidden />
         )}
         <PersonaBadge profile={profile} persona={profile.dominantPersona} />
       </div>

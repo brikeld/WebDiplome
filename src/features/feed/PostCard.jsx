@@ -62,6 +62,21 @@ function CompliantPersonaChangeLead({ change, fallbackContent }) {
   );
 }
 
+function CompliantJoinLead({ notice, fallbackContent }) {
+  if (!notice) {
+    return <p className="post-lead post-lead--compliant-join">{fallbackContent}</p>;
+  }
+
+  const { userDisplayName } = notice;
+
+  return (
+    <p className="post-lead post-lead--compliant-join">
+      COMPLIANT notice for {userDisplayName}: this profile is now active on the platform. Machine
+      data from their device has been linked to their public identity.
+    </p>
+  );
+}
+
 function CompliantLowScoreLead({ notice, fallbackContent }) {
   if (!notice) {
     return <p className="post-lead post-lead--compliant-low-score">{fallbackContent}</p>;
@@ -123,11 +138,13 @@ export default function PostCard({
     leaderboard,
     compliantPersonaChange,
     compliantLowScore,
+    compliantJoin,
   } = post;
 
   const isCompliantPersonaChange = Boolean(compliantPersonaChange);
   const isCompliantLowScore = Boolean(compliantLowScore);
-  const isCompliantSystemPost = isCompliantPersonaChange || isCompliantLowScore;
+  const isCompliantJoin = Boolean(compliantJoin);
+  const isCompliantSystemPost = isCompliantPersonaChange || isCompliantLowScore || isCompliantJoin;
   const applyImageFx = shouldApplyPostImageFx({ chartType });
   const hasLeadContent = Boolean(String(content ?? '').trim());
 
@@ -182,7 +199,7 @@ export default function PostCard({
   return (
     <article
       ref={cardRef}
-      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${leaderboard ? ' post-card--has-leaderboard' : ''}${isCompliantSystemPost ? ' post-card--compliant-persona-change' : ''}${isCompliantLowScore ? ' post-card--compliant-low-score' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${isRevealing ? ' post-card--revealing' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
+      className={`post-card${attachedAsset ? ' post-card--has-attachment' : ''}${leaderboard ? ' post-card--has-leaderboard' : ''}${isCompliantSystemPost ? ' post-card--compliant-persona-change' : ''}${isCompliantLowScore ? ' post-card--compliant-low-score' : ''}${isCompliantJoin ? ' post-card--compliant-join' : ''}${!hasLeadContent ? ' post-card--empty-lead' : ''}${isCommentsOpen ? ' post-card--comments-open' : ''}${isHidden ? ' post-card--hidden' : ''}${isRevealing ? ' post-card--revealing' : ''}${resolvedPillsMode === 'none' ? ' post-card--no-pills' : ''}${resolvedPillsMode === 'bottom-only' ? ' post-card--bottom-pills-only' : ''}${isHighlightable ? ' post-card--highlightable' : ''}${isHighlighted ? ' post-card--highlighted' : ''}`}
       data-post-id={post.id}
       data-persona={post.persona}
       style={{ '--post-accent': noteColor }}
@@ -218,6 +235,11 @@ export default function PostCard({
               ) : isCompliantLowScore ? (
                 <CompliantLowScoreLead
                   notice={compliantLowScore}
+                  fallbackContent={content}
+                />
+              ) : isCompliantJoin ? (
+                <CompliantJoinLead
+                  notice={compliantJoin}
                   fallbackContent={content}
                 />
               ) : (

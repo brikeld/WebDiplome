@@ -131,6 +131,20 @@ button.profile-avatar-link.leaderboard-row__avatar {
   display: block;
 }
 .leaderboard-row__avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.leaderboard-row__avatar-initials.user-silhouette-icon {
+  width: 62%;
+  height: 62%;
+  color: var(--leaderboard-ink);
+}
+
+.leaderboard-row__avatar-initials:not(.user-silhouette-icon) {
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 12px;
   font-weight: 700;

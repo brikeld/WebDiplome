@@ -126,6 +126,7 @@ const POST_METADATA_KEYS = [
   'textSliceType',
   'compliantPersonaChange',
   'compliantLowScore',
+  'compliantJoin',
 ];
 
 export function extractPostMetadata(post) {

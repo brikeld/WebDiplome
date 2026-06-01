@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import UserSilhouetteIcon from '@/features/identity/UserSilhouetteIcon.jsx';
 
 /**
  * Clickable profile portrait — navigates to the Profile view (main tab).
@@ -24,7 +25,6 @@ export default function ProfileAvatarLink({
   }, [avatarSrc]);
 
   const showImg = Boolean(imgSrc) && !imgFailed;
-  const showInitials = !showImg && avatarInitials != null && avatarInitials !== '';
 
   const inner = (
     <>
@@ -44,9 +44,9 @@ export default function ProfileAvatarLink({
             setImgFailed(true);
           }}
         />
-      ) : showInitials ? (
-        <span className={initialsClassName}>{avatarInitials}</span>
-      ) : null}
+      ) : (
+        <UserSilhouetteIcon className={initialsClassName} />
+      )}
       {children}
     </>
   );

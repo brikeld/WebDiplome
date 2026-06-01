@@ -1,3 +1,5 @@
+import UserSilhouetteIcon from '@/features/identity/UserSilhouetteIcon.jsx';
+
 export default function Sidebar({ mainView = 'profile', onSelectView }) {
   return (
     <>
@@ -19,7 +21,7 @@ export default function Sidebar({ mainView = 'profile', onSelectView }) {
             aria-current={mainView === 'profile' ? 'page' : undefined}
             onClick={() => onSelectView?.('profile')}
           >
-            <span className="rail-btn__glyph">⌾</span>
+            <UserSilhouetteIcon className="rail-btn__glyph-icon" />
           </button>
         </nav>
       </aside>

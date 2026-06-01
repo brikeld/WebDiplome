@@ -9,6 +9,10 @@ import {
 } from './publicProfileMapping.js';
 import { resolveHostedPublicUrl } from './publicMediaUrls.js';
 import { repairProfileWallpaperIfNeeded } from './repairProfileWallpaper.js';
+import {
+  createCompliantJoinPost,
+  hasCompliantJoinPost,
+} from './compliantSystemPosts.js';
 
 function throwIfError(result, label) {
   if (result?.error) throw new Error(`${label}: ${result.error.message}`);
@@ -221,6 +225,27 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
           .map((p) => mapPostForInsert(p, saved.id, userId, 'sync'));
         if (posts.length > 0) {
           throwIfError(await supabase.from('posts').insert(posts), 'insert posts');
+        }
+      }
+
+      if (!existing) {
+        const afterSync = await readPosts(saved.id);
+        if (!hasCompliantJoinPost(afterSync)) {
+          const displayName =
+            String(row.display_name || '').trim() ||
+            [payload?.firstname, payload?.lastname].map((s) => String(s ?? '').trim()).filter(Boolean).join(' ') ||
+            'User';
+          const joinPost = createCompliantJoinPost({
+            profile: payload,
+            userDisplayName: displayName,
+            dominantPersona: row.dominant_persona ?? payload?.dominantPersona,
+          });
+          await appendPosts({
+            profileId: saved.id,
+            userId,
+            posts: [joinPost],
+            source: 'system',
+          });
         }
       }
 

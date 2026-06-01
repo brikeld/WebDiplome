@@ -26,6 +26,10 @@ import {
   appendPersonaPosts,
   POSTS_DIR,
 } from './server/lib/postsStore.js';
+import {
+  createCompliantJoinPost,
+  hasCompliantJoinPost,
+} from './server/lib/compliantSystemPosts.js';
 import { serverConfig } from './server/lib/env.js';
 import { supabaseClients } from './server/lib/supabaseClient.js';
 import { createAuthRoutes } from './server/routes/authRoutes.js';
@@ -228,6 +232,23 @@ app.post('/api/profile', async (req, res) => {
       const replace =
         body.replacePersonaPosts === true || body.replace_persona_posts === true;
       await syncPersonaPostsFromClient(id, personaPosts, { replace }, normalizePost);
+    }
+
+    if (!existingProfile) {
+      const currentPosts = await readPostsForId(id);
+      if (!hasCompliantJoinPost(currentPosts)) {
+        const displayName = [body.firstname, body.lastname]
+          .map((s) => String(s ?? '').trim())
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        const joinPost = createCompliantJoinPost({
+          profile: toStore,
+          userDisplayName: displayName || 'User',
+          dominantPersona: toStore.dominantPersona,
+        });
+        await appendPersonaPosts(id, [joinPost], normalizePost);
+      }
     }
 
     await fs.writeFile(filepath, JSON.stringify(toStore, null, 2), 'utf8');

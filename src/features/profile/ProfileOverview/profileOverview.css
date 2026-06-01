@@ -362,7 +362,13 @@
   display: block;
 }
 
-.po-avatar-fallback {
+.po-avatar-fallback.user-silhouette-icon {
+  width: 58%;
+  height: 58%;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.po-avatar-fallback:not(.user-silhouette-icon) {
   font-family: var(--font-sans);
   font-size: var(--po-fs-lg);
   font-weight: 800;

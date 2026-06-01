@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { fetchLatestMacRelease } from '@/lib/apiClient.js';
 import PostCard from '../features/feed/PostCard.jsx';
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
+import UserSilhouetteIcon from '@/features/identity/UserSilhouetteIcon.jsx';
 import {
   avatarSrcFromProfile,
   getPersonaBadgeModel,
-  initialsFromProfile,
 } from '@/lib/profileUtils.js';
 import './landingPage.css';
 
@@ -170,7 +170,6 @@ function LandingHeroAccess({ profile, onEnterProfile, onRegister, profileEntryLo
 
   if (hasProfile) {
     const avatarSrc = avatarSrcFromProfile(profile);
-    const initials = initialsFromProfile(profile);
     const personaColor = getPersonaBadgeModel(profile).color;
 
     return (
@@ -193,7 +192,7 @@ function LandingHeroAccess({ profile, onEnterProfile, onRegister, profileEntryLo
             {avatarSrc ? (
               <img className="lp-hero-avatar-img" src={avatarSrc} alt="" />
             ) : (
-              <span className="lp-hero-avatar-initials">{initials}</span>
+              <UserSilhouetteIcon className="lp-hero-avatar-initials" />
             )}
           </span>
           <span className="lp-hero-access-btn">
