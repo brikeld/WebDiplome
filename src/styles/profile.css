@@ -536,6 +536,14 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-section-gap: clamp(12px, 2.8cqw, 20px);
   --profile-rail-inner-pad-y: clamp(28px, 7cqw, 46px);
   --profile-rail-inner-pad-x: clamp(18px, 4.6cqw, 32px);
+  --profile-rail-name-size: clamp(38px, 12cqw, 76px);
+  --profile-rail-bio-label-size: clamp(19px, 5.1cqw, 28px);
+  --profile-rail-bio-size: clamp(16px, 4.5cqw, 24px);
+  --profile-rail-badge-size: clamp(28px, 7.4cqw, 42px);
+  --profile-rail-stat-icon: clamp(22px, 5.8cqw, 32px);
+  --profile-rail-stat-num: clamp(19px, 5cqw, 30px);
+  --profile-rail-tab-min-h: clamp(38px, 11cqw, 56px);
+  --profile-rail-tab-font: clamp(14px, 4.2cqw, 22px);
   background: var(--persona-accent, #759aef);
   border: none;
   gap: var(--profile-rail-section-gap);
@@ -640,7 +648,7 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-name-line--first,
 .profile-rail-capsule .profile-name-line--last {
-  font-size: clamp(38px, 12cqw, 76px);
+  font-size: var(--profile-rail-name-size);
 }
 
 .profile-rail-capsule .profile-name-row--last {
@@ -657,7 +665,7 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-name-lg {
   color: #000;
-  font-size: clamp(38px, 12cqw, 76px);
+  font-size: var(--profile-rail-name-size);
   letter-spacing: -0.03em;
   line-height: 0.92;
   overflow-wrap: normal;
@@ -681,7 +689,7 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-hero-badge-slot .persona-badge {
-  --persona-badge-size: clamp(28px, 7.4cqw, 42px);
+  --persona-badge-size: var(--profile-rail-badge-size);
   --persona-badge-border: clamp(2px, 0.55cqw, 3px);
   border-color: #000;
   box-shadow: none;
@@ -695,13 +703,13 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-follow-icon {
-  width: clamp(22px, 5.8cqw, 32px);
-  height: clamp(22px, 5.8cqw, 32px);
+  width: var(--profile-rail-stat-icon);
+  height: var(--profile-rail-stat-icon);
   color: #000;
 }
 
 .profile-rail-capsule .profile-follow-num {
-  font-size: clamp(19px, 5cqw, 30px);
+  font-size: var(--profile-rail-stat-num);
   font-weight: 700;
   color: #000;
 }
@@ -709,7 +717,7 @@ button.profile-last-analysis-pill:disabled {
 .profile-rail-capsule .profile-bio-label {
   display: block;
   font-family: var(--font-avant), var(--font-sans);
-  font-size: clamp(19px, 5.1cqw, 28px);
+  font-size: var(--profile-rail-bio-label-size);
   font-weight: 700;
   font-style: normal;
   line-height: 1.1;
@@ -720,7 +728,7 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-bio {
   font-family: 'AvantGarde ITC BT', var(--font-avant), var(--font-sans);
-  font-size: clamp(16px, 4.5cqw, 24px);
+  font-size: var(--profile-rail-bio-size);
   font-style: oblique;
   font-weight: 600;
   line-height: 1.28;
@@ -762,13 +770,13 @@ button.profile-last-analysis-pill:disabled {
   flex: 0 0 auto;
   width: 100%;
   height: auto;
-  min-height: clamp(38px, 11cqw, 56px);
+  min-height: var(--profile-rail-tab-min-h);
   margin: 0;
   padding: clamp(7px, 1.9cqw, 13px) clamp(10px, 2.6cqw, 18px);
   border: clamp(2px, 0.55cqw, 3px) solid transparent;
   border-radius: clamp(11px, 3cqw, 17px);
   background: #fff;
-  font-size: clamp(14px, 4.2cqw, 22px);
+  font-size: var(--profile-rail-tab-font);
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -814,6 +822,43 @@ button.profile-last-analysis-pill:disabled {
     line-height: 1.05;
     font-size: clamp(13px, 3.6cqw, 16px);
     min-height: clamp(38px, 10.5cqw, 48px);
+  }
+}
+
+/* Wide rail (2K / large monitors): bigger type & rings; card height follows content */
+@container profile-rail (min-width: 600px) {
+  .profile-rail-capsule.dashboard-capsule {
+    --profile-rail-section-gap: clamp(14px, 3.2cqw, 24px);
+    --profile-rail-inner-pad-y: clamp(36px, 8.5cqw, 62px);
+    --profile-rail-inner-pad-x: clamp(22px, 5.4cqw, 40px);
+    --profile-rail-name-size: clamp(44px, 13.5cqw, 92px);
+    --profile-rail-bio-label-size: clamp(22px, 5.8cqw, 34px);
+    --profile-rail-bio-size: clamp(18px, 5.2cqw, 30px);
+    --profile-rail-badge-size: clamp(32px, 8.4cqw, 48px);
+    --profile-rail-stat-icon: clamp(26px, 6.8cqw, 38px);
+    --profile-rail-stat-num: clamp(22px, 5.8cqw, 36px);
+    --profile-rail-tab-min-h: clamp(44px, 12cqw, 62px);
+    --profile-rail-tab-font: clamp(16px, 4.8cqw, 26px);
+  }
+
+  .profile-rail-capsule .profile-header-stack {
+    flex: 0 0 auto;
+  }
+
+  .profile-rail-capsule .profile-hero-capsule {
+    flex: 0 0 auto;
+    min-height: clamp(360px, 58cqw, 520px);
+    --profile-score-size: clamp(11rem, 48cqw, 18rem);
+    --profile-score-size-max: clamp(11rem, 48cqw, 18rem);
+  }
+
+  .profile-rail-capsule .profile-hero-main {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  .profile-rail-capsule .tabs-row--rail {
+    margin-top: auto;
   }
 }
 
