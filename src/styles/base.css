@@ -1527,15 +1527,21 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.85rem;
+  padding: clamp(0.35rem, calc(var(--post-avatar-size) * 0.08), 0.75rem);
   box-sizing: border-box;
   font-family: var(--font-avant);
-  font-size: clamp(1rem, 2.2vw, 1.7rem);
+  font-size: clamp(
+    0.62rem,
+    calc((var(--post-avatar-size) - 1.1rem) / 6.75),
+    1.28rem
+  );
   font-weight: 900;
-  letter-spacing: -0.06em;
-  line-height: 0.85;
+  letter-spacing: -0.04em;
+  line-height: 1;
   text-align: center;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .post-avatar .persona-badge,
