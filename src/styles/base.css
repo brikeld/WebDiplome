@@ -1820,7 +1820,7 @@ body {
 
 /* Idle tell-me-more — smaller than timer row; scales with --tell-idle-scale */
 .dashboard-capsule--figma:not(.is-tell-expanded):not(.is-tell-closing) {
-  --tell-idle-scale: 0.88;
+  --tell-idle-scale: 0.86;
 }
 
 .dashboard-capsule--figma:not(.is-tell-expanded):not(.is-tell-closing) .dashboard-tell-row {
@@ -2361,10 +2361,10 @@ body {
 .dashboard-capsule--figma {
   --dashboard-btn-gap: 10px;
   --dashboard-pad: 18px;
-  --dashboard-timer-flex: 1.12;
-  --dashboard-tell-idle-flex: 2.62;
-  --dashboard-actions-min-h: clamp(152px, 17.5vh, 204px);
-  --dashboard-tell-idle-min-h: clamp(188px, 25vh, 288px);
+  --dashboard-timer-flex: 1.28;
+  --dashboard-tell-idle-flex: 2.45;
+  --dashboard-actions-min-h: clamp(168px, 19vh, 220px);
+  --dashboard-tell-idle-min-h: clamp(176px, 23vh, 272px);
   --dashboard-timer-radius: 28px;
   --dashboard-timer-time-radius: 20px;
   --dashboard-shell-radius: var(--capsule-radius);

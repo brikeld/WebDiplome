@@ -52,7 +52,7 @@ import {
   ingestProfileAvatars,
   normalizeProfilesFromApi,
 } from '@/lib/publicAvatarRegistry.js';
-import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
+import { isHostedApiOrigin, pollGenerationJob } from '@/lib/aiJobClient.js';
 import {
   canUseHostedAccountFeatures,
   clearHostedAccountStorage,
@@ -199,7 +199,14 @@ function sleep(ms) {
 async function pollProfileUntilGenerationComplete(initialProfile, reloadProfileFromApi, {
   pollMs = 3000,
   timeoutMs = 180000,
+  jobId = null,
 } = {}) {
+  if (jobId) {
+    await pollGenerationJob(jobId, { pollMs: 2000, timeoutMs });
+    const fresh = await reloadProfileFromApi();
+    return fresh ?? initialProfile;
+  }
+
   const initialPostCount = Array.isArray(initialProfile?.personaPosts)
     ? initialProfile.personaPosts.length
     : 0;
@@ -207,13 +214,23 @@ async function pollProfileUntilGenerationComplete(initialProfile, reloadProfileF
     String(initialProfile?.profileSummary || initialProfile?.userDescription || '').trim(),
   );
   const start = Date.now();
+  let lastCount = initialPostCount;
+  let stablePolls = 0;
   while (Date.now() - start < timeoutMs) {
     const fresh = await reloadProfileFromApi();
     if (!fresh) break;
     const bio = String(fresh.profileSummary || fresh.userDescription || '').trim();
     const posts = Array.isArray(fresh.personaPosts) ? fresh.personaPosts : [];
     if (!hadBio && bio) return fresh;
-    if (posts.length > initialPostCount) return fresh;
+    if (posts.length > initialPostCount) {
+      if (posts.length === lastCount) {
+        stablePolls += 1;
+        if (stablePolls >= 2) return fresh;
+      } else {
+        stablePolls = 0;
+        lastCount = posts.length;
+      }
+    }
     await sleep(pollMs);
   }
   throw new Error('Generation timed out — is your AI PC worker running?');
@@ -865,6 +882,7 @@ function AppInner({
                   fallbackPersona={personaKey}
                   personaAccent={personaColor}
                   personaPastel={PERSONA_PASTEL_COLORS[personaKey] ?? PERSONA_PASTEL_COLORS.security}
+                  holdLoadingOverlay={postGen.loading}
                 />
               </div>
             </div>
@@ -1458,15 +1476,20 @@ export default function App() {
     const scoresAfter = getPersonaScoresNormalized(freshProfile ?? {});
     setPersonaDeltas(computePersonaDeltas(scoresBefore, scoresAfter));
 
+    let generationJobId = null;
     if (hosted) {
       const slug = freshProfile?.slug ?? freshProfile?.id ?? profile?.slug ?? profile?.id;
       if (slug) {
         try {
-          await fetch(`${API_ORIGIN}/api/generation-jobs/trigger-update`, {
+          const triggerRes = await fetch(`${API_ORIGIN}/api/generation-jobs/trigger-update`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ profileSlug: slug }),
           });
+          if (triggerRes.ok) {
+            const triggerBody = await triggerRes.json().catch(() => ({}));
+            generationJobId = triggerBody?.jobId ?? null;
+          }
         } catch {
           /* Electron may have already queued the job */
         }
@@ -1482,7 +1505,9 @@ export default function App() {
         return { ...prev, phase: 'generating' };
       });
       try {
-        await pollProfileUntilGenerationComplete(freshProfile, reloadProfileFromApi);
+        await pollProfileUntilGenerationComplete(freshProfile, reloadProfileFromApi, {
+          jobId: generationJobId,
+        });
         await reloadProfileFromApi();
         setPostGen(POST_GEN_IDLE);
         schedulePersonaDeltasClearAfterGenerate();

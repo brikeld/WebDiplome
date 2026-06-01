@@ -174,7 +174,13 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       if (!row) return res.status(404).json({ error: 'Profile not found' });
 
       if (await jobStore.hasActiveJob(row.id)) {
-        return res.json({ success: true, alreadyQueued: true });
+        const active = await jobStore.findActiveJob({ profileId: row.id, jobType: 'posts' });
+        return res.json({
+          success: true,
+          alreadyQueued: true,
+          jobId: active?.id ?? null,
+          status: active?.status ?? 'queued',
+        });
       }
 
       const latest = await jobStore.findLatestJobPayload(row.id, 'posts');

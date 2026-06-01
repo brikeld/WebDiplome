@@ -110,7 +110,7 @@ function resolvePostAnalysis(post) {
   return { chain, ingredients, highlights, rawThinking };
 }
 
-export default function InferenceChainPanel({ post, personaLabel }) {
+export default function InferenceChainPanel({ post, personaLabel, holdLoadingOverlay = false }) {
   const { chain, ingredients, highlights, rawThinking } = resolvePostAnalysis(post);
   const validChain = isValidChain(chain);
   const hasIngredients = !!(ingredients && ingredients.length);
@@ -123,6 +123,7 @@ export default function InferenceChainPanel({ post, personaLabel }) {
 
   const { ready, loadingKey } = useTellMeMoreLoading(
     isLeaderboardPost ? [] : [post?.id],
+    { blocked: holdLoadingOverlay },
   );
 
   const [activeThinking, setActiveThinking] = useState(null);
@@ -157,7 +158,10 @@ export default function InferenceChainPanel({ post, personaLabel }) {
         aria-label="Algorithm inference chain"
       >
         <div className="inference-panel__body">
-          <LeaderboardRationaleView leaderboard={leaderboard} />
+          <LeaderboardRationaleView
+            leaderboard={leaderboard}
+            holdLoadingOverlay={holdLoadingOverlay}
+          />
         </div>
       </div>
     );

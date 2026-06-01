@@ -6,6 +6,7 @@ import {
   BOARD_DESCRIPTIONS,
   cloneRationaleSignal,
 } from './leaderboardRationaleUtils.js';
+import { isLeaderboardBotEntry } from '@/lib/leaderboardEntryVisibility.js';
 import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 
@@ -20,12 +21,12 @@ function OtherUserAvatar({ entry }) {
   );
 }
 
-export default function LeaderboardRationaleView({ leaderboard }) {
+export default function LeaderboardRationaleView({ leaderboard, holdLoadingOverlay = false }) {
   const [showOthers, setShowOthers] = useState(false);
   const [activeSignal, setActiveSignal] = useState(null);
 
   const boardId = leaderboard?.boardId;
-  const { ready, loadingKey } = useTellMeMoreLoading([boardId]);
+  const { ready, loadingKey } = useTellMeMoreLoading([boardId], { blocked: holdLoadingOverlay });
 
   useEffect(() => {
     setShowOthers(false);
@@ -51,13 +52,16 @@ export default function LeaderboardRationaleView({ leaderboard }) {
   const verdict = atmosphericVerdict(userRank, boardId);
   const boardDesc = BOARD_DESCRIPTIONS[boardId] ?? null;
 
-  // Clone entries for the others screen (non-user, with hidden flag)
-  let cloneIdx = -1;
+  // Others screen: real users always visible; only bots use cloneHidden[].
+  let botIdx = -1;
   const cloneEntries = entries
     .filter((e) => !e.isUser)
     .map((entry) => {
-      cloneIdx += 1;
-      return { ...entry, hidden: Boolean(cloneHidden[cloneIdx]) };
+      if (!isLeaderboardBotEntry(entry)) {
+        return { ...entry, hidden: false };
+      }
+      botIdx += 1;
+      return { ...entry, hidden: Boolean(cloneHidden[botIdx]) };
     });
 
   const handleSignalClick = (i) => {

@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
+import { mapLeaderboardEntryHiddenFlags } from '@/lib/leaderboardEntryVisibility.js';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import './leaderboardBlock.css';
 
@@ -82,14 +83,9 @@ export default function LeaderboardBlock({ leaderboard, accentColor, authorSlug,
   const selfRevealing = isLeaderboardSelfRevealing(boardId);
   const titleId = `leaderboard-title-${boardId}-${reactId}`;
 
-  // Map each entry to its "is this row hidden?" flag.
-  // The user row is hidden when isLeaderboardSelfHidden(boardId) is true.
-  // Clone rows index cloneHidden[] by their position among the 4 clones (in rank order).
-  let cloneIdx = -1;
-  const hiddenForEntry = entries.map((e) => {
-    if (e.isUser) return selfHidden;
-    cloneIdx += 1;
-    return Boolean(cloneHidden[cloneIdx]);
+  const hiddenForEntry = mapLeaderboardEntryHiddenFlags(entries, {
+    selfHidden,
+    cloneHidden,
   });
 
   return (

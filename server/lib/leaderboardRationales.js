@@ -5,6 +5,7 @@
  */
 
 import { RATIONALE_TEMPLATES } from './prompts.js';
+import { isLeaderboardBotEntry } from '../../src/lib/leaderboardEntryVisibility.js';
 
 const PHRASE_MAX = 90;
 const CLIMB_TIP_MAX = 110;
@@ -54,17 +55,20 @@ export function parseRationalesResponse(rawText) {
  */
 export function buildRationalesPayload(board, standing, cloneHidden) {
   const userScore = standing.entries.find((e) => e.isUser)?.score ?? 0;
-  let cloneIdx = -1;
+  let botIdx = -1;
   const rows = standing.entries.map((e) => {
     if (e.isUser) {
       return { rank: e.rank, score: Math.round(e.score), isUser: true, hidden: false };
     }
-    cloneIdx += 1;
+    if (!isLeaderboardBotEntry(e)) {
+      return { rank: e.rank, score: Math.round(e.score), isUser: false, hidden: false };
+    }
+    botIdx += 1;
     return {
       rank: e.rank,
       score: Math.round(e.score),
       isUser: false,
-      hidden: Boolean(cloneHidden[cloneIdx]),
+      hidden: Boolean(cloneHidden[botIdx]),
     };
   });
   return [
@@ -134,16 +138,19 @@ export function fallbackRationales(board, standing, cloneHidden) {
     selfPhrase: 'classified by the algorithm',
     clonePhrases: ['', '', '', ''],
   };
-  let cloneIdx = -1;
+  let botIdx = -1;
   return standing.entries.map((e) => {
     if (e.isUser) {
       return { rank: e.rank, phrase: tpl.selfPhrase, signal: standing.hint };
     }
-    cloneIdx += 1;
-    if (cloneHidden[cloneIdx]) {
+    if (!isLeaderboardBotEntry(e)) {
+      return { rank: e.rank, phrase: 'in your zone', signal: `score ${Math.round(e.score)}` };
+    }
+    botIdx += 1;
+    if (cloneHidden[botIdx]) {
       return { rank: e.rank, phrase: null, signal: null };
     }
-    const phrase = tpl.clonePhrases[cloneIdx % tpl.clonePhrases.length] || 'in your zone';
+    const phrase = tpl.clonePhrases[botIdx % tpl.clonePhrases.length] || 'in your zone';
     return { rank: e.rank, phrase, signal: `score ${Math.round(e.score)}` };
   });
 }

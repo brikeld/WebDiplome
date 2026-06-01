@@ -45,6 +45,7 @@ export default function TellMeMorePill({
   fallbackPersona = 'security',
   personaAccent = null,
   personaPastel = null,
+  holdLoadingOverlay = false,
 }) {
   const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
   const postPersonaKey = String(highlightedPost?.persona ?? mainPersonaKey).toLowerCase();
@@ -77,6 +78,7 @@ export default function TellMeMorePill({
         <InferenceChainPanel
           post={highlightedPost}
           personaLabel={label}
+          holdLoadingOverlay={holdLoadingOverlay}
         />
       </div>
     );
