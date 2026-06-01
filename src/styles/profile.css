@@ -546,7 +546,7 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-stat-num: clamp(18px, calc(4.8cqw + 0.25cqh), 32px);
   --profile-rail-tab-h: clamp(44px, 8.5cqw, 54px);
   --profile-rail-tab-font: clamp(15px, 4.2cqw, 20px);
-  --profile-rail-ring-size: clamp(6rem, calc(23cqw + 1.5cqh), 9.75rem);
+  --profile-rail-ring-size: clamp(6.5rem, calc(25.5cqw + 1.65cqh), 10.5rem);
   --profile-rail-ring-gap: clamp(12px, calc(3.2cqw + 0.25cqh), 26px);
   display: flex;
   flex-direction: column;
