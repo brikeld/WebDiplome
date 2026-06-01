@@ -619,7 +619,7 @@ body {
   --shell-rail-width: 72px;
   --shell-rail-clearance: 34px;
   --shell-inline-pad: 16px;
-  --shell-capsules-nudge-left: 32px;
+  --shell-capsules-nudge-left: 30px;
   --left-capsule-extra-width: 0px;
 }
 
