@@ -426,8 +426,8 @@ body {
   justify-self: center;
   align-self: center;
   display: block;
-  width: clamp(70px, 6.8vw, 88px);
-  height: clamp(70px, 6.8vw, 88px);
+  width: clamp(82px, 8.2vw, 106px);
+  height: clamp(82px, 8.2vw, 106px);
   z-index: 1;
 }
 
