@@ -9,6 +9,9 @@ import {
 
 const API_ORIGIN = resolveApiOrigin();
 
+/** Persona post generator always emits three posts (one per persona). */
+const EXPECTED_GENERATED_POST_COUNT = 3;
+
 async function fetchGenerationJob(jobId) {
   const res = await fetch(`${API_ORIGIN}/api/generation-jobs/${encodeURIComponent(jobId)}`, {
     cache: 'no-store',
@@ -41,7 +44,7 @@ export async function runHostedPostGenerationWithReveal({
   });
   queue.markBaseline(getBaselinePosts());
 
-  let jobDone = !jobId;
+  let jobDone = false;
   let jobFailed = null;
   let expectedRevealKeys = [];
   const start = Date.now();
@@ -63,19 +66,30 @@ export async function runHostedPostGenerationWithReveal({
     const apiPosts = readApiPersonaPosts(reloadResult);
     queue.enqueue(sortPostsForReveal(queue.findUnrevealed(apiPosts)));
 
-    const generationComplete =
-      jobDone
-      && queue.isIdle()
-      && queue.hasRevealedAll(expectedRevealKeys)
-      && queue.allNewGeneratedRevealed(apiPosts);
+    const newGeneratedCount = queue.countNewGeneratedInApi(apiPosts);
+    const generationComplete = jobId
+      ? jobDone
+        && queue.isIdle()
+        && queue.hasRevealedAll(expectedRevealKeys)
+        && queue.allNewGeneratedRevealed(apiPosts)
+      : queue.isIdle()
+        && newGeneratedCount >= EXPECTED_GENERATED_POST_COUNT
+        && queue.allNewGeneratedRevealed(apiPosts);
 
     if (generationComplete) break;
     await sleep(pollMs);
   }
 
   if (jobFailed) throw new Error(jobFailed);
-  if (!jobDone) {
+  if (jobId && !jobDone) {
     throw new Error('Generation timed out — is your AI PC worker running?');
+  }
+  if (!jobId) {
+    const reloadResult = await reloadProfileFromApi({ skipPostsMerge: true });
+    const apiPosts = readApiPersonaPosts(reloadResult);
+    if (queue.countNewGeneratedInApi(apiPosts) < EXPECTED_GENERATED_POST_COUNT) {
+      throw new Error('Generation timed out — is your AI PC worker running?');
+    }
   }
 
   await queue.waitUntilIdle();

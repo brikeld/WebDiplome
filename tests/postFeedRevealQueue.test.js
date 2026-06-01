@@ -28,4 +28,20 @@ describe('createPostFeedRevealQueue', () => {
     expect(POST_REVEAL_GAP_MS).toBeGreaterThanOrEqual(2000);
     expect(POST_REVEAL_GAP_MS).toBeLessThanOrEqual(3000);
   });
+
+  it('counts new generated posts against the marked baseline', () => {
+    const baseline = [{ content: 'old', createdAt: 1, persona: 'securite' }];
+    const queue = createPostFeedRevealQueue({
+      gapMs: 50,
+      getBaseline: () => baseline,
+      onPostsChange: () => {},
+    });
+    queue.markBaseline(baseline);
+    const apiPosts = [
+      ...baseline,
+      { content: 'new-a', createdAt: 2, persona: 'productivite' },
+      { content: 'new-b', createdAt: 3, persona: 'popularite' },
+    ];
+    expect(queue.countNewGeneratedInApi(apiPosts)).toBe(2);
+  });
 });

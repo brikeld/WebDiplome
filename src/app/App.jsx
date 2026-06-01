@@ -63,6 +63,7 @@ import {
   createPostFeedRevealQueue,
   POST_REVEAL_GAP_MS,
   sleep as feedRevealSleep,
+  stripFeedRevealMetaFromPosts,
 } from '@/lib/postFeedRevealQueue.js';
 import {
   canUseHostedAccountFeatures,
@@ -756,12 +757,6 @@ function AppInner({
     postPhase: postGen.phase,
   });
   const dashboardBusy = dashboardLayout.actionSlot !== 'timer';
-  const feedPostsRevealing = useMemo(
-    () => (profile?.personaPosts ?? []).some((p) => (p._feedRevealSeq ?? 0) > 0),
-    [profile?.personaPosts],
-  );
-  const showFeedGeneratingPlaceholder =
-    postGen.phase === 'generating' && !feedPostsRevealing;
 
   const accountFeaturesEnabled = useMemo(() => {
     const owned = resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug);
@@ -813,7 +808,7 @@ function AppInner({
                 feedProfiles={feedProfiles}
                 viewerProfile={viewerProfile}
                 aiFeaturesEnabled={accountFeaturesEnabled}
-                isGeneratingPosts={showFeedGeneratingPlaceholder}
+                isGeneratingPosts={postGen.phase === 'generating'}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
                 onPostHide={handlePostHideClick}
@@ -835,7 +830,7 @@ function AppInner({
             onTabChange={setActiveTab}
             onOpenProfile={handleOpenProfile}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
-            isGeneratingPosts={!viewedProfile && showFeedGeneratingPlaceholder}
+            isGeneratingPosts={!viewedProfile && postGen.phase === 'generating'}
             generateApiOrigin={GENERATE_API_ORIGIN}
           />
         )}
@@ -1222,12 +1217,11 @@ export default function App() {
   }, [linkedProfileSlug]);
 
   useEffect(() => {
-    const skip =
-      postGen.loading && isFeedGenerationPhase(postGen.phase)
-        ? linkedProfileSlug ?? profile?.slug ?? profile?.id ?? null
-        : null;
+    const skip = postGen.loading
+      ? linkedProfileSlug ?? profile?.slug ?? profile?.id ?? null
+      : null;
     spectateRevealRef.current?.setSkipSlug(skip);
-  }, [postGen.loading, postGen.phase, linkedProfileSlug, profile?.slug, profile?.id]);
+  }, [postGen.loading, linkedProfileSlug, profile?.slug, profile?.id]);
 
   const pollHarvestUntilDone = useCallback(async (scoresBefore, profileSlug) => {
     const slug = String(profileSlug || '').trim();
@@ -1309,7 +1303,9 @@ export default function App() {
       getBaseline: () => streamPostsBaselineRef.current,
       onFirstReveal: () => dismissGeneratingUiRef.current(),
       onPostsChange: (personaPosts) => {
-        setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
+        flushSync(() => {
+          setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
+        });
       },
     });
     revealQueue.markBaseline(baseline);
@@ -1528,22 +1524,12 @@ export default function App() {
       }
     }
 
-    streamPostsBaselineRef.current = Array.isArray(freshProfile?.personaPosts)
-      ? freshProfile.personaPosts
-      : [];
-
-    const generationPromise = hosted
-      ? runHostedPostGenerationWithReveal({
-          initialProfile: freshProfile,
-          jobId: generationJobId,
-          reloadProfileFromApi,
-          getBaselinePosts: () => streamPostsBaselineRef.current,
-          onDismissGeneratingUi: dismissGeneratingUi,
-          applyRevealedPosts: (personaPosts) => {
-            setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
-          },
-        })
-      : runBioAndPostGeneration(freshProfile);
+    streamPostsBaselineRef.current = stripFeedRevealMetaFromPosts(
+      freshProfile?.personaPosts ?? [],
+    );
+    setProfile((prev) =>
+      prev ? { ...prev, personaPosts: streamPostsBaselineRef.current } : prev,
+    );
 
     await new Promise((r) => setTimeout(r, PERSONA_DELTA_DISPLAY_MS));
 
@@ -1553,7 +1539,21 @@ export default function App() {
     });
 
     try {
-      await generationPromise;
+      if (hosted) {
+        await runHostedPostGenerationWithReveal({
+          jobId: generationJobId,
+          reloadProfileFromApi,
+          getBaselinePosts: () => streamPostsBaselineRef.current,
+          onDismissGeneratingUi: dismissGeneratingUi,
+          applyRevealedPosts: (personaPosts) => {
+            flushSync(() => {
+              setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
+            });
+          },
+        });
+      } else {
+        await runBioAndPostGeneration(freshProfile);
+      }
       setPostGen(POST_GEN_IDLE);
       schedulePersonaDeltasClearAfterGenerate();
     } catch (e) {

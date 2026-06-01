@@ -15,6 +15,10 @@ function stripFeedClientMeta(post) {
   return rest;
 }
 
+export function stripFeedRevealMetaFromPosts(posts) {
+  return (Array.isArray(posts) ? posts : []).map(stripFeedClientMeta);
+}
+
 /**
  * Staggered feed reveals: each post prepended with `_feedEnter` animation.
  */
@@ -124,6 +128,16 @@ export function createPostFeedRevealQueue({
         if (!revealedKeys.has(key)) return false;
       }
       return true;
+    },
+    countNewGeneratedInApi(apiPosts) {
+      let count = 0;
+      for (const p of Array.isArray(apiPosts) ? apiPosts : []) {
+        if (isCompliantSystemPost(p)) continue;
+        const key = postIdentityKey(p);
+        if (!key || baselineKeys.has(key)) continue;
+        count += 1;
+      }
+      return count;
     },
     enqueue(posts) {
       const list = Array.isArray(posts) ? posts : [];
