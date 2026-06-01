@@ -7,11 +7,7 @@ const DEFAULT_BARS = [
   { height: '12%', solid: true },
 ];
 
-const COMPACT_BARS = [
-  { height: '36%' },
-  { height: '28%' },
-  { height: '20%', solid: true },
-];
+const COMPACT_BARS = [{ solid: false }, { solid: false }, { solid: true }];
 
 export default function TellMeMoreLoadingOverlay({
   loadingKey = 'idle',
@@ -31,7 +27,7 @@ export default function TellMeMoreLoadingOverlay({
         <div
           key={idx}
           className={`tell-load__skel${bar.solid ? ' tell-load__skel--solid' : ''}`}
-          style={{ height: bar.height }}
+          style={bar.height ? { height: bar.height } : undefined}
         />
       ))}
     </div>

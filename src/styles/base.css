@@ -1782,8 +1782,8 @@ body {
   grid-template-columns: 1fr;
   gap: var(--dashboard-btn-gap, 10px);
   width: 100%;
-  /* Fills remaining capsule height when tell-me-more is a compact idle strip. */
-  flex: 1 1 0;
+  /* ~1.1fr of capsule — scales with viewport like the original grid row */
+  flex: 1.1 1 0;
   min-height: var(--dashboard-actions-min-h, clamp(172px, 21vh, 232px));
   height: auto;
   /* Clipping happens only while tell-me-more is collapsing (see inferenceChain.css). */
@@ -1797,8 +1797,8 @@ body {
 }
 
 .dashboard-tell-row {
-  flex: 1.35 1 0;
-  min-height: clamp(100px, 14vh, 148px);
+  flex: 2.25 1 0;
+  min-height: 0;
   width: 100%;
   display: flex;
 }
