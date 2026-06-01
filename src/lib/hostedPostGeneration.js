@@ -59,7 +59,12 @@ export async function runHostedPostGenerationWithReveal({
   let jobDone = false;
   let jobFailed = null;
   let expectedCount = null;
-  let jobDoneAt = 0;
+  // Tracks the highest new-post count seen and when it last increased. Used as
+  // a "settle" signal: generation is only done once posts STOP arriving for a
+  // while — robust to a worker that writes posts incrementally and/or reports
+  // `complete` before all rows are persisted.
+  let maxNewCount = 0;
+  let lastProgressAt = Date.now();
   const start = Date.now();
 
   while (Date.now() - start < timeoutMs) {
@@ -67,9 +72,9 @@ export async function runHostedPostGenerationWithReveal({
       const job = await fetchGenerationJob(jobId);
       if (job.status === 'complete') {
         jobDone = true;
-        jobDoneAt = Date.now();
+        // May be 0/null if the worker doesn't echo posts back in the job
+        // record — we must NOT treat "unknown" as "all revealed".
         expectedCount = expectedGeneratedKeysFromJobPosts(job.posts).length || null;
-        onDismissGeneratingUi?.();
       } else if (job.status === 'failed') {
         jobFailed = job.error || 'AI job failed';
         break;
@@ -81,24 +86,31 @@ export async function runHostedPostGenerationWithReveal({
     queue.enqueue(sortPostsForReveal(queue.findUnrevealed(apiPosts)));
 
     const newGeneratedCount = queue.countNewGeneratedInApi(apiPosts);
+    if (newGeneratedCount > maxNewCount) {
+      maxNewCount = newGeneratedCount;
+      lastProgressAt = Date.now();
+    }
     const revealedEverythingSoFar =
       queue.isIdle() && queue.allNewGeneratedRevealed(apiPosts);
 
+    // Floor the expectation: even when the job record omits its posts, never
+    // settle before the standard 3 persona posts unless generation has clearly
+    // stalled (no new posts for the grace window). This is what stops the run
+    // from "completing" the moment the first post reveals.
+    const expectedFloor = Math.max(expectedCount ?? 0, EXPECTED_GENERATED_POST_COUNT);
+    const reachedExpected = newGeneratedCount >= expectedFloor;
+    const stalled = Date.now() - lastProgressAt >= postJobDoneGraceMs;
+
     let generationComplete = false;
-    if (jobId) {
-      if (jobDone && revealedEverythingSoFar) {
-        const reachedExpected =
-          expectedCount == null || newGeneratedCount >= expectedCount;
-        const graceElapsed = Date.now() - jobDoneAt >= postJobDoneGraceMs;
-        generationComplete = reachedExpected || graceElapsed;
+    if (revealedEverythingSoFar) {
+      if (jobId) {
+        // With a job handle we additionally require the job to be done before
+        // we accept the "stalled" escape hatch.
+        generationComplete = reachedExpected ? jobDone : jobDone && stalled;
+      } else {
+        // No job handle (trigger failed but the worker may still run).
+        generationComplete = reachedExpected || stalled;
       }
-    } else {
-      // No job handle (trigger failed but the worker may still be running):
-      // settle once the expected count is revealed, or after a bounded wait.
-      generationComplete =
-        revealedEverythingSoFar
-        && (newGeneratedCount >= EXPECTED_GENERATED_POST_COUNT
-          || Date.now() - start >= postJobDoneGraceMs * 2);
     }
 
     if (generationComplete) break;
