@@ -1,4 +1,4 @@
-import { postIdentityKey } from '@/lib/mergePersonaPosts.js';
+import { postIdentityKey, isCompliantSystemPost } from '@/lib/mergePersonaPosts.js';
 
 /** Pause between revealing consecutive posts (2–3s target). */
 export const POST_REVEAL_GAP_MS = 2500;
@@ -11,17 +11,18 @@ export function sleep(ms) {
 
 function stripFeedClientMeta(post) {
   if (!post || typeof post !== 'object') return post;
-  const { _feedEnter, _feedKey, _feedRevealSeq, ...rest } = post;
+  const { _feedEnter, _feedEnterDone, _feedKey, _feedRevealSeq, ...rest } = post;
   return rest;
 }
 
 /**
  * Staggered feed reveals: each post prepended with `_feedEnter` animation.
- * @param {{ gapMs?: number, onPostsChange: (personaPosts: object[]) => void, getBaseline: () => object[] }} opts
  */
 export function createPostFeedRevealQueue({ gapMs = POST_REVEAL_GAP_MS, onPostsChange, getBaseline }) {
   const revealedKeys = new Set();
+  const baselineKeys = new Set();
   const pendingKeys = new Set();
+  const enterDoneKeys = new Set();
   const pending = [];
   let drainPromise = null;
   let revealSeq = 0;
@@ -29,20 +30,38 @@ export function createPostFeedRevealQueue({ gapMs = POST_REVEAL_GAP_MS, onPostsC
 
   const markBaseline = (posts) => {
     revealedKeys.clear();
+    baselineKeys.clear();
+    enterDoneKeys.clear();
     for (const p of Array.isArray(posts) ? posts : []) {
       const key = postIdentityKey(p);
-      if (key) revealedKeys.add(key);
+      if (key) {
+        revealedKeys.add(key);
+        baselineKeys.add(key);
+      }
     }
     revealedBatch = [];
   };
 
   const flushToUi = () => {
     const baseline = getBaseline() ?? [];
-    const batchForProfile = revealedBatch.map((p, i) => ({
-      ...p,
-      _feedEnter: i === revealedBatch.length - 1,
-    }));
+    const batchForProfile = revealedBatch.map((p, i) => {
+      const done = Boolean(p._feedKey && enterDoneKeys.has(p._feedKey));
+      const isLatest = i === revealedBatch.length - 1;
+      return {
+        ...p,
+        _feedEnter: isLatest && !done,
+        _feedEnterDone: done || !isLatest,
+      };
+    });
     onPostsChange([...batchForProfile, ...baseline]);
+  };
+
+  const scheduleEnterDone = (feedKey) => {
+    if (!feedKey || enterDoneKeys.has(feedKey)) return;
+    setTimeout(() => {
+      enterDoneKeys.add(feedKey);
+      flushToUi();
+    }, POST_FEED_ENTER_ANIM_MS);
   };
 
   const drain = async () => {
@@ -66,6 +85,7 @@ export function createPostFeedRevealQueue({ gapMs = POST_REVEAL_GAP_MS, onPostsC
         _feedRevealSeq: revealSeq,
       });
       flushToUi();
+      scheduleEnterDone(feedKey);
     }
     drainPromise = null;
   };
@@ -80,10 +100,17 @@ export function createPostFeedRevealQueue({ gapMs = POST_REVEAL_GAP_MS, onPostsC
     findUnrevealed(posts) {
       return findUnrevealedPosts(posts, revealedKeys);
     },
-    allPostsRevealed(posts) {
-      for (const p of Array.isArray(posts) ? posts : []) {
+    hasRevealedAll(keys) {
+      const list = Array.isArray(keys) ? keys : [];
+      if (list.length === 0) return true;
+      return list.every((key) => revealedKeys.has(key));
+    },
+    allNewGeneratedRevealed(apiPosts) {
+      for (const p of Array.isArray(apiPosts) ? apiPosts : []) {
+        if (isCompliantSystemPost(p)) continue;
         const key = postIdentityKey(p);
-        if (key && !revealedKeys.has(key)) return false;
+        if (!key || baselineKeys.has(key)) continue;
+        if (!revealedKeys.has(key)) return false;
       }
       return true;
     },
@@ -108,6 +135,7 @@ export function createPostFeedRevealQueue({ gapMs = POST_REVEAL_GAP_MS, onPostsC
         if (!drainPromise) drainPromise = drain();
         await drainPromise;
       }
+      await sleep(POST_FEED_ENTER_ANIM_MS);
     },
     isIdle() {
       return pending.length === 0 && !drainPromise;
@@ -132,4 +160,11 @@ export function findUnrevealedPosts(apiPosts, revealedKeys) {
     out.push(p);
   }
   return out;
+}
+
+export function expectedGeneratedKeysFromJobPosts(posts) {
+  return (Array.isArray(posts) ? posts : [])
+    .filter((p) => !isCompliantSystemPost(p))
+    .map((p) => postIdentityKey(p))
+    .filter(Boolean);
 }

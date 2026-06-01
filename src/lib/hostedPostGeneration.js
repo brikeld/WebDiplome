@@ -1,6 +1,8 @@
 import { resolveApiOrigin } from '@/lib/apiOrigin.js';
+import { readApiPersonaPosts } from '@/lib/profileReload.js';
 import {
   createPostFeedRevealQueue,
+  expectedGeneratedKeysFromJobPosts,
   sleep,
   sortPostsForReveal,
 } from '@/lib/postFeedRevealQueue.js';
@@ -24,7 +26,6 @@ async function fetchGenerationJob(jobId) {
  * Poll hosted API + worker job while stagger-revealing new posts into profile state.
  */
 export async function runHostedPostGenerationWithReveal({
-  initialProfile,
   jobId,
   reloadProfileFromApi,
   applyRevealedPosts,
@@ -32,32 +33,40 @@ export async function runHostedPostGenerationWithReveal({
   pollMs = 1000,
   timeoutMs = 180000,
 }) {
-  const baseline = Array.isArray(initialProfile?.personaPosts) ? initialProfile.personaPosts : [];
   const queue = createPostFeedRevealQueue({
     getBaseline: getBaselinePosts,
     onPostsChange: applyRevealedPosts,
   });
-  queue.markBaseline(baseline);
+  queue.markBaseline(getBaselinePosts());
 
   let jobDone = !jobId;
   let jobFailed = null;
+  let expectedRevealKeys = [];
   const start = Date.now();
 
   while (Date.now() - start < timeoutMs) {
     if (jobId && !jobDone) {
       const job = await fetchGenerationJob(jobId);
-      if (job.status === 'complete') jobDone = true;
-      else if (job.status === 'failed') {
+      if (job.status === 'complete') {
+        jobDone = true;
+        expectedRevealKeys = expectedGeneratedKeysFromJobPosts(job.posts);
+      } else if (job.status === 'failed') {
         jobFailed = job.error || 'AI job failed';
         break;
       }
     }
 
-    const fresh = await reloadProfileFromApi({ skipPostsMerge: true });
-    const apiPosts = fresh?.personaPosts ?? [];
+    const reloadResult = await reloadProfileFromApi({ skipPostsMerge: true });
+    const apiPosts = readApiPersonaPosts(reloadResult);
     queue.enqueue(sortPostsForReveal(queue.findUnrevealed(apiPosts)));
 
-    if (jobDone && queue.isIdle() && queue.allPostsRevealed(apiPosts)) break;
+    const generationComplete =
+      jobDone
+      && queue.isIdle()
+      && queue.hasRevealedAll(expectedRevealKeys)
+      && queue.allNewGeneratedRevealed(apiPosts);
+
+    if (generationComplete) break;
     await sleep(pollMs);
   }
 
@@ -67,5 +76,5 @@ export async function runHostedPostGenerationWithReveal({
   }
 
   await queue.waitUntilIdle();
-  return reloadProfileFromApi({ skipPostsMerge: false });
+  return reloadProfileFromApi({ skipPostsMerge: false, forcePostsMerge: true });
 }

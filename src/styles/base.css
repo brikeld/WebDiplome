@@ -927,49 +927,27 @@ body {
  * (display: contents) so the post-card behaves exactly like a direct child of
  * .posts-tab's flex column. When a card is freshly revealed by the streaming
  * generator the shell switches to display: grid with a row that animates from
- * 0fr → 1fr — this physically grows the card's vertical footprint, which the
- * surrounding flex column compensates for by smoothly sliding existing cards
- * down. No instantaneous snap, no FLIP measurement, no JS height plumbing.
+ * Stable wrapper for feed cards; entering posts animate in without layout snap.
  *
- * Duration MUST match POST_FEED_ENTER_ANIM_MS in src/app/App.jsx.
+ * Duration MUST match POST_FEED_ENTER_ANIM_MS in postFeedRevealQueue.js.
  */
 .post-card-shell {
-  display: contents;
+  display: block;
+  width: 100%;
 }
 
 .post-card-shell--entering {
-  display: grid;
-  grid-template-rows: 1fr;
-  width: 100%;
-  min-height: 0;
-  animation: post-card-shell-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: post-card-feed-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.post-card-shell--entering > * {
-  min-height: 0;
-  overflow: hidden;
-}
-
-@keyframes post-card-shell-enter {
-  0% {
-    grid-template-rows: 0fr;
-    /* Negate the flex gap below the shell while it has no height, so the
-       sibling beneath doesn't sit in a "phantom" 64–68 px empty band at the
-       first frame. Margin animates back to 0 in lockstep with the row
-       expansion → the gap re-appears smoothly as the new card grows. */
-    margin-bottom: calc(-1 * var(--posts-stack-gap, 64px));
+@keyframes post-card-feed-enter {
+  from {
     opacity: 0;
-    filter: blur(6px);
+    transform: translateY(-14px);
   }
-  60% {
+  to {
     opacity: 1;
-    filter: blur(0);
-  }
-  100% {
-    grid-template-rows: 1fr;
-    margin-bottom: 0;
-    opacity: 1;
-    filter: blur(0);
+    transform: translateY(0);
   }
 }
 

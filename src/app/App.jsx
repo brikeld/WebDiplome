@@ -228,6 +228,15 @@ function mergeProfileFromApi(prev, incoming) {
   };
 }
 
+function mergeOwnedProfileFromApi(prev, incoming, { preserveClientPosts = false } = {}) {
+  if (!incoming) return prev ?? null;
+  if (!prev) return incoming;
+  if (preserveClientPosts) {
+    return mergeProfilePreservePosts(prev, incoming);
+  }
+  return mergeProfileFromApi(prev, incoming);
+}
+
 function AppInner({
   mainView,
   setMainView,
@@ -246,6 +255,8 @@ function AppInner({
   profileScoreReplayNonce,
   handleGeneratePersonaPosts,
   linkedProfileSlug,
+  tryDeferCompliant,
+  updateSessionActive,
 }) {
   const {
     adjustedScores,
@@ -286,31 +297,39 @@ function AppInner({
   const prependCompliantPost = useCallback(
     (post) => {
       if (!profileId || !post) return;
-      setProfile((prev) =>
-        prev
-          ? { ...prev, personaPosts: mergePostsPrepend([post], prev.personaPosts ?? []) }
-          : prev,
-      );
-      prependPersonaPosts(profileId, [post]).catch((err) => {
-        console.warn('[compliant] failed to persist system post:', err?.message || err);
-      });
+      const apply = () => {
+        setProfile((prev) =>
+          prev
+            ? { ...prev, personaPosts: mergePostsPrepend([post], prev.personaPosts ?? []) }
+            : prev,
+        );
+        prependPersonaPosts(profileId, [post]).catch((err) => {
+          console.warn('[compliant] failed to persist system post:', err?.message || err);
+        });
+      };
+      if (tryDeferCompliant?.(apply)) return;
+      apply();
     },
-    [profileId, setProfile],
+    [profileId, setProfile, tryDeferCompliant],
   );
 
   const prependCompliantLowScorePost = useCallback(
     (uiPersonaKey, post) => {
       if (!profileId || !post || !uiPersonaKey) return;
-      setProfile((prev) => {
-        if (!prev) return prev;
-        const stripped = stripLowScorePostsForPersona(prev.personaPosts ?? [], uiPersonaKey);
-        return { ...prev, personaPosts: mergePostsPrepend([post], stripped) };
-      });
-      prependPersonaPosts(profileId, [post]).catch((err) => {
-        console.warn('[compliant] failed to persist low-score post:', err?.message || err);
-      });
+      const apply = () => {
+        setProfile((prev) => {
+          if (!prev) return prev;
+          const stripped = stripLowScorePostsForPersona(prev.personaPosts ?? [], uiPersonaKey);
+          return { ...prev, personaPosts: mergePostsPrepend([post], stripped) };
+        });
+        prependPersonaPosts(profileId, [post]).catch((err) => {
+          console.warn('[compliant] failed to persist low-score post:', err?.message || err);
+        });
+      };
+      if (tryDeferCompliant?.(apply)) return;
+      apply();
     },
-    [profileId, setProfile],
+    [profileId, setProfile, tryDeferCompliant],
   );
 
   const personaKey = personaOverride ?? liveDominantPersona;
@@ -389,6 +408,7 @@ function AppInner({
 
   useEffect(() => {
     if (!profile || !profileId || !scoresLoaded) return;
+    if (updateSessionActive || postGen.loading) return;
 
     const prev = previousPersonaScoresRef.current;
     const userDisplayName = displayNameFromProfileLite(profile);
@@ -405,15 +425,10 @@ function AppInner({
       if (rounded >= PERSONA_SCORE_RESTRICT_THRESHOLD) return;
 
       const existing = findLowScorePostForPersona(existingPosts, ui);
-      const existingRounded = existing
-        ? Math.round(Number(existing.compliantLowScore?.score) || 0)
-        : null;
-      const isBaseline = prevScores === null;
       const wasAbove =
         prevScores !== null &&
         (Number(prevScores[key]) || 0) >= PERSONA_SCORE_RESTRICT_THRESHOLD;
-      const scoreChanged = existingRounded !== null && existingRounded !== rounded;
-      const needsPost = !existing || scoreChanged || isBaseline || wasAbove;
+      const needsPost = !existing || wasAbove;
 
       if (!needsPost) {
         markLowScoreFired(profileId, ui);
@@ -453,7 +468,15 @@ function AppInner({
       security: adjustedScores.security,
       social: adjustedScores.social,
     };
-  }, [adjustedScores, profile, profileId, scoresLoaded, prependCompliantLowScorePost]);
+  }, [
+    adjustedScores,
+    profile,
+    profileId,
+    scoresLoaded,
+    postGen.loading,
+    updateSessionActive,
+    prependCompliantLowScorePost,
+  ]);
 
   const cyclePersona = () => {
     const order = ['productivity', 'popularity', 'security'];
@@ -882,6 +905,10 @@ export default function App() {
   const [harvestError, setHarvestError] = useState(null);
   const [personaDeltas, setPersonaDeltas] = useState(null);
   const streamPostsBaselineRef = useRef([]);
+  const generationSessionActiveRef = useRef(false);
+  const [updateSessionActive, setUpdateSessionActive] = useState(false);
+  const deferCompliantRef = useRef(false);
+  const pendingCompliantRef = useRef([]);
   const spectateRevealRef = useRef(null);
   if (!spectateRevealRef.current) {
     spectateRevealRef.current = createFeedSpectatorRevealController({ setAllProfiles });
@@ -894,6 +921,18 @@ export default function App() {
   const [landingOwnedProfile, setLandingOwnedProfile] = useState(null);
   const [linkedProfileSlug, setLinkedProfileSlug] = useState(() => readLinkedProfileSlug());
   const landingEnterProfileTimerRef = useRef(null);
+
+  const tryDeferCompliant = useCallback((apply) => {
+    if (!deferCompliantRef.current) return false;
+    pendingCompliantRef.current.push(apply);
+    return true;
+  }, []);
+
+  const flushDeferredCompliant = useCallback(() => {
+    deferCompliantRef.current = false;
+    const pending = pendingCompliantRef.current.splice(0);
+    for (const apply of pending) apply();
+  }, []);
 
   const cancelPersonaDeltasClear = useCallback(() => {
     if (personaDeltasClearRef.current) {
@@ -1066,13 +1105,19 @@ export default function App() {
                 persistProfileSlug(meSlug);
               }
               setLandingOwnedProfile(meProfile);
-              setProfile((prev) => mergeProfileFromApi(prev, meProfile));
+              setProfile((prev) =>
+                mergeOwnedProfileFromApi(prev, meProfile, {
+                  preserveClientPosts: generationSessionActiveRef.current,
+                }),
+              );
               const directory = [...normalized];
               const idx = directory.findIndex(
                 (p) => p?.slug === meSlug || p?.id === meSlug,
               );
               if (idx >= 0) {
-                directory[idx] = mergeProfileFromApi(directory[idx], meProfile);
+                directory[idx] = mergeOwnedProfileFromApi(directory[idx], meProfile, {
+                  preserveClientPosts: generationSessionActiveRef.current,
+                });
               } else {
                 directory.unshift(meProfile);
               }
@@ -1091,7 +1136,11 @@ export default function App() {
         }
         setLandingOwnedProfile(owned);
         if (owned) {
-          setProfile((prev) => mergeProfileFromApi(prev, owned));
+          setProfile((prev) =>
+            mergeOwnedProfileFromApi(prev, owned, {
+              preserveClientPosts: generationSessionActiveRef.current,
+            }),
+          );
         } else if (linkedProfileSlug && !isHostedApiOrigin()) {
           setProfile(null);
         }
@@ -1110,7 +1159,7 @@ export default function App() {
     };
   }, [syncAccountDeletionState, mainView, linkedProfileSlug]);
 
-  const reloadProfileFromApi = useCallback(async ({ skipPostsMerge = false } = {}) => {
+  const reloadProfileFromApi = useCallback(async ({ skipPostsMerge = false, forcePostsMerge = false } = {}) => {
     const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to reload profile');
     const data = await res.json();
@@ -1127,12 +1176,23 @@ export default function App() {
       : hosted
         ? null
         : data[0];
+    const apiPersonaPosts = Array.isArray(incoming?.personaPosts) ? incoming.personaPosts : [];
     let merged = incoming;
     setProfile((prev) => {
       if (skipPostsMerge && prev && incoming) {
-        merged = { ...incoming, personaPosts: prev.personaPosts ?? [] };
+        merged = attachApiPersonaPosts(
+          { ...incoming, personaPosts: prev.personaPosts ?? [] },
+          apiPersonaPosts,
+        );
       } else {
-        merged = incoming ? mergeProfileFromApi(prev, incoming) : prev;
+        const preserveClientPosts =
+          !forcePostsMerge && generationSessionActiveRef.current;
+        merged = incoming
+          ? mergeOwnedProfileFromApi(prev, incoming, { preserveClientPosts })
+          : prev;
+        if (merged && incoming) {
+          merged = attachApiPersonaPosts(merged, apiPersonaPosts);
+        }
       }
       return merged;
     });
@@ -1311,7 +1371,7 @@ export default function App() {
       }
 
       await revealQueue.waitUntilIdle();
-      await reloadProfileFromApi();
+      await reloadProfileFromApi({ forcePostsMerge: true });
       schedulePersonaDeltasClearAfterGenerate();
     } catch (e) {
       await revealQueue.waitUntilIdle().catch(() => {});
@@ -1366,6 +1426,9 @@ export default function App() {
     }
 
     cancelPersonaDeltasClear();
+    generationSessionActiveRef.current = true;
+    setUpdateSessionActive(true);
+    deferCompliantRef.current = true;
     const scoresBefore = getPersonaScoresNormalized(profile);
     setHarvestError(null);
     setHarvestProgress(null);
@@ -1404,6 +1467,9 @@ export default function App() {
       } catch {
         /* ignore */
       }
+      generationSessionActiveRef.current = false;
+      setUpdateSessionActive(false);
+      flushDeferredCompliant();
       return;
     }
 
@@ -1467,6 +1533,10 @@ export default function App() {
     } catch (e) {
       setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
       schedulePersonaDeltasClearAfterGenerate();
+    } finally {
+      generationSessionActiveRef.current = false;
+      setUpdateSessionActive(false);
+      flushDeferredCompliant();
     }
   };
 
@@ -1503,6 +1573,8 @@ export default function App() {
         profileScoreReplayNonce={profileScoreReplayNonce}
         handleGeneratePersonaPosts={handleGeneratePersonaPosts}
         linkedProfileSlug={linkedProfileSlug}
+        tryDeferCompliant={tryDeferCompliant}
+        updateSessionActive={updateSessionActive}
       />
     </LiveScoringProvider>
   );

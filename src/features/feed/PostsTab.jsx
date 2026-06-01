@@ -172,6 +172,7 @@ function buildEnrichedPosts(profile, { personaBadgePersona, allProfilesForLeader
         };
       })() : null,
       _feedEnter: !!p._feedEnter,
+      _feedEnterDone: !!p._feedEnterDone,
       _feedKey: p._feedKey ?? null,
       _feedRevealSeq: typeof p._feedRevealSeq === 'number' ? p._feedRevealSeq : 0,
     };

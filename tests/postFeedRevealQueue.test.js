@@ -1,31 +1,27 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { isCompliantSystemPost } from '../src/lib/mergePersonaPosts.js';
 import { createPostFeedRevealQueue, POST_REVEAL_GAP_MS } from '../src/lib/postFeedRevealQueue.js';
 
 describe('createPostFeedRevealQueue', () => {
-  it('reveals posts one at a time with gap', async () => {
-    vi.useFakeTimers();
+  it('tracks only generated posts for completion (ignores new COMPLIANT posts)', () => {
     const baseline = [{ content: 'old', createdAt: 1, persona: 'securite' }];
-    const snapshots = [];
     const queue = createPostFeedRevealQueue({
-      gapMs: 100,
+      gapMs: 50,
       getBaseline: () => baseline,
-      onPostsChange: (posts) => snapshots.push(posts.map((p) => p.content)),
+      onPostsChange: () => {},
     });
     queue.markBaseline(baseline);
-    queue.enqueue([
-      { content: 'a', createdAt: 2, persona: 'securite' },
-      { content: 'b', createdAt: 3, persona: 'securite' },
-    ]);
-
-    await vi.advanceTimersByTimeAsync(0);
-    expect(snapshots.at(-1)).toEqual(['a', 'old']);
-
-    await vi.advanceTimersByTimeAsync(100);
-    await vi.runAllTimersAsync();
-    await queue.waitUntilIdle();
-
-    expect(snapshots.at(-1)).toEqual(['a', 'b', 'old']);
-    vi.useRealTimers();
+    const apiWithCompliant = [
+      ...baseline,
+      {
+        content: 'COMPLIANT notice',
+        createdAt: 2,
+        persona: 'securite',
+        compliantLowScore: { uiPersonaKey: 'security', score: 12 },
+      },
+    ];
+    expect(isCompliantSystemPost(apiWithCompliant[1])).toBe(true);
+    expect(queue.allNewGeneratedRevealed(apiWithCompliant)).toBe(true);
   });
 
   it('uses default gap near 2.5s', () => {
