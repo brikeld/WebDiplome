@@ -535,10 +535,17 @@ button.profile-last-analysis-pill:disabled {
   container-name: profile-rail;
   --profile-rail-section-gap: clamp(10px, 2.4cqw, 16px);
   --profile-rail-card-gap: clamp(8px, 2cqw, 14px);
-  --profile-rail-card-pad: clamp(14px, 3.6cqw, 18px);
+  --profile-rail-card-pad-top: clamp(18px, 4.8cqw, 28px);
+  --profile-rail-card-pad-left: clamp(20px, 5.2cqw, 30px);
+  --profile-rail-card-pad-right: clamp(14px, 3.6cqw, 18px);
+  --profile-rail-card-pad-bottom: clamp(14px, 3.6cqw, 18px);
+  --profile-rail-card-pad: var(--profile-rail-card-pad-top) var(--profile-rail-card-pad-right)
+    var(--profile-rail-card-pad-bottom) var(--profile-rail-card-pad-left);
   --profile-rail-icons-to-bio-gap: clamp(16px, 4.2cqw, 28px);
-  --profile-rail-inner-pad-y: var(--profile-rail-card-pad);
-  --profile-rail-inner-pad-x: var(--profile-rail-card-pad);
+  --profile-rail-inner-pad-y: var(--profile-rail-card-pad-top);
+  --profile-rail-inner-pad-x: var(--profile-rail-card-pad-left);
+  --profile-rail-inner-pad-right: var(--profile-rail-card-pad-right);
+  --profile-rail-inner-pad-bottom: var(--profile-rail-card-pad-bottom);
   --profile-rail-name-size: clamp(32px, 9.8cqw, 58px);
   --profile-rail-bio-label-size: clamp(14px, 3.8cqw, 18px);
   --profile-rail-bio-size: clamp(14px, 3.8cqw, 18px);
@@ -548,8 +555,9 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-tab-h: clamp(32px, 6cqw, 38px);
   --profile-rail-tab-gap: clamp(4px, 1cqw, 6px);
   --profile-rail-tab-font: clamp(13px, 3.5cqw, 16px);
-  --profile-rail-scores-copy-size: clamp(13px, 3.5cqw, 16px);
-  --profile-rail-scores-row-label-size: clamp(14px, 3.8cqw, 18px);
+  --profile-rail-scores-copy-size: clamp(14px, min(3.8cqw, 2.55cqh), 20px);
+  --profile-rail-scores-row-label-size: clamp(15px, min(4.2cqw, 2.75cqh), 22px);
+  --profile-rail-scores-row-gap: clamp(10px, min(1.8cqw, 1.35cqh), 14px);
   --profile-rail-ring-footprint: clamp(3.15rem, 10.5cqw, 3.85rem);
   --profile-rail-ring-size: clamp(5.75rem, 22cqw, 7.5rem);
   --profile-rail-ring-gap: clamp(8px, 2.2cqw, 14px);
@@ -570,12 +578,27 @@ button.profile-last-analysis-pill:disabled {
   overflow: hidden;
 }
 
+/* Wide / tall rail — scale persona copy with capsule height, not only width */
+@media (min-width: 1661px) {
+  .profile-rail-capsule.dashboard-capsule {
+    --profile-rail-card-pad-top: clamp(20px, 5.2cqw, 32px);
+    --profile-rail-card-pad-left: clamp(24px, 5.8cqw, 36px);
+    --profile-rail-scores-copy-size: clamp(15px, 2.7cqh, 21px);
+    --profile-rail-scores-row-label-size: clamp(16px, 2.9cqh, 23px);
+    --profile-rail-scores-row-gap: clamp(11px, 1.25cqh, 15px);
+    --profile-rail-bio-size: clamp(15px, min(4cqw, 2.2cqh), 20px);
+  }
+}
+
 /* Laptop: narrower rail width — retune cqw/cqh so type/rings match post-column scale */
 @media (max-width: 1660px) {
   .profile-rail-capsule.dashboard-capsule {
     --profile-rail-section-gap: clamp(9px, 2.2cqw, 14px);
     --profile-rail-card-gap: clamp(7px, 1.8cqw, 12px);
-    --profile-rail-card-pad: clamp(12px, 3.2cqw, 16px);
+    --profile-rail-card-pad-top: clamp(16px, 4.2cqw, 22px);
+    --profile-rail-card-pad-left: clamp(18px, 4.6cqw, 24px);
+    --profile-rail-card-pad-right: clamp(12px, 3.2cqw, 16px);
+    --profile-rail-card-pad-bottom: clamp(12px, 3.2cqw, 16px);
     --profile-rail-icons-to-bio-gap: clamp(14px, 3.8cqw, 24px);
     --profile-rail-name-size: clamp(28px, 8.8cqw, 50px);
     --profile-rail-bio-label-size: clamp(13px, 3.6cqw, 17px);
@@ -586,8 +609,9 @@ button.profile-last-analysis-pill:disabled {
     --profile-rail-tab-h: clamp(28px, 5.4cqw, 34px);
     --profile-rail-tab-gap: clamp(4px, 0.9cqw, 6px);
     --profile-rail-tab-font: clamp(12px, 3.2cqw, 15px);
-    --profile-rail-scores-copy-size: clamp(12px, 3.2cqw, 15px);
-    --profile-rail-scores-row-label-size: clamp(13px, 3.6cqw, 17px);
+    --profile-rail-scores-copy-size: clamp(12px, min(3.2cqw, 2.2cqh), 15px);
+    --profile-rail-scores-row-label-size: clamp(13px, min(3.6cqw, 2.35cqh), 17px);
+    --profile-rail-scores-row-gap: clamp(9px, min(1.6cqw, 1.15cqh), 12px);
     --profile-rail-ring-footprint: clamp(2.85rem, 9.8cqw, 3.5rem);
     --profile-rail-ring-size: clamp(5.1rem, 19.5cqw, 6.65rem);
     --profile-rail-ring-gap: clamp(7px, 2cqw, 12px);
@@ -596,7 +620,10 @@ button.profile-last-analysis-pill:disabled {
 
 @media (max-width: 1350px) {
   .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-card-pad: clamp(11px, 3cqw, 14px);
+    --profile-rail-card-pad-top: clamp(14px, 3.6cqw, 18px);
+    --profile-rail-card-pad-left: clamp(16px, 4cqw, 20px);
+    --profile-rail-card-pad-right: clamp(11px, 3cqw, 14px);
+    --profile-rail-card-pad-bottom: clamp(11px, 3cqw, 14px);
     --profile-rail-icons-to-bio-gap: clamp(12px, 3.4cqw, 20px);
     --profile-rail-name-size: clamp(26px, 8.2cqw, 44px);
     --profile-rail-bio-label-size: clamp(12px, 3.4cqw, 16px);
@@ -606,8 +633,9 @@ button.profile-last-analysis-pill:disabled {
     --profile-rail-tab-h: clamp(26px, 5cqw, 32px);
     --profile-rail-tab-gap: clamp(3px, 0.8cqw, 5px);
     --profile-rail-tab-font: clamp(11px, 3cqw, 14px);
-    --profile-rail-scores-copy-size: clamp(11px, 3.1cqw, 14px);
-    --profile-rail-scores-row-label-size: clamp(12px, 3.4cqw, 16px);
+    --profile-rail-scores-copy-size: clamp(11px, min(3.1cqw, 2cqh), 14px);
+    --profile-rail-scores-row-label-size: clamp(12px, min(3.4cqw, 2.1cqh), 16px);
+    --profile-rail-scores-row-gap: clamp(8px, min(1.5cqw, 1cqh), 11px);
   }
 }
 
@@ -648,7 +676,8 @@ button.profile-last-analysis-pill:disabled {
   box-sizing: border-box;
   width: 100%;
   height: auto;
-  padding: var(--profile-rail-inner-pad-y) var(--profile-rail-inner-pad-x);
+  padding: var(--profile-rail-inner-pad-y) var(--profile-rail-inner-pad-right, var(--profile-rail-card-pad-right))
+    var(--profile-rail-inner-pad-bottom, var(--profile-rail-card-pad-bottom)) var(--profile-rail-inner-pad-x);
 }
 
 .profile-rail-capsule .profile-hero-left {
@@ -849,7 +878,8 @@ button.profile-last-analysis-pill:disabled {
   min-height: 0;
   height: 100%;
   margin: 0;
-  padding: var(--profile-rail-card-pad);
+  padding: var(--profile-rail-card-pad-top) var(--profile-rail-card-pad-right)
+    var(--profile-rail-card-pad-bottom) var(--profile-rail-card-pad-left);
   background: var(--card, #fff);
   border-radius: var(--radius-post-surface);
   color: #000;
@@ -864,8 +894,9 @@ button.profile-last-analysis-pill:disabled {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: clamp(6px, 1.6cqw, 10px);
+  justify-content: flex-start;
+  align-content: flex-start;
+  gap: var(--profile-rail-scores-row-gap, 12px);
 }
 
 .profile-rail-capsule .profile-rail-persona-row {
@@ -874,14 +905,13 @@ button.profile-last-analysis-pill:disabled {
   flex-direction: column;
   align-items: stretch;
   gap: clamp(3px, 0.9cqw, 6px);
-  padding: clamp(6px, 1.6cqw, 9px) 0 0;
+  padding: 0;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
 }
 
 .profile-rail-capsule .profile-rail-persona-row:first-child {
   border-top: none;
-  padding-top: 0;
 }
 
 .profile-rail-capsule .profile-rail-persona-row--dominant {
