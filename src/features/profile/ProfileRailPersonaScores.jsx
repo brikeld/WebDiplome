@@ -4,6 +4,7 @@ import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { usePersonaBlurbs } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import { PERSONA_UI_COLORS } from '@/lib/personaColors.js';
 import { buildProfileOverviewData } from '@/lib/profileOverviewData.js';
+import { resolveDominantPersonaKey } from '@/lib/profileUtils.js';
 import { clampRailBlurb } from '@/features/profile/railBlurb.js';
 
 const PERSONAS = [
@@ -59,7 +60,7 @@ function PersonaRow({ label, value, delta, color, copy, isDominant, isPending })
 }
 
 export default function ProfileRailPersonaScores({ profile }) {
-  const { adjustedScores, dominantPersona } = useLiveScoring();
+  const { adjustedScores } = useLiveScoring();
   const { blurbs, loading, ensureBlurbs } = usePersonaBlurbs() ?? {};
 
   useEffect(() => {
@@ -67,13 +68,14 @@ export default function ProfileRailPersonaScores({ profile }) {
   }, [ensureBlurbs]);
 
   const profileData = useMemo(
-    () => buildProfileOverviewData(profile, { adjustedScores, dominantPersona }),
-    [profile, adjustedScores, dominantPersona],
+    () => buildProfileOverviewData(profile, { adjustedScores }),
+    [profile, adjustedScores],
   );
 
   if (!profileData) return null;
 
-  const domKey = normalizeDominant(profileData.dominantPersona);
+  // Profile main persona (harvest/analyze), not live highest score — drives order + accent bar.
+  const domKey = normalizeDominant(resolveDominantPersonaKey(profile));
   const deltas = profileData.scoreDrift?.deltas ?? null;
   const orderedPersonas = [
     ...PERSONAS.filter(({ key }) => key === domKey),
