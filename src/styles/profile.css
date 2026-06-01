@@ -533,9 +533,12 @@ button.profile-last-analysis-pill:disabled {
 .profile-rail-capsule.dashboard-capsule {
   container-type: inline-size;
   container-name: profile-rail;
+  --profile-rail-section-gap: clamp(12px, 2.8cqw, 20px);
+  --profile-rail-inner-pad-y: clamp(28px, 7cqw, 46px);
+  --profile-rail-inner-pad-x: clamp(18px, 4.6cqw, 32px);
   background: var(--persona-accent, #759aef);
   border: none;
-  gap: clamp(14px, 3.5cqw, 22px);
+  gap: var(--profile-rail-section-gap);
   min-height: 0;
 }
 
@@ -555,12 +558,12 @@ button.profile-last-analysis-pill:disabled {
   --profile-hero-scale: 1;
   --profile-rings-scale: 1;
   --profile-ring-photo-ratio: 0.3;
-  --profile-score-size: clamp(8.25rem, 36cqw, 12.5rem);
-  --profile-score-size-max: clamp(8.25rem, 36cqw, 12.5rem);
-  --profile-rail-text-gap: clamp(10px, 2.6cqw, 16px);
-  flex: 0 0 auto;
+  --profile-score-size: clamp(9rem, 40cqw, 14rem);
+  --profile-score-size-max: clamp(9rem, 40cqw, 14rem);
+  --profile-rail-text-gap: var(--profile-rail-section-gap);
+  flex: 1 1 0;
   width: 100%;
-  min-height: clamp(280px, 56cqw, 440px);
+  min-height: clamp(300px, 60cqw, 500px);
   margin-top: 0;
   background: var(--card, #fff);
   border: none;
@@ -571,16 +574,16 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-hero-main {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto auto auto;
   align-content: start;
   align-items: start;
-  gap: clamp(10px, 2.6cqw, 18px) clamp(8px, 2.2cqw, 16px);
+  gap: var(--profile-rail-section-gap) clamp(10px, 2.6cqw, 18px);
   box-sizing: border-box;
-  padding: clamp(22px, 5.5cqw, 34px) clamp(16px, 4cqw, 26px)
-    clamp(18px, 4.5cqw, 28px);
+  min-height: 100%;
+  padding: var(--profile-rail-inner-pad-y) var(--profile-rail-inner-pad-x);
 }
 
 .profile-rail-capsule .profile-hero-left {
@@ -610,7 +613,7 @@ button.profile-last-analysis-pill:disabled {
   flex-direction: column;
   align-items: flex-start;
   gap: clamp(4px, 1.1cqw, 8px);
-  margin-top: clamp(8px, 2.2cqw, 14px);
+  margin-top: 0;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -637,7 +640,7 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-name-line--first,
 .profile-rail-capsule .profile-name-line--last {
-  font-size: clamp(36px, 11.5cqw, 72px);
+  font-size: clamp(38px, 12cqw, 76px);
 }
 
 .profile-rail-capsule .profile-name-row--last {
@@ -654,7 +657,7 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-name-lg {
   color: #000;
-  font-size: clamp(36px, 11.5cqw, 72px);
+  font-size: clamp(38px, 12cqw, 76px);
   letter-spacing: -0.03em;
   line-height: 0.92;
   overflow-wrap: normal;
@@ -678,7 +681,7 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-hero-badge-slot .persona-badge {
-  --persona-badge-size: clamp(26px, 6.8cqw, 38px);
+  --persona-badge-size: clamp(28px, 7.4cqw, 42px);
   --persona-badge-border: clamp(2px, 0.55cqw, 3px);
   border-color: #000;
   box-shadow: none;
@@ -692,13 +695,13 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-follow-icon {
-  width: clamp(20px, 5.4cqw, 30px);
-  height: clamp(20px, 5.4cqw, 30px);
+  width: clamp(22px, 5.8cqw, 32px);
+  height: clamp(22px, 5.8cqw, 32px);
   color: #000;
 }
 
 .profile-rail-capsule .profile-follow-num {
-  font-size: clamp(18px, 4.8cqw, 28px);
+  font-size: clamp(19px, 5cqw, 30px);
   font-weight: 700;
   color: #000;
 }
@@ -706,7 +709,7 @@ button.profile-last-analysis-pill:disabled {
 .profile-rail-capsule .profile-bio-label {
   display: block;
   font-family: var(--font-avant), var(--font-sans);
-  font-size: clamp(18px, 4.8cqw, 26px);
+  font-size: clamp(19px, 5.1cqw, 28px);
   font-weight: 700;
   font-style: normal;
   line-height: 1.1;
@@ -717,7 +720,7 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-bio {
   font-family: 'AvantGarde ITC BT', var(--font-avant), var(--font-sans);
-  font-size: clamp(15px, 4.2cqw, 22px);
+  font-size: clamp(16px, 4.5cqw, 24px);
   font-style: oblique;
   font-weight: 600;
   line-height: 1.28;
@@ -741,14 +744,14 @@ button.profile-last-analysis-pill:disabled {
   padding: clamp(4px, 1.2cqw, 8px);
 }
 
-/* Rail tabs: scale with capsule width; pinned to bottom */
+/* Rail tabs: same section gap as card ↔ buttons; scales with rail width */
 .profile-rail-capsule .tabs-row--rail {
   flex: 0 0 auto;
-  margin-top: auto;
+  margin-top: 0;
   margin-bottom: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(6px, 1.6cqw, 12px);
+  gap: var(--profile-rail-section-gap);
   padding: 0;
   align-items: stretch;
   background: transparent;
@@ -759,13 +762,13 @@ button.profile-last-analysis-pill:disabled {
   flex: 0 0 auto;
   width: 100%;
   height: auto;
-  min-height: clamp(34px, 10cqw, 52px);
+  min-height: clamp(38px, 11cqw, 56px);
   margin: 0;
-  padding: clamp(6px, 1.7cqw, 12px) clamp(8px, 2.4cqw, 16px);
+  padding: clamp(7px, 1.9cqw, 13px) clamp(10px, 2.6cqw, 18px);
   border: clamp(2px, 0.55cqw, 3px) solid transparent;
-  border-radius: clamp(10px, 2.8cqw, 16px);
+  border-radius: clamp(11px, 3cqw, 17px);
   background: #fff;
-  font-size: clamp(13px, 3.8cqw, 20px);
+  font-size: clamp(14px, 4.2cqw, 22px);
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -809,8 +812,8 @@ button.profile-last-analysis-pill:disabled {
   .profile-rail-capsule .tabs-row--rail .tab:nth-child(3) {
     white-space: normal;
     line-height: 1.05;
-    font-size: clamp(12px, 3.2cqw, 15px);
-    min-height: clamp(34px, 9.5cqw, 44px);
+    font-size: clamp(13px, 3.6cqw, 16px);
+    min-height: clamp(38px, 10.5cqw, 48px);
   }
 }
 
