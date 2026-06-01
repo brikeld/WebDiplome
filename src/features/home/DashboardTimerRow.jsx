@@ -36,6 +36,54 @@ export default function DashboardTimerRow({
   const hideBlockedActive = hideBlocked && highlightedPost && !highlightedPostIsHidden;
   const confirmActive = confirmingHide && highlightedPost && !highlightedPostIsHidden;
   const confirmUnhideActive = confirmingUnhide && highlightedPost && highlightedPostIsHidden;
+
+  const CONFIRM_EXIT_MS = 420;
+  const [confirmClosing, setConfirmClosing] = useState(null);
+  const [timerReveal, setTimerReveal] = useState(false);
+  const confirmCloseTimerRef = useRef(null);
+  const timerRevealTimerRef = useRef(null);
+
+  const hideBlockedVisible = hideBlockedActive || confirmClosing === 'blocked';
+  const confirmHideVisible = confirmActive || confirmClosing === 'hide';
+  const confirmUnhideVisible = confirmUnhideActive || confirmClosing === 'unhide';
+
+  const dismissConfirm = useCallback(
+    (kind, onDone) => {
+      if (confirmClosing) return;
+      setConfirmClosing(kind);
+      if (confirmCloseTimerRef.current) clearTimeout(confirmCloseTimerRef.current);
+      confirmCloseTimerRef.current = setTimeout(() => {
+        confirmCloseTimerRef.current = null;
+        setConfirmClosing(null);
+        onDone?.();
+        setTimerReveal(true);
+        if (timerRevealTimerRef.current) clearTimeout(timerRevealTimerRef.current);
+        timerRevealTimerRef.current = setTimeout(() => {
+          setTimerReveal(false);
+          timerRevealTimerRef.current = null;
+        }, CONFIRM_EXIT_MS);
+      }, CONFIRM_EXIT_MS);
+    },
+    [confirmClosing],
+  );
+
+  useEffect(
+    () => () => {
+      if (confirmCloseTimerRef.current) clearTimeout(confirmCloseTimerRef.current);
+      if (timerRevealTimerRef.current) clearTimeout(timerRevealTimerRef.current);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (hideBlockedActive || confirmActive || confirmUnhideActive) {
+      setConfirmClosing(null);
+      setTimerReveal(false);
+    }
+  }, [hideBlockedActive, confirmActive, confirmUnhideActive]);
+
+  const confirmCardClass = (kind) =>
+    confirmClosing === kind ? ' dashboard-timer-card--confirm-closing' : '';
   const idleTimerActive = dashboardLayout.actionSlot === 'timer';
   const points = Math.abs(Number(highlightedPost?.systemDeltaPct) || 1);
   const restorePoints = points * 0.5;
@@ -110,13 +158,13 @@ export default function DashboardTimerRow({
   const idleTimerStyle = { '--persona-accent': personaColor };
 
   const renderTimerSlot = () => {
-    if (hideBlockedActive) {
+    if (hideBlockedVisible) {
       const blockedLabel = (
         personaLabels[hidePersonaUiKey] ?? highlightedPostPersonaLabel ?? 'Social'
       ).toLowerCase();
       return (
         <div
-          className={`${timerBaseClass} dashboard-timer-card--confirm dashboard-timer-card--confirm-blocked`}
+          className={`${timerBaseClass} dashboard-timer-card--confirm dashboard-timer-card--confirm-blocked${confirmCardClass('blocked')}`}
           role="alertdialog"
           aria-labelledby="hide-blocked-title-inline"
           style={timerStyle}
@@ -144,7 +192,8 @@ export default function DashboardTimerRow({
               <button
                 type="button"
                 className="dashboard-hide-confirm__btn dashboard-hide-confirm__btn--cancel"
-                onClick={onCancelHide}
+                onClick={() => dismissConfirm('blocked', onCancelHide)}
+                disabled={confirmClosing === 'blocked'}
               >
                 Got it
               </button>
@@ -154,10 +203,10 @@ export default function DashboardTimerRow({
       );
     }
 
-    if (confirmUnhideActive) {
+    if (confirmUnhideVisible) {
       return (
         <div
-          className={`${timerBaseClass} dashboard-timer-card--confirm dashboard-timer-card--confirm-unhide`}
+          className={`${timerBaseClass} dashboard-timer-card--confirm dashboard-timer-card--confirm-unhide${confirmCardClass('unhide')}`}
           role="alertdialog"
           aria-labelledby="unhide-confirm-title-inline"
           style={timerStyle}
@@ -185,7 +234,8 @@ export default function DashboardTimerRow({
               <button
                 type="button"
                 className="dashboard-hide-confirm__btn dashboard-hide-confirm__btn--cancel"
-                onClick={onCancelHide}
+                onClick={() => dismissConfirm('unhide', onCancelHide)}
+                disabled={confirmClosing === 'unhide'}
               >
                 {leaderboardSelected ? 'Stay hidden' : 'Keep hidden'}
               </button>
@@ -202,10 +252,10 @@ export default function DashboardTimerRow({
       );
     }
 
-    if (confirmActive) {
+    if (confirmHideVisible) {
       return (
         <div
-          className={`${timerBaseClass} dashboard-timer-card--confirm`}
+          className={`${timerBaseClass} dashboard-timer-card--confirm${confirmCardClass('hide')}`}
           role="alertdialog"
           aria-labelledby="hide-confirm-title-inline"
           style={timerStyle}
@@ -233,7 +283,8 @@ export default function DashboardTimerRow({
               <button
                 type="button"
                 className="dashboard-hide-confirm__btn dashboard-hide-confirm__btn--cancel"
-                onClick={onCancelHide}
+                onClick={() => dismissConfirm('hide', onCancelHide)}
+                disabled={confirmClosing === 'hide'}
               >
                 {leaderboardSelected ? 'Stay visible' : 'Keep post'}
               </button>
@@ -290,7 +341,9 @@ export default function DashboardTimerRow({
     return (
       <button
         type="button"
-        className={`${timerBaseClass}${idleTimerClass}`}
+        className={`${timerBaseClass}${idleTimerClass}${
+          timerReveal ? ' dashboard-timer-card--reveal' : ''
+        }`}
         style={idleTimerStyle}
         disabled={postGen.loading || !profile || !accountFeaturesEnabled}
         title={
@@ -323,13 +376,14 @@ export default function DashboardTimerRow({
     );
   };
 
+  const actionsRowConfirm =
+    hideBlockedVisible || confirmHideVisible || confirmUnhideVisible || timerReveal;
+
   return (
     <div
       className={`dashboard-actions-row${
-        hideBlockedActive || confirmActive || confirmUnhideActive
-          ? ' dashboard-actions-row--confirm'
-          : ''
-      }`}
+        actionsRowConfirm ? ' dashboard-actions-row--confirm' : ''
+      }${confirmClosing ? ' dashboard-actions-row--confirm-leaving' : ''}`}
     >
       {renderTimerSlot()}
     </div>
