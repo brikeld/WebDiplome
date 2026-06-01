@@ -77,6 +77,7 @@ export default function ProfileView({
             mainScoreEntryReplayKey={mainScoreEntryReplayKey}
             onNavigateTab={onTabChange}
             onOpenProfile={onOpenProfile}
+            variant="rail"
           />
           <TabBar
             variant="rail"

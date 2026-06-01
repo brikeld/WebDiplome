@@ -607,7 +607,7 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-name-line--first,
 .profile-rail-capsule .profile-name-line--last {
-  font-size: clamp(28px, 8.5cqw, 52px);
+  font-size: clamp(32px, 9.8cqw, 60px);
 }
 
 .profile-rail-capsule .profile-name-row--last {
@@ -624,7 +624,7 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-name-lg {
   color: #000;
-  font-size: clamp(28px, 8.5cqw, 52px);
+  font-size: clamp(32px, 9.8cqw, 60px);
   letter-spacing: -0.03em;
   line-height: 0.92;
   overflow-wrap: normal;
@@ -678,6 +678,28 @@ button.profile-last-analysis-pill:disabled {
   color: #000;
 }
 
+.profile-rail-capsule .profile-bio-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(4px, 1.1cqw, 8px);
+  margin-top: clamp(8px, 2.2cqw, 14px);
+  width: 100%;
+  min-width: 0;
+}
+
+.profile-rail-capsule .profile-bio-label {
+  display: block;
+  font-family: var(--font-avant), var(--font-sans);
+  font-size: clamp(17px, 4.6cqw, 24px);
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1.1;
+  color: #000;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+}
+
 .profile-rail-capsule .profile-bio {
   font-family: 'AvantGarde ITC BT', var(--font-avant), var(--font-sans);
   font-size: clamp(15px, 4.2cqw, 22px);
@@ -685,7 +707,7 @@ button.profile-last-analysis-pill:disabled {
   font-weight: 600;
   line-height: 1.28;
   color: #000;
-  margin-top: clamp(8px, 2.2cqw, 14px);
+  margin: 0;
   overflow-wrap: normal;
   word-break: normal;
 }
@@ -699,38 +721,34 @@ button.profile-last-analysis-pill:disabled {
   padding: clamp(4px, 1.2cqw, 8px);
 }
 
-/* Tab grid fills all space below the profile card */
+/* Rail tabs: three equal compact buttons (stacked) */
 .profile-rail-capsule .tabs-row--rail {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   min-height: 0;
-  margin-top: auto;
+  margin-top: clamp(10px, 2.5cqw, 16px);
   margin-bottom: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1.12fr) minmax(0, 0.88fr);
-  grid-template-areas:
-    "profile profile profile"
-    "posts leaderboards leaderboards";
-  gap: clamp(10px, 2.8cqw, 24px);
-  padding: clamp(12px, 3cqw, 20px);
-  place-items: stretch;
-  align-content: center;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2cqw, 12px);
+  padding: 0 clamp(4px, 1cqw, 8px) clamp(4px, 1cqw, 8px);
+  align-items: stretch;
   background: transparent;
   border: none;
 }
 
 .profile-rail-capsule .tabs-row--rail .tab {
+  flex: 0 0 auto;
   width: 100%;
-  height: 100%;
-  min-height: 0;
+  height: auto;
+  min-height: clamp(42px, 11cqw, 54px);
   margin: 0;
-  padding: clamp(8px, 2.2cqw, 14px) clamp(6px, 1.6cqw, 10px);
-  border: clamp(2px, 0.55cqw, 4px) solid transparent;
-  border-radius: clamp(14px, 3.5cqw, 20px);
+  padding: clamp(8px, 2.1cqw, 12px) clamp(10px, 2.6cqw, 14px);
+  border: clamp(2px, 0.55cqw, 3px) solid transparent;
+  border-radius: clamp(12px, 3cqw, 16px);
   background: #fff;
-  font-size: clamp(18px, 5cqw, 38px);
+  font-size: clamp(15px, 3.9cqw, 19px);
   font-weight: 700;
-  line-height: 1.05;
+  line-height: 1.1;
   letter-spacing: -0.02em;
   display: flex;
   align-items: center;
@@ -738,6 +756,7 @@ button.profile-last-analysis-pill:disabled {
   text-align: center;
   color: #000;
   cursor: pointer;
+  white-space: nowrap;
   transition:
     border-color 0.42s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
@@ -749,22 +768,6 @@ button.profile-last-analysis-pill:disabled {
 .profile-rail-capsule .tabs-row--rail .tab--rail:active:not(.active) {
   transform: scale(0.97);
   transition-duration: 0.12s;
-}
-
-.profile-rail-capsule .tabs-row--rail .tab:nth-child(1) {
-  grid-area: posts;
-}
-
-.profile-rail-capsule .tabs-row--rail .tab:nth-child(2) {
-  grid-area: profile;
-  font-size: clamp(24px, 6.5cqw, 52px);
-}
-
-.profile-rail-capsule .tabs-row--rail .tab:nth-child(3) {
-  grid-area: leaderboards;
-  font-size: clamp(14px, 3.8cqw, 28px);
-  white-space: normal;
-  hyphens: auto;
 }
 
 .profile-rail-capsule .tabs-row--rail .tab:hover:not(.active) {

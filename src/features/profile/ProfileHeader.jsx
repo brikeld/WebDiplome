@@ -19,11 +19,26 @@ export default function ProfileHeader({
   mainScoreEntryReplayKey = 0,
   onNavigateTab,
   onOpenProfile,
+  variant = 'default',
 }) {
   const name = displayNameFromProfile(profile ?? {});
   const firstName = String(profile?.firstname ?? '').trim();
   const lastName = String(profile?.lastname ?? '').trim();
-  const useSplitName = Boolean(firstName && lastName);
+  const isRail = variant === 'rail';
+  const nameParts = (() => {
+    if (firstName && lastName) {
+      return { line1: firstName, line2: lastName };
+    }
+    const tokens = name.trim().split(/\s+/).filter(Boolean);
+    if (tokens.length >= 2) {
+      return { line1: tokens[0], line2: tokens.slice(1).join(' ') };
+    }
+    if (tokens.length === 1) {
+      return { line1: tokens[0], line2: '\u00a0' };
+    }
+    return { line1: name || '—', line2: '\u00a0' };
+  })();
+  const useSplitName = isRail || Boolean(firstName && lastName);
   const initials = initialsFromProfile(profile ?? {});
   const avatarSrc = avatarSrcFromProfile(profile);
   const handle = machineHandleFromProfile(profile ?? {});
@@ -62,9 +77,13 @@ export default function ProfileHeader({
               <div className="profile-name-handle-stack">
                 {useSplitName ? (
                   <div className="profile-name-stack profile-name-stack--split">
-                    <span className="profile-name-line profile-name-line--first">{firstName}</span>
+                    <span className="profile-name-line profile-name-line--first">
+                      {isRail ? nameParts.line1 : firstName}
+                    </span>
                     <div className="profile-name-row profile-name-row--last">
-                      <span className="profile-name-line profile-name-line--last">{lastName}</span>
+                      <span className="profile-name-line profile-name-line--last">
+                        {isRail ? nameParts.line2 : lastName}
+                      </span>
                       <span className="profile-hero-badge-slot">
                         <PersonaBadge
                           persona={personaBadgePersona}
@@ -116,7 +135,12 @@ export default function ProfileHeader({
                   <span className="profile-follow-num">{rankingCount}</span>
                 </button>
               </div>
-              <p className="profile-bio">{bio ? `"${bio}"` : '—'}</p>
+              <div className="profile-bio-block">
+                {isRail ? (
+                  <span className="profile-bio-label">bio</span>
+                ) : null}
+                <p className="profile-bio">{bio ? `"${bio}"` : '—'}</p>
+              </div>
             </div>
 
             <div
