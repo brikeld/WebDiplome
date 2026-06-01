@@ -543,7 +543,6 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-stat-icon: clamp(20px, 5.4cqw, 30px);
   --profile-rail-stat-num: clamp(18px, 4.8cqw, 28px);
   --profile-rail-tab-min-h: clamp(40px, 11cqw, 52px);
-  --profile-rail-tab-max-h: clamp(48px, 12.5cqw, 60px);
   --profile-rail-tab-font: clamp(14px, 4cqw, 20px);
   --profile-rail-ring-size: clamp(5.75rem, 24cqw, 8.5rem);
   --profile-rail-ring-gap: clamp(12px, 3.2cqw, 22px);
@@ -555,6 +554,12 @@ button.profile-last-analysis-pill:disabled {
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
+}
+
+.view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule {
+  gap: var(--profile-rail-section-gap);
+  padding: clamp(20px, 5.5cqw, 28px) clamp(18px, 4.6cqw, 30px)
+    var(--profile-rail-section-gap);
 }
 
 .profile-rail-capsule .profile-header-stack {
@@ -758,26 +763,26 @@ button.profile-last-analysis-pill:disabled {
   padding: clamp(4px, 1.2cqw, 8px);
 }
 
-/* Tabs absorb extra rail height (fullscreen) — same gap token as card ↔ buttons */
+/* Tabs fill all space below the profile card (no void under Leaderboards) */
 .profile-rail-capsule .tabs-row--rail {
   flex: 1 1 0;
   min-height: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(var(--profile-rail-tab-min-h), 1fr));
   gap: var(--profile-rail-section-gap);
   padding: 0;
   align-items: stretch;
+  align-content: stretch;
   background: transparent;
   border: none;
 }
 
 .profile-rail-capsule .tabs-row--rail .tab {
-  flex: 1 1 0;
   width: 100%;
   min-height: var(--profile-rail-tab-min-h);
-  max-height: var(--profile-rail-tab-max-h);
-  height: auto;
+  height: 100%;
+  max-height: none;
   margin: 0;
   padding: clamp(8px, 2cqw, 12px) clamp(10px, 2.6cqw, 16px);
   border: clamp(2px, 0.55cqw, 3px) solid transparent;
