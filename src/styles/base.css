@@ -619,7 +619,7 @@ body {
   --shell-rail-width: 72px;
   --shell-rail-clearance: 34px;
   --shell-inline-pad: 16px;
-  --shell-capsules-nudge-left: 24px;
+  --shell-capsules-nudge-left: 32px;
   --left-capsule-extra-width: 0px;
 }
 
@@ -767,7 +767,7 @@ body {
   .page-outer.view-profile {
     --left-capsule-extra-width: 0px;
     --dashboard-extra-width: 0px;
-    --shell-capsules-nudge-left: 30px;
+    --shell-capsules-nudge-left: 38px;
   }
 
   .view-home .page,
