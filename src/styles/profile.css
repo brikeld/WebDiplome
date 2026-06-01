@@ -548,8 +548,8 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-tab-font: clamp(15px, 4.2cqw, 20px);
   --profile-rail-ring-size: clamp(6.5rem, calc(25.5cqw + 1.65cqh), 10.5rem);
   --profile-rail-ring-gap: clamp(12px, calc(3.2cqw + 0.25cqh), 26px);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   background: var(--persona-accent, #759aef);
   border: none;
   gap: var(--profile-rail-section-gap);
@@ -603,9 +603,9 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-header-stack {
+  grid-row: 1;
   margin-bottom: 0;
   padding-bottom: 0;
-  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -803,15 +803,15 @@ button.profile-last-analysis-pill:disabled {
   padding: clamp(4px, 1.2cqw, 8px);
 }
 
-/* Persona scores: white panel, grows to show full generated copy */
+/* Persona scores — compact text rows (no dashboard ring tiles) */
 .profile-rail-capsule .profile-rail-persona-scores {
-  flex: 1 1 auto;
-  min-height: clamp(11.5rem, 32cqh, 22rem);
+  grid-row: 2;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--profile-rail-card-gap);
   margin: 0;
-  padding: clamp(14px, 3.8cqw, 22px) clamp(14px, 3.6cqw, 22px);
+  padding: clamp(14px, 3.6cqw, 22px);
   background: var(--card, #fff);
   border-radius: var(--radius-post-surface);
   color: #000;
@@ -831,103 +831,101 @@ button.profile-last-analysis-pill:disabled {
   color: #000;
 }
 
-.profile-rail-capsule .profile-rail-persona-scores__body {
-  flex: 1 1 auto;
+.profile-rail-capsule .profile-rail-persona-scores__list {
+  flex: 1 1 0;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 0;
 }
 
-.profile-rail-capsule .profile-rail-persona-scores__body::-webkit-scrollbar {
-  display: none;
+.profile-rail-capsule .profile-rail-persona-row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(4px, 1.1cqw, 8px);
+  min-height: 0;
+  padding: clamp(8px, 2.2cqw, 12px) 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack {
-  width: 100%;
-  margin: 0;
-  gap: var(--profile-rail-card-gap);
-  justify-content: flex-start;
+.profile-rail-capsule .profile-rail-persona-row:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-row {
-  align-items: flex-start;
-  gap: clamp(8px, 2.2cqw, 12px);
+.profile-rail-capsule .profile-rail-persona-row--dominant {
+  padding-left: clamp(6px, 1.4cqw, 10px);
+  border-left: 3px solid var(--persona-accent, #759aef);
 }
 
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring.dashboard-ring-card--stack {
-  width: clamp(2.85rem, 12cqw, 3.85rem);
-  min-width: clamp(2.85rem, 12cqw, 3.85rem);
-  flex-shrink: 0;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring.dashboard-ring-card--stack::before {
-  border-radius: clamp(9px, 2.4cqw, 14px);
-  opacity: 1;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring .dashboard-ring-svg {
-  width: 78%;
-  max-width: none;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring .dashboard-ring-svg circle:first-of-type {
-  stroke: rgba(0, 0, 0, 0.14);
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-ring .dashboard-ring-svg circle:nth-of-type(2) {
-  stroke: #000;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .dashboard-ring-score,
-.profile-rail-capsule .profile-rail-persona-scores .dashboard-ring-score > span:first-child {
-  color: #000;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .dashboard-ring-score-pct {
-  color: #000;
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .dashboard-ring-delta {
-  font-size: var(--profile-rail-tab-font);
-  color: rgba(0, 0, 0, 0.62);
-}
-
-.profile-rail-capsule .profile-rail-persona-scores .po-persona-stack-text {
-  gap: clamp(2px, 0.6cqw, 6px);
-  padding-top: clamp(2px, 0.5cqw, 4px);
+.profile-rail-capsule .profile-rail-persona-row__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: clamp(8px, 2cqw, 12px);
   min-width: 0;
 }
 
-.profile-rail-capsule .profile-rail-persona-scores .po-score-row-label {
+.profile-rail-capsule .profile-rail-persona-row__label {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(5px, 1.3cqw, 8px);
+  min-width: 0;
   font-size: var(--profile-rail-bio-label-size);
   font-weight: 700;
   line-height: 1.1;
   color: #000;
 }
 
-.profile-rail-capsule .profile-rail-persona-scores .po-secondary {
+.profile-rail-capsule .profile-rail-persona-row__dot {
+  flex-shrink: 0;
+  width: clamp(6px, 1.4cqw, 8px);
+  height: clamp(6px, 1.4cqw, 8px);
+  border-radius: 50%;
+}
+
+.profile-rail-capsule .profile-rail-persona-row__score {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: clamp(4px, 1cqw, 6px);
+  font-size: var(--profile-rail-stat-num);
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+}
+
+.profile-rail-capsule .profile-rail-persona-row__delta {
+  font-size: var(--profile-rail-tab-font);
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.profile-rail-capsule .profile-rail-persona-row__delta--up {
+  color: #000;
+}
+
+.profile-rail-capsule .profile-rail-persona-row__copy {
   margin: 0;
   font-size: var(--profile-rail-bio-size);
   font-weight: 600;
   line-height: 1.28;
-  color: rgba(0, 0, 0, 0.78);
+  color: rgba(0, 0, 0, 0.76);
   overflow-wrap: break-word;
   word-break: normal;
 }
 
-.profile-rail-capsule .profile-rail-persona-scores .po-secondary--pending {
+.profile-rail-capsule .profile-rail-persona-row__copy.is-pending {
   opacity: 0.55;
   font-style: italic;
 }
 
-.profile-rail-capsule .profile-rail-persona-scores .po-scores-dominant {
-  display: none;
-}
-
-/* Tabs are the third block at the bottom */
+/* Tabs pinned to bottom row of rail grid */
 .profile-rail-capsule .tabs-row--rail {
-  flex: 0 0 auto;
+  grid-row: 3;
   margin: 0;
   display: flex;
   flex-direction: column;
