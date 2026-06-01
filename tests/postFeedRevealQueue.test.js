@@ -71,4 +71,45 @@ describe('createPostFeedRevealQueue', () => {
       expect(revealed).toEqual(['securite', 'popularite']);
     });
   });
+
+  describe('single-post drain wedge (regression)', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    // Reproduces the hosted/streaming bug: posts arrive one at a time, so the
+    // first enqueue holds a single post and drains fully synchronously. A stale
+    // `drainPromise` must NOT block later enqueues from draining posts 2 and 3.
+    it('keeps draining when posts arrive one at a time', async () => {
+      vi.useFakeTimers();
+      const revealed = [];
+      const queue = createPostFeedRevealQueue({
+        gapMs: 10,
+        getBaseline: () => [],
+        onPostsChange: () => {},
+        onPostRevealed: (persona) => revealed.push(persona),
+      });
+      queue.markBaseline([]);
+
+      // Poll 1: one post -> synchronous drain.
+      queue.enqueue([{ content: 'a', createdAt: 1, persona: 'securite' }]);
+      expect(revealed).toEqual(['securite']);
+      // The `.finally` microtask must null `drainPromise` so the queue is idle.
+      await Promise.resolve();
+      expect(queue.isIdle()).toBe(true);
+
+      // Poll 2: a second post must start a NEW drain (the pre-fix bug dropped it).
+      queue.enqueue([{ content: 'b', createdAt: 2, persona: 'popularite' }]);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(revealed).toEqual(['securite', 'popularite']);
+
+      // Poll 3: third post likewise reveals.
+      queue.enqueue([{ content: 'c', createdAt: 3, persona: 'productivite' }]);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(revealed).toEqual(['securite', 'popularite', 'productivite']);
+
+      await Promise.resolve();
+      expect(queue.isIdle()).toBe(true);
+    });
+  });
 });

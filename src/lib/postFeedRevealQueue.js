@@ -79,7 +79,7 @@ export function createPostFeedRevealQueue({
     }, POST_FEED_ENTER_ANIM_MS);
   };
 
-  const drain = async () => {
+  const drainLoop = async () => {
     while (pending.length > 0) {
       if (revealedBatch.length > 0) {
         await sleep(gapMs);
@@ -113,7 +113,28 @@ export function createPostFeedRevealQueue({
       flushToUi();
       scheduleEnterDone(feedKey);
     }
-    drainPromise = null;
+  };
+
+  /*
+   * Start the drain loop if it isn't already running.
+   *
+   * CRITICAL: `drainPromise` is nulled via `.finally`, NOT inside `drainLoop`.
+   * When a batch holds a single post the loop runs to completion synchronously
+   * (no leading `sleep`), so a previous design that did `drainPromise = null`
+   * inside the loop got that null immediately overwritten by the caller's
+   * `drainPromise = drainLoop()` assignment — leaving `drainPromise` stuck
+   * non-null forever. That wedged every later enqueue (`!drainPromise` was
+   * never true again), so posts trickling in one-at-a-time only revealed the
+   * first one and `isIdle()`/`waitUntilIdle()` never settled. `.finally` always
+   * runs after the promise resolves, and the trailing re-check picks up any
+   * items appended during the final synchronous window.
+   */
+  const ensureDrain = () => {
+    if (drainPromise) return;
+    drainPromise = drainLoop().finally(() => {
+      drainPromise = null;
+      if (pending.length > 0) ensureDrain();
+    });
   };
 
   return {
@@ -160,16 +181,23 @@ export function createPostFeedRevealQueue({
         pending.push(p);
         added = true;
       }
-      if (added && !drainPromise) {
-        drainPromise = drain();
+      if (added) {
+        ensureDrain();
       }
       return added;
     },
     async waitUntilIdle() {
-      if (drainPromise) await drainPromise;
-      while (pending.length > 0) {
-        if (!drainPromise) drainPromise = drain();
-        await drainPromise;
+      // Loop until both the queue is empty AND no drain is in flight. Each
+      // awaited drain may append more work (or finish synchronously), so we
+      // re-check both conditions every pass rather than awaiting once.
+      while (drainPromise || pending.length > 0) {
+        if (!drainPromise && pending.length > 0) ensureDrain();
+        if (drainPromise) {
+          await drainPromise;
+        } else {
+          // Yield once so a freshly-resolved drain's `.finally` can run.
+          await Promise.resolve();
+        }
       }
       await sleep(POST_FEED_ENTER_ANIM_MS);
     },
