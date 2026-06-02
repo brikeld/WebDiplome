@@ -1,0 +1,297 @@
+/* Ultra-wide / high-resolution displays (6144×3456 and similar).
+   Extends shell columns, typography, and landing tokens beyond the 2100px desktop cap. */
+
+@media (min-width: 2101px) {
+  :root {
+    /* 1 at 2100px → ~2 at 6144px CSS pixels */
+    --uw-scale: clamp(1, calc((100vw - 2100px) / 4044 + 1), 2);
+    --uw-shell-scale: clamp(1, calc((100vw - 2100px) / 3200 + 1), 2.35);
+    --post-bubble-h: clamp(12.5rem, calc(9rem + 0.65vw), 18rem);
+    --capsule-radius: calc(44px * var(--uw-scale));
+    --radius-pill: calc(46px * var(--uw-scale));
+    --radius-post-surface: calc(41px * var(--uw-scale));
+    --capsule-shell-border-width: clamp(3px, calc(3px * var(--uw-scale)), 6px);
+    --shell-rail-inset: clamp(16px, 1.1vw, 42px);
+    --shell-rail-width: clamp(72px, 3.6vw, 128px);
+    --shell-rail-clearance: clamp(24px, 2.2vw, 72px);
+    --shell-inline-pad: clamp(16px, 1.4vw, 48px);
+    --post-avatar-size: clamp(10.5rem, calc(8rem + 0.55vw), 16rem);
+    --post-body-size: clamp(26px, calc(16px + 0.42vw), 48px);
+    --post-name-size: clamp(14px, calc(10px + 0.12vw), 22px);
+    --post-handle-size: clamp(11px, calc(8px + 0.08vw), 16px);
+    --post-meta-pill-size: clamp(16px, calc(12px + 0.14vw), 24px);
+    --post-meta-pill-icon-size: clamp(22px, calc(16px + 0.2vw), 34px);
+    --post-meta-comment-icon-size: clamp(28px, calc(20px + 0.24vw), 42px);
+    --post-meta-comment-pad-y: clamp(9px, calc(6px + 0.08vw), 14px);
+    --post-meta-comment-pad-x: clamp(18px, calc(12px + 0.18vw), 28px);
+  }
+
+  .page {
+    max-width: min(96vw, calc(2100px + (100vw - 2100px) * 0.92));
+  }
+
+  .project-name {
+    font-size: clamp(16px, calc(12px + 0.55vw), 36px);
+    min-height: clamp(32px, calc(24px + 0.45vw), 56px);
+    padding: clamp(7px, 0.35vw, 12px) clamp(12px, 0.55vw, 22px) clamp(3px, 0.2vw, 8px);
+  }
+
+  .icon-rail {
+    min-height: clamp(9.5rem, calc(7rem + 2.5vw), 14rem);
+    padding: clamp(10px, 0.65vw, 18px) clamp(6px, 0.45vw, 12px);
+    gap: clamp(8px, 0.45vw, 14px);
+  }
+
+  .rail-btn {
+    font-size: clamp(34px, calc(22px + 0.55vw), 56px);
+    width: clamp(2.75rem, calc(2rem + 0.9vw), 4.25rem);
+    height: clamp(2.75rem, calc(2rem + 0.9vw), 4.25rem);
+    min-width: clamp(2.75rem, calc(2rem + 0.9vw), 4.25rem);
+    min-height: clamp(2.75rem, calc(2rem + 0.9vw), 4.25rem);
+    border-radius: clamp(11px, calc(8px + 0.12vw), 18px);
+  }
+
+  .rail-btn.is-active {
+    width: clamp(2.75rem, calc(2rem + 0.9vw), 4.25rem);
+    height: clamp(2.75rem, calc(2rem + 0.9vw), 4.25rem);
+  }
+
+  .rail-btn__glyph-icon {
+    width: clamp(1.45rem, calc(1rem + 0.35vw), 2.2rem);
+    height: clamp(1.45rem, calc(1rem + 0.35vw), 2.2rem);
+  }
+
+  .view-home .page,
+  .view-profile .page {
+    --shell-col-gap: clamp(24px, calc(14px + 0.55vw), 56px);
+    --shell-capsules-nudge-left: clamp(30px, calc(18px + 0.65vw), 72px);
+    --shell-left-col-max: min(
+      58vw,
+      max(1180px, calc(1180px + (100vw - 2100px) * 0.38))
+    );
+    --shell-right-col-width: min(
+      34vw,
+      max(720px, calc(720px + (100vw - 2100px) * 0.24))
+    );
+  }
+
+  .view-home .main-col,
+  .view-profile .main-col {
+    --post-body-size: clamp(26px, calc(16px + 0.42vw), 48px);
+    --post-avatar-size: clamp(10.5rem, calc(8rem + 0.55vw), 16rem);
+    --post-name-size: clamp(14px, calc(10px + 0.12vw), 22px);
+    --post-handle-size: clamp(11px, calc(8px + 0.08vw), 16px);
+    --post-meta-pill-size: clamp(16px, calc(12px + 0.14vw), 24px);
+    --post-meta-pill-icon-size: clamp(22px, calc(16px + 0.2vw), 34px);
+    --post-meta-comment-icon-size: clamp(28px, calc(20px + 0.24vw), 42px);
+  }
+
+  .posts-capsule {
+    --posts-capsule-pad-x: clamp(38px, calc(24px + 0.65vw), 72px);
+    --post-card-gutter-x: clamp(6px, calc(4px + 0.08vw), 12px);
+    --post-meta-row-inset-x: clamp(18px, calc(12px + 0.28vw), 32px);
+    padding: clamp(36px, calc(24px + 0.75vw), 64px) var(--posts-capsule-pad-x)
+      clamp(40px, calc(28px + 0.8vw), 72px);
+  }
+
+  .posts-tab {
+    --posts-stack-gap: clamp(64px, calc(40px + 1.1vw), 112px);
+  }
+
+  .post-pill-slot {
+    min-height: clamp(66px, calc(48px + 0.75vw), 96px);
+  }
+
+  .post-pill-slot--top {
+    margin-top: clamp(-20px, calc(-12px - 0.22vw), -28px);
+    margin-bottom: clamp(-12px, calc(-8px - 0.12vw), -18px);
+  }
+
+  .post-pill-slot--bottom {
+    margin-top: clamp(-12px, calc(-8px - 0.12vw), -18px);
+    margin-bottom: clamp(-20px, calc(-12px - 0.22vw), -28px);
+  }
+
+  .post-meta-circle {
+    width: clamp(30px, calc(22px + 0.28vw), 44px);
+    height: clamp(30px, calc(22px + 0.28vw), 44px);
+  }
+
+  .post-attachment-block {
+    max-height: min(70vh, calc(48vh + 12vw));
+  }
+
+  .tabs-row {
+    padding: clamp(6px, 0.35vw, 10px);
+    margin-bottom: clamp(24px, calc(16px + 0.45vw), 40px);
+    border-width: clamp(3px, calc(2px + 0.08vw), 5px);
+  }
+
+  .tabs-row .tab {
+    font-size: clamp(18px, calc(14px + 0.28vw), 28px);
+    padding: clamp(12px, calc(8px + 0.28vw), 18px) clamp(12px, calc(8px + 0.35vw), 20px)
+      clamp(13px, calc(9px + 0.28vw), 19px);
+    border-radius: clamp(10px, calc(8px + 0.12vw), 14px);
+  }
+
+  .view-home .persona-side-panel .dashboard-capsule,
+  .view-profile .persona-side-panel .dashboard-capsule {
+    padding: clamp(28px, calc(18px + 0.65vw), 52px) clamp(30px, calc(20px + 0.7vw), 56px)
+      clamp(32px, calc(22px + 0.75vw), 60px);
+    gap: clamp(24px, calc(16px + 0.45vw), 40px);
+  }
+
+  .dashboard-top-label,
+  .home-top-label {
+    font-size: clamp(12px, calc(10px + 0.22vw), 24px);
+    margin: clamp(8px, 0.35vw, 16px) auto clamp(16px, 0.55vw, 28px);
+  }
+
+  .dashboard-persona-pill {
+    font-size: clamp(20px, calc(14px + 0.45vw), 40px);
+    padding: clamp(8px, 0.35vw, 14px) clamp(18px, 0.65vw, 32px) clamp(10px, 0.4vw, 16px);
+  }
+
+  .dashboard-grid {
+    gap: clamp(12px, calc(8px + 0.18vw), 20px);
+  }
+
+  .dashboard-card {
+    min-height: clamp(110px, calc(80px + 1.2vw), 180px);
+    padding: clamp(18px, calc(12px + 0.35vw), 28px);
+    font-size: clamp(13px, calc(10px + 0.22vw), 24px);
+  }
+
+  .dashboard-card--analysis {
+    font-size: clamp(14px, calc(11px + 0.24vw), 26px);
+  }
+
+  .dashboard-card--generate {
+    font-size: clamp(14px, calc(11px + 0.28vw), 30px);
+  }
+
+  .dashboard-card--analyze {
+    font-size: clamp(15px, calc(12px + 0.32vw), 34px);
+  }
+
+  .dashboard-card--leaderboards {
+    font-size: clamp(13px, calc(10px + 0.2vw), 22px);
+  }
+
+  .dashboard-rings {
+    flex: 0 0 clamp(148px, calc(110px + 2.2vw), 260px);
+    gap: clamp(14px, calc(10px + 0.28vw), 24px);
+    margin-top: clamp(12px, 0.45vw, 20px);
+  }
+
+  .dashboard-ring-svg {
+    width: clamp(86px, calc(64px + 0.95vw), 150px);
+    height: clamp(86px, calc(64px + 0.95vw), 150px);
+  }
+
+  .dashboard-ring-label {
+    font-size: clamp(13px, calc(10px + 0.2vw), 22px);
+    min-height: clamp(26px, calc(20px + 0.22vw), 38px);
+  }
+
+  .dashboard-ring-score {
+    font-size: clamp(17px, calc(13px + 0.28vw), 30px);
+  }
+
+  .dashboard-capsule--figma {
+    --dashboard-btn-gap: clamp(10px, calc(8px + 0.12vw), 18px);
+    --dashboard-pad: clamp(18px, calc(12px + 0.35vw), 32px);
+    --dashboard-actions-min-h: clamp(168px, calc(120px + 2.2vw), 280px);
+    --dashboard-tell-idle-min-h: clamp(176px, calc(130px + 2.8vw), 340px);
+    --dashboard-timer-radius: clamp(28px, calc(20px + 0.35vw), 44px);
+    --dashboard-timer-time-radius: clamp(20px, calc(14px + 0.22vw), 32px);
+  }
+
+  .dashboard-update-label {
+    font-size: clamp(24px, calc(16px + 0.55vw), 48px);
+  }
+
+  .dashboard-update-time {
+    min-width: clamp(148px, calc(96px + 1.4vw), 260px);
+    font-size: clamp(40px, calc(24px + 0.85vw), 86px);
+    border-radius: clamp(22px, calc(16px + 0.22vw), 36px);
+  }
+
+  .dashboard-timer-card--idle-countdown .dashboard-update-label {
+    font-size: clamp(15px, calc(12px + 0.22vw), 28px);
+  }
+
+  .dashboard-timer-card--idle-countdown .dashboard-update-time {
+    min-width: clamp(88px, calc(72px + 0.65vw), 160px);
+    font-size: clamp(22px, calc(16px + 0.38vw), 40px);
+  }
+
+  .po-stack,
+  .po-modal {
+    --po-fs-lg: clamp(30px, calc(20px + 0.55vw), 48px);
+    --po-fs-md: clamp(22px, calc(16px + 0.38vw), 34px);
+    --po-fs-sm: clamp(18px, calc(13px + 0.28vw), 26px);
+  }
+
+  .po-stack {
+    gap: clamp(18px, calc(12px + 0.28vw), 28px);
+  }
+
+  .po-grid {
+    gap: clamp(18px, calc(12px + 0.28vw), 28px);
+  }
+
+  .po-card {
+    border-radius: clamp(32px, calc(22px + 0.35vw), 48px);
+    padding: clamp(24px, calc(16px + 0.35vw), 40px) clamp(26px, calc(18px + 0.38vw), 44px);
+  }
+
+  .profile-leaderboards-grid {
+    gap: clamp(16px, calc(12px + 0.28vw), 28px);
+  }
+
+  .profile-leaderboard-card {
+    min-height: clamp(280px, calc(220px + 2.5vw), 420px);
+    padding: clamp(18px, calc(14px + 0.28vw), 28px);
+    border-radius: clamp(22px, calc(16px + 0.22vw), 34px);
+  }
+
+  .profile-leaderboard-card__title {
+    font-size: clamp(18px, calc(14px + 0.35vw), 34px);
+  }
+
+  .profile-leaderboard-card__rank {
+    min-width: clamp(64px, calc(48px + 0.45vw), 96px);
+    font-size: clamp(22px, calc(16px + 0.28vw), 34px);
+    padding: clamp(8px, 0.35vw, 14px) clamp(11px, 0.45vw, 18px);
+  }
+}
+
+@media (min-width: 3840px) {
+  :root {
+    --uw-scale: clamp(1.55, calc((100vw - 2100px) / 4044 + 1), 2.35);
+  }
+
+  .view-home .page,
+  .view-profile .page {
+    --shell-left-col-max: min(56vw, max(1480px, calc(1480px + (100vw - 3840px) * 0.42)));
+    --shell-right-col-width: min(32vw, max(920px, calc(920px + (100vw - 3840px) * 0.26)));
+  }
+}
+
+@media (min-width: 6144px) {
+  :root {
+    --uw-scale: 2.35;
+  }
+
+  .page {
+    max-width: min(97vw, 5800px);
+  }
+
+  .view-home .page,
+  .view-profile .page {
+    --shell-left-col-max: min(54vw, 3320px);
+    --shell-right-col-width: min(30vw, 1840px);
+    --shell-col-gap: 56px;
+  }
+}

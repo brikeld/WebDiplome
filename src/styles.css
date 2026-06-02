@@ -2,4 +2,5 @@
 @import './styles/base.css';
 @import './styles/home.css';
 @import './styles/profile.css';
+@import './styles/ultra-wide.css';
 @import './features/profile/ProfileOverview/profileOverview.css';
