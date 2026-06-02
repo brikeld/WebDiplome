@@ -600,21 +600,6 @@ button.profile-last-analysis-pill:disabled {
   }
 }
 
-@media (min-width: 2101px) {
-  .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-section-gap: clamp(12px, 2.2cqw, 22px);
-    --profile-rail-name-size: clamp(32px, 9.8cqw, 72px);
-    --profile-rail-bio-size: clamp(14px, min(3.5cqw, 2.1cqh), 24px);
-    --profile-rail-scores-copy-size: clamp(13px, min(3.3cqw, 2.1cqh), 22px);
-    --profile-rail-scores-row-label-size: clamp(16px, min(3.9cqw, 2.35cqh), 28px);
-    --profile-rail-scores-row-gap: clamp(16px, min(2.7cqw, 2.2cqh), 32px);
-    --profile-rail-ring-footprint: clamp(5.15rem, 18cqw, 9rem);
-    --profile-rail-ring-size: clamp(9.45rem, 35.5cqw, 16rem);
-    --profile-rail-tab-h: clamp(32px, 6cqw, 52px);
-    --profile-rail-tab-font: clamp(13px, 3.5cqw, 22px);
-  }
-}
-
 /* Laptop: narrower rail width — retune cqw/cqh so type/rings match post-column scale */
 @media (max-width: 1660px) {
   .profile-rail-capsule.dashboard-capsule {
