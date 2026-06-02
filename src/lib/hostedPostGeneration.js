@@ -104,9 +104,12 @@ export async function runHostedPostGenerationWithReveal({
     let generationComplete = false;
     if (revealedEverythingSoFar) {
       if (jobId) {
-        // With a job handle we additionally require the job to be done before
-        // we accept the "stalled" escape hatch.
-        generationComplete = reachedExpected ? jobDone : jobDone && stalled;
+        // Normal case: the expected posts are all revealed — finish as soon as
+        // the job reports done, or if nothing new has arrived for the grace
+        // window (guards against a worker that never flips status). When fewer
+        // than the floor have arrived, require BOTH job-done and a stall before
+        // giving up, so we don't truncate a slow run.
+        generationComplete = reachedExpected ? jobDone || stalled : jobDone && stalled;
       } else {
         // No job handle (trigger failed but the worker may still run).
         generationComplete = reachedExpected || stalled;
