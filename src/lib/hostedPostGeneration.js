@@ -57,6 +57,7 @@ export async function runHostedPostGenerationWithReveal({
   queue.markBaseline(getBaselinePosts());
 
   let jobDone = false;
+  let jobDoneAt = 0;
   let jobFailed = null;
   let expectedCount = null;
   // Tracks the highest new-post count seen and when it last increased. Used as
@@ -72,6 +73,7 @@ export async function runHostedPostGenerationWithReveal({
       const job = await fetchGenerationJob(jobId);
       if (job.status === 'complete') {
         jobDone = true;
+        jobDoneAt = Date.now();
         // May be 0/null if the worker doesn't echo posts back in the job
         // record — we must NOT treat "unknown" as "all revealed".
         expectedCount = expectedGeneratedKeysFromJobPosts(job.posts).length || null;
@@ -99,17 +101,26 @@ export async function runHostedPostGenerationWithReveal({
     // from "completing" the moment the first post reveals.
     const expectedFloor = Math.max(expectedCount ?? 0, EXPECTED_GENERATED_POST_COUNT);
     const reachedExpected = newGeneratedCount >= expectedFloor;
-    const stalled = Date.now() - lastProgressAt >= postJobDoneGraceMs;
+    // CRITICAL: anchor the stall timer to the LATER of last-progress and
+    // job-done. The hosted DB has read-after-write lag, so at the poll where
+    // the job flips to `complete` the freshly written posts usually have NOT
+    // surfaced in the API yet. If we measured the stall from `start`, a run
+    // that took longer than the grace window would already be "stalled" and we
+    // would bail the instant the job completed — dismissing the generating
+    // screen with 0–1 posts revealed and leaving the rest to appear (un
+    // animated) only after a manual reload. Re-anchoring to `jobDoneAt` gives
+    // the API a fresh grace window to surface the writes after completion.
+    const stallAnchor = Math.max(lastProgressAt, jobDoneAt);
+    const stalled = Date.now() - stallAnchor >= postJobDoneGraceMs;
 
     let generationComplete = false;
     if (revealedEverythingSoFar) {
       if (jobId) {
-        // Normal case: the expected posts are all revealed — finish as soon as
-        // the job reports done, or if nothing new has arrived for the grace
-        // window (guards against a worker that never flips status). When fewer
-        // than the floor have arrived, require BOTH job-done and a stall before
-        // giving up, so we don't truncate a slow run.
-        generationComplete = reachedExpected ? jobDone || stalled : jobDone && stalled;
+        // Finish only once the expected posts are all revealed AND the job is
+        // done — or, as a safety valve, if nothing new has surfaced for the
+        // grace window measured from job-done (covers a worker that emits fewer
+        // posts than the floor, or never surfaces them).
+        generationComplete = reachedExpected ? jobDone : jobDone && stalled;
       } else {
         // No job handle (trigger failed but the worker may still run).
         generationComplete = reachedExpected || stalled;

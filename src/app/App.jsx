@@ -1576,12 +1576,21 @@ export default function App() {
       }
     }
 
-    streamPostsBaselineRef.current = stripFeedRevealMetaFromPosts(
-      freshProfile?.personaPosts ?? [],
-    );
-    setProfile((prev) =>
-      prev ? { ...prev, personaPosts: streamPostsBaselineRef.current } : prev,
-    );
+    // Reveal baseline = everything currently on screen. We UNION the live
+    // client list (`prev.personaPosts`, which carries any COMPLIANT system post
+    // that may only exist client-side) with the fresh server snapshot, instead
+    // of trusting the server snapshot alone. A server reload can omit a
+    // client-only compliant post; using it as the sole baseline made that post
+    // vanish the moment reveals started and "reappear" at the end. Unioning
+    // keeps it pinned in the feed (the feed itself re-sorts by time, so new
+    // posts still land above it).
+    const freshServerPosts = stripFeedRevealMetaFromPosts(freshProfile?.personaPosts ?? []);
+    setProfile((prev) => {
+      const livePosts = stripFeedRevealMetaFromPosts(prev?.personaPosts ?? []);
+      const baseline = mergePostsPrepend(livePosts, freshServerPosts);
+      streamPostsBaselineRef.current = baseline;
+      return prev ? { ...prev, personaPosts: baseline } : prev;
+    });
 
     await new Promise((r) => setTimeout(r, PERSONA_DELTA_DISPLAY_MS));
 
