@@ -1,3 +1,5 @@
+import { filterVisualGenerationAssets } from './generationAssetTypes.js';
+
 /** @param {object[]} existingPosts */
 export function collectUsedAssetFilenames(existingPosts) {
   const used = new Set();
@@ -38,10 +40,11 @@ export function mergeAssetCandidatePool(existing = [], incoming = []) {
  * @param {object[]} existingPosts
  */
 export function pickUnusedAssetCandidate(candidates, existingPosts) {
-  if (!Array.isArray(candidates) || candidates.length === 0) return null;
+  const visualCandidates = filterVisualGenerationAssets(candidates);
+  if (visualCandidates.length === 0) return null;
 
   const used = collectUsedAssetFilenames(existingPosts);
-  const available = candidates.filter((c) => {
+  const available = visualCandidates.filter((c) => {
     const fn = candidateContentFilename(c);
     return fn && !used.has(fn);
   });

@@ -74,7 +74,7 @@ const ASSET_DIRS = [
   {
     path: '/Users/brikeld/Documents/Repo/Diplome_/testCreationAcc/data/assets/docs',
     kind: 'document',
-    allowedExts: new Set(['.pdf', '.txt', '.md', '.py', '.js', '.ts', '.css']),
+    allowedExts: new Set(['.pdf']),
     excludeBasenames: new Set(),
   },
 ];

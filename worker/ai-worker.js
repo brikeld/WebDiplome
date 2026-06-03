@@ -10,6 +10,12 @@ import {
   nextAssetPersona,
   pickUnusedAssetCandidate,
 } from '../server/lib/pickGenerationAsset.js';
+import {
+  extensionFromAssetCandidate,
+  GENERATION_IMAGE_EXTS,
+  isVisualGenerationAsset,
+} from '../server/lib/generationAssetTypes.js';
+import { extractDocText } from '../server/lib/docText.js';
 import { isCompletePublicStorageObjectUrl } from '../src/lib/uploadPublicUrl.js';
 import { ensureLmModelLoaded } from '../server/lib/lmStudioLoad.js';
 
@@ -50,7 +56,7 @@ async function reportJobProgress(jobId, body) {
 }
 
 async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
-  if (!assetCandidate?.url) return null;
+  if (!assetCandidate?.url || !isVisualGenerationAsset(assetCandidate)) return null;
   const assetUrl = assetCandidate.url.startsWith('http')
     ? assetCandidate.url
     : `${API}${assetCandidate.url.startsWith('/') ? '' : '/'}${assetCandidate.url}`;
@@ -59,7 +65,24 @@ async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
   const buf = Buffer.from(await res.arrayBuffer());
   const mime = assetCandidate.mime || res.headers.get('content-type') || 'image/jpeg';
   const filename = assetCandidate.filename || path.basename(assetUrl.split('?')[0]) || 'asset';
-  if (String(mime).startsWith('image/')) {
+  const ext = extensionFromAssetCandidate(assetCandidate) || path.extname(filename).toLowerCase();
+
+  if (ext === '.pdf' || String(mime).toLowerCase() === 'application/pdf') {
+    const text = await extractDocText(buf, '.pdf');
+    if (!text) return null;
+    return {
+      persona: targetPersona || 'productivite',
+      asset: {
+        kind: 'document',
+        text,
+        mime: 'application/pdf',
+        filename,
+        url: assetUrl,
+      },
+    };
+  }
+
+  if (String(mime).startsWith('image/') || GENERATION_IMAGE_EXTS.has(ext)) {
     return {
       persona: targetPersona || 'popularite',
       asset: {
@@ -71,16 +94,8 @@ async function fetchAssetAsAssignment(assetCandidate, targetPersona) {
       },
     };
   }
-  return {
-    persona: targetPersona || 'productivite',
-    asset: {
-      kind: 'document',
-      text: buf.toString('utf8'),
-      mime,
-      filename,
-      url: assetUrl,
-    },
-  };
+
+  return null;
 }
 
 function resolveDataJson(payload) {

@@ -14,6 +14,18 @@ describe('pickGenerationAsset', () => {
     expect(used.has('abc123.pdf')).toBe(true);
   });
 
+  it('ignores non-visual candidates (txt, code, markdown)', () => {
+    const picked = pickUnusedAssetCandidate(
+      [
+        { filename: 'notes.txt', url: '/x/notes.txt' },
+        { filename: 'script.py', url: '/x/script.py' },
+        { filename: 'shot.png', url: '/x/shot.png' },
+      ],
+      [],
+    );
+    expect(picked?.filename).toBe('shot.png');
+  });
+
   it('skips already-used candidates', () => {
     const picked = pickUnusedAssetCandidate(
       [
