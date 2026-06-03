@@ -8,10 +8,24 @@ describe('leaderboardEntryProfileSlug', () => {
     ).toBe('ada-lovelace');
   });
 
-  it('falls back to author slug for the highlighted user row without slug', () => {
+  it('falls back to author slug for the highlighted user row when in directory', () => {
     expect(
-      leaderboardEntryProfileSlug({ source: 'real', isUser: true }, 'brikeld-hoxha'),
+      leaderboardEntryProfileSlug(
+        { source: 'real', isUser: true },
+        'brikeld-hoxha',
+        ['brikeld-hoxha'],
+      ),
     ).toBe('brikeld-hoxha');
+  });
+
+  it('returns null for deleted real rows not in directory', () => {
+    expect(
+      leaderboardEntryProfileSlug(
+        { source: 'real', slug: 'emanuel-masha', isUser: false },
+        'brikeld-hoxha',
+        ['brikeld-hoxha'],
+      ),
+    ).toBeNull();
   });
 
   it('returns null for bot rows', () => {

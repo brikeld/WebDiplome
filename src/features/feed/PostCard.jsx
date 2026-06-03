@@ -121,6 +121,7 @@ function PostCard({
   onHide,
   onTellMeMore,
   onOpenProfile,
+  leaderboardDirectorySlugs = [],
   tellMeMoreActive = false,
   isHidden = false,
   isRevealing = false,
@@ -307,7 +308,8 @@ function PostCard({
             leaderboard={leaderboard}
             accentColor={noteColor}
             authorSlug={authorSlug}
-            onOpenProfile={openAuthorProfile}
+            onOpenProfile={onOpenProfile}
+            leaderboardDirectorySlugs={leaderboardDirectorySlugs}
           />
         ) : null}
 

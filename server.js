@@ -18,7 +18,10 @@ import {
   deleteAllAccountData,
   recordAccountDeletion,
 } from './server/lib/accountDeletion.js';
-import { isProfileSlugDeleted } from './server/lib/deletedProfileSlugs.js';
+import {
+  filterProfilesNotDeleted,
+  isProfileSlugDeleted,
+} from './server/lib/deletedProfileSlugs.js';
 import { getHostedAccountState } from './server/lib/hostedAccountDeletion.js';
 import {
   readPostsForId,
@@ -30,6 +33,7 @@ import {
 import {
   createCompliantJoinPost,
   hasCompliantJoinPost,
+  joinCreatedAtAfterExisting,
 } from './server/lib/compliantSystemPosts.js';
 import { serverConfig } from './server/lib/env.js';
 import { supabaseClients } from './server/lib/supabaseClient.js';
@@ -235,21 +239,20 @@ app.post('/api/profile', async (req, res) => {
       await syncPersonaPostsFromClient(id, personaPosts, { replace }, normalizePost);
     }
 
-    if (!existingProfile) {
-      const currentPosts = await readPostsForId(id);
-      if (!hasCompliantJoinPost(currentPosts)) {
-        const displayName = [body.firstname, body.lastname]
-          .map((s) => String(s ?? '').trim())
-          .filter(Boolean)
-          .join(' ')
-          .trim();
-        const joinPost = createCompliantJoinPost({
-          profile: toStore,
-          userDisplayName: displayName || 'User',
-          dominantPersona: toStore.dominantPersona,
-        });
-        await appendPersonaPosts(id, [joinPost], normalizePost);
-      }
+    const currentPosts = await readPostsForId(id);
+    if (!hasCompliantJoinPost(currentPosts)) {
+      const displayName = [body.firstname, body.lastname]
+        .map((s) => String(s ?? '').trim())
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+      const joinPost = createCompliantJoinPost({
+        profile: toStore,
+        userDisplayName: displayName || 'User',
+        dominantPersona: toStore.dominantPersona,
+        createdAt: joinCreatedAtAfterExisting(currentPosts),
+      });
+      await appendPersonaPosts(id, [joinPost], normalizePost);
     }
 
     await fs.writeFile(filepath, JSON.stringify(toStore, null, 2), 'utf8');
@@ -394,9 +397,14 @@ app.post('/api/profile/:id/posts/prepend', async (req, res) => {
 });
 
 async function loadLocalProfilesForLeaderboards() {
-  const files = (await fs.readdir(PROFILES_DIR)).filter((f) => f.endsWith('.json'));
-  return Promise.all(
-    files.map(async (file) => {
+  const { deletedProfileIds } = await readAccountState(PROFILES_DIR);
+  const files = (await fs.readdir(PROFILES_DIR)).filter(
+    (f) => f.endsWith('.json') && f !== '_account-meta.json',
+  );
+  const profiles = await Promise.all(
+    files
+      .filter((file) => !isProfileSlugDeleted(String(file).replace(/\.json$/i, ''), deletedProfileIds))
+      .map(async (file) => {
       const id = String(file).replace(/\.json$/i, '');
       const filepath = path.join(PROFILES_DIR, file);
       const raw = await fs.readFile(filepath, 'utf8');
@@ -411,6 +419,7 @@ async function loadLocalProfilesForLeaderboards() {
       };
     }),
   );
+  return filterProfilesNotDeleted(profiles, deletedProfileIds);
 }
 
 // GET /api/leaderboards — live standings for every board (local file-backed mode)

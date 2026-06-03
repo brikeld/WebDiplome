@@ -12,13 +12,17 @@ import { repairProfileWallpaperIfNeeded } from './repairProfileWallpaper.js';
 import {
   createCompliantJoinPost,
   hasCompliantJoinPost,
+  joinCreatedAtAfterExisting,
 } from './compliantSystemPosts.js';
 import {
   dedupeProfilesWithMergedPosts,
   mergeSiblingPostsForProfile,
   profileIdentityKey,
 } from './hostedProfileDedupe.js';
-import { filterProfilesNotDeleted, isProfileSlugDeleted } from './deletedProfileSlugs.js';
+import {
+  filterProfilesNotDeleted,
+  isProfileSlugDeleted,
+} from './deletedProfileSlugs.js';
 import { getHostedAccountState } from './hostedAccountDeletion.js';
 
 function throwIfError(result, label) {
@@ -253,25 +257,24 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         }
       }
 
-      if (!existing) {
-        const afterSync = await readPosts(saved.id);
-        if (!hasCompliantJoinPost(afterSync)) {
-          const displayName =
-            String(row.display_name || '').trim() ||
-            [payload?.firstname, payload?.lastname].map((s) => String(s ?? '').trim()).filter(Boolean).join(' ') ||
-            'User';
-          const joinPost = createCompliantJoinPost({
-            profile: payload,
-            userDisplayName: displayName,
-            dominantPersona: row.dominant_persona ?? payload?.dominantPersona,
-          });
-          await appendPosts({
-            profileId: saved.id,
-            userId,
-            posts: [joinPost],
-            source: 'system',
-          });
-        }
+      const afterSync = await readPosts(saved.id);
+      if (!hasCompliantJoinPost(afterSync)) {
+        const displayName =
+          String(row.display_name || '').trim() ||
+          [payload?.firstname, payload?.lastname].map((s) => String(s ?? '').trim()).filter(Boolean).join(' ') ||
+          'User';
+        const joinPost = createCompliantJoinPost({
+          profile: payload,
+          userDisplayName: displayName,
+          dominantPersona: row.dominant_persona ?? payload?.dominantPersona,
+          createdAt: joinCreatedAtAfterExisting(afterSync),
+        });
+        await appendPosts({
+          profileId: saved.id,
+          userId,
+          posts: [joinPost],
+          source: 'system',
+        });
       }
 
       return mapProfileRowForApi(saved, await readPosts(saved.id));
@@ -286,13 +289,20 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     },
 
     async listProfilesForLeaderboards() {
+      const { deletedProfileIds } = getHostedAccountState();
       const rows = throwIfError(
         await supabase.from('profiles').select('*').order('updated_at', { ascending: false }),
         'list profiles for leaderboards',
       );
-      const directory = await listAllProfilesWithPosts();
+      const directory = filterProfilesNotDeleted(
+        await listAllProfilesWithPosts(),
+        deletedProfileIds,
+      );
+      const activeRows = (rows ?? []).filter(
+        (row) => !isProfileSlugDeleted(row?.slug, deletedProfileIds),
+      );
       return Promise.all(
-        (rows ?? []).map(async (row) => {
+        activeRows.map(async (row) => {
           const api = {
             ...mapProfileRowForApi(row, await readPosts(row.id)),
             _harvest: row.raw_profile ?? {},

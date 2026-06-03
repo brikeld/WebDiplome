@@ -28,7 +28,7 @@ function formatLeaderboardTitle(title) {
   return text.toUpperCase();
 }
 
-function Row({ entry, hidden, revealing, authorSlug, onOpenProfile }) {
+function Row({ entry, hidden, revealing, authorSlug, onOpenProfile, directorySlugs }) {
   const cls = [
     'leaderboard-row',
     entry.isUser ? 'leaderboard-row--self' : '',
@@ -38,7 +38,7 @@ function Row({ entry, hidden, revealing, authorSlug, onOpenProfile }) {
   // Assumes 5-entry board: rank 1 → 100%, rank 5 → 20%.
   const widthPct = ((6 - entry.rank) / 5) * 100;
   const name = entry.name;
-  const entrySlug = leaderboardEntryProfileSlug(entry, authorSlug);
+  const entrySlug = leaderboardEntryProfileSlug(entry, authorSlug, directorySlugs);
   const openEntryProfile =
     onOpenProfile && entrySlug ? () => onOpenProfile('profile', entrySlug) : undefined;
   return (
@@ -72,7 +72,13 @@ function Row({ entry, hidden, revealing, authorSlug, onOpenProfile }) {
   );
 }
 
-export default function LeaderboardBlock({ leaderboard, accentColor, authorSlug, onOpenProfile }) {
+export default function LeaderboardBlock({
+  leaderboard,
+  accentColor,
+  authorSlug,
+  onOpenProfile,
+  leaderboardDirectorySlugs = [],
+}) {
   const { isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
   const reactId = useId();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
@@ -92,6 +98,11 @@ export default function LeaderboardBlock({ leaderboard, accentColor, authorSlug,
     selfHidden,
     cloneHidden,
   });
+  const directorySlugs = new Set(
+    (Array.isArray(leaderboardDirectorySlugs) ? leaderboardDirectorySlugs : [])
+      .map((s) => String(s ?? '').trim())
+      .filter(Boolean),
+  );
 
   return (
     <div
@@ -114,6 +125,7 @@ export default function LeaderboardBlock({ leaderboard, accentColor, authorSlug,
             revealing={e.isUser && selfRevealing}
             onOpenProfile={onOpenProfile}
             authorSlug={authorSlug}
+            directorySlugs={directorySlugs}
           />
         ))}
       </ul>

@@ -67,7 +67,12 @@ import {
   filterProfilesNotDeleted,
   isProfileSlugDeleted,
   purgeClientAccountState,
+  slugsReferToSameAccount,
 } from '@/lib/accountDeletionClient.js';
+import {
+  buildCompliantJoinPostForProfile,
+  profileNeedsCompliantJoin,
+} from '@/lib/ensureCompliantJoin.js';
 import {
   canUseHostedAccountFeatures,
   clearHostedAccountStorage,
@@ -303,6 +308,7 @@ function AppInner({
   const [viewedProfile, setViewedProfile] = useState(null);
   const previousLivePersonaRef = useRef(null);
   const previousPersonaScoresRef = useRef(null);
+  const joinEnsureAttemptedRef = useRef(false);
   const updateTimerStartRef = useRef(Date.now());
   const [updateRemainingMs, setUpdateRemainingMs] = useState(DASHBOARD_UPDATE_INTERVAL_MS);
 
@@ -713,9 +719,22 @@ function AppInner({
 
   useEffect(() => {
     if (!accountResetKey) return;
+    joinEnsureAttemptedRef.current = false;
     setViewedProfile(null);
     resetProfileChrome();
   }, [accountResetKey, resetProfileChrome]);
+
+  useEffect(() => {
+    if (!profileId || !profile || joinEnsureAttemptedRef.current) return;
+    if (!profileNeedsCompliantJoin(profile)) {
+      joinEnsureAttemptedRef.current = true;
+      return;
+    }
+    joinEnsureAttemptedRef.current = true;
+    const post = buildCompliantJoinPostForProfile(profile, profile.personaPosts ?? []);
+    if (!post) return;
+    prependCompliantPost(post);
+  }, [profileId, profile, prependCompliantPost]);
 
   const handleOpenProfile = useCallback(
     async (tab = 'profile', authorSlug = null) => {
@@ -741,9 +760,12 @@ function AppInner({
       }
 
       let target = (Array.isArray(allProfiles) ? allProfiles : []).find(
-        (p) => p?.slug === targetSlug || p?.id === targetSlug,
+        (p) =>
+          p?.slug === targetSlug
+          || p?.id === targetSlug
+          || (explicitSlug && slugsReferToSameAccount(p?.slug ?? p?.id, explicitSlug)),
       );
-      if (!target) {
+      if (!target && explicitSlug) {
         try {
           const res = await fetch(
             `${API_ORIGIN}/api/profiles/${encodeURIComponent(targetSlug)}`,
@@ -858,6 +880,7 @@ function AppInner({
                 tellMeMorePostId={tellExpanded ? (highlightedPost?.id ?? null) : null}
                 personaBadgePersona={personaKey}
                 onOpenProfile={handleOpenProfile}
+                deletedProfileIds={deletedProfileIds}
               />
             </ScrollArea>
           </div>
@@ -871,6 +894,7 @@ function AppInner({
             activeTab={activeTab}
             onTabChange={setActiveTab}
             onOpenProfile={handleOpenProfile}
+            deletedProfileIds={deletedProfileIds}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
             isGeneratingPosts={!viewedProfile && postGen.phase === 'generating' && !postGen.firstRevealed}
             generateApiOrigin={GENERATE_API_ORIGIN}
@@ -1371,8 +1395,18 @@ export default function App() {
   }, [reloadProfileFromApi]);
 
   const runBioAndPostGeneration = useCallback(async (profileSnapshot) => {
-    const p = profileSnapshot ?? profile;
+    let p = profileSnapshot ?? profile;
     if (!p) return;
+    if (profileNeedsCompliantJoin(p)) {
+      const joinPost = buildCompliantJoinPostForProfile(p, p.personaPosts ?? []);
+      if (joinPost) {
+        prependCompliantPost(joinPost);
+        p = {
+          ...p,
+          personaPosts: mergePostsPrepend([joinPost], p.personaPosts ?? []),
+        };
+      }
+    }
     streamPostsBaselineRef.current = Array.isArray(p.personaPosts) ? p.personaPosts : [];
 
     const existingBio = String(p.profileSummary || p.userDescription || '').trim();
@@ -1537,7 +1571,12 @@ export default function App() {
     } finally {
       disarmIdleWatchdog();
     }
-  }, [profile, reloadProfileFromApi, schedulePersonaDeltasClearAfterGenerate]);
+  }, [
+    profile,
+    prependCompliantPost,
+    reloadProfileFromApi,
+    schedulePersonaDeltasClearAfterGenerate,
+  ]);
 
   const runBioAndPostGenerationRef = useRef(runBioAndPostGeneration);
   useEffect(() => {

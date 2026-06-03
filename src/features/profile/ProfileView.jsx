@@ -22,6 +22,7 @@ export default function ProfileView({
   activeTab,
   onTabChange,
   onOpenProfile,
+  deletedProfileIds = [],
   mainScoreEntryReplayKey,
   isGeneratingPosts,
   personaBadgePersona = null,
@@ -65,6 +66,7 @@ export default function ProfileView({
                       isGeneratingPosts={isGeneratingPosts}
                       personaBadgePersona={resolvedPersonaKey ?? personaBadgePersona}
                       onOpenProfile={onOpenProfile}
+                      deletedProfileIds={deletedProfileIds}
                     />
                   )}
                   {displayTab === 'leaderboards' && (

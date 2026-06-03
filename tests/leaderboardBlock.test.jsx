@@ -108,6 +108,7 @@ describe('<LeaderboardBlock>', () => {
         accentColor="#abc"
         authorSlug="brikeld-hoxha"
         onOpenProfile={() => {}}
+        leaderboardDirectorySlugs={['brikeld-hoxha', 'alex-johnson']}
       />,
     );
     expect(html).toContain('profile-name-link leaderboard-row__name');
