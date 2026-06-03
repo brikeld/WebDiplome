@@ -23,6 +23,10 @@ function postCreatedAtMs(post) {
   return Number.isFinite(d.getTime()) ? d.getTime() : 0;
 }
 
+function sortPostsNewestFirst(posts) {
+  return [...posts].sort((a, b) => postCreatedAtMs(b) - postCreatedAtMs(a));
+}
+
 /** At most one COMPLIANT persona-change post — keeps the newest by createdAt. */
 export function keepLatestPersonaChangePostOnly(posts) {
   if (!Array.isArray(posts) || posts.length === 0) return posts ?? [];
@@ -146,5 +150,5 @@ export function mergePersonaPostsFromApi(prevPosts, incomingPosts) {
         ? incomingRegular
         : mergePostsPrepend(incomingRegular, prevRegular);
 
-  return dedupeCompliantSystemPosts(mergePostsPrepend(system, regular));
+  return sortPostsNewestFirst(dedupeCompliantSystemPosts(mergePostsPrepend(system, regular)));
 }

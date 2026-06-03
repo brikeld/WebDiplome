@@ -26,7 +26,6 @@ const PERSONA_COLORS = {
 };
 
 import { resolveLeaderboardForFeed } from '@/lib/resolveLeaderboardForFeed.js';
-import { isCompliantJoinPost } from '@/lib/mergePersonaPosts.js';
 import { API_ORIGIN } from '@/lib/apiClient.js';
 
 /**
@@ -87,10 +86,6 @@ function postCreatedAtMs(createdAt) {
 }
 
 function sortNewestFirst(a, b) {
-  const aJoin = isCompliantJoinPost(a) ? 1 : 0;
-  const bJoin = isCompliantJoinPost(b) ? 1 : 0;
-  if (aJoin !== bJoin) return bJoin - aJoin;
-
   const at = postCreatedAtMs(a.createdAt);
   const bt = postCreatedAtMs(b.createdAt);
   const cmp = (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);

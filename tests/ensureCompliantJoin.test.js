@@ -1,18 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildCompliantJoinPostForProfile,
-  joinCreatedAtAfterExisting,
+  joinCreatedAtBeforeExisting,
   profileNeedsCompliantJoin,
 } from '../src/lib/ensureCompliantJoin.js';
 
 describe('ensureCompliantJoin', () => {
-  it('join createdAt sorts above existing generated posts', () => {
+  it('join createdAt sorts below existing generated posts', () => {
     const posts = [
       { persona: 'productivite', content: 'hello', createdAt: 1_000 },
       { persona: 'securite', content: 'world', createdAt: 2_000 },
     ];
-    const ts = joinCreatedAtAfterExisting(posts);
-    expect(ts).toBeGreaterThan(2_000);
+    const ts = joinCreatedAtBeforeExisting(posts);
+    expect(ts).toBeLessThan(1_000);
   });
 
   it('profileNeedsCompliantJoin is false when join already exists', () => {

@@ -101,4 +101,21 @@ describe('mergePersonaPosts', () => {
     expect(merged.some((p) => p.id === system.id)).toBe(true);
     expect(merged.some((p) => p.content === 'new')).toBe(true);
   });
+
+  it('does not pin COMPLIANT join above newer generated posts', () => {
+    const join = {
+      id: 'compliant-join-1',
+      content: 'joined',
+      createdAt: 100,
+      compliantJoin: { userDisplayName: 'Ada Lovelace' },
+    };
+    const generated = {
+      id: 'post-1',
+      content: 'fresh generated post',
+      createdAt: 200,
+      persona: 'productivite',
+    };
+    const merged = mergePersonaPostsFromApi([join], [join, generated]);
+    expect(merged.map((p) => p.id)).toEqual(['post-1', 'compliant-join-1']);
+  });
 });

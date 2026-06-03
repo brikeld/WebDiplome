@@ -33,7 +33,7 @@ import {
 import {
   createCompliantJoinPost,
   hasCompliantJoinPost,
-  joinCreatedAtAfterExisting,
+  joinCreatedAtBeforeExisting,
 } from './server/lib/compliantSystemPosts.js';
 import { serverConfig } from './server/lib/env.js';
 import { supabaseClients } from './server/lib/supabaseClient.js';
@@ -251,7 +251,7 @@ app.post('/api/profile', async (req, res) => {
         profile: toStore,
         userDisplayName: displayName || 'User',
         dominantPersona: toStore.dominantPersona,
-        createdAt: joinCreatedAtAfterExisting(currentPosts),
+        createdAt: joinCreatedAtBeforeExisting(currentPosts),
       });
       await appendPersonaPosts(id, [joinPost], normalizePost);
     }

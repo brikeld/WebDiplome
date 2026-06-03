@@ -19,13 +19,13 @@ function postCreatedAtMs(post) {
   return Number.isFinite(d.getTime()) ? d.getTime() : 0;
 }
 
-export function joinCreatedAtAfterExisting(posts) {
-  let max = Date.now();
+export function joinCreatedAtBeforeExisting(posts) {
+  let min = Date.now();
   for (const p of Array.isArray(posts) ? posts : []) {
     const t = postCreatedAtMs(p);
-    if (Number.isFinite(t) && t >= max) max = t + 1;
+    if (Number.isFinite(t) && t <= min) min = t - 1;
   }
-  return max;
+  return min;
 }
 
 export function createCompliantJoinPost({

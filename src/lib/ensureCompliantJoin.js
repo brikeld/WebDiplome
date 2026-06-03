@@ -11,21 +11,21 @@ function postCreatedAtMs(post) {
   return Number.isFinite(d.getTime()) ? d.getTime() : 0;
 }
 
-/** Join notice must sort above every other post (including freshly generated ones). */
-export function joinCreatedAtAfterExisting(posts) {
-  let max = Date.now();
+/** Join notice is a normal post; newer generated posts should bury it. */
+export function joinCreatedAtBeforeExisting(posts) {
+  let min = Date.now();
   for (const p of Array.isArray(posts) ? posts : []) {
     const t = postCreatedAtMs(p);
-    if (Number.isFinite(t) && t >= max) max = t + 1;
+    if (Number.isFinite(t) && t <= min) min = t - 1;
   }
-  return max;
+  return min;
 }
 
 export function buildCompliantJoinPostForProfile(profile, existingPosts = []) {
   if (!profile) return null;
   const userDisplayName = displayNameFromProfile(profile);
   const dominantPersona = resolveDominantPersonaKey(profile);
-  const createdAt = joinCreatedAtAfterExisting(existingPosts);
+  const createdAt = joinCreatedAtBeforeExisting(existingPosts);
   return createCompliantJoinPost({
     profile,
     userDisplayName,

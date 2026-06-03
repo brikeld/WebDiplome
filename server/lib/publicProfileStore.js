@@ -12,7 +12,7 @@ import { repairProfileWallpaperIfNeeded } from './repairProfileWallpaper.js';
 import {
   createCompliantJoinPost,
   hasCompliantJoinPost,
-  joinCreatedAtAfterExisting,
+  joinCreatedAtBeforeExisting,
 } from './compliantSystemPosts.js';
 import {
   dedupeProfilesWithMergedPosts,
@@ -346,7 +346,7 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
           profile: payload,
           userDisplayName: displayName,
           dominantPersona: row.dominant_persona ?? payload?.dominantPersona,
-          createdAt: joinCreatedAtAfterExisting(afterSync),
+          createdAt: joinCreatedAtBeforeExisting(afterSync),
         });
         await appendPostsToProfile({
           profileId: saved.id,
