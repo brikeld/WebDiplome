@@ -167,7 +167,7 @@ function assembleBoard(board, profiles, { highlightSlug, minimumRows, nowMs }) {
   const botsNeeded = Math.max(0, minimumRows - real.length);
   const bots = Array.from({ length: botsNeeded }, (_, i) => botEntry(board, i, nowMs));
 
-  const merged = [...real, ...bots].sort((a, b) => b.score - a.score);
+  const merged = [...real, ...bots].sort((a, b) => b.score - a.score).slice(0, minimumRows);
   const entries = merged.map((row, i) => ({
     rank: i + 1,
     name: row.name,
