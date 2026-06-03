@@ -269,6 +269,18 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     return row;
   }
 
+  async function appendPostsToProfile({ profileId, userId, posts, source = 'generated' }) {
+    const rows = (Array.isArray(posts) ? posts : [])
+      .filter((p) => p && p.content)
+      .map((p) => mapPostForInsert(p, profileId, userId, source));
+    if (rows.length === 0) return [];
+    const inserted = throwIfError(
+      await supabase.from('posts').insert(rows).select('*'),
+      'append posts',
+    );
+    return (inserted ?? []).map(mapPostRowForApi);
+  }
+
   return {
     async getProfileByUserId(userId) {
       const row = await findProfileByUserId(userId);
@@ -317,7 +329,7 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
           dominantPersona: row.dominant_persona ?? payload?.dominantPersona,
           createdAt: joinCreatedAtAfterExisting(afterSync),
         });
-        await appendPosts({
+        await appendPostsToProfile({
           profileId: saved.id,
           userId,
           posts: [joinPost],
@@ -383,15 +395,7 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     },
 
     async appendPosts({ profileId, userId, posts, source = 'generated' }) {
-      const rows = (Array.isArray(posts) ? posts : [])
-        .filter((p) => p && p.content)
-        .map((p) => mapPostForInsert(p, profileId, userId, source));
-      if (rows.length === 0) return [];
-      const inserted = throwIfError(
-        await supabase.from('posts').insert(rows).select('*'),
-        'append posts',
-      );
-      return (inserted ?? []).map(mapPostRowForApi);
+      return appendPostsToProfile({ profileId, userId, posts, source });
     },
 
     async updateProfileSummary({ profileId, userId, profileSummary }) {
