@@ -18,6 +18,7 @@ import { generateCommentSuggestions } from './server/lib/commentSuggestions.js';
 import { generatePersonaBlurbs } from './server/lib/personaBlurbs.js';
 import { computeAllBoardStandings } from './server/lib/leaderboards.js';
 import { ensureLmModelLoaded } from './server/lib/lmStudioLoad.js';
+import { buildLmUserPayload } from './server/lib/compactHarvestData.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
@@ -251,14 +252,13 @@ async function prepareGenerationContext() {
     }
   }
 
-  let userPayloadObject;
+  let userPayload;
   if (electronData) {
-    userPayloadObject = { user: userForLm, profile: electronData };
+    userPayload = buildLmUserPayload(userForLm, electronData);
   } else {
     const { wallpaperBase64, personaPosts, ...profileForAI } = profile;
-    userPayloadObject = profileForAI;
+    userPayload = JSON.stringify(profileForAI);
   }
-  const userPayload = JSON.stringify(userPayloadObject);
 
   const usedUploadFilenames = new Set(
     existing

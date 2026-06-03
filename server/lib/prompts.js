@@ -18,7 +18,7 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 900,
   },
   image: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. A photo from your own files is attached. Describe or react to what you see — specific detail, natural voice, touch of humor (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. A photo or screenshot from the user's files is attached in the user message. The caption MUST be grounded in what is actually visible in that image: name at least TWO concrete visual details (objects, UI, text on screen, colors, setting). Do not write about browser history, apps, or other profile JSON unless you can see them in the image. Profile JSON is only for voice/tone. Touch of humor (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
     temperature: 0.82,
     maxTokens: 900,
   },

@@ -36,6 +36,7 @@ import {
 } from './leaderboardRationales.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
 import { synthesiseChartMetadata } from '../../src/lib/chartPostMetadata.js';
+import { prepareVisionImageData, truncateUserPayloadString } from './lmContextBudget.js';
 
 /** Slot index for the asset slot (image or document from disk). */
 export const ASSET_SLOT_INDEX = 1;
@@ -109,7 +110,18 @@ function pickWithRecencyGuard(pool, recentIds, personaScores) {
 }
 
 function imageTextFallbackNote(filename) {
-  return `\n\nFor context, the user recently had a file named "${filename}" — you may reference it naturally in the post.`;
+  return `\n\n[Vision unavailable — you cannot see the image. The attached file was "${filename}". Write a cautious caption that does not invent specific visual details; only hint at the filename or that you are sharing a file.]`;
+}
+
+const IMAGE_CAPTION_USER_LEAD =
+  'Task: write a caption for the attached image/screenshot. Ground the post in what you SEE (≥2 visible details). Do not pivot to unrelated profile topics.\n\n';
+
+function userPayloadForVisionSlot(slot) {
+  const base = slot.userPayload ?? '';
+  if (slot.promptKey === 'image' && slot.imageData) {
+    return truncateUserPayloadString(`${IMAGE_CAPTION_USER_LEAD}${base}`);
+  }
+  return truncateUserPayloadString(base);
 }
 
 async function fetchJsonWithTimeout(url, options, timeoutMs) {
@@ -753,11 +765,18 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
   const maxTokens = Math.max(promptCfg.maxTokens || 900, 2100);
 
   const runOnce = async (temperature, withVision) => {
+    let visionImage = null;
+    if (withVision && slot.imageData) {
+      visionImage = await prepareVisionImageData(slot.imageData);
+      if (!visionImage) visionImage = slot.imageData;
+    }
     const body = buildChatBody({
       model: slot._model,
       systemPrompt,
-      userPayload: slot.userPayload,
-      imageData: withVision && slot.imageData ? slot.imageData : null,
+      userPayload: withVision && visionImage
+        ? userPayloadForVisionSlot(slot)
+        : truncateUserPayloadString(slot.userPayload),
+      imageData: visionImage,
       docText: slot.docText || null,
       docFilename: slot.docFilename || null,
       temperature,
@@ -774,7 +793,9 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
     try {
       parsed = await runOnce(promptCfg.temperature, true);
       if (parsed.content) visionSucceeded = true;
-    } catch { /* vision not supported */ }
+    } catch (err) {
+      console.warn('[personaPostGenerator] vision call failed:', err?.message || err);
+    }
   }
 
   if (!parsed.content) {
