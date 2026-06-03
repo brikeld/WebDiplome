@@ -253,7 +253,6 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       }
 
       const apiProfile = await profileStore.getProfileBySlug(slug);
-      const priorPayload = latest?.request_payload;
       const job = await jobStore.createJob({
         userId: row.user_id,
         profileId: row.id,
