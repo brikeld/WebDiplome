@@ -1297,8 +1297,8 @@ export default function App() {
     };
 
     load();
-    // Poll quickly on landing/home so other users' newly generated posts appear in "for you".
-    const pollMs = mainView === 'landing' || mainView === 'home' ? 2_000 : 30_000;
+    // Keep the public directory fresh without hammering hosted Supabase through the API.
+    const pollMs = mainView === 'landing' || mainView === 'home' ? 10_000 : 30_000;
     const id = setInterval(load, pollMs);
     return () => {
       cancelled = true;

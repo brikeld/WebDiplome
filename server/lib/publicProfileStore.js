@@ -41,6 +41,25 @@ function parseWallpaperBase64(value) {
   return { mime, buffer };
 }
 
+const PUBLIC_PROFILE_SELECT = [
+  'id',
+  'user_id',
+  'slug',
+  'firstname',
+  'lastname',
+  'display_name',
+  'machine_name',
+  'global_score',
+  'persona_scores',
+  'dominant_persona',
+  'profile_summary',
+  'wallpaper_url',
+  'collected_at',
+  'persona_blurbs',
+  'created_at',
+  'updated_at',
+].join(',');
+
 export function createPublicProfileStore(supabase, { storageStore } = {}) {
   if (!supabase) throw new Error('Supabase service client required');
 
@@ -66,7 +85,7 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
 
   async function listAllProfilesWithPosts() {
     const rows = throwIfError(
-      await supabase.from('profiles').select('*').order('updated_at', { ascending: false }),
+      await supabase.from('profiles').select(PUBLIC_PROFILE_SELECT).order('updated_at', { ascending: false }),
       'list profiles',
     );
     const safeRows = await Promise.all((rows ?? []).map((row) => ensureWebSafeWallpaper(row)));

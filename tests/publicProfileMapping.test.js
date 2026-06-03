@@ -41,15 +41,19 @@ describe('public profile mapping', () => {
     expect(row.raw_profile.firstname).toBe('Ada');
   });
 
-  it('strips wallpaper base64 from stored raw_profile', () => {
+  it('strips heavyweight sync fields from stored raw_profile', () => {
     const slim = slimProfilePayloadForStorage({
       firstname: 'Ada',
       wallpaperBase64: 'data:image/jpeg;base64,' + 'A'.repeat(5000),
       personaPosts: [{ content: 'hi' }],
+      dataJson: { PAST_HISTORY: { huge: 'payload' } },
+      data_json: { PAST_HISTORY: { huge: 'payload' } },
     });
     expect(slim.firstname).toBe('Ada');
     expect(slim.wallpaperBase64).toBeUndefined();
     expect(slim.personaPosts).toBeUndefined();
+    expect(slim.dataJson).toBeUndefined();
+    expect(slim.data_json).toBeUndefined();
   });
 
   it('maps stored persona blurbs for API', () => {

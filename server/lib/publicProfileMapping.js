@@ -37,6 +37,8 @@ export function slimProfilePayloadForStorage(payload) {
   delete out.wallpaper_base64;
   delete out.personaPosts;
   delete out.persona_posts;
+  delete out.dataJson;
+  delete out.data_json;
   return out;
 }
 
