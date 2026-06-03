@@ -481,7 +481,10 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         return { deleted: false, slug: null, deletedSlugs: [], orphansRemoved };
       }
 
-      const { deletedSlugs, orphansRemoved } = await deleteAllProfilesWithIdentityKey(profile, userId);
+      const { deletedSlugs, orphansRemoved } = await this.deleteAllProfilesWithIdentityKey(
+        profile,
+        userId,
+      );
 
       const authDelete = await supabase.auth.admin.deleteUser(userId);
       if (authDelete.error) {
