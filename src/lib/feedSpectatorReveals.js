@@ -60,7 +60,6 @@ export function createFeedSpectatorRevealController({ setAllProfiles, gapMs = PO
       }
     },
     reset() {
-      skipSlug = null;
       queuesBySlug.clear();
     },
   };

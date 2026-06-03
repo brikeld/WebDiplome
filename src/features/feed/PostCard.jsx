@@ -11,7 +11,6 @@ import CommentsCapsule from '@/features/commenting/CommentsCapsule.jsx';
 import { DEMO_OTHER_COMMENTER } from '@/lib/demoCommentIdentity.js';
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
-import ProfileNameLink from '@/features/profile/ProfileNameLink.jsx';
 
 const PostPdfCarousel = lazy(() => import('./PostPdfCarousel.jsx'));
 
@@ -29,7 +28,7 @@ function personaUiColor(key) {
   return PERSONA_UI_COLORS[String(key ?? '').toLowerCase()] ?? '#fff';
 }
 
-function CompliantPersonaChangeLead({ change, fallbackContent, onOpenProfile }) {
+function CompliantPersonaChangeLead({ change, fallbackContent }) {
   if (!change) {
     return <p className="post-lead post-lead--compliant-persona-change">{fallbackContent}</p>;
   }
@@ -44,11 +43,7 @@ function CompliantPersonaChangeLead({ change, fallbackContent, onOpenProfile }) 
 
   return (
     <p className="post-lead post-lead--compliant-persona-change">
-      Due to behavior on COMPLIANT,{' '}
-      <ProfileNameLink onOpenProfile={onOpenProfile} ariaLabel={`View ${userDisplayName}'s profile`}>
-        {userDisplayName}
-      </ProfileNameLink>
-      &apos;s main persona changed from{' '}
+      Due to behavior on COMPLIANT, {userDisplayName}&apos;s main persona changed from{' '}
       <span
         className="post-persona-label"
         style={{ color: personaUiColor(fromPersona) }}
@@ -67,7 +62,7 @@ function CompliantPersonaChangeLead({ change, fallbackContent, onOpenProfile }) 
   );
 }
 
-function CompliantJoinLead({ notice, fallbackContent, onOpenProfile }) {
+function CompliantJoinLead({ notice, fallbackContent }) {
   if (!notice) {
     return <p className="post-lead post-lead--compliant-join">{fallbackContent}</p>;
   }
@@ -76,17 +71,13 @@ function CompliantJoinLead({ notice, fallbackContent, onOpenProfile }) {
 
   return (
     <p className="post-lead post-lead--compliant-join">
-      COMPLIANT notice for{' '}
-      <ProfileNameLink onOpenProfile={onOpenProfile} ariaLabel={`View ${userDisplayName}'s profile`}>
-        {userDisplayName}
-      </ProfileNameLink>
-      : this profile is now active on the platform. Machine
+      COMPLIANT notice for {userDisplayName}: this profile is now active on the platform. Machine
       data from their device has been linked to their public identity.
     </p>
   );
 }
 
-function CompliantLowScoreLead({ notice, fallbackContent, onOpenProfile }) {
+function CompliantLowScoreLead({ notice, fallbackContent }) {
   if (!notice) {
     return <p className="post-lead post-lead--compliant-low-score">{fallbackContent}</p>;
   }
@@ -96,11 +87,7 @@ function CompliantLowScoreLead({ notice, fallbackContent, onOpenProfile }) {
 
   return (
     <p className="post-lead post-lead--compliant-low-score">
-      COMPLIANT notice for{' '}
-      <ProfileNameLink onOpenProfile={onOpenProfile} ariaLabel={`View ${userDisplayName}'s profile`}>
-        {userDisplayName}
-      </ProfileNameLink>
-      : your{' '}
+      COMPLIANT notice for {userDisplayName}: your{' '}
       <span className="post-persona-label" style={{ color: accent }}>
         {personaLabel}
       </span>
@@ -121,7 +108,6 @@ function PostCard({
   onHide,
   onTellMeMore,
   onOpenProfile,
-  leaderboardDirectorySlugs = [],
   tellMeMoreActive = false,
   isHidden = false,
   isRevealing = false,
@@ -245,19 +231,16 @@ function PostCard({
                 <CompliantPersonaChangeLead
                   change={compliantPersonaChange}
                   fallbackContent={content}
-                  onOpenProfile={openAuthorProfile}
                 />
               ) : isCompliantLowScore ? (
                 <CompliantLowScoreLead
                   notice={compliantLowScore}
                   fallbackContent={content}
-                  onOpenProfile={openAuthorProfile}
                 />
               ) : isCompliantJoin ? (
                 <CompliantJoinLead
                   notice={compliantJoin}
                   fallbackContent={content}
-                  onOpenProfile={openAuthorProfile}
                 />
               ) : (
                 <p className="post-lead">{content}</p>
@@ -308,8 +291,7 @@ function PostCard({
             leaderboard={leaderboard}
             accentColor={noteColor}
             authorSlug={authorSlug}
-            onOpenProfile={onOpenProfile}
-            leaderboardDirectorySlugs={leaderboardDirectorySlugs}
+            onOpenProfile={openAuthorProfile}
           />
         ) : null}
 

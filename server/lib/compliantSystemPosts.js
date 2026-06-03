@@ -12,32 +12,11 @@ function joinCopy(userDisplayName) {
   );
 }
 
-function postCreatedAtMs(post) {
-  const v = post?.createdAt ?? post?.created_at ?? 0;
-  if (typeof v === 'number' && Number.isFinite(v)) return v;
-  const d = new Date(v);
-  return Number.isFinite(d.getTime()) ? d.getTime() : 0;
-}
-
-export function joinCreatedAtAfterExisting(posts) {
-  let max = Date.now();
-  for (const p of Array.isArray(posts) ? posts : []) {
-    const t = postCreatedAtMs(p);
-    if (Number.isFinite(t) && t >= max) max = t + 1;
-  }
-  return max;
-}
-
-export function createCompliantJoinPost({
-  profile,
-  userDisplayName,
-  dominantPersona,
-  createdAt: createdAtOverride,
-}) {
+export function createCompliantJoinPost({ profile, userDisplayName, dominantPersona }) {
   const fromProfile = [profile?.firstname, profile?.lastname].filter(Boolean).join(' ').trim();
   const name = userDisplayName ?? (fromProfile || 'User');
   const persona = dominantPersona ?? profile?.dominantPersona ?? 'productivity';
-  const createdAt = Number(createdAtOverride) || Date.now();
+  const createdAt = Date.now();
 
   return {
     id: `compliant-join-${createdAt}`,

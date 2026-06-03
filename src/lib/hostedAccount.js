@@ -66,10 +66,6 @@ export function hostedAuthHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export function shouldResetHostedSessionForProfileMeStatus(status) {
-  return Number(status) === 401;
-}
-
 /** Read `#access_token=…&refresh_token=…` from Electron “View on web”, then strip hash. */
 export function ingestHostedSessionFromHash() {
   if (typeof window === 'undefined') return false;

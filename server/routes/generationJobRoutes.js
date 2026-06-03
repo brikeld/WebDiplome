@@ -4,11 +4,6 @@ import { requireHostedUser, requireWorker } from '../lib/auth.js';
 
 import { slimProfilePayloadForStorage } from '../lib/publicProfileMapping.js';
 import { resolveCommenterProfileContext, resolveSubjectProfileContext } from '../lib/aiJobProfile.js';
-import {
-  harvestPayloadHasContent,
-  mergeGenerationRequestPayload,
-  queueInitialPostsJobIfNeeded,
-} from '../lib/generationQueue.js';
 
 const workerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -72,26 +67,6 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         jobType: requestPayload.jobType,
       });
       if (active) {
-        const existingPayload =
-          active.request_payload && typeof active.request_payload === 'object'
-            ? active.request_payload
-            : {};
-        const existingData = existingPayload.dataJson ?? existingPayload.data_json;
-        const incomingData = requestPayload.dataJson ?? requestPayload.data_json;
-        if (
-          active.status === 'queued'
-          && !harvestPayloadHasContent(existingData)
-          && harvestPayloadHasContent(incomingData)
-        ) {
-          const merged = mergeGenerationRequestPayload(existingPayload, requestPayload);
-          await jobStore.updateQueuedJobPayload(active.id, merged);
-          return res.json({
-            success: true,
-            jobId: active.id,
-            status: active.status,
-            payloadUpdated: true,
-          });
-        }
         return res.json({
           success: true,
           jobId: active.id,
@@ -187,42 +162,6 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         },
       });
       res.json({ success: true, jobId: job.id, status: job.status });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  });
-
-  router.post('/generation-jobs/trigger-initial', requireUser, async (req, res) => {
-    try {
-      const slug = String(req.body?.profileSlug || '').trim();
-      const row = slug ? await profileStore.getProfileRowBySlug(slug) : null;
-      if (!row) return res.status(404).json({ error: 'Profile not found' });
-      if (row.user_id !== req.authUser.id) {
-        return res.status(403).json({ error: 'Profile owner required' });
-      }
-
-      const outcome = await queueInitialPostsJobIfNeeded({
-        profileStore,
-        jobStore,
-        profileSlug: slug,
-        userId: req.authUser.id,
-      });
-
-      if (outcome.alreadyComplete) {
-        return res.json({ success: true, alreadyComplete: true });
-      }
-      if (outcome.alreadyQueued) {
-        return res.json({
-          success: true,
-          alreadyQueued: true,
-          jobId: outcome.jobId,
-          status: outcome.status,
-        });
-      }
-      if (!outcome.queued) {
-        return res.status(400).json({ error: outcome.reason || 'Could not queue generation' });
-      }
-      res.json({ success: true, jobId: outcome.jobId, status: outcome.status });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

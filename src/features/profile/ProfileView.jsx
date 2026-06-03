@@ -5,16 +5,9 @@ import ProfileRailPersonaScores from '@/features/profile/ProfileRailPersonaScore
 import ProfileTab from '@/features/profile/ProfileTab.jsx';
 import PostsTab from '@/features/feed/PostsTab.jsx';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
-import { machineHandleFromProfile, resolveDominantPersonaKey } from '@/lib/profileUtils.js';
-
-const PERSONA_COLORS = {
-  productivity: '#D8D8D8',
-  security: '#759AEF',
-  popularity: '#CCF847',
-};
+import { machineHandleFromProfile } from '@/lib/profileUtils.js';
 import { profilePaneLabel } from '@/features/profile/profileTabs.js';
 import { useProfileTabTransition } from '@/features/profile/useProfileTabTransition.js';
-import { useProfileIdentityTransition } from '@/features/profile/useProfileIdentityTransition.js';
 
 export default function ProfileView({
   profile,
@@ -22,55 +15,48 @@ export default function ProfileView({
   activeTab,
   onTabChange,
   onOpenProfile,
-  deletedProfileIds = [],
   mainScoreEntryReplayKey,
   isGeneratingPosts,
   personaBadgePersona = null,
   generateApiOrigin,
 }) {
-  const { displayProfile, phase: identityPhase } = useProfileIdentityTransition(profile);
-  const resolvedProfile = displayProfile ?? profile;
-  const resolvedPersonaKey = resolveDominantPersonaKey(resolvedProfile);
-  const resolvedPersonaColor =
-    PERSONA_COLORS[resolvedPersonaKey] ?? personaColor ?? PERSONA_COLORS.productivity;
-  const handleLabel = machineHandleFromProfile(resolvedProfile);
-  const { displayTab, phase: tabPhase } = useProfileTabTransition(activeTab);
+  const handleLabel = machineHandleFromProfile(profile);
+  const { displayTab, phase } = useProfileTabTransition(activeTab);
   const paneLabel = profilePaneLabel(displayTab);
 
   return (
-    <div className={`profile-view-body profile-view-body--${identityPhase}`}>
+    <>
       <div className="main-col">
         <ScrollArea key="profile-content" mode="profile">
           <div className="home-tab">
             <p
-              className={`home-top-label profile-pane-label profile-pane-label--${tabPhase}`}
+              className={`home-top-label profile-pane-label profile-pane-label--${phase}`}
               key={displayTab}
             >
               {paneLabel}
             </p>
             <div
-              className={`posts-capsule profile-content-capsule profile-content-capsule--${tabPhase}`}
-              style={{ '--persona-accent': resolvedPersonaColor }}
+              className={`posts-capsule profile-content-capsule profile-content-capsule--${phase}`}
+              style={{ '--persona-accent': personaColor }}
               role="tabpanel"
               aria-label={paneLabel}
-              aria-busy={tabPhase !== 'visible'}
+              aria-busy={phase !== 'visible'}
             >
               <div className="profile-tab-panels">
                 <div className="profile-tab-panels__inner" data-profile-tab={displayTab}>
-                  {displayTab === 'profile' && <ProfileTab profile={resolvedProfile} />}
+                  {displayTab === 'profile' && <ProfileTab profile={profile} />}
                   {displayTab === 'posts' && (
                     <PostsTab
-                      profile={resolvedProfile}
+                      profile={profile}
                       feedContext="profile"
                       hideInteractions
                       isGeneratingPosts={isGeneratingPosts}
-                      personaBadgePersona={resolvedPersonaKey ?? personaBadgePersona}
+                      personaBadgePersona={personaBadgePersona}
                       onOpenProfile={onOpenProfile}
-                      deletedProfileIds={deletedProfileIds}
                     />
                   )}
                   {displayTab === 'leaderboards' && (
-                    <LeaderboardsTab profile={resolvedProfile} />
+                    <LeaderboardsTab profile={profile} />
                   )}
                 </div>
               </div>
@@ -83,26 +69,26 @@ export default function ProfileView({
         <p className="dashboard-top-label">{handleLabel}</p>
         <div
           className="dashboard-capsule profile-rail-capsule"
-          style={{ '--persona-accent': resolvedPersonaColor }}
+          style={{ '--persona-accent': personaColor }}
         >
           <ProfileHeader
-            profile={resolvedProfile}
-            personaColor={resolvedPersonaColor}
-            personaBadgePersona={resolvedPersonaKey ?? personaBadgePersona}
+            profile={profile}
+            personaColor={personaColor}
+            personaBadgePersona={personaBadgePersona}
             mainScoreEntryReplayKey={mainScoreEntryReplayKey}
             onNavigateTab={onTabChange}
             onOpenProfile={onOpenProfile}
             variant="rail"
           />
-          <ProfileRailPersonaScores profile={resolvedProfile} />
+          <ProfileRailPersonaScores profile={profile} />
           <TabBar
             variant="rail"
             activeTab={activeTab}
             onTabChange={onTabChange}
-            personaColor={resolvedPersonaColor}
+            personaColor={personaColor}
           />
         </div>
       </aside>
-    </div>
+    </>
   );
 }

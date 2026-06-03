@@ -154,22 +154,6 @@ export function mapPostRowForApi(row) {
   };
 }
 
-function normalizePostCreatedAt(value) {
-  if (value instanceof Date && Number.isFinite(value.getTime())) {
-    return value.toISOString();
-  }
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    const date = new Date(value);
-    if (Number.isFinite(date.getTime())) return date.toISOString();
-  }
-  const text = String(value ?? '').trim();
-  if (/^\d+$/.test(text)) {
-    const date = new Date(Number(text));
-    if (Number.isFinite(date.getTime())) return date.toISOString();
-  }
-  return text || new Date().toISOString();
-}
-
 export function mapPostForInsert(post, profileId, userId, source = 'sync') {
   return {
     profile_id: profileId,
@@ -181,6 +165,6 @@ export function mapPostForInsert(post, profileId, userId, source = 'sync') {
     leaderboard: post?.leaderboard ?? null,
     metadata: extractPostMetadata(post),
     source,
-    created_at: normalizePostCreatedAt(post?.createdAt ?? post?.created_at),
+    created_at: post?.createdAt ?? post?.created_at ?? new Date().toISOString(),
   };
 }

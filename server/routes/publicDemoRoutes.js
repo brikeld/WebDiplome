@@ -1,22 +1,12 @@
 import express from 'express';
 import multer from 'multer';
 import { requireHostedUser } from '../lib/auth.js';
-import {
-  forgetHostedAccountDeletion,
-  recordHostedAccountDeletion,
-} from '../lib/hostedAccountDeletion.js';
+import { recordHostedAccountDeletion } from '../lib/hostedAccountDeletion.js';
 import { serverConfig } from '../lib/env.js';
-import { queuePostsJobAfterHarvestSync } from '../lib/generationQueue.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
-export function createPublicDemoRoutes({
-  supabaseService,
-  profileStore,
-  storageStore,
-  buildLeaderboards,
-  jobStore = null,
-}) {
+export function createPublicDemoRoutes({ supabaseService, profileStore, storageStore, buildLeaderboards }) {
   const router = express.Router();
   const requireUser = requireHostedUser(supabaseService);
 
@@ -62,24 +52,7 @@ export function createPublicDemoRoutes({
         payload: req.body ?? {},
         replacePosts: req.body?.replacePersonaPosts === true,
       });
-
-      const syncedSlug = profile?.slug ?? profile?.id ?? '';
-      if (syncedSlug) forgetHostedAccountDeletion(syncedSlug);
-
-      let generation = null;
-      if (jobStore) {
-        const slug = syncedSlug;
-        const syncDataJson = req.body?.dataJson ?? req.body?.data_json ?? null;
-        generation = await queuePostsJobAfterHarvestSync({
-          profileStore,
-          jobStore,
-          profileSlug: slug,
-          userId: req.authUser.id,
-          syncDataJson,
-        });
-      }
-
-      res.json({ success: true, profile, generation });
+      res.json({ success: true, profile });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -179,13 +152,8 @@ export function createPublicDemoRoutes({
   router.delete('/account', requireUser, async (req, res) => {
     try {
       const result = await profileStore.deleteAccountForUser(req.authUser.id);
-      if (result?.deleted) {
-        const slugs = Array.isArray(result.deletedSlugs) && result.deletedSlugs.length > 0
-          ? result.deletedSlugs
-          : result.slug
-            ? [result.slug]
-            : [];
-        if (slugs.length > 0) recordHostedAccountDeletion(slugs);
+      if (result?.deleted && result?.slug) {
+        recordHostedAccountDeletion(result.slug);
       }
       res.json({ success: true, ...result });
     } catch (err) {

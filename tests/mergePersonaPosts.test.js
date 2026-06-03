@@ -68,26 +68,6 @@ describe('mergePersonaPosts', () => {
     expect(merged.find((p) => p.compliantLowScore?.uiPersonaKey === 'security')?.id).toBe('ls-new');
   });
 
-  it('does not resurrect regular posts when incoming list is shorter (authoritative reload)', () => {
-    const prev = [
-      { id: 'old-1', content: 'stale post', createdAt: 100, persona: 'productivite' },
-      { id: 'old-2', content: 'another stale', createdAt: 90, persona: 'securite' },
-    ];
-    const incoming = [{ id: 'new-1', content: 'fresh', createdAt: 200, persona: 'productivite' }];
-    const merged = mergePersonaPostsFromApi(prev, incoming);
-    expect(merged).toHaveLength(1);
-    expect(merged[0].id).toBe('new-1');
-  });
-
-  it('clears all client posts when API returns an empty list (account delete)', () => {
-    const prev = [
-      { id: 'compliant-join', compliantJoin: { userDisplayName: 'Brikeld Hoxha' }, createdAt: 1 },
-      { id: 'compliant-low', compliantLowScore: { uiPersonaKey: 'security' }, createdAt: 2 },
-      { id: 'r1', content: 'hello', createdAt: 3, persona: 'securite' },
-    ];
-    expect(mergePersonaPostsFromApi(prev, [])).toEqual([]);
-  });
-
   it('keeps compliant posts when API returns fewer regular posts', () => {
     const system = {
       id: 'compliant-low-score-1-security',

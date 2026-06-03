@@ -2,8 +2,6 @@ import { useId } from 'react';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { mapLeaderboardEntryHiddenFlags } from '@/lib/leaderboardEntryVisibility.js';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
-import ProfileNameLink from '@/features/profile/ProfileNameLink.jsx';
-import { leaderboardEntryProfileSlug } from '@/lib/leaderboardProfileSlug.js';
 import './leaderboardBlock.css';
 
 function DeltaChip({ userRank, previousUserRank }) {
@@ -28,7 +26,7 @@ function formatLeaderboardTitle(title) {
   return text.toUpperCase();
 }
 
-function Row({ entry, hidden, revealing, authorSlug, onOpenProfile, directorySlugs }) {
+function Row({ entry, hidden, revealing, authorSlug, onOpenProfile }) {
   const cls = [
     'leaderboard-row',
     entry.isUser ? 'leaderboard-row--self' : '',
@@ -38,9 +36,6 @@ function Row({ entry, hidden, revealing, authorSlug, onOpenProfile, directorySlu
   // Assumes 5-entry board: rank 1 → 100%, rank 5 → 20%.
   const widthPct = ((6 - entry.rank) / 5) * 100;
   const name = entry.name;
-  const entrySlug = leaderboardEntryProfileSlug(entry, authorSlug, directorySlugs);
-  const openEntryProfile =
-    onOpenProfile && entrySlug ? () => onOpenProfile('profile', entrySlug) : undefined;
   return (
     <li className={cls} data-source={entry.source || 'real'} aria-current={entry.isUser ? 'true' : undefined}>
       <div className="leaderboard-row__header">
@@ -49,18 +44,18 @@ function Row({ entry, hidden, revealing, authorSlug, onOpenProfile, directorySlu
           className="leaderboard-row__avatar"
           imgClassName="leaderboard-row__avatar-img"
           initialsClassName="leaderboard-row__avatar-initials"
-          onOpenProfile={openEntryProfile}
+          onOpenProfile={
+            onOpenProfile && authorSlug
+              ? () => onOpenProfile('profile', authorSlug)
+              : onOpenProfile
+                ? () => onOpenProfile('profile')
+                : undefined
+          }
           ariaLabel={entry.isUser ? 'View your profile' : `View ${name}'s profile`}
           avatarSrc={entry.source === 'bot' ? null : (entry.avatarSrc || null)}
           avatarInitials={entry.source === 'bot' ? entry.avatarInitials : null}
         />
-        <ProfileNameLink
-          className="leaderboard-row__name"
-          onOpenProfile={hidden ? undefined : openEntryProfile}
-          ariaLabel={entry.isUser ? 'View your profile' : `View ${name}'s profile`}
-        >
-          {name}
-        </ProfileNameLink>
+        <span className="leaderboard-row__name">{name}</span>
         {entry.handle
           ? <span className="leaderboard-row__handle">{entry.handle}</span>
           : null}
@@ -72,13 +67,7 @@ function Row({ entry, hidden, revealing, authorSlug, onOpenProfile, directorySlu
   );
 }
 
-export default function LeaderboardBlock({
-  leaderboard,
-  accentColor,
-  authorSlug,
-  onOpenProfile,
-  leaderboardDirectorySlugs = [],
-}) {
+export default function LeaderboardBlock({ leaderboard, accentColor, authorSlug, onOpenProfile }) {
   const { isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
   const reactId = useId();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
@@ -98,11 +87,6 @@ export default function LeaderboardBlock({
     selfHidden,
     cloneHidden,
   });
-  const directorySlugs = new Set(
-    (Array.isArray(leaderboardDirectorySlugs) ? leaderboardDirectorySlugs : [])
-      .map((s) => String(s ?? '').trim())
-      .filter(Boolean),
-  );
 
   return (
     <div
@@ -125,7 +109,6 @@ export default function LeaderboardBlock({
             revealing={e.isUser && selfRevealing}
             onOpenProfile={onOpenProfile}
             authorSlug={authorSlug}
-            directorySlugs={directorySlugs}
           />
         ))}
       </ul>

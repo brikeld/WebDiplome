@@ -14,7 +14,6 @@ export default function HomeTab({
   tellMeMorePostId = null,
   personaBadgePersona = null,
   onOpenProfile,
-  deletedProfileIds = [],
 }) {
   return (
     <div className="home-tab">
@@ -34,7 +33,6 @@ export default function HomeTab({
         tellMeMorePostId={tellMeMorePostId}
         personaBadgePersona={personaBadgePersona}
         onOpenProfile={onOpenProfile}
-        deletedProfileIds={deletedProfileIds}
       />
     </div>
   );

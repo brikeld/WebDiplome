@@ -25,8 +25,7 @@ const PERSONA_COLORS = {
   popularity: '#CCF847',
 };
 
-import { resolveLeaderboardForFeed } from '@/lib/resolveLeaderboardForFeed.js';
-import { isCompliantJoinPost } from '@/lib/mergePersonaPosts.js';
+import { remixStoredLeaderboard } from '../../../server/lib/multiUserLeaderboards.js';
 import { API_ORIGIN } from '@/lib/apiClient.js';
 
 /**
@@ -87,10 +86,6 @@ function postCreatedAtMs(createdAt) {
 }
 
 function sortNewestFirst(a, b) {
-  const aJoin = isCompliantJoinPost(a) ? 1 : 0;
-  const bJoin = isCompliantJoinPost(b) ? 1 : 0;
-  if (aJoin !== bJoin) return bJoin - aJoin;
-
   const at = postCreatedAtMs(a.createdAt);
   const bt = postCreatedAtMs(b.createdAt);
   const cmp = (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
@@ -99,10 +94,7 @@ function sortNewestFirst(a, b) {
 }
 
 /** Map one profile's raw persona posts into enriched card models (unsorted). */
-function buildEnrichedPosts(
-  profile,
-  { personaBadgePersona, allProfilesForLeaderboards = null, deletedProfileIds = [] },
-) {
+function buildEnrichedPosts(profile, { personaBadgePersona, allProfilesForLeaderboards = null }) {
   if (!profile) return [];
   const raw = profile.personaPosts ?? [];
   const displayName = displayNameFromProfile(profile);
@@ -172,16 +164,15 @@ function buildEnrichedPosts(
         const directory = allProfilesForLeaderboards?.length
           ? allProfilesForLeaderboards
           : [profile];
-        const remixed = resolveLeaderboardForFeed(
+        const remixed = remixStoredLeaderboard(
           { ...base, entries: p.leaderboard.entries },
           directory,
           authorSlug,
-          deletedProfileIds,
         );
         return {
           ...base,
           userRank: remixed.userRank ?? base.userRank,
-          entries: enrichLeaderboardEntries(remixed.entries ?? []),
+          entries: enrichLeaderboardEntries(remixed.entries ?? p.leaderboard.entries),
         };
       })() : null,
       _feedEnter: !!p._feedEnter,
@@ -195,7 +186,6 @@ function buildEnrichedPosts(
 export default function PostsTab({
   profile,
   feedProfiles = null,
-  deletedProfileIds = [],
   viewerProfile = null,
   aiFeaturesEnabled = true,
   feedContext = 'home',
@@ -279,25 +269,12 @@ export default function PostsTab({
         // Per-author badge in a multi-author feed; current theme persona otherwise.
         personaBadgePersona: multiAuthor ? null : personaBadgePersona,
         allProfilesForLeaderboards: sources,
-        deletedProfileIds,
       }),
     );
 
     // Newest first; tie-break so staggered client posts keep order even if timestamps collide.
     return all.sort(sortNewestFirst);
-  }, [feedContext, feedProfiles, personaBadgePersona, profile, deletedProfileIds]);
-
-  const leaderboardDirectorySlugs = useMemo(() => {
-    const sources = feedContext === 'home' && Array.isArray(feedProfiles) && feedProfiles.length > 0
-      ? feedProfiles
-      : profile
-        ? [profile]
-        : [];
-    return sources
-      .map((p) => p?.slug ?? p?.id)
-      .filter(Boolean)
-      .map(String);
-  }, [feedContext, feedProfiles, profile]);
+  }, [feedContext, feedProfiles, personaBadgePersona, profile]);
 
   const list = (
     <div
@@ -374,7 +351,6 @@ export default function PostsTab({
             }
             tellMeMoreActive={tellMeMorePostId === p.id}
             onOpenProfile={onOpenProfile}
-            leaderboardDirectorySlugs={leaderboardDirectorySlugs}
           />
         </div>
       ))}
