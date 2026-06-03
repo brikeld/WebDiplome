@@ -2,6 +2,8 @@ import { useId } from 'react';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { mapLeaderboardEntryHiddenFlags } from '@/lib/leaderboardEntryVisibility.js';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
+import ProfileNameLink from '@/features/profile/ProfileNameLink.jsx';
+import { leaderboardEntryProfileSlug } from '@/lib/leaderboardProfileSlug.js';
 import './leaderboardBlock.css';
 
 function DeltaChip({ userRank, previousUserRank }) {
@@ -36,6 +38,9 @@ function Row({ entry, hidden, revealing, authorSlug, onOpenProfile }) {
   // Assumes 5-entry board: rank 1 → 100%, rank 5 → 20%.
   const widthPct = ((6 - entry.rank) / 5) * 100;
   const name = entry.name;
+  const entrySlug = leaderboardEntryProfileSlug(entry, authorSlug);
+  const openEntryProfile =
+    onOpenProfile && entrySlug ? () => onOpenProfile('profile', entrySlug) : undefined;
   return (
     <li className={cls} data-source={entry.source || 'real'} aria-current={entry.isUser ? 'true' : undefined}>
       <div className="leaderboard-row__header">
@@ -44,18 +49,18 @@ function Row({ entry, hidden, revealing, authorSlug, onOpenProfile }) {
           className="leaderboard-row__avatar"
           imgClassName="leaderboard-row__avatar-img"
           initialsClassName="leaderboard-row__avatar-initials"
-          onOpenProfile={
-            onOpenProfile && authorSlug
-              ? () => onOpenProfile('profile', authorSlug)
-              : onOpenProfile
-                ? () => onOpenProfile('profile')
-                : undefined
-          }
+          onOpenProfile={openEntryProfile}
           ariaLabel={entry.isUser ? 'View your profile' : `View ${name}'s profile`}
           avatarSrc={entry.source === 'bot' ? null : (entry.avatarSrc || null)}
           avatarInitials={entry.source === 'bot' ? entry.avatarInitials : null}
         />
-        <span className="leaderboard-row__name">{name}</span>
+        <ProfileNameLink
+          className="leaderboard-row__name"
+          onOpenProfile={hidden ? undefined : openEntryProfile}
+          ariaLabel={entry.isUser ? 'View your profile' : `View ${name}'s profile`}
+        >
+          {name}
+        </ProfileNameLink>
         {entry.handle
           ? <span className="leaderboard-row__handle">{entry.handle}</span>
           : null}

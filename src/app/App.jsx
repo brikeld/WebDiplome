@@ -64,6 +64,11 @@ import {
   stripFeedRevealMetaFromPosts,
 } from '@/lib/postFeedRevealQueue.js';
 import {
+  filterProfilesNotDeleted,
+  isProfileSlugDeleted,
+  purgeClientAccountState,
+} from '@/lib/accountDeletionClient.js';
+import {
   canUseHostedAccountFeatures,
   clearHostedAccountStorage,
   fetchLinkedProfile,
@@ -231,13 +236,23 @@ function mergeProfileFromApi(prev, incoming) {
   };
 }
 
+/** Poll/harvest reload: server post list is authoritative unless a generation session is active. */
+function adoptProfileFromApi(prev, incoming, { preserveClientPosts = false } = {}) {
+  if (!incoming) return prev ?? null;
+  if (preserveClientPosts && prev) return mergeProfilePreservePosts(prev, incoming);
+  return {
+    ...incoming,
+    personaPosts: Array.isArray(incoming.personaPosts) ? incoming.personaPosts : [],
+  };
+}
+
 function mergeOwnedProfileFromApi(prev, incoming, { preserveClientPosts = false } = {}) {
   if (!incoming) return prev ?? null;
   if (!prev) return incoming;
   if (preserveClientPosts) {
     return mergeProfilePreservePosts(prev, incoming);
   }
-  return mergeProfileFromApi(prev, incoming);
+  return adoptProfileFromApi(prev, incoming);
 }
 
 function AppInner({
@@ -256,11 +271,14 @@ function AppInner({
   harvestError,
   personaDeltas,
   profileScoreReplayNonce,
+  bumpProfileEntryReplay,
   handleGeneratePersonaPosts,
   linkedProfileSlug,
   tryDeferCompliant,
   updateSessionActive,
   postRevealFlash,
+  deletedProfileIds = [],
+  accountResetKey = 0,
 }) {
   const {
     adjustedScores,
@@ -344,9 +362,21 @@ function AppInner({
   // "for you" feed = every profile's posts. Swap in the live merged `profile`
   // (carries streaming reveals + client system posts) for the current user's row.
   const feedProfiles = useMemo(() => {
-    const list = Array.isArray(allProfiles) ? allProfiles.filter(Boolean) : [];
+    const list = filterProfilesNotDeleted(
+      Array.isArray(allProfiles) ? allProfiles.filter(Boolean) : [],
+      deletedProfileIds,
+    );
+    const ownSlug = profile?.slug ?? profile?.id ?? null;
+    if (ownSlug && isProfileSlugDeleted(ownSlug, deletedProfileIds)) {
+      return list;
+    }
     if (!profile) return list;
-    const ownId = profile.slug ?? profile.id ?? null;
+    const ownId = ownSlug;
+    const inDirectory = list.some(
+      (p) => ownId != null && (p?.slug === ownId || p?.id === ownId),
+    );
+    // Stale in-memory profile after delete — do not inject ghost posts into "for you".
+    if (!inDirectory) return list;
     let replaced = false;
     const merged = list.map((p) => {
       if (ownId != null && (p?.slug === ownId || p?.id === ownId)) {
@@ -357,7 +387,7 @@ function AppInner({
     });
     if (!replaced) merged.unshift(profile);
     return merged;
-  }, [allProfiles, profile]);
+  }, [allProfiles, profile, deletedProfileIds]);
   const updateTimerLabel = formatDashboardCountdown(updateRemainingMs);
 
   useEffect(() => {
@@ -681,6 +711,12 @@ function AppInner({
     setTellExpanded(false);
   }, []);
 
+  useEffect(() => {
+    if (!accountResetKey) return;
+    setViewedProfile(null);
+    resetProfileChrome();
+  }, [accountResetKey, resetProfileChrome]);
+
   const handleOpenProfile = useCallback(
     async (tab = 'profile', authorSlug = null) => {
       const explicitSlug =
@@ -700,6 +736,7 @@ function AppInner({
         setMainView('profile');
         setActiveTab(tab);
         resetProfileChrome();
+        bumpProfileEntryReplay?.();
         return;
       }
 
@@ -730,8 +767,9 @@ function AppInner({
       setMainView('profile');
       setActiveTab(tab);
       resetProfileChrome();
+      bumpProfileEntryReplay?.();
     },
-    [allProfiles, ownProfileSlug, resetProfileChrome, setActiveTab, setMainView],
+    [allProfiles, ownProfileSlug, resetProfileChrome, setActiveTab, setMainView, bumpProfileEntryReplay],
   );
 
   const handleSelectView = useCallback(
@@ -1039,35 +1077,51 @@ export default function App() {
     };
   }, [mainView]);
 
+  const [deletedProfileIds, setDeletedProfileIds] = useState([]);
+  const [accountResetKey, setAccountResetKey] = useState(0);
+
+  const applyFullAccountReset = useCallback((profileIdForStorage = null) => {
+    purgeClientAccountState({ profileId: profileIdForStorage, clearSession: true });
+    clearStoredProfileSlug();
+    setLinkedProfileSlug(null);
+    setProfile(null);
+    setAllProfiles([]);
+    setLandingOwnedProfile(null);
+    spectateRevealRef.current?.reset?.();
+    spectateRevealRef.current?.ingestProfiles([]);
+    setMainView('landing');
+    setPersonaOverride(null);
+    setPersonaDeltas(null);
+    setPostGen(POST_GEN_IDLE);
+    setHarvestPhase('idle');
+    setHarvestError(null);
+    setHarvestProgress(null);
+    setAccountResetKey((k) => k + 1);
+  }, []);
+
   const syncAccountDeletionState = useCallback(async () => {
     try {
       const stateRes = await fetch(`${API_ORIGIN}/api/account-state`);
       if (!stateRes.ok) return false;
       const state = await stateRes.json();
+      const deleted = Array.isArray(state?.deletedProfileIds)
+        ? state.deletedProfileIds.map(String)
+        : [];
+      setDeletedProfileIds(deleted);
       // Live-scoring reset only — do not log out other users when someone else deletes.
       applyAccountDeletionFromServer(state?.lastDeletionAt);
 
-      const mySlug = linkedProfileSlug || readLinkedProfileSlug();
-      const deleted = Array.isArray(state?.deletedProfileIds) ? state.deletedProfileIds : [];
-      if (!mySlug || !deleted.includes(String(mySlug))) return false;
+      const mySlug = linkedProfileSlug || readLinkedProfileSlug() || readStoredProfileSlug();
+      if (!mySlug || !isProfileSlugDeleted(mySlug, deleted)) return false;
 
-      clearHostedAccountStorage();
-      clearStoredProfileSlug();
-      setLinkedProfileSlug(null);
-      setProfile(null);
-      setMainView('landing');
-      setPersonaOverride(null);
-      setPersonaDeltas(null);
-      setPostGen(POST_GEN_IDLE);
-      setHarvestPhase('idle');
-      setHarvestError(null);
-      setHarvestProgress(null);
+      const storageProfileId = profile?.slug ?? profile?.id ?? mySlug;
+      applyFullAccountReset(storageProfileId);
       return true;
     } catch {
       /* ignore */
     }
     return false;
-  }, [linkedProfileSlug]);
+  }, [applyFullAccountReset, linkedProfileSlug, profile?.slug, profile?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1120,7 +1174,24 @@ export default function App() {
           setProfile(null);
           return;
         }
-        const normalized = normalizeProfilesFromApi(data);
+        let deleted = deletedProfileIds;
+        try {
+          const stateRes = await fetch(`${API_ORIGIN}/api/account-state`, { cache: 'no-store' });
+          if (stateRes.ok) {
+            const state = await stateRes.json();
+            deleted = Array.isArray(state?.deletedProfileIds)
+              ? state.deletedProfileIds.map(String)
+              : [];
+            setDeletedProfileIds(deleted);
+            applyAccountDeletionFromServer(state?.lastDeletionAt);
+          }
+        } catch {
+          /* ignore */
+        }
+
+        const normalized = normalizeProfilesFromApi(
+          filterProfilesNotDeleted(data, deleted),
+        );
         ingestProfileAvatars(normalized);
         inferPublicMediaConfigFromProfiles(normalized);
 
@@ -1129,12 +1200,11 @@ export default function App() {
             headers: { ...hostedAuthHeaders() },
           }).catch(() => null);
           if (!meRes?.ok) {
-            if (meRes?.status === 401) {
-              clearHostedAccountStorage();
-              clearStoredProfileSlug();
-              setLinkedProfileSlug(null);
-              setProfile(null);
-              setLandingOwnedProfile(null);
+            if (meRes?.status === 401 || meRes?.status === 404) {
+              const storageProfileId =
+                profile?.slug ?? profile?.id ?? linkedProfileSlug ?? readStoredProfileSlug();
+              applyFullAccountReset(storageProfileId);
+              return;
             }
           } else {
             const meJson = await meRes.json().catch(() => ({}));
@@ -1166,12 +1236,22 @@ export default function App() {
               spectateRevealRef.current?.ingestProfiles(directory);
               return;
             }
+            const storageProfileId =
+              profile?.slug ?? profile?.id ?? linkedProfileSlug ?? readStoredProfileSlug();
+            applyFullAccountReset(storageProfileId);
+            return;
           }
         }
 
         setAllProfiles(normalized);
         spectateRevealRef.current?.ingestProfiles(normalized);
         const owned = resolveOwnedLandingProfile(normalized, linkedProfileSlug);
+        if (linkedProfileSlug && !owned) {
+          const storageProfileId =
+            profile?.slug ?? profile?.id ?? linkedProfileSlug ?? readStoredProfileSlug();
+          applyFullAccountReset(storageProfileId);
+          return;
+        }
         if (!linkedProfileSlug && readStoredProfileSlug() && !owned) {
           clearStoredProfileSlug();
         }
@@ -1182,7 +1262,7 @@ export default function App() {
               preserveClientPosts: generationSessionActiveRef.current,
             }),
           );
-        } else if (linkedProfileSlug && !isHostedApiOrigin()) {
+        } else {
           setProfile(null);
         }
       } catch {
@@ -1198,14 +1278,24 @@ export default function App() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [syncAccountDeletionState, mainView, linkedProfileSlug]);
+  }, [syncAccountDeletionState, mainView, linkedProfileSlug, applyFullAccountReset, deletedProfileIds]);
 
   const reloadProfileFromApi = useCallback(async ({ skipPostsMerge = false, forcePostsMerge = false } = {}) => {
     const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to reload profile');
     const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) return null;
-    const normalized = normalizeProfilesFromApi(data);
+    if (!Array.isArray(data) || data.length === 0) {
+      setAllProfiles([]);
+      setProfile(null);
+      return null;
+    }
+    const filtered = filterProfilesNotDeleted(data, deletedProfileIds);
+    if (filtered.length === 0) {
+      setAllProfiles([]);
+      setProfile(null);
+      return null;
+    }
+    const normalized = normalizeProfilesFromApi(filtered);
     ingestProfileAvatars(normalized);
     setAllProfiles(normalized);
     spectateRevealRef.current?.ingestProfiles(normalized);
@@ -1238,7 +1328,7 @@ export default function App() {
       return merged;
     });
     return merged;
-  }, [linkedProfileSlug]);
+  }, [deletedProfileIds, linkedProfileSlug]);
 
   useEffect(() => {
     const skip = postGen.loading
@@ -1669,6 +1759,9 @@ export default function App() {
         harvestError={harvestError}
         personaDeltas={personaDeltas}
         profileScoreReplayNonce={profileScoreReplayNonce}
+        bumpProfileEntryReplay={() => setProfileScoreReplayNonce((n) => n + 1)}
+        deletedProfileIds={deletedProfileIds}
+        accountResetKey={accountResetKey}
         handleGeneratePersonaPosts={handleGeneratePersonaPosts}
         linkedProfileSlug={linkedProfileSlug}
         tryDeferCompliant={tryDeferCompliant}

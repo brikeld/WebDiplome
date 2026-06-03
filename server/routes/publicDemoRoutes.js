@@ -152,8 +152,13 @@ export function createPublicDemoRoutes({ supabaseService, profileStore, storageS
   router.delete('/account', requireUser, async (req, res) => {
     try {
       const result = await profileStore.deleteAccountForUser(req.authUser.id);
-      if (result?.deleted && result?.slug) {
-        recordHostedAccountDeletion(result.slug);
+      if (result?.deleted) {
+        const slugs = Array.isArray(result.deletedSlugs) && result.deletedSlugs.length > 0
+          ? result.deletedSlugs
+          : result.slug
+            ? [result.slug]
+            : [];
+        if (slugs.length > 0) recordHostedAccountDeletion(slugs);
       }
       res.json({ success: true, ...result });
     } catch (err) {

@@ -95,6 +95,26 @@ describe('<LeaderboardBlock>', () => {
     }
   });
 
+  it('renders clickable name buttons when onOpenProfile and entry slug are set', () => {
+    const withSlug = {
+      ...sample,
+      entries: sample.entries.map((e, i) =>
+        i === 0 ? { ...e, slug: 'brikeld-hoxha', source: 'real' } : { ...e, slug: 'alex-johnson', source: 'real' },
+      ),
+    };
+    const html = renderWithProvider(
+      <LeaderboardBlock
+        leaderboard={withSlug}
+        accentColor="#abc"
+        authorSlug="brikeld-hoxha"
+        onOpenProfile={() => {}}
+      />,
+    );
+    expect(html).toContain('profile-name-link leaderboard-row__name');
+    expect(html).toContain('View your profile');
+    expect(html).toContain('View Alex Johnson');
+  });
+
   it('user row contains a bar fill (highlighting handled in CSS, not markup)', () => {
     const html = renderWithProvider(<LeaderboardBlock leaderboard={sample} accentColor="#abc" />);
     // The user row keeps both `leaderboard-row` and `leaderboard-row--self`; its bar-fill

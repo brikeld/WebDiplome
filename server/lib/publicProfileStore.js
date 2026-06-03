@@ -16,7 +16,10 @@ import {
 import {
   dedupeProfilesWithMergedPosts,
   mergeSiblingPostsForProfile,
+  profileIdentityKey,
 } from './hostedProfileDedupe.js';
+import { filterProfilesNotDeleted, isProfileSlugDeleted } from './deletedProfileSlugs.js';
+import { getHostedAccountState } from './hostedAccountDeletion.js';
 
 function throwIfError(result, label) {
   if (result?.error) throw new Error(`${label}: ${result.error.message}`);
@@ -275,8 +278,11 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     },
 
     async listProfiles() {
+      await deleteOrphanPosts();
       const mapped = await listAllProfilesWithPosts();
-      return dedupeProfilesWithMergedPosts(mapped);
+      const deduped = dedupeProfilesWithMergedPosts(mapped);
+      const { deletedProfileIds } = getHostedAccountState();
+      return filterProfilesNotDeleted(deduped, deletedProfileIds);
     },
 
     async listProfilesForLeaderboards() {
@@ -297,6 +303,9 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     },
 
     async getProfileBySlug(slug) {
+      const { deletedProfileIds } = getHostedAccountState();
+      if (isProfileSlugDeleted(slug, deletedProfileIds)) return null;
+
       const row = throwIfError(
         await supabase.from('profiles').select('*').eq('slug', slug).maybeSingle(),
         'get profile',
@@ -402,27 +411,78 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       };
     },
 
+    /**
+     * Remove every hosted row for the same real person (name + machine), not only
+     * the current auth user — prevents ghost "Brikeld Hoxha" feeds after re-signup.
+     */
+    async deleteAllProfilesWithIdentityKey(seedRow, actingUserId = null) {
+      const key = profileIdentityKey(
+        seedRow
+          ? {
+              firstname: seedRow.firstname,
+              lastname: seedRow.lastname,
+              machineName: seedRow.machine_name ?? seedRow.machineName,
+            }
+          : null,
+      );
+      if (!key) return { deletedSlugs: [], orphansRemoved: 0 };
+
+      const rows = throwIfError(
+        await supabase.from('profiles').select('id, slug, user_id, firstname, lastname, machine_name'),
+        'list profiles for identity purge',
+      );
+      const siblings = (rows ?? []).filter((row) => {
+        if (!row?.id) return false;
+        return (
+          profileIdentityKey({
+            firstname: row.firstname,
+            lastname: row.lastname,
+            machineName: row.machine_name,
+          }) === key
+        );
+      });
+
+      const deletedSlugs = [];
+      for (const row of siblings) {
+        await purgeProfileData({
+          userId: row.user_id,
+          profileId: row.id,
+          slug: row.slug,
+        });
+        deletedSlugs.push(String(row.slug));
+        if (row.user_id && row.user_id !== actingUserId) {
+          await supabase.auth.admin.deleteUser(row.user_id).catch(() => null);
+        }
+      }
+
+      const orphansRemoved = await deleteOrphanPosts();
+      return { deletedSlugs, orphansRemoved };
+    },
+
     /** Wipe profile, posts, jobs, assets, and the Supabase auth user. */
     async deleteAccountForUser(userId) {
       const profile = await findProfileByUserId(userId);
       if (!profile) {
         await purgeProfileData({ userId, profileId: null });
         await supabase.auth.admin.deleteUser(userId).catch(() => null);
-        return { deleted: false, slug: null };
+        const orphansRemoved = await deleteOrphanPosts();
+        return { deleted: false, slug: null, deletedSlugs: [], orphansRemoved };
       }
 
-      await purgeProfileData({
-        userId,
-        profileId: profile.id,
-        slug: profile.slug,
-      });
+      const { deletedSlugs, orphansRemoved } = await deleteAllProfilesWithIdentityKey(profile, userId);
 
       const authDelete = await supabase.auth.admin.deleteUser(userId);
       if (authDelete.error) {
         throw new Error(`delete auth user: ${authDelete.error.message}`);
       }
 
-      return { deleted: true, slug: profile.slug, profileId: profile.id };
+      return {
+        deleted: true,
+        slug: profile.slug,
+        profileId: profile.id,
+        deletedSlugs,
+        orphansRemoved,
+      };
     },
 
     deleteProfileBySlug,

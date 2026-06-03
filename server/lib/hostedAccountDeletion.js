@@ -5,12 +5,15 @@ let state = {
   deletedProfileIds: [],
 };
 
-export function recordHostedAccountDeletion(slug) {
+export function recordHostedAccountDeletion(slugs) {
   const at = Date.now();
-  const id = slug ? String(slug) : null;
+  const incoming = (Array.isArray(slugs) ? slugs : [slugs])
+    .map((s) => String(s ?? '').trim())
+    .filter(Boolean);
+  const merged = [...new Set([...incoming, ...state.deletedProfileIds])].slice(0, 64);
   state = {
     lastDeletionAt: at,
-    deletedProfileIds: id ? [id, ...state.deletedProfileIds.filter((s) => s !== id)].slice(0, 32) : state.deletedProfileIds,
+    deletedProfileIds: merged,
   };
   return state;
 }

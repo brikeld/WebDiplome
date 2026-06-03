@@ -18,6 +18,7 @@ import {
   deleteAllAccountData,
   recordAccountDeletion,
 } from './server/lib/accountDeletion.js';
+import { isProfileSlugDeleted } from './server/lib/deletedProfileSlugs.js';
 import { getHostedAccountState } from './server/lib/hostedAccountDeletion.js';
 import {
   readPostsForId,
@@ -314,9 +315,20 @@ app.delete('/api/profile/:id', async (req, res) => {
 // GET /api/profiles — return array of all saved profiles
 app.get('/api/profiles', async (_req, res) => {
   try {
-    const files = (await fs.readdir(PROFILES_DIR)).filter((f) => f.endsWith('.json'));
+    const { deletedProfileIds } = await readAccountState(PROFILES_DIR);
+    const deletedSet = new Set(
+      (deletedProfileIds ?? []).map((id) => String(id).trim().toLowerCase()).filter(Boolean),
+    );
+    const files = (await fs.readdir(PROFILES_DIR)).filter(
+      (f) => f.endsWith('.json') && f !== '_account-meta.json',
+    );
     const profilesWithMeta = await Promise.all(
-      files.map(async (file) => {
+      files
+        .filter((file) => {
+          const id = String(file).replace(/\.json$/i, '').toLowerCase();
+          return !deletedSet.has(id);
+        })
+        .map(async (file) => {
         const filepath = path.join(PROFILES_DIR, file);
         const stat = await fs.stat(filepath);
         const raw = await fs.readFile(filepath, 'utf8');
@@ -341,6 +353,10 @@ app.get('/api/profile/:id', async (req, res) => {
   const filepath = path.join(PROFILES_DIR, filename);
 
   try {
+    const { deletedProfileIds } = await readAccountState(PROFILES_DIR);
+    if (isProfileSlugDeleted(req.params.id, deletedProfileIds)) {
+      return res.status(404).json({ error: `Profile '${req.params.id}' not found` });
+    }
     const raw = await fs.readFile(filepath, 'utf8');
     const data = JSON.parse(raw);
     const posts = await readPostsForId(req.params.id);
