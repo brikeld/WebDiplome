@@ -195,6 +195,12 @@ async function processPostsJob(payload, jobId, ownerUserId) {
     assetCandidate,
     payload.assetPersona || nextAssetPersona(existingPosts),
   );
+  if (!assetAssignment) {
+    const poolSize = Array.isArray(payload.assetCandidates) ? payload.assetCandidates.length : 0;
+    console.warn(
+      `[worker] asset slot skipped: pool=${poolSize} candidate=${assetCandidate?.filename ?? 'none'}`,
+    );
+  }
 
   await fs.mkdir(CHART_UPLOAD_DIR, { recursive: true });
 

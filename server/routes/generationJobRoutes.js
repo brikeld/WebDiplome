@@ -3,6 +3,7 @@ import multer from 'multer';
 import { requireHostedUser, requireWorker } from '../lib/auth.js';
 
 import { slimProfilePayloadForStorage } from '../lib/publicProfileMapping.js';
+import { mergeAssetCandidatePool, nextAssetPersona } from '../lib/pickGenerationAsset.js';
 import { resolveCommenterProfileContext, resolveSubjectProfileContext } from '../lib/aiJobProfile.js';
 import {
   harvestPayloadHasContent,
@@ -253,6 +254,11 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       }
 
       const apiProfile = await profileStore.getProfileBySlug(slug);
+      const profileRow = await profileStore.getProfileRowBySlug(slug);
+      const storedPool = profileRow?.raw_profile?.generationAssetCandidates ?? [];
+      const priorPool = priorPayload?.assetCandidates ?? [];
+      const assetCandidates = mergeAssetCandidatePool(storedPool, priorPool);
+      const existingPosts = Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [];
       const job = await jobStore.createJob({
         userId: row.user_id,
         profileId: row.id,
@@ -261,7 +267,9 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
           jobType: 'posts',
           profile: slimProfilePayloadForStorage(apiProfile ?? {}),
           dataJson: priorPayload?.dataJson ?? priorPayload?.data_json ?? null,
-          existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
+          existingPosts,
+          ...(assetCandidates.length > 0 ? { assetCandidates } : {}),
+          assetPersona: priorPayload?.assetPersona ?? nextAssetPersona(existingPosts),
         },
       });
       res.json({ success: true, jobId: job.id, status: job.status });

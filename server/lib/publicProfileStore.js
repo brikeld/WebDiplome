@@ -7,6 +7,7 @@ import {
   mapPersonaBlurbsForStorage,
   mapSyncPayloadToProfileRow,
 } from './publicProfileMapping.js';
+import { mergeAssetCandidatePool } from './pickGenerationAsset.js';
 import { resolveHostedPublicUrl } from './publicMediaUrls.js';
 import { repairProfileWallpaperIfNeeded } from './repairProfileWallpaper.js';
 import {
@@ -313,22 +314,28 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     async upsertProfileSync({ userId, payload, replacePosts = false }) {
       const existing = await findProfileByUserId(userId);
       const slug = existing?.slug ?? buildProfileSlug(payload?.firstname, payload?.lastname, userId);
-      const row = mapSyncPayloadToProfileRow(payload, userId, slug);
+      const prevPool = existing?.raw_profile?.generationAssetCandidates ?? [];
+      const incomingPool = payload?.generationAssetCandidates ?? payload?.assetCandidates ?? [];
+      const mergedPool = mergeAssetCandidatePool(prevPool, incomingPool);
+      const syncPayload = mergedPool.length > 0
+        ? { ...payload, generationAssetCandidates: mergedPool }
+        : payload;
+      const row = mapSyncPayloadToProfileRow(syncPayload, userId, slug);
       const incomingSummary = String(payload?.profileSummary ?? payload?.userDescription ?? '').trim();
       if (!incomingSummary && existing?.profile_summary) {
         row.profile_summary = existing.profile_summary;
       }
-      row.wallpaper_url = await resolveWallpaperUrl(userId, payload, existing);
+      row.wallpaper_url = await resolveWallpaperUrl(userId, syncPayload, existing);
       const saved = throwIfError(
         await supabase.from('profiles').upsert(row, { onConflict: 'user_id' }).select('*').single(),
         'upsert profile',
       );
 
-      if (Array.isArray(payload?.personaPosts)) {
+      if (Array.isArray(syncPayload?.personaPosts)) {
         if (replacePosts) {
           throwIfError(await supabase.from('posts').delete().eq('profile_id', saved.id), 'replace posts');
         }
-        const posts = payload.personaPosts
+        const posts = syncPayload.personaPosts
           .filter((p) => p && p.content)
           .map((p) => mapPostForInsert(p, saved.id, userId, 'sync'));
         if (posts.length > 0) {

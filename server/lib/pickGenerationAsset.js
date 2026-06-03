@@ -13,6 +13,24 @@ export function collectUsedAssetFilenames(existingPosts) {
   return used;
 }
 
+/** @param {object|null|undefined} candidate */
+export function candidateContentFilename(candidate) {
+  if (!candidate || typeof candidate !== 'object') return '';
+  return String(candidate.filename ?? candidate.uploadFilename ?? '').trim();
+}
+
+/** Merge hosted asset pools keyed by content-addressed filename. */
+export function mergeAssetCandidatePool(existing = [], incoming = []) {
+  const byFilename = new Map();
+  for (const candidate of [...existing, ...incoming]) {
+    const filename = candidateContentFilename(candidate);
+    const url = candidate?.url ? String(candidate.url).trim() : '';
+    if (!filename || !url) continue;
+    byFilename.set(filename, { ...candidate, filename });
+  }
+  return [...byFilename.values()];
+}
+
 /**
  * Pick a random asset candidate not already used in prior posts.
  * Candidates must expose a content-addressed `filename` (sha256 + ext).
@@ -24,7 +42,7 @@ export function pickUnusedAssetCandidate(candidates, existingPosts) {
 
   const used = collectUsedAssetFilenames(existingPosts);
   const available = candidates.filter((c) => {
-    const fn = c?.filename ? String(c.filename) : '';
+    const fn = candidateContentFilename(c);
     return fn && !used.has(fn);
   });
 
