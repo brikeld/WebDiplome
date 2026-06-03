@@ -490,10 +490,7 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         userId,
       );
 
-      const authDelete = await supabase.auth.admin.deleteUser(userId);
-      if (authDelete.error) {
-        throw new Error(`delete auth user: ${authDelete.error.message}`);
-      }
+      const authDelete = await supabase.auth.admin.deleteUser(userId).catch((error) => ({ error }));
 
       return {
         deleted: true,
@@ -501,6 +498,9 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         profileId: profile.id,
         deletedSlugs,
         orphansRemoved,
+        ...(authDelete.error
+          ? { authDeleteError: authDelete.error.message || String(authDelete.error) }
+          : {}),
       };
     },
 
