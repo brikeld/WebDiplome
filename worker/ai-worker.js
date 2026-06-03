@@ -10,6 +10,7 @@ import {
   nextAssetPersona,
   pickUnusedAssetCandidate,
 } from '../server/lib/pickGenerationAsset.js';
+import { isCompletePublicStorageObjectUrl } from '../src/lib/uploadPublicUrl.js';
 import { ensureLmModelLoaded } from '../server/lib/lmStudioLoad.js';
 
 const API = String(process.env.WEBDIPLOME_API_ORIGIN || 'http://localhost:3001').replace(/\/$/, '');
@@ -103,7 +104,11 @@ async function uploadBufferToHostedApi(buffer, filename, mimeType, ownerUserId) 
   if (!res.ok) throw new Error(json.error || `Upload failed (${res.status})`);
   const url = json.url || null;
   if (!url) throw new Error('worker upload missing url');
-  return url;
+  return {
+    url,
+    filename: json.filename || filename,
+    mime: json.mime || mimeType,
+  };
 }
 
 async function rewritePostAssetUrls(posts, ownerUserId) {
@@ -114,27 +119,32 @@ async function rewritePostAssetUrls(posts, ownerUserId) {
       out.push(post);
       continue;
     }
-    if (asset.url && /^https?:\/\//i.test(asset.url)) {
-      out.push(post);
+
+    const currentUrl = asset.url ? String(asset.url) : '';
+    if (currentUrl && isCompletePublicStorageObjectUrl(currentUrl)) {
+      const objectName = currentUrl.split('/').pop()?.split('?')[0];
+      out.push(objectName && objectName !== asset.filename
+        ? { ...post, attachedAsset: { ...asset, url: currentUrl, filename: objectName } }
+        : post);
       continue;
     }
 
     const filename = asset.filename || (asset.url ? path.basename(String(asset.url)) : null);
     const mime = asset.mime || 'image/png';
-    let hostedUrl = null;
+    let hosted = null;
 
     if (filename) {
       const localPath = path.join(CHART_UPLOAD_DIR, filename);
       try {
         await fs.access(localPath);
         const buf = await fs.readFile(localPath);
-        hostedUrl = await uploadBufferToHostedApi(buf, filename, mime, ownerUserId);
+        hosted = await uploadBufferToHostedApi(buf, filename, mime, ownerUserId);
       } catch {
         /* not a local chart file */
       }
     }
 
-    if (!hostedUrl && asset.url) {
+    if (!hosted && asset.url) {
       const rel = asset.url.startsWith('http')
         ? asset.url
         : `${API}${asset.url.startsWith('/') ? '' : '/'}${asset.url}`;
@@ -142,7 +152,7 @@ async function rewritePostAssetUrls(posts, ownerUserId) {
         const res = await fetch(rel);
         if (res.ok) {
           const buf = Buffer.from(await res.arrayBuffer());
-          hostedUrl = await uploadBufferToHostedApi(
+          hosted = await uploadBufferToHostedApi(
             buf,
             filename || path.basename(rel.split('?')[0]) || 'asset.bin',
             res.headers.get('content-type') || mime,
@@ -154,8 +164,16 @@ async function rewritePostAssetUrls(posts, ownerUserId) {
       }
     }
 
-    out.push(hostedUrl
-      ? { ...post, attachedAsset: { ...asset, url: hostedUrl } }
+    out.push(hosted
+      ? {
+        ...post,
+        attachedAsset: {
+          ...asset,
+          url: hosted.url,
+          filename: hosted.filename || asset.filename,
+          mime: hosted.mime || asset.mime,
+        },
+      }
       : post);
   }
   return out;

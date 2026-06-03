@@ -24,9 +24,13 @@ export function harvestPayloadHasContent(dataJson) {
   return Object.keys(dataJson).length > 0;
 }
 
+export function hasAssetCandidates(payload) {
+  return Array.isArray(payload?.assetCandidates) && payload.assetCandidates.length > 0;
+}
+
 export function mergeGenerationRequestPayload(existing = {}, incoming = {}) {
   const jobType = incoming.jobType || existing.jobType || 'posts';
-  return {
+  const merged = {
     ...existing,
     ...incoming,
     jobType,
@@ -39,6 +43,23 @@ export function mergeGenerationRequestPayload(existing = {}, incoming = {}) {
       ? incoming.existingPosts
       : (existing.existingPosts ?? []),
   };
+  if (hasAssetCandidates(incoming)) {
+    merged.assetCandidates = incoming.assetCandidates;
+  } else if (hasAssetCandidates(existing)) {
+    merged.assetCandidates = existing.assetCandidates;
+  }
+  if (incoming.assetPersona) merged.assetPersona = incoming.assetPersona;
+  return merged;
+}
+
+/** True when a queued job payload should be patched before the worker claims it. */
+export function shouldPatchQueuedGenerationPayload(existing = {}, incoming = {}) {
+  const existingData = existing.dataJson ?? existing.data_json;
+  const incomingData = incoming.dataJson ?? incoming.data_json;
+  const needsHarvest =
+    !harvestPayloadHasContent(existingData) && harvestPayloadHasContent(incomingData);
+  const needsAssets = hasAssetCandidates(incoming) && !hasAssetCandidates(existing);
+  return needsHarvest || needsAssets;
 }
 
 function userPayloadFromProfileRow(row, apiProfile) {
@@ -98,10 +119,9 @@ export async function queueInitialPostsJobIfNeeded({
   let requestPayload;
 
   if (priorPayload && typeof priorPayload === 'object') {
-    const { assetCandidates: _stale, ...priorWithoutAssets } = priorPayload;
-    const priorData = priorWithoutAssets.dataJson ?? priorWithoutAssets.data_json;
+    const priorData = priorPayload.dataJson ?? priorPayload.data_json;
     requestPayload = {
-      ...priorWithoutAssets,
+      ...priorPayload,
       jobType: 'posts',
       profile: slimProfilePayloadForStorage(apiProfile ?? {}),
       existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
@@ -138,6 +158,8 @@ export async function queuePostsJobAfterHarvestSync({
   profileSlug,
   userId = null,
   syncDataJson = null,
+  assetCandidates = null,
+  assetPersona = null,
 }) {
   const slug = String(profileSlug || '').trim();
   if (!slug || !profileStore || !jobStore) {
@@ -167,18 +189,16 @@ export async function queuePostsJobAfterHarvestSync({
         ? active.request_payload
         : {};
     const existingData = existingPayload.dataJson ?? existingPayload.data_json;
-    if (
-      active.status === 'queued'
-      && !harvestPayloadHasContent(existingData)
-      && harvestPayloadHasContent(incomingData)
-    ) {
-      const merged = mergeGenerationRequestPayload(existingPayload, {
-        jobType: 'posts',
-        profile: slimProfilePayloadForStorage(apiProfile ?? {}),
-        dataJson: incomingData,
-        existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
-        user: userPayloadFromProfileRow(row, apiProfile),
-      });
+    const patchPayload = {
+      jobType: 'posts',
+      profile: slimProfilePayloadForStorage(apiProfile ?? {}),
+      dataJson: incomingData,
+      existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
+      user: userPayloadFromProfileRow(row, apiProfile),
+      ...(hasAssetCandidates({ assetCandidates }) ? { assetCandidates, assetPersona } : {}),
+    };
+    if (active.status === 'queued' && shouldPatchQueuedGenerationPayload(existingPayload, patchPayload)) {
+      const merged = mergeGenerationRequestPayload(existingPayload, patchPayload);
       await jobStore.updateQueuedJobPayload(active.id, merged);
       return {
         queued: false,
@@ -201,6 +221,7 @@ export async function queuePostsJobAfterHarvestSync({
     profile: slimProfilePayloadForStorage(apiProfile ?? {}),
     dataJson: incomingData,
     existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
+    ...(hasAssetCandidates({ assetCandidates }) ? { assetCandidates, assetPersona } : {}),
   };
 
   const job = await jobStore.createJob({

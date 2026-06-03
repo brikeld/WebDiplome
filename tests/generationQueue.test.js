@@ -4,6 +4,8 @@ import {
   mergeGenerationRequestPayload,
   countAiGeneratedPosts,
   queuePostsJobAfterHarvestSync,
+  hasAssetCandidates,
+  shouldPatchQueuedGenerationPayload,
 } from '../server/lib/generationQueue.js';
 
 describe('generationQueue helpers', () => {
@@ -21,6 +23,25 @@ describe('generationQueue helpers', () => {
     );
     expect(merged.dataJson).toEqual({ hostname: 'demo' });
     expect(merged.user.first_name).toBe('New');
+  });
+
+  it('keeps assetCandidates from incoming payload', () => {
+    const candidates = [{ filename: 'a'.repeat(64) + '.jpg', url: '/uploads/x.jpg' }];
+    const merged = mergeGenerationRequestPayload(
+      { jobType: 'posts', dataJson: { hostname: 'demo' } },
+      { assetCandidates: candidates, assetPersona: 'popularite' },
+    );
+    expect(merged.assetCandidates).toEqual(candidates);
+    expect(merged.assetPersona).toBe('popularite');
+  });
+
+  it('detects when queued payload needs asset candidates', () => {
+    const candidates = [{ filename: 'b'.repeat(64) + '.png', url: 'https://x/y.png' }];
+    expect(hasAssetCandidates({ assetCandidates: candidates })).toBe(true);
+    expect(shouldPatchQueuedGenerationPayload(
+      { dataJson: { hostname: 'demo' } },
+      { assetCandidates: candidates },
+    )).toBe(true);
   });
 
   it('counts only non-system posts', () => {

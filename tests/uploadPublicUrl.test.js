@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   contentHashFilename,
+  isBucketOnlyPublicStorageUrl,
   publicStorageObjectUrl,
+  resolveAttachedAssetPublicUrl,
   resolveUploadAssetUrl,
   UPLOADS_PUBLIC_BUCKET,
 } from '../src/lib/uploadPublicUrl.js';
@@ -41,5 +43,17 @@ describe('uploadPublicUrl', () => {
   it('passes through absolute URLs unchanged', () => {
     const url = `https://cdn.example/${filename}`;
     expect(resolveUploadAssetUrl(url, { supabaseUrl })).toBe(url);
+  });
+
+  it('repairs bucket-only Supabase URLs using filename', () => {
+    const broken = `https://example.supabase.co/storage/v1/object/public/${UPLOADS_PUBLIC_BUCKET}`;
+    expect(isBucketOnlyPublicStorageUrl(broken)).toBe(true);
+    const resolved = resolveAttachedAssetPublicUrl(
+      { kind: 'image', filename, url: broken },
+      { supabaseUrl },
+    );
+    expect(resolved).toBe(
+      `https://example.supabase.co/storage/v1/object/public/${UPLOADS_PUBLIC_BUCKET}/${filename}`,
+    );
   });
 });

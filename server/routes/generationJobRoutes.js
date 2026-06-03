@@ -8,6 +8,7 @@ import {
   harvestPayloadHasContent,
   mergeGenerationRequestPayload,
   queueInitialPostsJobIfNeeded,
+  shouldPatchQueuedGenerationPayload,
 } from '../lib/generationQueue.js';
 
 const workerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
@@ -80,8 +81,7 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         const incomingData = requestPayload.dataJson ?? requestPayload.data_json;
         if (
           active.status === 'queued'
-          && !harvestPayloadHasContent(existingData)
-          && harvestPayloadHasContent(incomingData)
+          && shouldPatchQueuedGenerationPayload(existingPayload, requestPayload)
         ) {
           const merged = mergeGenerationRequestPayload(existingPayload, requestPayload);
           await jobStore.updateQueuedJobPayload(active.id, merged);
@@ -253,15 +253,15 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       }
 
       const apiProfile = await profileStore.getProfileBySlug(slug);
-      const { assetCandidates: _staleAssets, ...priorWithoutAssets } = priorPayload;
+      const priorPayload = latest?.request_payload;
       const job = await jobStore.createJob({
         userId: row.user_id,
         profileId: row.id,
         requestPayload: {
-          ...priorWithoutAssets,
+          ...(priorPayload && typeof priorPayload === 'object' ? priorPayload : {}),
           jobType: 'posts',
           profile: slimProfilePayloadForStorage(apiProfile ?? {}),
-          dataJson: priorPayload.dataJson ?? priorPayload.data_json ?? null,
+          dataJson: priorPayload?.dataJson ?? priorPayload?.data_json ?? null,
           existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
         },
       });

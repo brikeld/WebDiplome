@@ -70,12 +70,16 @@ export function createPublicDemoRoutes({
       if (jobStore) {
         const slug = syncedSlug;
         const syncDataJson = req.body?.dataJson ?? req.body?.data_json ?? null;
+        const assetCandidates = req.body?.generationAssetCandidates ?? req.body?.assetCandidates ?? null;
+        const assetPersona = req.body?.assetPersona ?? null;
         generation = await queuePostsJobAfterHarvestSync({
           profileStore,
           jobStore,
           profileSlug: slug,
           userId: req.authUser.id,
           syncDataJson,
+          assetCandidates,
+          assetPersona,
         });
       }
 

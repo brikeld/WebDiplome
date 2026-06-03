@@ -27,6 +27,8 @@ const PERSONA_COLORS = {
 
 import { resolveLeaderboardForFeed } from '@/lib/resolveLeaderboardForFeed.js';
 import { API_ORIGIN } from '@/lib/apiClient.js';
+import { getPublicMediaConfig } from '@/lib/publicMediaConfig.js';
+import { resolveAttachedAssetPublicUrl } from '@/lib/uploadPublicUrl.js';
 
 /**
  * Stable identifier for a post that survives a `reloadProfileFromApi` swap.
@@ -54,17 +56,21 @@ function postStableKey(p, fallbackIndex) {
 function resolveAttachedAsset(asset) {
   if (!asset || typeof asset !== 'object') return null;
   const kind = asset.kind === 'document' ? 'document' : 'image';
-  let url = asset.url ?? null;
-  if (!url && asset.filename) url = `/uploads/${asset.filename}`;
-  if (url && !/^https?:\/\//i.test(url) && !url.startsWith('/')) {
-    url = `/uploads/${url}`;
-  }
-  if (!url) return null;
-  const absolute = resolvePublicMediaUrl(url, API_ORIGIN);
+  const config = getPublicMediaConfig();
+  const absolute = resolveAttachedAssetPublicUrl(asset, {
+    supabaseUrl: config?.supabaseUrl ?? null,
+    apiOrigin: API_ORIGIN,
+    uploadsBucket: config?.uploadsBucket,
+  }) ?? resolvePublicMediaUrl(asset.url ?? (asset.filename ? `/uploads/${asset.filename}` : null), API_ORIGIN);
+  if (!absolute) return null;
+  const filename =
+    asset.filename
+    || absolute.split('/').pop()?.split('?')[0]
+    || '';
   return {
     kind,
     url: absolute,
-    filename: asset.filename ?? '',
+    filename,
     mime: asset.mime ?? null,
     visionAnalysed: !!asset.visionAnalysed,
   };

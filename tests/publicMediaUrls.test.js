@@ -35,4 +35,14 @@ describe('publicMediaUrls', () => {
     expect(out.url).toMatch(/^https:\/\//);
     expect(out.url).toContain(filename);
   });
+
+  it('repairs bucket-only storage URLs using filename', () => {
+    const broken = `https://example.supabase.co/storage/v1/object/public/uploads-public`;
+    const out = normalizeAttachedAssetForApi({
+      kind: 'image',
+      filename,
+      url: broken,
+    });
+    expect(out.url).toContain(filename);
+  });
 });
