@@ -30,9 +30,10 @@ export default function ProfileView({
 }) {
   const { displayProfile, phase: identityPhase } = useProfileIdentityTransition(profile);
   const resolvedProfile = displayProfile ?? profile;
-  const resolvedPersonaKey = resolveDominantPersonaKey(resolvedProfile);
-  const resolvedPersonaColor =
-    PERSONA_COLORS[resolvedPersonaKey] ?? personaColor ?? PERSONA_COLORS.productivity;
+  const storedPersonaKey = resolveDominantPersonaKey(resolvedProfile);
+  const themePersonaKey = personaBadgePersona ?? storedPersonaKey;
+  const themePersonaColor =
+    personaColor ?? PERSONA_COLORS[themePersonaKey] ?? PERSONA_COLORS.productivity;
   const handleLabel = machineHandleFromProfile(resolvedProfile);
   const { displayTab, phase: tabPhase } = useProfileTabTransition(activeTab);
   const paneLabel = profilePaneLabel(displayTab);
@@ -50,7 +51,7 @@ export default function ProfileView({
             </p>
             <div
               className={`posts-capsule profile-content-capsule profile-content-capsule--${tabPhase}`}
-              style={{ '--persona-accent': resolvedPersonaColor }}
+              style={{ '--persona-accent': themePersonaColor }}
               role="tabpanel"
               aria-label={paneLabel}
               aria-busy={tabPhase !== 'visible'}
@@ -64,7 +65,7 @@ export default function ProfileView({
                       feedContext="profile"
                       hideInteractions
                       isGeneratingPosts={isGeneratingPosts}
-                      personaBadgePersona={resolvedPersonaKey ?? personaBadgePersona}
+                      personaBadgePersona={themePersonaKey}
                       onOpenProfile={onOpenProfile}
                       deletedProfileIds={deletedProfileIds}
                     />
@@ -83,12 +84,12 @@ export default function ProfileView({
         <p className="dashboard-top-label">{handleLabel}</p>
         <div
           className="dashboard-capsule profile-rail-capsule"
-          style={{ '--persona-accent': resolvedPersonaColor }}
+          style={{ '--persona-accent': themePersonaColor }}
         >
           <ProfileHeader
             profile={resolvedProfile}
-            personaColor={resolvedPersonaColor}
-            personaBadgePersona={resolvedPersonaKey ?? personaBadgePersona}
+            personaColor={themePersonaColor}
+            personaBadgePersona={themePersonaKey}
             mainScoreEntryReplayKey={mainScoreEntryReplayKey}
             onNavigateTab={onTabChange}
             onOpenProfile={onOpenProfile}
@@ -99,7 +100,7 @@ export default function ProfileView({
             variant="rail"
             activeTab={activeTab}
             onTabChange={onTabChange}
-            personaColor={resolvedPersonaColor}
+            personaColor={themePersonaColor}
           />
         </div>
       </aside>
