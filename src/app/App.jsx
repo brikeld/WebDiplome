@@ -704,10 +704,13 @@ function AppInner({
 
   const ownProfileSlug = profile?.slug ?? profile?.id ?? null;
   const displayProfile = viewedProfile ?? profile;
-  const displayPersonaKey = viewedProfile
-    ? resolveDominantPersonaKey(viewedProfile)
+  // Profile chrome always reflects stored dominant persona; feed debug override stays on home only.
+  const displayPersonaKey = displayProfile
+    ? resolveDominantPersonaKey(displayProfile)
     : personaKey;
   const displayPersonaColor = PERSONA_COLORS[displayPersonaKey] ?? PERSONA_COLORS.productivity;
+  const pageThemeKey = mainView === 'profile' ? displayPersonaKey : personaKey;
+  const pageThemeColor = PERSONA_COLORS[pageThemeKey] ?? PERSONA_COLORS.productivity;
 
   const resetProfileChrome = useCallback(() => {
     setHighlightedPost(null);
@@ -839,11 +842,11 @@ function AppInner({
   return (
     <PersonaBlurbsProvider profile={displayProfile}>
     <div
-      className={`page-outer persona-${personaKey} view-${mainView}`}
+      className={`page-outer persona-${pageThemeKey} view-${mainView}`}
       style={{
-        '--persona-accent': personaColor,
-        '--tabs-capsule-fill': personaColor,
-        '--persona-secondary': personaColor,
+        '--persona-accent': pageThemeColor,
+        '--tabs-capsule-fill': pageThemeColor,
+        '--persona-secondary': pageThemeColor,
       }}
     >
       <ScoreAnimator />
