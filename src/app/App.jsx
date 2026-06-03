@@ -57,12 +57,23 @@ import {
   attachApiPersonaPosts,
   mergeProfilePreservePosts,
 } from '@/lib/profileReload.js';
+import { isCompliantSystemPost } from '@/lib/mergePersonaPosts.js';
 import {
   createPostFeedRevealQueue,
   POST_REVEAL_GAP_MS,
   sleep as feedRevealSleep,
   stripFeedRevealMetaFromPosts,
 } from '@/lib/postFeedRevealQueue.js';
+import {
+  filterProfilesNotDeleted,
+  isProfileSlugDeleted,
+  purgeClientAccountState,
+  slugsReferToSameAccount,
+} from '@/lib/accountDeletionClient.js';
+import {
+  buildCompliantJoinPostForProfile,
+  profileNeedsCompliantJoin,
+} from '@/lib/ensureCompliantJoin.js';
 import {
   canUseHostedAccountFeatures,
   clearHostedAccountStorage,
@@ -72,6 +83,7 @@ import {
   readHostedSession,
   readLinkedProfileSlug,
   resolveOwnedProfileForFeatures,
+  shouldResetHostedSessionForProfileMeStatus,
 } from '@/lib/hostedAccount.js';
 import {
   persistProfileSlug,
@@ -231,13 +243,23 @@ function mergeProfileFromApi(prev, incoming) {
   };
 }
 
+/** Poll/harvest reload: server post list is authoritative unless a generation session is active. */
+function adoptProfileFromApi(prev, incoming, { preserveClientPosts = false } = {}) {
+  if (!incoming) return prev ?? null;
+  if (preserveClientPosts && prev) return mergeProfilePreservePosts(prev, incoming);
+  return {
+    ...incoming,
+    personaPosts: Array.isArray(incoming.personaPosts) ? incoming.personaPosts : [],
+  };
+}
+
 function mergeOwnedProfileFromApi(prev, incoming, { preserveClientPosts = false } = {}) {
   if (!incoming) return prev ?? null;
   if (!prev) return incoming;
   if (preserveClientPosts) {
     return mergeProfilePreservePosts(prev, incoming);
   }
-  return mergeProfileFromApi(prev, incoming);
+  return adoptProfileFromApi(prev, incoming);
 }
 
 function AppInner({
@@ -256,11 +278,14 @@ function AppInner({
   harvestError,
   personaDeltas,
   profileScoreReplayNonce,
+  bumpProfileEntryReplay,
   handleGeneratePersonaPosts,
   linkedProfileSlug,
   tryDeferCompliant,
   updateSessionActive,
   postRevealFlash,
+  deletedProfileIds = [],
+  accountResetKey = 0,
 }) {
   const {
     adjustedScores,
@@ -285,6 +310,7 @@ function AppInner({
   const [viewedProfile, setViewedProfile] = useState(null);
   const previousLivePersonaRef = useRef(null);
   const previousPersonaScoresRef = useRef(null);
+  const joinEnsureAttemptedRef = useRef(false);
   const updateTimerStartRef = useRef(Date.now());
   const [updateRemainingMs, setUpdateRemainingMs] = useState(DASHBOARD_UPDATE_INTERVAL_MS);
 
@@ -344,9 +370,21 @@ function AppInner({
   // "for you" feed = every profile's posts. Swap in the live merged `profile`
   // (carries streaming reveals + client system posts) for the current user's row.
   const feedProfiles = useMemo(() => {
-    const list = Array.isArray(allProfiles) ? allProfiles.filter(Boolean) : [];
+    const list = filterProfilesNotDeleted(
+      Array.isArray(allProfiles) ? allProfiles.filter(Boolean) : [],
+      deletedProfileIds,
+    );
+    const ownSlug = profile?.slug ?? profile?.id ?? null;
+    if (ownSlug && isProfileSlugDeleted(ownSlug, deletedProfileIds)) {
+      return list;
+    }
     if (!profile) return list;
-    const ownId = profile.slug ?? profile.id ?? null;
+    const ownId = ownSlug;
+    const inDirectory = list.some(
+      (p) => ownId != null && (p?.slug === ownId || p?.id === ownId),
+    );
+    // Stale in-memory profile after delete — do not inject ghost posts into "for you".
+    if (!inDirectory) return list;
     let replaced = false;
     const merged = list.map((p) => {
       if (ownId != null && (p?.slug === ownId || p?.id === ownId)) {
@@ -357,7 +395,7 @@ function AppInner({
     });
     if (!replaced) merged.unshift(profile);
     return merged;
-  }, [allProfiles, profile]);
+  }, [allProfiles, profile, deletedProfileIds]);
   const updateTimerLabel = formatDashboardCountdown(updateRemainingMs);
 
   useEffect(() => {
@@ -681,6 +719,25 @@ function AppInner({
     setTellExpanded(false);
   }, []);
 
+  useEffect(() => {
+    if (!accountResetKey) return;
+    joinEnsureAttemptedRef.current = false;
+    setViewedProfile(null);
+    resetProfileChrome();
+  }, [accountResetKey, resetProfileChrome]);
+
+  useEffect(() => {
+    if (!profileId || !profile || joinEnsureAttemptedRef.current) return;
+    if (!profileNeedsCompliantJoin(profile)) {
+      joinEnsureAttemptedRef.current = true;
+      return;
+    }
+    joinEnsureAttemptedRef.current = true;
+    const post = buildCompliantJoinPostForProfile(profile, profile.personaPosts ?? []);
+    if (!post) return;
+    prependCompliantPost(post);
+  }, [profileId, profile, prependCompliantPost]);
+
   const handleOpenProfile = useCallback(
     async (tab = 'profile', authorSlug = null) => {
       const explicitSlug =
@@ -700,13 +757,17 @@ function AppInner({
         setMainView('profile');
         setActiveTab(tab);
         resetProfileChrome();
+        bumpProfileEntryReplay?.();
         return;
       }
 
       let target = (Array.isArray(allProfiles) ? allProfiles : []).find(
-        (p) => p?.slug === targetSlug || p?.id === targetSlug,
+        (p) =>
+          p?.slug === targetSlug
+          || p?.id === targetSlug
+          || (explicitSlug && slugsReferToSameAccount(p?.slug ?? p?.id, explicitSlug)),
       );
-      if (!target) {
+      if (!target && explicitSlug) {
         try {
           const res = await fetch(
             `${API_ORIGIN}/api/profiles/${encodeURIComponent(targetSlug)}`,
@@ -730,8 +791,9 @@ function AppInner({
       setMainView('profile');
       setActiveTab(tab);
       resetProfileChrome();
+      bumpProfileEntryReplay?.();
     },
-    [allProfiles, ownProfileSlug, resetProfileChrome, setActiveTab, setMainView],
+    [allProfiles, ownProfileSlug, resetProfileChrome, setActiveTab, setMainView, bumpProfileEntryReplay],
   );
 
   const handleSelectView = useCallback(
@@ -820,6 +882,7 @@ function AppInner({
                 tellMeMorePostId={tellExpanded ? (highlightedPost?.id ?? null) : null}
                 personaBadgePersona={personaKey}
                 onOpenProfile={handleOpenProfile}
+                deletedProfileIds={deletedProfileIds}
               />
             </ScrollArea>
           </div>
@@ -833,6 +896,7 @@ function AppInner({
             activeTab={activeTab}
             onTabChange={setActiveTab}
             onOpenProfile={handleOpenProfile}
+            deletedProfileIds={deletedProfileIds}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
             isGeneratingPosts={!viewedProfile && postGen.phase === 'generating' && !postGen.firstRevealed}
             generateApiOrigin={GENERATE_API_ORIGIN}
@@ -1039,35 +1103,51 @@ export default function App() {
     };
   }, [mainView]);
 
+  const [deletedProfileIds, setDeletedProfileIds] = useState([]);
+  const [accountResetKey, setAccountResetKey] = useState(0);
+
+  const applyFullAccountReset = useCallback((profileIdForStorage = null) => {
+    purgeClientAccountState({ profileId: profileIdForStorage, clearSession: true });
+    clearStoredProfileSlug();
+    setLinkedProfileSlug(null);
+    setProfile(null);
+    setAllProfiles([]);
+    setLandingOwnedProfile(null);
+    spectateRevealRef.current?.reset?.();
+    spectateRevealRef.current?.ingestProfiles([]);
+    setMainView('landing');
+    setPersonaOverride(null);
+    setPersonaDeltas(null);
+    setPostGen(POST_GEN_IDLE);
+    setHarvestPhase('idle');
+    setHarvestError(null);
+    setHarvestProgress(null);
+    setAccountResetKey((k) => k + 1);
+  }, []);
+
   const syncAccountDeletionState = useCallback(async () => {
     try {
       const stateRes = await fetch(`${API_ORIGIN}/api/account-state`);
       if (!stateRes.ok) return false;
       const state = await stateRes.json();
+      const deleted = Array.isArray(state?.deletedProfileIds)
+        ? state.deletedProfileIds.map(String)
+        : [];
+      setDeletedProfileIds(deleted);
       // Live-scoring reset only — do not log out other users when someone else deletes.
       applyAccountDeletionFromServer(state?.lastDeletionAt);
 
-      const mySlug = linkedProfileSlug || readLinkedProfileSlug();
-      const deleted = Array.isArray(state?.deletedProfileIds) ? state.deletedProfileIds : [];
-      if (!mySlug || !deleted.includes(String(mySlug))) return false;
+      const mySlug = linkedProfileSlug || readLinkedProfileSlug() || readStoredProfileSlug();
+      if (!mySlug || !isProfileSlugDeleted(mySlug, deleted)) return false;
 
-      clearHostedAccountStorage();
-      clearStoredProfileSlug();
-      setLinkedProfileSlug(null);
-      setProfile(null);
-      setMainView('landing');
-      setPersonaOverride(null);
-      setPersonaDeltas(null);
-      setPostGen(POST_GEN_IDLE);
-      setHarvestPhase('idle');
-      setHarvestError(null);
-      setHarvestProgress(null);
+      const storageProfileId = profile?.slug ?? profile?.id ?? mySlug;
+      applyFullAccountReset(storageProfileId);
       return true;
     } catch {
       /* ignore */
     }
     return false;
-  }, [linkedProfileSlug]);
+  }, [applyFullAccountReset, linkedProfileSlug, profile?.slug, profile?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1120,7 +1200,24 @@ export default function App() {
           setProfile(null);
           return;
         }
-        const normalized = normalizeProfilesFromApi(data);
+        let deleted = deletedProfileIds;
+        try {
+          const stateRes = await fetch(`${API_ORIGIN}/api/account-state`, { cache: 'no-store' });
+          if (stateRes.ok) {
+            const state = await stateRes.json();
+            deleted = Array.isArray(state?.deletedProfileIds)
+              ? state.deletedProfileIds.map(String)
+              : [];
+            setDeletedProfileIds(deleted);
+            applyAccountDeletionFromServer(state?.lastDeletionAt);
+          }
+        } catch {
+          /* ignore */
+        }
+
+        const normalized = normalizeProfilesFromApi(
+          filterProfilesNotDeleted(data, deleted),
+        );
         ingestProfileAvatars(normalized);
         inferPublicMediaConfigFromProfiles(normalized);
 
@@ -1129,12 +1226,11 @@ export default function App() {
             headers: { ...hostedAuthHeaders() },
           }).catch(() => null);
           if (!meRes?.ok) {
-            if (meRes?.status === 401) {
-              clearHostedAccountStorage();
-              clearStoredProfileSlug();
-              setLinkedProfileSlug(null);
-              setProfile(null);
-              setLandingOwnedProfile(null);
+            if (shouldResetHostedSessionForProfileMeStatus(meRes?.status)) {
+              const storageProfileId =
+                profile?.slug ?? profile?.id ?? linkedProfileSlug ?? readStoredProfileSlug();
+              applyFullAccountReset(storageProfileId);
+              return;
             }
           } else {
             const meJson = await meRes.json().catch(() => ({}));
@@ -1166,12 +1262,22 @@ export default function App() {
               spectateRevealRef.current?.ingestProfiles(directory);
               return;
             }
+            const storageProfileId =
+              profile?.slug ?? profile?.id ?? linkedProfileSlug ?? readStoredProfileSlug();
+            applyFullAccountReset(storageProfileId);
+            return;
           }
         }
 
         setAllProfiles(normalized);
         spectateRevealRef.current?.ingestProfiles(normalized);
         const owned = resolveOwnedLandingProfile(normalized, linkedProfileSlug);
+        if (linkedProfileSlug && !owned) {
+          const storageProfileId =
+            profile?.slug ?? profile?.id ?? linkedProfileSlug ?? readStoredProfileSlug();
+          applyFullAccountReset(storageProfileId);
+          return;
+        }
         if (!linkedProfileSlug && readStoredProfileSlug() && !owned) {
           clearStoredProfileSlug();
         }
@@ -1182,7 +1288,7 @@ export default function App() {
               preserveClientPosts: generationSessionActiveRef.current,
             }),
           );
-        } else if (linkedProfileSlug && !isHostedApiOrigin()) {
+        } else {
           setProfile(null);
         }
       } catch {
@@ -1198,14 +1304,24 @@ export default function App() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [syncAccountDeletionState, mainView, linkedProfileSlug]);
+  }, [syncAccountDeletionState, mainView, linkedProfileSlug, applyFullAccountReset, deletedProfileIds]);
 
   const reloadProfileFromApi = useCallback(async ({ skipPostsMerge = false, forcePostsMerge = false } = {}) => {
     const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to reload profile');
     const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) return null;
-    const normalized = normalizeProfilesFromApi(data);
+    if (!Array.isArray(data) || data.length === 0) {
+      setAllProfiles([]);
+      setProfile(null);
+      return null;
+    }
+    const filtered = filterProfilesNotDeleted(data, deletedProfileIds);
+    if (filtered.length === 0) {
+      setAllProfiles([]);
+      setProfile(null);
+      return null;
+    }
+    const normalized = normalizeProfilesFromApi(filtered);
     ingestProfileAvatars(normalized);
     setAllProfiles(normalized);
     spectateRevealRef.current?.ingestProfiles(normalized);
@@ -1238,7 +1354,7 @@ export default function App() {
       return merged;
     });
     return merged;
-  }, [linkedProfileSlug]);
+  }, [deletedProfileIds, linkedProfileSlug]);
 
   useEffect(() => {
     const skip = postGen.loading
@@ -1280,9 +1396,48 @@ export default function App() {
     throw new Error('Harvest timed out');
   }, [reloadProfileFromApi]);
 
+  const ownedProfileId = useMemo(() => {
+    if (!profile) return null;
+    if (isHostedApiOrigin()) {
+      return profile.slug ?? profile.id ?? null;
+    }
+    const first = String(profile.firstname ?? '').trim().toLowerCase();
+    const last = String(profile.lastname ?? '').trim().toLowerCase();
+    return first && last ? `${first}-${last}` : null;
+  }, [profile?.slug, profile?.id, profile?.firstname, profile?.lastname]);
+
+  const prependCompliantPost = useCallback(
+    (post) => {
+      if (!ownedProfileId || !post) return;
+      const apply = () => {
+        setProfile((prev) =>
+          prev
+            ? { ...prev, personaPosts: mergePostsPrepend([post], prev.personaPosts ?? []) }
+            : prev,
+        );
+        prependPersonaPosts(ownedProfileId, [post]).catch((err) => {
+          console.warn('[compliant] failed to persist system post:', err?.message || err);
+        });
+      };
+      if (tryDeferCompliant(apply)) return;
+      apply();
+    },
+    [ownedProfileId, tryDeferCompliant],
+  );
+
   const runBioAndPostGeneration = useCallback(async (profileSnapshot) => {
-    const p = profileSnapshot ?? profile;
+    let p = profileSnapshot ?? profile;
     if (!p) return;
+    if (profileNeedsCompliantJoin(p)) {
+      const joinPost = buildCompliantJoinPostForProfile(p, p.personaPosts ?? []);
+      if (joinPost) {
+        prependCompliantPost(joinPost);
+        p = {
+          ...p,
+          personaPosts: mergePostsPrepend([joinPost], p.personaPosts ?? []),
+        };
+      }
+    }
     streamPostsBaselineRef.current = Array.isArray(p.personaPosts) ? p.personaPosts : [];
 
     const existingBio = String(p.profileSummary || p.userDescription || '').trim();
@@ -1447,7 +1602,12 @@ export default function App() {
     } finally {
       disarmIdleWatchdog();
     }
-  }, [profile, reloadProfileFromApi, schedulePersonaDeltasClearAfterGenerate]);
+  }, [
+    profile,
+    prependCompliantPost,
+    reloadProfileFromApi,
+    schedulePersonaDeltasClearAfterGenerate,
+  ]);
 
   const runBioAndPostGenerationRef = useRef(runBioAndPostGeneration);
   useEffect(() => {
@@ -1456,26 +1616,96 @@ export default function App() {
 
   const autoPostGenProfileIdRef = useRef(null);
 
-  // Local dev only: after Electron syncs a bio with no posts, stream generation from :3010.
+  const countAiGeneratedPosts = useCallback((posts) => {
+    if (!Array.isArray(posts)) return 0;
+    return posts.filter(
+      (p) => String(p?.content || '').trim() && !isCompliantSystemPost(p),
+    ).length;
+  }, []);
+
+  // After harvest sync: queue worker jobs on hosted; stream from :3010 locally.
   useEffect(() => {
-    if (isHostedApiOrigin()) return;
-    if (!profile || postGen.loading) return;
-    const profileId = profile.slug ?? profile.id;
+    if (!profile || postGen.loading || harvestPhase === 'harvesting') return;
+
+    const hosted = isHostedApiOrigin();
+    const owned = hosted
+      ? resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug)
+      : profile;
+    if (!owned) return;
+
+    const profileId = owned.slug ?? owned.id;
     if (!profileId || autoPostGenProfileIdRef.current === profileId) return;
-    const bio = String(profile.profileSummary || profile.userDescription || '').trim();
-    const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
-    if (!bio || posts.length > 0) return;
+
+    const aiPostCount = countAiGeneratedPosts(owned.personaPosts);
+    if (aiPostCount >= 3) return;
+
+    if (hosted && !readHostedSession()?.access_token) {
+      return;
+    }
+    if (!hosted) {
+      const bio = String(owned.profileSummary || owned.userDescription || '').trim();
+      if (!bio) return;
+    }
+
     autoPostGenProfileIdRef.current = profileId;
     setPostGen({ loading: true, phase: 'generating', error: null, firstRevealed: false });
-    runBioAndPostGenerationRef.current(profile)
-      .then(() => {
-        setPostGen(POST_GEN_IDLE);
-      })
-      .catch((e) => {
+
+    (async () => {
+      try {
+        if (hosted) {
+          const triggerRes = await fetch(`${API_ORIGIN}/api/generation-jobs/trigger-initial`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...hostedAuthHeaders(),
+            },
+            body: JSON.stringify({ profileSlug: profileId }),
+          });
+          if (!triggerRes.ok) {
+            const errText = await triggerRes.text().catch(() => '');
+            throw new Error(errText.slice(0, 200) || `Generation queue failed (${triggerRes.status})`);
+          }
+          const triggerBody = await triggerRes.json().catch(() => ({}));
+          if (triggerBody?.alreadyComplete) {
+            setPostGen(POST_GEN_IDLE);
+            return;
+          }
+          const jobId = triggerBody?.jobId ?? null;
+          streamPostsBaselineRef.current = stripFeedRevealMetaFromPosts(owned.personaPosts ?? []);
+          await runHostedPostGenerationWithReveal({
+            jobId,
+            reloadProfileFromApi,
+            getBaselinePosts: () => streamPostsBaselineRef.current,
+            onDismissGeneratingUi: dismissGeneratingUi,
+            onPostRevealed: handlePostRevealed,
+            applyRevealedPosts: (personaPosts) => {
+              setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
+            },
+          });
+          setPostGen(POST_GEN_IDLE);
+          schedulePersonaDeltasClearAfterGenerate();
+          await reloadProfileFromApi({ forcePostsMerge: true });
+        } else {
+          await runBioAndPostGenerationRef.current(owned);
+          setPostGen(POST_GEN_IDLE);
+        }
+      } catch (e) {
         autoPostGenProfileIdRef.current = null;
         setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
-      });
-  }, [profile, postGen.loading]);
+      }
+    })();
+  }, [
+    profile,
+    allProfiles,
+    linkedProfileSlug,
+    postGen.loading,
+    harvestPhase,
+    countAiGeneratedPosts,
+    reloadProfileFromApi,
+    dismissGeneratingUi,
+    handlePostRevealed,
+    schedulePersonaDeltasClearAfterGenerate,
+  ]);
 
   const handleGeneratePersonaPosts = async () => {
     if (postGen.loading || harvestPhase === 'harvesting' || !profile) return;
@@ -1669,6 +1899,9 @@ export default function App() {
         harvestError={harvestError}
         personaDeltas={personaDeltas}
         profileScoreReplayNonce={profileScoreReplayNonce}
+        bumpProfileEntryReplay={() => setProfileScoreReplayNonce((n) => n + 1)}
+        deletedProfileIds={deletedProfileIds}
+        accountResetKey={accountResetKey}
         handleGeneratePersonaPosts={handleGeneratePersonaPosts}
         linkedProfileSlug={linkedProfileSlug}
         tryDeferCompliant={tryDeferCompliant}

@@ -41,11 +41,16 @@ function joinCopy(userDisplayName) {
   );
 }
 
-export function createCompliantJoinPost({ profile, userDisplayName, dominantPersona }) {
+export function createCompliantJoinPost({
+  profile,
+  userDisplayName,
+  dominantPersona,
+  createdAt: createdAtOverride,
+}) {
   const fromProfile = [profile?.firstname, profile?.lastname].filter(Boolean).join(' ').trim();
   const name = userDisplayName ?? (fromProfile || 'User');
   const persona = dominantPersona ?? profile?.dominantPersona ?? 'productivity';
-  const createdAt = Date.now();
+  const createdAt = Number(createdAtOverride) || Date.now();
 
   return {
     id: `compliant-join-${createdAt}`,

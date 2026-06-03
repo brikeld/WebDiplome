@@ -200,6 +200,20 @@ export function createGenerationJobStore(supabase) {
       }) ?? null;
     },
 
+    /** Replace payload on a still-queued job (e.g. sync queued empty harvest, Electron sends full data). */
+    async updateQueuedJobPayload(jobId, requestPayload) {
+      return throwIfError(
+        await supabase
+          .from('generation_jobs')
+          .update({ request_payload: requestPayload ?? {} })
+          .eq('id', jobId)
+          .eq('status', 'queued')
+          .select('*')
+          .maybeSingle(),
+        'update queued generation job payload',
+      );
+    },
+
     async findLatestJobPayload(profileId, jobType = 'posts') {
       const rows = throwIfError(
         await supabase

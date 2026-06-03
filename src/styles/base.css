@@ -1642,6 +1642,40 @@ body {
   text-align: inherit;
 }
 
+.profile-name-link {
+  display: inline;
+  font: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 0.14em;
+  transition: text-decoration-color 0.15s ease, opacity 0.15s ease;
+}
+
+.profile-name-link:hover,
+.profile-name-link:focus-visible {
+  text-decoration-color: currentColor;
+}
+
+.profile-name-link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+button.profile-name-link.leaderboard-row__name {
+  text-align: left;
+  min-width: 0;
+}
+
 .profile-avatar-link:focus-visible {
   outline: 2px solid var(--post-accent, var(--persona-accent, #759aef));
   outline-offset: 3px;

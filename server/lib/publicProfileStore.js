@@ -12,11 +12,18 @@ import { repairProfileWallpaperIfNeeded } from './repairProfileWallpaper.js';
 import {
   createCompliantJoinPost,
   hasCompliantJoinPost,
+  joinCreatedAtAfterExisting,
 } from './compliantSystemPosts.js';
 import {
   dedupeProfilesWithMergedPosts,
   mergeSiblingPostsForProfile,
+  profileIdentityKey,
 } from './hostedProfileDedupe.js';
+import {
+  filterProfilesNotDeleted,
+  isProfileSlugDeleted,
+} from './deletedProfileSlugs.js';
+import { getHostedAccountState } from './hostedAccountDeletion.js';
 
 function throwIfError(result, label) {
   if (result?.error) throw new Error(`${label}: ${result.error.message}`);
@@ -180,6 +187,54 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     return { deleted: results.length, profiles: results, prefix: pattern };
   }
 
+  /**
+   * Remove every hosted row for the same real person (name + machine), not only
+   * the current auth user — prevents ghost feeds after re-signup.
+   */
+  async function deleteAllProfilesWithIdentityKey(seedRow, actingUserId = null) {
+    const key = profileIdentityKey(
+      seedRow
+        ? {
+            firstname: seedRow.firstname,
+            lastname: seedRow.lastname,
+            machineName: seedRow.machine_name ?? seedRow.machineName,
+          }
+        : null,
+    );
+    if (!key) return { deletedSlugs: [], orphansRemoved: 0 };
+
+    const rows = throwIfError(
+      await supabase.from('profiles').select('id, slug, user_id, firstname, lastname, machine_name'),
+      'list profiles for identity purge',
+    );
+    const siblings = (rows ?? []).filter((row) => {
+      if (!row?.id) return false;
+      return (
+        profileIdentityKey({
+          firstname: row.firstname,
+          lastname: row.lastname,
+          machineName: row.machine_name,
+        }) === key
+      );
+    });
+
+    const deletedSlugs = [];
+    for (const row of siblings) {
+      await purgeProfileData({
+        userId: row.user_id,
+        profileId: row.id,
+        slug: row.slug,
+      });
+      deletedSlugs.push(String(row.slug));
+      if (row.user_id && row.user_id !== actingUserId) {
+        await supabase.auth.admin.deleteUser(row.user_id).catch(() => null);
+      }
+    }
+
+    const orphansRemoved = await deleteOrphanPosts();
+    return { deletedSlugs, orphansRemoved };
+  }
+
   async function resolveWallpaperUrl(userId, payload, existing) {
     const parsed = parseWallpaperBase64(payload?.wallpaperBase64 ?? payload?.wallpaper_base64);
     if (parsed && storageStore) {
@@ -212,6 +267,18 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       return { ...row, wallpaper_url: repaired };
     }
     return row;
+  }
+
+  async function appendPostsToProfile({ profileId, userId, posts, source = 'generated' }) {
+    const rows = (Array.isArray(posts) ? posts : [])
+      .filter((p) => p && p.content)
+      .map((p) => mapPostForInsert(p, profileId, userId, source));
+    if (rows.length === 0) return [];
+    const inserted = throwIfError(
+      await supabase.from('posts').insert(rows).select('*'),
+      'append posts',
+    );
+    return (inserted ?? []).map(mapPostRowForApi);
   }
 
   return {
@@ -250,43 +317,52 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         }
       }
 
-      if (!existing) {
-        const afterSync = await readPosts(saved.id);
-        if (!hasCompliantJoinPost(afterSync)) {
-          const displayName =
-            String(row.display_name || '').trim() ||
-            [payload?.firstname, payload?.lastname].map((s) => String(s ?? '').trim()).filter(Boolean).join(' ') ||
-            'User';
-          const joinPost = createCompliantJoinPost({
-            profile: payload,
-            userDisplayName: displayName,
-            dominantPersona: row.dominant_persona ?? payload?.dominantPersona,
-          });
-          await appendPosts({
-            profileId: saved.id,
-            userId,
-            posts: [joinPost],
-            source: 'system',
-          });
-        }
+      const afterSync = await readPosts(saved.id);
+      if (!hasCompliantJoinPost(afterSync)) {
+        const displayName =
+          String(row.display_name || '').trim() ||
+          [payload?.firstname, payload?.lastname].map((s) => String(s ?? '').trim()).filter(Boolean).join(' ') ||
+          'User';
+        const joinPost = createCompliantJoinPost({
+          profile: payload,
+          userDisplayName: displayName,
+          dominantPersona: row.dominant_persona ?? payload?.dominantPersona,
+          createdAt: joinCreatedAtAfterExisting(afterSync),
+        });
+        await appendPostsToProfile({
+          profileId: saved.id,
+          userId,
+          posts: [joinPost],
+          source: 'system',
+        });
       }
 
       return mapProfileRowForApi(saved, await readPosts(saved.id));
     },
 
     async listProfiles() {
+      await deleteOrphanPosts();
       const mapped = await listAllProfilesWithPosts();
-      return dedupeProfilesWithMergedPosts(mapped);
+      const deduped = dedupeProfilesWithMergedPosts(mapped);
+      const { deletedProfileIds } = getHostedAccountState();
+      return filterProfilesNotDeleted(deduped, deletedProfileIds);
     },
 
     async listProfilesForLeaderboards() {
+      const { deletedProfileIds } = getHostedAccountState();
       const rows = throwIfError(
         await supabase.from('profiles').select('*').order('updated_at', { ascending: false }),
         'list profiles for leaderboards',
       );
-      const directory = await listAllProfilesWithPosts();
+      const directory = filterProfilesNotDeleted(
+        await listAllProfilesWithPosts(),
+        deletedProfileIds,
+      );
+      const activeRows = (rows ?? []).filter(
+        (row) => !isProfileSlugDeleted(row?.slug, deletedProfileIds),
+      );
       return Promise.all(
-        (rows ?? []).map(async (row) => {
+        activeRows.map(async (row) => {
           const api = {
             ...mapProfileRowForApi(row, await readPosts(row.id)),
             _harvest: row.raw_profile ?? {},
@@ -297,6 +373,9 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     },
 
     async getProfileBySlug(slug) {
+      const { deletedProfileIds } = getHostedAccountState();
+      if (isProfileSlugDeleted(slug, deletedProfileIds)) return null;
+
       const row = throwIfError(
         await supabase.from('profiles').select('*').eq('slug', slug).maybeSingle(),
         'get profile',
@@ -316,15 +395,7 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     },
 
     async appendPosts({ profileId, userId, posts, source = 'generated' }) {
-      const rows = (Array.isArray(posts) ? posts : [])
-        .filter((p) => p && p.content)
-        .map((p) => mapPostForInsert(p, profileId, userId, source));
-      if (rows.length === 0) return [];
-      const inserted = throwIfError(
-        await supabase.from('posts').insert(rows).select('*'),
-        'append posts',
-      );
-      return (inserted ?? []).map(mapPostRowForApi);
+      return appendPostsToProfile({ profileId, userId, posts, source });
     },
 
     async updateProfileSummary({ profileId, userId, profileSummary }) {
@@ -402,27 +473,35 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       };
     },
 
+    deleteAllProfilesWithIdentityKey,
+
     /** Wipe profile, posts, jobs, assets, and the Supabase auth user. */
     async deleteAccountForUser(userId) {
       const profile = await findProfileByUserId(userId);
       if (!profile) {
         await purgeProfileData({ userId, profileId: null });
         await supabase.auth.admin.deleteUser(userId).catch(() => null);
-        return { deleted: false, slug: null };
+        const orphansRemoved = await deleteOrphanPosts();
+        return { deleted: false, slug: null, deletedSlugs: [], orphansRemoved };
       }
 
-      await purgeProfileData({
+      const { deletedSlugs, orphansRemoved } = await this.deleteAllProfilesWithIdentityKey(
+        profile,
         userId,
-        profileId: profile.id,
-        slug: profile.slug,
-      });
+      );
 
       const authDelete = await supabase.auth.admin.deleteUser(userId);
       if (authDelete.error) {
         throw new Error(`delete auth user: ${authDelete.error.message}`);
       }
 
-      return { deleted: true, slug: profile.slug, profileId: profile.id };
+      return {
+        deleted: true,
+        slug: profile.slug,
+        profileId: profile.id,
+        deletedSlugs,
+        orphansRemoved,
+      };
     },
 
     deleteProfileBySlug,

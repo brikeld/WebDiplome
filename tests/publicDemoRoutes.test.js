@@ -12,5 +12,7 @@ describe('hosted public demo routes', () => {
     expect(src).toContain("router.get('/app-releases/latest'");
     expect(src).toContain("router.get('/leaderboards'");
     expect(src).toContain("router.post('/comments'");
+    expect(src).toContain('queuePostsJobAfterHarvestSync');
+    expect(src).toContain('jobStore');
   });
 });

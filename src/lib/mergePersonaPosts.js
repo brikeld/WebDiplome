@@ -120,10 +120,18 @@ export function mergePostsPrepend(newPosts, baselinePosts) {
 /**
  * Merge API reload with in-memory profile without dropping COMPLIANT system posts.
  * Regular posts use the longer-list heuristic; system posts are always unioned.
+ *
+ * When the server returns an empty post list, treat it as authoritative (account
+ * delete / wiped posts) — never resurrect stale client posts.
  */
 export function mergePersonaPostsFromApi(prevPosts, incomingPosts) {
   const prev = Array.isArray(prevPosts) ? prevPosts : [];
+  if (incomingPosts === undefined) return dedupeCompliantSystemPosts(prev);
   const incoming = Array.isArray(incomingPosts) ? incomingPosts : [];
+
+  if (incoming.length === 0) {
+    return dedupeCompliantSystemPosts(incoming);
+  }
 
   const prevSystem = prev.filter(isCompliantSystemPost);
   const incomingSystem = incoming.filter(isCompliantSystemPost);
@@ -132,9 +140,11 @@ export function mergePersonaPostsFromApi(prevPosts, incomingPosts) {
 
   const system = mergePostsPrepend(incomingSystem, prevSystem);
   const regular =
-    incomingRegular.length >= prevRegular.length
-      ? mergePostsPrepend(incomingRegular, prevRegular)
-      : mergePostsPrepend(prevRegular, incomingRegular);
+    incomingRegular.length === 0
+      ? []
+      : prevRegular.length > incomingRegular.length
+        ? incomingRegular
+        : mergePostsPrepend(incomingRegular, prevRegular);
 
   return dedupeCompliantSystemPosts(mergePostsPrepend(system, regular));
 }
