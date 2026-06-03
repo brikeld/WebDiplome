@@ -20,7 +20,7 @@ export function slugsReferToSameAccount(a, b) {
 export function isProfileSlugDeleted(slug, deletedProfileIds) {
   const needle = String(slug ?? '').trim();
   if (!needle || !Array.isArray(deletedProfileIds)) return false;
-  return deletedProfileIds.some((id) => slugsReferToSameAccount(needle, id));
+  return deletedProfileIds.some((id) => needle === String(id ?? '').trim());
 }
 
 export function filterProfilesNotDeleted(profiles, deletedProfileIds) {

@@ -83,6 +83,7 @@ import {
   readHostedSession,
   readLinkedProfileSlug,
   resolveOwnedProfileForFeatures,
+  shouldResetHostedSessionForProfileMeStatus,
 } from '@/lib/hostedAccount.js';
 import {
   persistProfileSlug,
@@ -1225,7 +1226,7 @@ export default function App() {
             headers: { ...hostedAuthHeaders() },
           }).catch(() => null);
           if (!meRes?.ok) {
-            if (meRes?.status === 401 || meRes?.status === 404) {
+            if (shouldResetHostedSessionForProfileMeStatus(meRes?.status)) {
               const storageProfileId =
                 profile?.slug ?? profile?.id ?? linkedProfileSlug ?? readStoredProfileSlug();
               applyFullAccountReset(storageProfileId);

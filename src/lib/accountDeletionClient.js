@@ -22,11 +22,11 @@ export function slugsReferToSameAccount(a, b) {
   return baseA !== '' && baseA === baseB;
 }
 
-/** True when this browser slug was removed (exact or sibling hosted row). */
+/** True when this exact browser slug was removed. */
 export function isProfileSlugDeleted(slug, deletedProfileIds) {
   const needle = String(slug ?? '').trim();
   if (!needle || !Array.isArray(deletedProfileIds)) return false;
-  return deletedProfileIds.some((id) => slugsReferToSameAccount(needle, id));
+  return deletedProfileIds.some((id) => needle === String(id ?? '').trim());
 }
 
 /** Drop profiles the server marked deleted (prevents ghost feed rows). */
