@@ -57,6 +57,7 @@ import {
   attachApiPersonaPosts,
   mergeProfilePreservePosts,
 } from '@/lib/profileReload.js';
+import { isCompliantSystemPost } from '@/lib/mergePersonaPosts.js';
 import {
   createPostFeedRevealQueue,
   POST_REVEAL_GAP_MS,
@@ -1614,26 +1615,95 @@ export default function App() {
 
   const autoPostGenProfileIdRef = useRef(null);
 
-  // Local dev only: after Electron syncs a bio with no posts, stream generation from :3010.
+  const countAiGeneratedPosts = useCallback((posts) => {
+    if (!Array.isArray(posts)) return 0;
+    return posts.filter(
+      (p) => String(p?.content || '').trim() && !isCompliantSystemPost(p),
+    ).length;
+  }, []);
+
+  // After harvest sync: queue worker jobs on hosted; stream from :3010 locally.
   useEffect(() => {
-    if (isHostedApiOrigin()) return;
-    if (!profile || postGen.loading) return;
-    const profileId = profile.slug ?? profile.id;
+    if (!profile || postGen.loading || harvestPhase === 'harvesting') return;
+
+    const hosted = isHostedApiOrigin();
+    const owned = hosted
+      ? resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug)
+      : profile;
+    if (!owned) return;
+
+    const profileId = owned.slug ?? owned.id;
     if (!profileId || autoPostGenProfileIdRef.current === profileId) return;
-    const bio = String(profile.profileSummary || profile.userDescription || '').trim();
-    const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
-    if (!bio || posts.length > 0) return;
+
+    const aiPostCount = countAiGeneratedPosts(owned.personaPosts);
+    if (aiPostCount >= 3) return;
+
+    if (!hosted) {
+      const bio = String(owned.profileSummary || owned.userDescription || '').trim();
+      if (!bio) return;
+    } else if (!readHostedSession()?.access_token) {
+      return;
+    }
+
     autoPostGenProfileIdRef.current = profileId;
     setPostGen({ loading: true, phase: 'generating', error: null, firstRevealed: false });
-    runBioAndPostGenerationRef.current(profile)
-      .then(() => {
-        setPostGen(POST_GEN_IDLE);
-      })
-      .catch((e) => {
+
+    (async () => {
+      try {
+        if (hosted) {
+          const triggerRes = await fetch(`${API_ORIGIN}/api/generation-jobs/trigger-initial`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...hostedAuthHeaders(),
+            },
+            body: JSON.stringify({ profileSlug: profileId }),
+          });
+          if (!triggerRes.ok) {
+            const errText = await triggerRes.text().catch(() => '');
+            throw new Error(errText.slice(0, 200) || `Generation queue failed (${triggerRes.status})`);
+          }
+          const triggerBody = await triggerRes.json().catch(() => ({}));
+          if (triggerBody?.alreadyComplete) {
+            setPostGen(POST_GEN_IDLE);
+            return;
+          }
+          const jobId = triggerBody?.jobId ?? null;
+          streamPostsBaselineRef.current = stripFeedRevealMetaFromPosts(owned.personaPosts ?? []);
+          await runHostedPostGenerationWithReveal({
+            jobId,
+            reloadProfileFromApi,
+            getBaselinePosts: () => streamPostsBaselineRef.current,
+            onDismissGeneratingUi: dismissGeneratingUi,
+            onPostRevealed: handlePostRevealed,
+            applyRevealedPosts: (personaPosts) => {
+              setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
+            },
+          });
+          setPostGen(POST_GEN_IDLE);
+          schedulePersonaDeltasClearAfterGenerate();
+          await reloadProfileFromApi({ forcePostsMerge: true });
+        } else {
+          await runBioAndPostGenerationRef.current(owned);
+          setPostGen(POST_GEN_IDLE);
+        }
+      } catch (e) {
         autoPostGenProfileIdRef.current = null;
         setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
-      });
-  }, [profile, postGen.loading]);
+      }
+    })();
+  }, [
+    profile,
+    allProfiles,
+    linkedProfileSlug,
+    postGen.loading,
+    harvestPhase,
+    countAiGeneratedPosts,
+    reloadProfileFromApi,
+    dismissGeneratingUi,
+    handlePostRevealed,
+    schedulePersonaDeltasClearAfterGenerate,
+  ]);
 
   const handleGeneratePersonaPosts = async () => {
     if (postGen.loading || harvestPhase === 'harvesting' || !profile) return;

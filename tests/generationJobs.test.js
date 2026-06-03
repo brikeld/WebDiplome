@@ -13,7 +13,9 @@ describe('generation job implementation', () => {
     expect(src).toContain("router.post('/comments/suggest'");
     expect(src).toContain("router.post('/persona-blurbs/generate'");
     expect(src).toContain("router.post('/profile/generate-summary'");
+    expect(src).toContain("router.post('/generation-jobs/trigger-initial'");
     expect(src).toContain("router.post('/generation-jobs/trigger-update'");
+    expect(src).toContain('queueInitialPostsJobIfNeeded');
     expect(src).toContain('resolveSubjectProfileContext');
     expect(src).toContain('resolveCommenterProfileContext');
   });

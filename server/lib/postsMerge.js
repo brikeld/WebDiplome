@@ -12,6 +12,12 @@ export function isCompliantJoinPost(post) {
   return Boolean(post?.compliantJoin);
 }
 
+export function isCompliantSystemPost(post) {
+  return Boolean(
+    post?.compliantPersonaChange || post?.compliantLowScore || post?.compliantJoin,
+  );
+}
+
 function postCreatedAtMs(post) {
   const v = post?.createdAt ?? post?.created_at ?? 0;
   if (typeof v === 'number' && Number.isFinite(v)) return v;
