@@ -3,6 +3,7 @@ import {
   harvestPayloadHasContent,
   mergeGenerationRequestPayload,
   countAiGeneratedPosts,
+  queuePostsJobAfterHarvestSync,
 } from '../server/lib/generationQueue.js';
 
 describe('generationQueue helpers', () => {
@@ -28,5 +29,15 @@ describe('generationQueue helpers', () => {
       { content: 'join', compliantJoin: true },
     ]);
     expect(n).toBe(1);
+  });
+
+  it('skips harvest sync queue when dataJson is empty', async () => {
+    const outcome = await queuePostsJobAfterHarvestSync({
+      profileStore: { getProfileRowBySlug: async () => null },
+      jobStore: {},
+      profileSlug: 'demo',
+      syncDataJson: {},
+    });
+    expect(outcome.reason).toBe('profile_not_found');
   });
 });

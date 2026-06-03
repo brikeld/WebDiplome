@@ -3,6 +3,7 @@ import multer from 'multer';
 import { requireHostedUser } from '../lib/auth.js';
 import { recordHostedAccountDeletion } from '../lib/hostedAccountDeletion.js';
 import { serverConfig } from '../lib/env.js';
+import { queuePostsJobAfterHarvestSync } from '../lib/generationQueue.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -11,6 +12,7 @@ export function createPublicDemoRoutes({
   profileStore,
   storageStore,
   buildLeaderboards,
+  jobStore = null,
 }) {
   const router = express.Router();
   const requireUser = requireHostedUser(supabaseService);
@@ -58,9 +60,20 @@ export function createPublicDemoRoutes({
         replacePosts: req.body?.replacePersonaPosts === true,
       });
 
-      // Generation jobs are queued by the Compliant app with full harvest dataJson.
-      // Auto-queueing here raced ahead with an empty payload and blocked real jobs.
-      res.json({ success: true, profile });
+      let generation = null;
+      if (jobStore) {
+        const slug = profile?.slug ?? profile?.id ?? '';
+        const syncDataJson = req.body?.dataJson ?? req.body?.data_json ?? null;
+        generation = await queuePostsJobAfterHarvestSync({
+          profileStore,
+          jobStore,
+          profileSlug: slug,
+          userId: req.authUser.id,
+          syncDataJson,
+        });
+      }
+
+      res.json({ success: true, profile, generation });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

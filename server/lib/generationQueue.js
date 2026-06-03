@@ -87,24 +87,29 @@ export async function queueInitialPostsJobIfNeeded({
     };
   }
 
+  const ctx = await resolveSubjectProfileContext(
+    profileStore,
+    { profileSlug: slug },
+    { jobStore },
+  );
+
   const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
   const priorPayload = latest?.request_payload;
   let requestPayload;
 
   if (priorPayload && typeof priorPayload === 'object') {
     const { assetCandidates: _stale, ...priorWithoutAssets } = priorPayload;
+    const priorData = priorWithoutAssets.dataJson ?? priorWithoutAssets.data_json;
     requestPayload = {
       ...priorWithoutAssets,
       jobType: 'posts',
       profile: slimProfilePayloadForStorage(apiProfile ?? {}),
       existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
+      dataJson: harvestPayloadHasContent(ctx.dataJson)
+        ? ctx.dataJson
+        : (harvestPayloadHasContent(priorData) ? priorData : (ctx.dataJson ?? {})),
     };
   } else {
-    const ctx = await resolveSubjectProfileContext(
-      profileStore,
-      { profileSlug: slug },
-      { jobStore },
-    );
     requestPayload = {
       jobType: 'posts',
       user: userPayloadFromProfileRow(row, apiProfile),
@@ -113,6 +118,90 @@ export async function queueInitialPostsJobIfNeeded({
       existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
     };
   }
+
+  const job = await jobStore.createJob({
+    userId: row.user_id,
+    profileId: row.id,
+    requestPayload,
+  });
+
+  return { queued: true, jobId: job.id, status: job.status };
+}
+
+/**
+ * After Electron harvest sync: start worker generation without opening the website.
+ * Updates a stale queued job when sync carries real harvest dataJson.
+ */
+export async function queuePostsJobAfterHarvestSync({
+  profileStore,
+  jobStore,
+  profileSlug,
+  userId = null,
+  syncDataJson = null,
+}) {
+  const slug = String(profileSlug || '').trim();
+  if (!slug || !profileStore || !jobStore) {
+    return { queued: false, reason: 'missing_context' };
+  }
+
+  const row = await profileStore.getProfileRowBySlug(slug);
+  if (!row) return { queued: false, reason: 'profile_not_found' };
+  if (userId && row.user_id !== userId) {
+    return { queued: false, reason: 'forbidden' };
+  }
+
+  const apiProfile = await profileStore.getProfileBySlug(slug);
+  if (!profileNeedsInitialGeneration(apiProfile)) {
+    return { queued: false, reason: 'already_complete', alreadyComplete: true };
+  }
+
+  const incomingData = syncDataJson ?? null;
+  if (!harvestPayloadHasContent(incomingData)) {
+    return { queued: false, reason: 'no_harvest_data' };
+  }
+
+  const active = await jobStore.findActiveJob({ profileId: row.id, jobType: 'posts' });
+  if (active) {
+    const existingPayload =
+      active.request_payload && typeof active.request_payload === 'object'
+        ? active.request_payload
+        : {};
+    const existingData = existingPayload.dataJson ?? existingPayload.data_json;
+    if (
+      active.status === 'queued'
+      && !harvestPayloadHasContent(existingData)
+      && harvestPayloadHasContent(incomingData)
+    ) {
+      const merged = mergeGenerationRequestPayload(existingPayload, {
+        jobType: 'posts',
+        profile: slimProfilePayloadForStorage(apiProfile ?? {}),
+        dataJson: incomingData,
+        existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
+        user: userPayloadFromProfileRow(row, apiProfile),
+      });
+      await jobStore.updateQueuedJobPayload(active.id, merged);
+      return {
+        queued: false,
+        payloadUpdated: true,
+        jobId: active.id,
+        status: active.status,
+      };
+    }
+    return {
+      queued: false,
+      alreadyQueued: true,
+      jobId: active.id,
+      status: active.status,
+    };
+  }
+
+  const requestPayload = {
+    jobType: 'posts',
+    user: userPayloadFromProfileRow(row, apiProfile),
+    profile: slimProfilePayloadForStorage(apiProfile ?? {}),
+    dataJson: incomingData,
+    existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
+  };
 
   const job = await jobStore.createJob({
     userId: row.user_id,
