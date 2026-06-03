@@ -93,4 +93,14 @@ describe('public profile mapping', () => {
       created_at: '2026-05-29T11:00:00Z',
     });
   });
+
+  it('serializes numeric post timestamps for Supabase timestamptz columns', () => {
+    const post = mapPostForInsert({
+      content: 'COMPLIANT notice.',
+      createdAt: 1780499624561,
+      compliantJoin: { userDisplayName: 'Brikeld Hoxha' },
+    }, 'profile-1', 'user-1', 'system');
+
+    expect(post.created_at).toBe('2026-06-03T15:13:44.561Z');
+  });
 });
