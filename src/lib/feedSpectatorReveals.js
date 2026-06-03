@@ -14,19 +14,32 @@ export function createFeedSpectatorRevealController({ setAllProfiles, gapMs = PO
   let skipSlug = null;
 
   const getOrCreateQueue = (slug, baselinePosts) => {
-    if (queuesBySlug.has(slug)) return queuesBySlug.get(slug);
-    const fixedBaseline = [...(Array.isArray(baselinePosts) ? baselinePosts : [])];
+    const incoming = [...(Array.isArray(baselinePosts) ? baselinePosts : [])];
+    if (queuesBySlug.has(slug)) {
+      const queue = queuesBySlug.get(slug);
+      // First poll may have had zero posts; expand baseline when the API catches up.
+      if (incoming.length > 0) {
+        queue.markBaseline(incoming);
+      }
+      return queue;
+    }
+    const fixedBaseline = incoming;
     const queue = createPostFeedRevealQueue({
       gapMs,
       getBaseline: () => fixedBaseline,
       onPostsChange: (personaPosts) => {
-        setAllProfiles((prev) =>
-          (Array.isArray(prev) ? prev : []).map((p) => {
+        setAllProfiles((prev) => {
+          const list = Array.isArray(prev) ? prev : [];
+          if (list.length === 0) return list;
+          let matched = false;
+          const next = list.map((p) => {
             const ps = p?.slug ?? p?.id;
             if (String(ps) !== String(slug)) return p;
+            matched = true;
             return { ...p, personaPosts };
-          }),
-        );
+          });
+          return matched ? next : list;
+        });
       },
     });
     queue.markBaseline(fixedBaseline);

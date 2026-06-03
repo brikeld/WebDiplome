@@ -1125,15 +1125,31 @@ export default function App() {
     setAccountResetKey((k) => k + 1);
   }, []);
 
+  const syncDeletedProfileIds = useCallback((deleted) => {
+    const next = Array.isArray(deleted) ? deleted.map(String) : [];
+    setDeletedProfileIds((prev) => {
+      if (prev.length === next.length && prev.every((value, index) => value === next[index])) {
+        return prev;
+      }
+      return next;
+    });
+    return next;
+  }, []);
+
+  const scheduleSpectatorIngest = useCallback((profiles, cancelledRef) => {
+    const snapshot = Array.isArray(profiles) ? profiles : [];
+    queueMicrotask(() => {
+      if (cancelledRef?.cancelled) return;
+      spectateRevealRef.current?.ingestProfiles(snapshot);
+    });
+  }, []);
+
   const syncAccountDeletionState = useCallback(async () => {
     try {
       const stateRes = await fetch(`${API_ORIGIN}/api/account-state`);
       if (!stateRes.ok) return false;
       const state = await stateRes.json();
-      const deleted = Array.isArray(state?.deletedProfileIds)
-        ? state.deletedProfileIds.map(String)
-        : [];
-      setDeletedProfileIds(deleted);
+      const deleted = syncDeletedProfileIds(state?.deletedProfileIds);
       // Live-scoring reset only — do not log out other users when someone else deletes.
       applyAccountDeletionFromServer(state?.lastDeletionAt);
 
@@ -1147,7 +1163,7 @@ export default function App() {
       /* ignore */
     }
     return false;
-  }, [applyFullAccountReset, linkedProfileSlug, profile?.slug, profile?.id]);
+  }, [applyFullAccountReset, linkedProfileSlug, profile?.slug, profile?.id, syncDeletedProfileIds]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1183,7 +1199,7 @@ export default function App() {
   }, [linkedProfileSlug, mainView]);
 
   useEffect(() => {
-    let cancelled = false;
+    const cancelledRef = { cancelled: false };
 
     const load = async () => {
       if (await syncAccountDeletionState()) return;
@@ -1192,7 +1208,7 @@ export default function App() {
         const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
         if (!res.ok) throw new Error('failed');
         const data = await res.json();
-        if (cancelled) return;
+        if (cancelledRef.cancelled) return;
         if (!Array.isArray(data) || data.length === 0) {
           setLandingOwnedProfile(null);
           setAllProfiles([]);
@@ -1205,10 +1221,7 @@ export default function App() {
           const stateRes = await fetch(`${API_ORIGIN}/api/account-state`, { cache: 'no-store' });
           if (stateRes.ok) {
             const state = await stateRes.json();
-            deleted = Array.isArray(state?.deletedProfileIds)
-              ? state.deletedProfileIds.map(String)
-              : [];
-            setDeletedProfileIds(deleted);
+            deleted = syncDeletedProfileIds(state?.deletedProfileIds);
             applyAccountDeletionFromServer(state?.lastDeletionAt);
           }
         } catch {
@@ -1227,9 +1240,12 @@ export default function App() {
           }).catch(() => null);
           if (!meRes?.ok) {
             if (shouldResetHostedSessionForProfileMeStatus(meRes?.status)) {
-              const storageProfileId =
-                profile?.slug ?? profile?.id ?? linkedProfileSlug ?? readStoredProfileSlug();
-              applyFullAccountReset(storageProfileId);
+              clearHostedAccountStorage();
+              setLinkedProfileSlug(null);
+              setProfile(null);
+              setLandingOwnedProfile(null);
+              setAllProfiles(normalized);
+              scheduleSpectatorIngest(normalized, cancelledRef);
               return;
             }
           } else {
@@ -1259,7 +1275,7 @@ export default function App() {
                 directory.unshift(meProfile);
               }
               setAllProfiles(directory);
-              spectateRevealRef.current?.ingestProfiles(directory);
+              scheduleSpectatorIngest(directory, cancelledRef);
               return;
             }
             const storageProfileId =
@@ -1270,7 +1286,7 @@ export default function App() {
         }
 
         setAllProfiles(normalized);
-        spectateRevealRef.current?.ingestProfiles(normalized);
+        scheduleSpectatorIngest(normalized, cancelledRef);
         const owned = resolveOwnedLandingProfile(normalized, linkedProfileSlug);
         if (linkedProfileSlug && !owned) {
           const storageProfileId =
@@ -1292,7 +1308,7 @@ export default function App() {
           setProfile(null);
         }
       } catch {
-        if (cancelled) return;
+        if (cancelledRef.cancelled) return;
       }
     };
 
@@ -1301,10 +1317,10 @@ export default function App() {
     const pollMs = mainView === 'landing' || mainView === 'home' ? 10_000 : 30_000;
     const id = setInterval(load, pollMs);
     return () => {
-      cancelled = true;
+      cancelledRef.cancelled = true;
       clearInterval(id);
     };
-  }, [syncAccountDeletionState, mainView, linkedProfileSlug, applyFullAccountReset, deletedProfileIds]);
+  }, [syncAccountDeletionState, mainView, linkedProfileSlug, applyFullAccountReset, scheduleSpectatorIngest, syncDeletedProfileIds]);
 
   const reloadProfileFromApi = useCallback(async ({ skipPostsMerge = false, forcePostsMerge = false } = {}) => {
     const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
@@ -1324,7 +1340,9 @@ export default function App() {
     const normalized = normalizeProfilesFromApi(filtered);
     ingestProfileAvatars(normalized);
     setAllProfiles(normalized);
-    spectateRevealRef.current?.ingestProfiles(normalized);
+    queueMicrotask(() => {
+      spectateRevealRef.current?.ingestProfiles(normalized);
+    });
     inferPublicMediaConfigFromProfiles(normalized);
     const hosted = isHostedApiOrigin();
     const pickSlug = linkedProfileSlug || (hosted ? null : selectedProfileSlug());

@@ -20,5 +20,9 @@ export async function fetchProfile(slug) {
 }
 
 export async function fetchLatestMacRelease() {
-  return fetchJson('/api/app-releases/latest?platform=mac');
+  try {
+    return await fetchJson('/api/app-releases/latest?platform=mac');
+  } catch {
+    return null;
+  }
 }
