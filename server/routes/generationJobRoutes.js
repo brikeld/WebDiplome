@@ -4,7 +4,11 @@ import { requireHostedUser, requireWorker } from '../lib/auth.js';
 
 import { slimProfilePayloadForStorage } from '../lib/publicProfileMapping.js';
 import { resolveCommenterProfileContext, resolveSubjectProfileContext } from '../lib/aiJobProfile.js';
-import { queueInitialPostsJobIfNeeded } from '../lib/generationQueue.js';
+import {
+  harvestPayloadHasContent,
+  mergeGenerationRequestPayload,
+  queueInitialPostsJobIfNeeded,
+} from '../lib/generationQueue.js';
 
 const workerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -68,6 +72,26 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         jobType: requestPayload.jobType,
       });
       if (active) {
+        const existingPayload =
+          active.request_payload && typeof active.request_payload === 'object'
+            ? active.request_payload
+            : {};
+        const existingData = existingPayload.dataJson ?? existingPayload.data_json;
+        const incomingData = requestPayload.dataJson ?? requestPayload.data_json;
+        if (
+          active.status === 'queued'
+          && !harvestPayloadHasContent(existingData)
+          && harvestPayloadHasContent(incomingData)
+        ) {
+          const merged = mergeGenerationRequestPayload(existingPayload, requestPayload);
+          await jobStore.updateQueuedJobPayload(active.id, merged);
+          return res.json({
+            success: true,
+            jobId: active.id,
+            status: active.status,
+            payloadUpdated: true,
+          });
+        }
         return res.json({
           success: true,
           jobId: active.id,

@@ -116,7 +116,6 @@ if (serverConfig.hostedMode) {
     profileStore,
     storageStore,
     buildLeaderboards: buildPublicLeaderboards,
-    jobStore,
   }));
   app.use('/api', createGenerationJobRoutes({
     config: serverConfig,

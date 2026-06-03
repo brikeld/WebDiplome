@@ -6,14 +6,11 @@ import { serverConfig } from '../lib/env.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
-import { queueInitialPostsJobIfNeeded } from '../lib/generationQueue.js';
-
 export function createPublicDemoRoutes({
   supabaseService,
   profileStore,
   storageStore,
   buildLeaderboards,
-  jobStore = null,
 }) {
   const router = express.Router();
   const requireUser = requireHostedUser(supabaseService);
@@ -61,28 +58,9 @@ export function createPublicDemoRoutes({
         replacePosts: req.body?.replacePersonaPosts === true,
       });
 
-      let generationJob = null;
-      if (jobStore && profile?.slug) {
-        try {
-          const outcome = await queueInitialPostsJobIfNeeded({
-            profileStore,
-            jobStore,
-            profileSlug: profile.slug,
-            userId: req.authUser.id,
-          });
-          if (outcome.queued || outcome.alreadyQueued) {
-            generationJob = {
-              jobId: outcome.jobId ?? null,
-              status: outcome.status ?? 'queued',
-              alreadyQueued: Boolean(outcome.alreadyQueued),
-            };
-          }
-        } catch (queueErr) {
-          console.warn('[profile/sync] auto-queue generation failed:', queueErr?.message || queueErr);
-        }
-      }
-
-      res.json({ success: true, profile, generationJob });
+      // Generation jobs are queued by the Compliant app with full harvest dataJson.
+      // Auto-queueing here raced ahead with an empty payload and blocked real jobs.
+      res.json({ success: true, profile });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

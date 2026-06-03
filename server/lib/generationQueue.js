@@ -17,6 +17,30 @@ export function profileNeedsInitialGeneration(profile) {
   return countAiGeneratedPosts(posts) < EXPECTED_AI_POST_COUNT;
 }
 
+/** True when harvest JSON is present enough for the worker to run LM prompts. */
+export function harvestPayloadHasContent(dataJson) {
+  if (!dataJson || typeof dataJson !== 'object') return false;
+  if (Array.isArray(dataJson)) return dataJson.length > 0;
+  return Object.keys(dataJson).length > 0;
+}
+
+export function mergeGenerationRequestPayload(existing = {}, incoming = {}) {
+  const jobType = incoming.jobType || existing.jobType || 'posts';
+  return {
+    ...existing,
+    ...incoming,
+    jobType,
+    user: { ...(existing.user || {}), ...(incoming.user || {}) },
+    profile: incoming.profile || existing.profile,
+    dataJson: harvestPayloadHasContent(incoming.dataJson)
+      ? incoming.dataJson
+      : (existing.dataJson ?? incoming.dataJson ?? {}),
+    existingPosts: Array.isArray(incoming.existingPosts)
+      ? incoming.existingPosts
+      : (existing.existingPosts ?? []),
+  };
+}
+
 function userPayloadFromProfileRow(row, apiProfile) {
   const raw = row?.raw_profile && typeof row.raw_profile === 'object' ? row.raw_profile : {};
   const api = apiProfile && typeof apiProfile === 'object' ? apiProfile : {};
