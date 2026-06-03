@@ -18,6 +18,20 @@ export function recordHostedAccountDeletion(slugs) {
   return state;
 }
 
+export function forgetHostedAccountDeletion(slugs) {
+  const remove = new Set(
+    (Array.isArray(slugs) ? slugs : [slugs])
+      .map((s) => String(s ?? '').trim())
+      .filter(Boolean),
+  );
+  if (remove.size === 0) return state;
+  state = {
+    ...state,
+    deletedProfileIds: state.deletedProfileIds.filter((slug) => !remove.has(String(slug))),
+  };
+  return state;
+}
+
 export function getHostedAccountState() {
   return {
     lastDeletionAt: state.lastDeletionAt,

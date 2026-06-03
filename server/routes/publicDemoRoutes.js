@@ -1,7 +1,10 @@
 import express from 'express';
 import multer from 'multer';
 import { requireHostedUser } from '../lib/auth.js';
-import { recordHostedAccountDeletion } from '../lib/hostedAccountDeletion.js';
+import {
+  forgetHostedAccountDeletion,
+  recordHostedAccountDeletion,
+} from '../lib/hostedAccountDeletion.js';
 import { serverConfig } from '../lib/env.js';
 import { queuePostsJobAfterHarvestSync } from '../lib/generationQueue.js';
 
@@ -60,9 +63,12 @@ export function createPublicDemoRoutes({
         replacePosts: req.body?.replacePersonaPosts === true,
       });
 
+      const syncedSlug = profile?.slug ?? profile?.id ?? '';
+      if (syncedSlug) forgetHostedAccountDeletion(syncedSlug);
+
       let generation = null;
       if (jobStore) {
-        const slug = profile?.slug ?? profile?.id ?? '';
+        const slug = syncedSlug;
         const syncDataJson = req.body?.dataJson ?? req.body?.data_json ?? null;
         generation = await queuePostsJobAfterHarvestSync({
           profileStore,
