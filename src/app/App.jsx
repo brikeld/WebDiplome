@@ -1638,10 +1638,9 @@ export default function App() {
     const aiPostCount = countAiGeneratedPosts(owned.personaPosts);
     if (aiPostCount >= 3) return;
 
-    if (!hosted) {
-      const bio = String(owned.profileSummary || owned.userDescription || '').trim();
-      if (!bio) return;
-    } else if (!readHostedSession()?.access_token) {
+    const bio = String(owned.profileSummary || owned.userDescription || '').trim();
+    if (!bio) return;
+    if (hosted && !readHostedSession()?.access_token) {
       return;
     }
 
