@@ -1394,6 +1394,35 @@ export default function App() {
     throw new Error('Harvest timed out');
   }, [reloadProfileFromApi]);
 
+  const ownedProfileId = useMemo(() => {
+    if (!profile) return null;
+    if (isHostedApiOrigin()) {
+      return profile.slug ?? profile.id ?? null;
+    }
+    const first = String(profile.firstname ?? '').trim().toLowerCase();
+    const last = String(profile.lastname ?? '').trim().toLowerCase();
+    return first && last ? `${first}-${last}` : null;
+  }, [profile?.slug, profile?.id, profile?.firstname, profile?.lastname]);
+
+  const prependCompliantPost = useCallback(
+    (post) => {
+      if (!ownedProfileId || !post) return;
+      const apply = () => {
+        setProfile((prev) =>
+          prev
+            ? { ...prev, personaPosts: mergePostsPrepend([post], prev.personaPosts ?? []) }
+            : prev,
+        );
+        prependPersonaPosts(ownedProfileId, [post]).catch((err) => {
+          console.warn('[compliant] failed to persist system post:', err?.message || err);
+        });
+      };
+      if (tryDeferCompliant(apply)) return;
+      apply();
+    },
+    [ownedProfileId, tryDeferCompliant],
+  );
+
   const runBioAndPostGeneration = useCallback(async (profileSnapshot) => {
     let p = profileSnapshot ?? profile;
     if (!p) return;

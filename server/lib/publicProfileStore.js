@@ -187,6 +187,54 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     return { deleted: results.length, profiles: results, prefix: pattern };
   }
 
+  /**
+   * Remove every hosted row for the same real person (name + machine), not only
+   * the current auth user — prevents ghost feeds after re-signup.
+   */
+  async function deleteAllProfilesWithIdentityKey(seedRow, actingUserId = null) {
+    const key = profileIdentityKey(
+      seedRow
+        ? {
+            firstname: seedRow.firstname,
+            lastname: seedRow.lastname,
+            machineName: seedRow.machine_name ?? seedRow.machineName,
+          }
+        : null,
+    );
+    if (!key) return { deletedSlugs: [], orphansRemoved: 0 };
+
+    const rows = throwIfError(
+      await supabase.from('profiles').select('id, slug, user_id, firstname, lastname, machine_name'),
+      'list profiles for identity purge',
+    );
+    const siblings = (rows ?? []).filter((row) => {
+      if (!row?.id) return false;
+      return (
+        profileIdentityKey({
+          firstname: row.firstname,
+          lastname: row.lastname,
+          machineName: row.machine_name,
+        }) === key
+      );
+    });
+
+    const deletedSlugs = [];
+    for (const row of siblings) {
+      await purgeProfileData({
+        userId: row.user_id,
+        profileId: row.id,
+        slug: row.slug,
+      });
+      deletedSlugs.push(String(row.slug));
+      if (row.user_id && row.user_id !== actingUserId) {
+        await supabase.auth.admin.deleteUser(row.user_id).catch(() => null);
+      }
+    }
+
+    const orphansRemoved = await deleteOrphanPosts();
+    return { deletedSlugs, orphansRemoved };
+  }
+
   async function resolveWallpaperUrl(userId, payload, existing) {
     const parsed = parseWallpaperBase64(payload?.wallpaperBase64 ?? payload?.wallpaper_base64);
     if (parsed && storageStore) {
@@ -421,53 +469,7 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       };
     },
 
-    /**
-     * Remove every hosted row for the same real person (name + machine), not only
-     * the current auth user — prevents ghost "Brikeld Hoxha" feeds after re-signup.
-     */
-    async deleteAllProfilesWithIdentityKey(seedRow, actingUserId = null) {
-      const key = profileIdentityKey(
-        seedRow
-          ? {
-              firstname: seedRow.firstname,
-              lastname: seedRow.lastname,
-              machineName: seedRow.machine_name ?? seedRow.machineName,
-            }
-          : null,
-      );
-      if (!key) return { deletedSlugs: [], orphansRemoved: 0 };
-
-      const rows = throwIfError(
-        await supabase.from('profiles').select('id, slug, user_id, firstname, lastname, machine_name'),
-        'list profiles for identity purge',
-      );
-      const siblings = (rows ?? []).filter((row) => {
-        if (!row?.id) return false;
-        return (
-          profileIdentityKey({
-            firstname: row.firstname,
-            lastname: row.lastname,
-            machineName: row.machine_name,
-          }) === key
-        );
-      });
-
-      const deletedSlugs = [];
-      for (const row of siblings) {
-        await purgeProfileData({
-          userId: row.user_id,
-          profileId: row.id,
-          slug: row.slug,
-        });
-        deletedSlugs.push(String(row.slug));
-        if (row.user_id && row.user_id !== actingUserId) {
-          await supabase.auth.admin.deleteUser(row.user_id).catch(() => null);
-        }
-      }
-
-      const orphansRemoved = await deleteOrphanPosts();
-      return { deletedSlugs, orphansRemoved };
-    },
+    deleteAllProfilesWithIdentityKey,
 
     /** Wipe profile, posts, jobs, assets, and the Supabase auth user. */
     async deleteAccountForUser(userId) {
