@@ -9,6 +9,11 @@ import { serverConfig } from '../lib/env.js';
 import { queuePostsJobAfterHarvestSync } from '../lib/generationQueue.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
+const PUBLIC_READ_CACHE_TTL_MS = Number(process.env.PUBLIC_READ_CACHE_TTL_MS || 30_000);
+
+function cacheKey(req) {
+  return `${req.method}:${req.originalUrl || req.url}`;
+}
 
 export function createPublicDemoRoutes({
   supabaseService,
@@ -19,6 +24,25 @@ export function createPublicDemoRoutes({
 }) {
   const router = express.Router();
   const requireUser = requireHostedUser(supabaseService);
+  const publicReadCache = new Map();
+
+  function clearPublicReadCache() {
+    publicReadCache.clear();
+  }
+
+  async function sendCachedPublicJson(req, res, loader) {
+    const key = cacheKey(req);
+    const now = Date.now();
+    const cached = publicReadCache.get(key);
+    if (cached && now - cached.createdAt < PUBLIC_READ_CACHE_TTL_MS) {
+      res.set('X-Public-Cache', 'hit');
+      return res.json(cached.data);
+    }
+    const data = await loader();
+    publicReadCache.set(key, { createdAt: now, data });
+    res.set('X-Public-Cache', 'miss');
+    return res.json(data);
+  }
 
   router.get('/public-config', (_req, res) => {
     res.json({
@@ -30,6 +54,25 @@ export function createPublicDemoRoutes({
   router.get('/profiles', async (_req, res) => {
     try {
       res.json(await profileStore.listProfiles());
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.get('/profiles/summary', async (req, res) => {
+    try {
+      await sendCachedPublicJson(req, res, () => profileStore.listProfileSummaries());
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.get('/feed', async (req, res) => {
+    try {
+      await sendCachedPublicJson(req, res, () => profileStore.listFeed({
+        limit: req.query.limit,
+        cursor: req.query.cursor,
+      }));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -65,6 +108,7 @@ export function createPublicDemoRoutes({
 
       const syncedSlug = profile?.slug ?? profile?.id ?? '';
       if (syncedSlug) forgetHostedAccountDeletion(syncedSlug);
+      clearPublicReadCache();
 
       let generation = null;
       if (jobStore) {
@@ -91,13 +135,15 @@ export function createPublicDemoRoutes({
 
   router.get('/leaderboards', async (req, res) => {
     try {
-      const profiles = await profileStore.listProfilesForLeaderboards();
-      const viewerSlug = String(
-        req.query.viewerSlug ?? req.query.viewer_slug ?? req.query.profileSlug ?? '',
-      ).trim() || null;
-      res.json({
-        success: true,
-        leaderboards: buildLeaderboards(profiles, 5, { viewerSlug }),
+      await sendCachedPublicJson(req, res, async () => {
+        const profiles = await profileStore.listProfilesForLeaderboards();
+        const viewerSlug = String(
+          req.query.viewerSlug ?? req.query.viewer_slug ?? req.query.profileSlug ?? '',
+        ).trim() || null;
+        return {
+          success: true,
+          leaderboards: buildLeaderboards(profiles, 5, { viewerSlug }),
+        };
       });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -118,6 +164,7 @@ export function createPublicDemoRoutes({
         persona: req.body?.persona ?? null,
         content,
       });
+      clearPublicReadCache();
       res.json({ success: true, comment });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -133,6 +180,7 @@ export function createPublicDemoRoutes({
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
       });
+      clearPublicReadCache();
       res.json(asset);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -157,6 +205,7 @@ export function createPublicDemoRoutes({
         posts,
         source: 'system',
       });
+      clearPublicReadCache();
       res.json({ success: true, count: inserted.length, posts: inserted });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -191,6 +240,7 @@ export function createPublicDemoRoutes({
             : [];
         if (slugs.length > 0) recordHostedAccountDeletion(slugs);
       }
+      clearPublicReadCache();
       res.json({ success: true, ...result });
     } catch (err) {
       res.status(500).json({ error: err.message });

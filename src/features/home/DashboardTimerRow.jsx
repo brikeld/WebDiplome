@@ -32,6 +32,7 @@ export default function DashboardTimerRow({
   updateTimerLabel,
   updateRemainingMs,
   onGeneratePersonaPosts,
+  manualGenerateEnabled = true,
   accountFeaturesEnabled = true,
   postRevealFlash = null,
 }) {
@@ -375,14 +376,16 @@ export default function DashboardTimerRow({
           timerReveal ? ' dashboard-timer-card--reveal' : ''
         }`}
         style={idleTimerStyle}
-        disabled={postGen.loading || !profile || !accountFeaturesEnabled}
+        disabled={postGen.loading || !profile || !accountFeaturesEnabled || !manualGenerateEnabled}
         title={
           !accountFeaturesEnabled
             ? 'Open this profile from the Compliant app to generate updates'
+            : !manualGenerateEnabled
+              ? 'Keep this page open and wait for the timer to generate updates'
             : undefined
         }
         onClick={() => {
-          if (!accountFeaturesEnabled) return;
+          if (!accountFeaturesEnabled || !manualGenerateEnabled) return;
           triggerCountdownPulse();
           onGeneratePersonaPosts();
         }}

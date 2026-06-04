@@ -119,6 +119,17 @@ export function mapProfileRowForApi(row, posts = []) {
   };
 }
 
+export function mapProfileRowForSummary(row, stats = {}) {
+  const profile = mapProfileRowForApi(row, []);
+  if (!profile) return null;
+  return {
+    ...profile,
+    personaPosts: [],
+    postCount: Number(stats.postCount) || 0,
+    latestPostAt: stats.latestPostAt ?? null,
+  };
+}
+
 const POST_METADATA_KEYS = [
   'inferenceChain',
   'ingredients',

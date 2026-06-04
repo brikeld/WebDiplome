@@ -3,6 +3,7 @@ import {
   mapPostForInsert,
   mapPostRowForApi,
   mapProfileRowForApi,
+  mapProfileRowForSummary,
   mapPersonaBlurbsForApi,
   mapPersonaBlurbsForStorage,
   mapSyncPayloadToProfileRow,
@@ -61,6 +62,15 @@ const PUBLIC_PROFILE_SELECT = [
   'updated_at',
 ].join(',');
 
+const DEFAULT_FEED_LIMIT = 20;
+const MAX_FEED_LIMIT = 50;
+
+function normalizeFeedLimit(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_FEED_LIMIT;
+  return Math.max(1, Math.min(MAX_FEED_LIMIT, Math.trunc(n)));
+}
+
 export function createPublicProfileStore(supabase, { storageStore } = {}) {
   if (!supabase) throw new Error('Supabase service client required');
 
@@ -84,15 +94,68 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     return (data ?? []).map(mapPostRowForApi);
   }
 
-  async function listAllProfilesWithPosts() {
+  async function listPublicProfileRows() {
     const rows = throwIfError(
       await supabase.from('profiles').select(PUBLIC_PROFILE_SELECT).order('updated_at', { ascending: false }),
       'list profiles',
     );
-    const safeRows = await Promise.all((rows ?? []).map((row) => ensureWebSafeWallpaper(row)));
+    return Promise.all((rows ?? []).map((row) => ensureWebSafeWallpaper(row)));
+  }
+
+  async function listAllProfilesWithPosts() {
+    const safeRows = await listPublicProfileRows();
     return Promise.all(
       safeRows.map(async (row) => mapProfileRowForApi(row, await readPosts(row.id))),
     );
+  }
+
+  async function listAllProfileSummaries() {
+    const safeRows = await listPublicProfileRows();
+    return safeRows.map((row) => mapProfileRowForSummary(row)).filter(Boolean);
+  }
+
+  async function listFeedPage({ limit = DEFAULT_FEED_LIMIT, cursor = null } = {}) {
+    const safeLimit = normalizeFeedLimit(limit);
+    let query = supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(safeLimit + 1);
+    const cursorText = String(cursor || '').trim();
+    if (cursorText) query = query.lt('created_at', cursorText);
+
+    const rows = throwIfError(await query, 'list feed posts');
+    const pageRows = (rows ?? []).slice(0, safeLimit);
+    const nextCursor = (rows ?? []).length > safeLimit
+      ? pageRows[pageRows.length - 1]?.created_at ?? null
+      : null;
+    const profileIds = [...new Set(pageRows.map((row) => row?.profile_id).filter(Boolean))];
+    if (profileIds.length === 0) {
+      return { profiles: [], nextCursor: null };
+    }
+
+    const profileRows = throwIfError(
+      await supabase.from('profiles').select(PUBLIC_PROFILE_SELECT).in('id', profileIds),
+      'list feed profiles',
+    );
+    const safeProfiles = await Promise.all((profileRows ?? []).map((row) => ensureWebSafeWallpaper(row)));
+    const byProfileId = new Map(safeProfiles.map((row) => [row.id, row]));
+    const bySlug = new Map();
+
+    const { deletedProfileIds } = getHostedAccountState();
+    for (const row of pageRows) {
+      const profileRow = byProfileId.get(row.profile_id);
+      if (!profileRow || isProfileSlugDeleted(profileRow.slug, deletedProfileIds)) continue;
+      const summary = bySlug.get(profileRow.slug)
+        ?? mapProfileRowForSummary(profileRow, { postCount: 0, latestPostAt: null });
+      summary.personaPosts = [...(summary.personaPosts ?? []), mapPostRowForApi(row)];
+      bySlug.set(profileRow.slug, summary);
+    }
+
+    return {
+      profiles: [...bySlug.values()],
+      nextCursor,
+    };
   }
 
   function withMergedSiblingPosts(profile, directory) {
@@ -372,6 +435,17 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       const deduped = dedupeProfilesWithMergedPosts(mapped);
       const { deletedProfileIds } = getHostedAccountState();
       return filterProfilesNotDeleted(deduped, deletedProfileIds);
+    },
+
+    async listProfileSummaries() {
+      await deleteOrphanPosts();
+      const mapped = await listAllProfileSummaries();
+      const { deletedProfileIds } = getHostedAccountState();
+      return filterProfilesNotDeleted(mapped, deletedProfileIds);
+    },
+
+    async listFeed({ limit, cursor } = {}) {
+      return listFeedPage({ limit, cursor });
     },
 
     async listProfilesForLeaderboards() {

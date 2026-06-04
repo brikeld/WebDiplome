@@ -1,4 +1,4 @@
-export const DASHBOARD_UPDATE_INTERVAL_MS = 10 * 60 * 1000;
+export const DASHBOARD_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 
 export function formatDashboardCountdown(ms) {
   const safeMs = Math.max(0, Number(ms) || 0);
@@ -24,6 +24,33 @@ export function getDashboardTimerRingModel(
     middle: Math.round(30 + progress * 240),
     inner: Math.round(5 + progress * 180),
   };
+}
+
+export function getDashboardCountdownNextRemaining(
+  remainingMs,
+  elapsedMs,
+  { active = true, visible = true } = {},
+) {
+  const current = Math.max(0, Number(remainingMs) || 0);
+  if (!active || !visible) return current;
+  const elapsed = Math.max(0, Number(elapsedMs) || 0);
+  return Math.max(0, current - elapsed);
+}
+
+export function shouldAutoTriggerDashboardUpdate({
+  remainingMs,
+  timerActive,
+  accountFeaturesEnabled,
+  postLoading,
+  harvestPhase,
+} = {}) {
+  return (
+    Math.max(0, Number(remainingMs) || 0) <= 0
+    && timerActive === true
+    && accountFeaturesEnabled === true
+    && postLoading !== true
+    && harvestPhase !== 'harvesting'
+  );
 }
 
 export function getDashboardControlLayout({ harvestPhase, postPhase } = {}) {

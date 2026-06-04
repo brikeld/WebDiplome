@@ -14,7 +14,9 @@ import {
 import {
   DASHBOARD_UPDATE_INTERVAL_MS,
   formatDashboardCountdown,
+  getDashboardCountdownNextRemaining,
   getDashboardControlLayout,
+  shouldAutoTriggerDashboardUpdate,
 } from '@/features/harvest/dashboardUpdateFlow.js';
 import '@/features/harvest/harvest.css';
 import DashboardPersonaRings from '@/features/home/DashboardPersonaRings.jsx';
@@ -92,6 +94,8 @@ import {
   clearStoredProfileSlug,
 } from '@/lib/profileSlugStorage.js';
 import { selectProfileBySlug } from '@/lib/profileDirectory.js';
+import { canManuallyGenerateDashboardUpdate } from '@/lib/adminProfile.js';
+import { mergeSummaryAndFeedProfiles } from '@/lib/publicFeedMerge.js';
 
 function selectedProfileSlug() {
   return readStoredProfileSlug();
@@ -99,6 +103,9 @@ function selectedProfileSlug() {
 
 const API_ORIGIN = resolveApiOrigin();
 const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
+const PUBLIC_DIRECTORY_POLL_MS = 30_000;
+const PUBLIC_FEED_POLL_MS = 30_000;
+const PUBLIC_FEED_LIMIT = 20;
 
 const PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 const PERSONA_ALIASES = {
@@ -217,6 +224,29 @@ function isFeedGenerationPhase(phase) {
   return phase === 'generating';
 }
 
+async function fetchPublicDirectorySnapshot({ includeFeed = false } = {}) {
+  try {
+    const summaryRes = await fetch(`${API_ORIGIN}/api/profiles/summary`, { cache: 'no-store' });
+    if (!summaryRes.ok) throw new Error(`Profile summary failed (${summaryRes.status})`);
+    const summaries = await summaryRes.json();
+    let feedProfiles = [];
+    if (includeFeed) {
+      const feedRes = await fetch(`${API_ORIGIN}/api/feed?limit=${PUBLIC_FEED_LIMIT}`, {
+        cache: 'no-store',
+      });
+      if (feedRes.ok) {
+        const feed = await feedRes.json().catch(() => ({}));
+        feedProfiles = Array.isArray(feed?.profiles) ? feed.profiles : [];
+      }
+    }
+    return mergeSummaryAndFeedProfiles(summaries, feedProfiles);
+  } catch {
+    const fallback = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
+    if (!fallback.ok) throw new Error('failed');
+    return fallback.json();
+  }
+}
+
 function computePersonaDeltas(before, after) {
   if (!before || !after) return null;
   const keys = ['productivity', 'security', 'social'];
@@ -311,7 +341,8 @@ function AppInner({
   const previousLivePersonaRef = useRef(null);
   const previousPersonaScoresRef = useRef(null);
   const joinEnsureAttemptedRef = useRef(false);
-  const updateTimerStartRef = useRef(Date.now());
+  const updateTimerLastTickRef = useRef(Date.now());
+  const autoDashboardGenerateRef = useRef(false);
   const [updateRemainingMs, setUpdateRemainingMs] = useState(DASHBOARD_UPDATE_INTERVAL_MS);
 
   const profileId = useMemo(() => {
@@ -398,15 +429,92 @@ function AppInner({
   }, [allProfiles, profile, deletedProfileIds]);
   const updateTimerLabel = formatDashboardCountdown(updateRemainingMs);
 
+  const accountFeaturesEnabled = useMemo(() => {
+    const owned = resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug);
+    return canUseHostedAccountFeatures(owned, linkedProfileSlug, {
+      viewedProfile,
+      allProfiles,
+    });
+  }, [profile, allProfiles, linkedProfileSlug, viewedProfile]);
+
+  const viewerProfile = useMemo(() => {
+    if (!accountFeaturesEnabled) return null;
+    return resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug);
+  }, [accountFeaturesEnabled, profile, allProfiles, linkedProfileSlug]);
+
+  const manualDashboardGenerateEnabled = canManuallyGenerateDashboardUpdate(viewerProfile ?? profile);
+  const dashboardTimerActive =
+    mainView === 'home'
+    && Boolean(profile)
+    && accountFeaturesEnabled
+    && !updateSessionActive
+    && !postGen.loading
+    && harvestPhase !== 'harvesting';
+
   useEffect(() => {
     const tick = () => {
-      const elapsed = (Date.now() - updateTimerStartRef.current) % DASHBOARD_UPDATE_INTERVAL_MS;
-      setUpdateRemainingMs(DASHBOARD_UPDATE_INTERVAL_MS - elapsed);
+      const now = Date.now();
+      const elapsed = now - updateTimerLastTickRef.current;
+      updateTimerLastTickRef.current = now;
+      const visible = typeof document === 'undefined' || document.visibilityState === 'visible';
+      setUpdateRemainingMs((prev) =>
+        getDashboardCountdownNextRemaining(prev, elapsed, {
+          active: dashboardTimerActive,
+          visible,
+        }),
+      );
     };
-    tick();
+    updateTimerLastTickRef.current = Date.now();
     const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
+    const handleVisibility = () => {
+      updateTimerLastTickRef.current = Date.now();
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
+    return () => {
+      clearInterval(id);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
+    };
+  }, [dashboardTimerActive]);
+
+  useEffect(() => {
+    if (updateRemainingMs > 0) {
+      autoDashboardGenerateRef.current = false;
+      return;
+    }
+    if (autoDashboardGenerateRef.current) return;
+    if (
+      !shouldAutoTriggerDashboardUpdate({
+        remainingMs: updateRemainingMs,
+        timerActive: dashboardTimerActive,
+        accountFeaturesEnabled,
+        postLoading: postGen.loading,
+        harvestPhase,
+      })
+    ) {
+      return;
+    }
+    autoDashboardGenerateRef.current = true;
+    setUpdateRemainingMs(DASHBOARD_UPDATE_INTERVAL_MS);
+    handleGeneratePersonaPosts();
+  }, [
+    updateRemainingMs,
+    dashboardTimerActive,
+    accountFeaturesEnabled,
+    postGen.loading,
+    harvestPhase,
+    handleGeneratePersonaPosts,
+  ]);
+
+  const handleDashboardGenerateClick = useCallback(() => {
+    if (!manualDashboardGenerateEnabled) return;
+    autoDashboardGenerateRef.current = false;
+    setUpdateRemainingMs(DASHBOARD_UPDATE_INTERVAL_MS);
+    handleGeneratePersonaPosts();
+  }, [manualDashboardGenerateEnabled, handleGeneratePersonaPosts]);
 
   useEffect(() => {
     if (!profile || !liveDominantPersona || !scoresLoaded) return;
@@ -823,19 +931,6 @@ function AppInner({
   });
   const dashboardBusy = dashboardLayout.actionSlot !== 'timer';
 
-  const accountFeaturesEnabled = useMemo(() => {
-    const owned = resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug);
-    return canUseHostedAccountFeatures(owned, linkedProfileSlug, {
-      viewedProfile,
-      allProfiles,
-    });
-  }, [profile, allProfiles, linkedProfileSlug, viewedProfile]);
-
-  const viewerProfile = useMemo(() => {
-    if (!accountFeaturesEnabled) return null;
-    return resolveOwnedProfileForFeatures(profile, allProfiles, linkedProfileSlug);
-  }, [accountFeaturesEnabled, profile, allProfiles, linkedProfileSlug]);
-
   return (
     <PersonaBlurbsProvider profile={displayProfile}>
     <div
@@ -933,7 +1028,8 @@ function AppInner({
                 accountFeaturesEnabled={accountFeaturesEnabled}
                 updateTimerLabel={updateTimerLabel}
                 updateRemainingMs={updateRemainingMs}
-                onGeneratePersonaPosts={handleGeneratePersonaPosts}
+                onGeneratePersonaPosts={handleDashboardGenerateClick}
+                manualGenerateEnabled={manualDashboardGenerateEnabled}
                 postRevealFlash={postRevealFlash}
               />
 
@@ -1205,9 +1301,7 @@ export default function App() {
       if (await syncAccountDeletionState()) return;
 
       try {
-        const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
-        if (!res.ok) throw new Error('failed');
-        const data = await res.json();
+        const data = await fetchPublicDirectorySnapshot({ includeFeed: mainView === 'home' });
         if (cancelledRef.cancelled) return;
         if (!Array.isArray(data) || data.length === 0) {
           setLandingOwnedProfile(null);
@@ -1314,7 +1408,7 @@ export default function App() {
 
     load();
     // Keep the public directory fresh without hammering hosted Supabase through the API.
-    const pollMs = mainView === 'landing' || mainView === 'home' ? 10_000 : 30_000;
+    const pollMs = mainView === 'home' ? PUBLIC_FEED_POLL_MS : PUBLIC_DIRECTORY_POLL_MS;
     const id = setInterval(load, pollMs);
     return () => {
       cancelledRef.cancelled = true;

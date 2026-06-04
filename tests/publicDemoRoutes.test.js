@@ -6,6 +6,8 @@ describe('hosted public demo routes', () => {
 
   it('declares public profile, release, upload, and sync endpoints', () => {
     expect(src).toContain("router.get('/profiles'");
+    expect(src).toContain("router.get('/profiles/summary'");
+    expect(src).toContain("router.get('/feed'");
     expect(src).toContain("router.get('/profiles/:slug'");
     expect(src).toContain("router.post('/profile/sync'");
     expect(src).toContain("router.post('/upload'");
