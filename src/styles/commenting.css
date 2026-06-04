@@ -218,7 +218,8 @@
   align-items: stretch;
 }
 
-.commenting-thread-stack .commenting-comment {
+.commenting-thread-stack .commenting-comment,
+.commenting-thread-stack-item {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -394,8 +395,7 @@ button.profile-avatar-link.commenting-comment-avatar .persona-badge {
 }
 
 .commenting-write-own,
-.commenting-suggestion-shell,
-.commenting-suggestion-picked {
+.commenting-suggestion-shell {
   width: 100%;
   box-sizing: border-box;
 }

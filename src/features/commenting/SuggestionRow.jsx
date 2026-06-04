@@ -1,6 +1,3 @@
-import Comment from './Comment.jsx';
-import { commentMetaCenterLine, mockCommentTimeAgo } from '@/lib/commentMetaStrip.js';
-
 const PERSONA_ORDER = ['productivite', 'securite', 'popularite'];
 
 function SuggestionOption({ suggestion, loading, onPick }) {
@@ -42,15 +39,7 @@ export default function SuggestionRow({
   suggestionsError = null,
   allowedPersonas = PERSONA_ORDER,
   commentsRestricted = false,
-  avatarSrc,
-  avatarInitials,
-  personaBadgePersona,
-  picked = null,
-  userCommentRef,
-  postId,
-  displayName,
   onPick,
-  onOpenProfile,
 }) {
   const personaOrder = PERSONA_ORDER.filter((p) => allowedPersonas.includes(p));
   const singleTrackRestricted =
@@ -73,29 +62,6 @@ export default function SuggestionRow({
           }
         );
       });
-
-  if (picked) {
-    return (
-      <div
-        ref={userCommentRef}
-        data-flip-root
-        className="commenting-suggestion-picked"
-        data-persona={picked.persona}
-      >
-        <Comment
-          persona={picked.persona}
-          content={picked.content}
-          displayName={displayName}
-          avatarSrc={avatarSrc}
-          avatarInitials={avatarInitials}
-          personaBadgePersona={personaBadgePersona}
-          onOpenProfile={onOpenProfile}
-          metaLeft={mockCommentTimeAgo(postId, picked.persona, 3)}
-          metaCenter={commentMetaCenterLine(postId, picked.persona)}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="commenting-suggestion-shell">

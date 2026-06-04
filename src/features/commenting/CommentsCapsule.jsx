@@ -234,21 +234,41 @@ export default function CommentsCapsule({
           <div className="commenting-thread-comments">
             <div className="commenting-thread-stack">
               {comments.map((c, i) => (
-              <Comment
-                key={c.persona}
-                persona={c.persona}
-                content={c.content}
-                metaLeft={mockCommentTimeAgo(post.id, c.persona, i)}
-                metaCenter={commentMetaCenterLine(post.id, c.persona)}
-                displayName={commenterDisplayName}
-                handle={commenterHandle}
-                avatarSrc={commenterAvatarSrc}
-                avatarInitials={commenterAvatarInitials}
-                personaBadgePersona={commenterPersonaBadgePersona}
-                onOpenProfile={onOpenProfile}
-                staggerIndex={i}
-              />
+                <Comment
+                  key={c.persona ?? c.id ?? i}
+                  persona={c.persona}
+                  content={c.content}
+                  metaLeft={mockCommentTimeAgo(post.id, c.persona, i)}
+                  metaCenter={commentMetaCenterLine(post.id, c.persona)}
+                  displayName={c.displayName ?? commenterDisplayName}
+                  handle={c.handle ?? commenterHandle}
+                  avatarSrc={c.avatarSrc ?? commenterAvatarSrc}
+                  avatarInitials={c.avatarInitials ?? commenterAvatarInitials}
+                  personaBadgePersona={c.personaBadgePersona ?? commenterPersonaBadgePersona}
+                  onOpenProfile={onOpenProfile}
+                  staggerIndex={i}
+                />
               ))}
+              {picked ? (
+                <div
+                  ref={userCommentRef}
+                  data-flip-root
+                  className="commenting-thread-stack-item"
+                >
+                  <Comment
+                    persona={picked.persona}
+                    content={picked.content}
+                    displayName={displayName}
+                    avatarSrc={avatarSrc}
+                    avatarInitials={avatarInitials}
+                    personaBadgePersona={personaBadgePersona}
+                    onOpenProfile={onOpenProfile}
+                    metaLeft={mockCommentTimeAgo(post.id, picked.persona, comments.length)}
+                    metaCenter={commentMetaCenterLine(post.id, picked.persona)}
+                    staggerIndex={comments.length}
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -260,22 +280,16 @@ export default function CommentsCapsule({
             </button>
           )}
 
-          <SuggestionRow
-            suggestions={suggestions}
-            suggestionsLoading={suggestionsLoading}
-            suggestionsError={suggestionsError}
-            allowedPersonas={allowedCommentPersonas}
-            commentsRestricted={commentsRestricted}
-            avatarSrc={avatarSrc}
-            avatarInitials={avatarInitials}
-            personaBadgePersona={personaBadgePersona}
-            picked={picked}
-            userCommentRef={userCommentRef}
-            postId={post.id}
-            displayName={displayName}
-            onPick={handlePick}
-            onOpenProfile={onOpenProfile}
-          />
+          {!picked ? (
+            <SuggestionRow
+              suggestions={suggestions}
+              suggestionsLoading={suggestionsLoading}
+              suggestionsError={suggestionsError}
+              allowedPersonas={allowedCommentPersonas}
+              commentsRestricted={commentsRestricted}
+              onPick={handlePick}
+            />
+          ) : null}
         </div>
       </div>
     </div>
