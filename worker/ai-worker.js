@@ -22,14 +22,11 @@ import { ensureLmModelLoaded } from '../server/lib/lmStudioLoad.js';
 const API = String(process.env.WEBDIPLOME_API_ORIGIN || 'http://localhost:3001').replace(/\/$/, '');
 const TOKEN = String(process.env.AI_WORKER_TOKEN || '');
 const WORKER_NAME = String(process.env.AI_WORKER_NAME || 'ai-pc');
-
-// load var from url query string
-const url_params = new URLSearchParams(window.location.search);
-const LM_STUDIO_BASE_URL = url_params.get('LMS') || String(process.env.LM_STUDIO_BASE_URL || 'http://127.0.0.1:1234').replace(/\/$/, '');
-const LM_STUDIO_MODEL = url_params.get('LM_STUDIO_MODEL') || String(process.env.LM_STUDIO_MODEL || 'google/gemma-4-e4b');
-const TIMEOUT_MS = parseInt(url_params.get('TIMEOUT_MS') || process.env.LM_STUDIO_TIMEOUT_MS || '180000', 10);
-const RETRIES = parseInt(url_params.get('RETRIES') || process.env.LM_STUDIO_RETRIES || '1', 10);
-const POLL_MS = parseInt(url_params.get('POLL_MS') || process.env.AI_WORKER_POLL_MS || '5000', 10);
+const LM_STUDIO_BASE_URL = String(process.env.LM_STUDIO_BASE_URL || 'http://127.0.0.1:1234').replace(/\/$/, '');
+const LM_STUDIO_MODEL = String(process.env.LM_STUDIO_MODEL || 'google/gemma-4-e4b');
+const TIMEOUT_MS = parseInt(process.env.LM_STUDIO_TIMEOUT_MS || '180000', 10);
+const RETRIES = parseInt(process.env.LM_STUDIO_RETRIES || '1', 10);
+const POLL_MS = parseInt(process.env.AI_WORKER_POLL_MS || '5000', 10);
 const CHART_UPLOAD_DIR = path.join(os.tmpdir(), 'webdiplome-worker-charts');
 
 function headers() {
