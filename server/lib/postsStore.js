@@ -9,6 +9,27 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const POSTS_DIR = path.join(__dirname, '..', '..', 'posts');
+const postFileLocks = new Map();
+
+async function withPostFileLock(id, task) {
+  const key = String(id || '');
+  const previous = postFileLocks.get(key) ?? Promise.resolve();
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const tail = previous.catch(() => {}).then(() => gate);
+  postFileLocks.set(key, tail);
+  await previous.catch(() => {});
+  try {
+    return await task();
+  } finally {
+    release();
+    if (postFileLocks.get(key) === tail) {
+      postFileLocks.delete(key);
+    }
+  }
+}
 
 export async function readPostsForId(id) {
   try {
@@ -29,24 +50,29 @@ export async function readPostsForId(id) {
 export async function writePostsForId(id, personaPosts, normalizePost = (p) => p) {
   await fs.mkdir(POSTS_DIR, { recursive: true });
   const posts = Array.isArray(personaPosts) ? personaPosts.map(normalizePost) : [];
-  await fs.writeFile(path.join(POSTS_DIR, `${id}.json`), JSON.stringify(posts, null, 2), 'utf8');
+  const filepath = path.join(POSTS_DIR, `${id}.json`);
+  const tmpPath = `${filepath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
+  await fs.writeFile(tmpPath, JSON.stringify(posts, null, 2), 'utf8');
+  await fs.rename(tmpPath, filepath);
   return posts.length;
 }
 
 /** Prepend freshly generated posts — always reads current file from disk first. */
 export async function appendPersonaPosts(id, newPosts, normalizePost = (p) => p) {
-  const current = await readPostsForId(id);
-  const incoming = Array.isArray(newPosts) ? newPosts.filter(Boolean) : [];
-  const replaceUiKeys = new Set(
-    incoming.map((p) => p?.compliantLowScore?.uiPersonaKey).filter(Boolean),
-  );
-  const baseline =
-    replaceUiKeys.size > 0
-      ? current.filter((p) => !replaceUiKeys.has(p?.compliantLowScore?.uiPersonaKey))
-      : current;
-  const merged = appendPostsForceGrow(incoming, baseline);
-  await writePostsForId(id, merged, normalizePost);
-  return merged;
+  return withPostFileLock(id, async () => {
+    const current = await readPostsForId(id);
+    const incoming = Array.isArray(newPosts) ? newPosts.filter(Boolean) : [];
+    const replaceUiKeys = new Set(
+      incoming.map((p) => p?.compliantLowScore?.uiPersonaKey).filter(Boolean),
+    );
+    const baseline =
+      replaceUiKeys.size > 0
+        ? current.filter((p) => !replaceUiKeys.has(p?.compliantLowScore?.uiPersonaKey))
+        : current;
+    const merged = appendPostsForceGrow(incoming, baseline);
+    await writePostsForId(id, merged, normalizePost);
+    return merged;
+  });
 }
 
 /**
@@ -54,33 +80,35 @@ export async function appendPersonaPosts(id, newPosts, normalizePost = (p) => p)
  * Never shrinks the feed unless replace=true (explicit reset).
  */
 export async function syncPersonaPostsFromClient(id, incomingPosts, { replace = false } = {}, normalizePost = (p) => p) {
-  const incoming = Array.isArray(incomingPosts) ? incomingPosts.map(normalizePost) : [];
-  const current = await readPostsForId(id);
+  return withPostFileLock(id, async () => {
+    const incoming = Array.isArray(incomingPosts) ? incomingPosts.map(normalizePost) : [];
+    const current = await readPostsForId(id);
 
-  if (replace) {
-    await writePostsForId(id, incoming, normalizePost);
-    return incoming.length;
-  }
+    if (replace) {
+      await writePostsForId(id, incoming, normalizePost);
+      return incoming.length;
+    }
 
-  if (incoming.length === 0) return current.length;
-  if (current.length === 0) {
-    await writePostsForId(id, incoming, normalizePost);
-    return incoming.length;
-  }
+    if (incoming.length === 0) return current.length;
+    if (current.length === 0) {
+      await writePostsForId(id, incoming, normalizePost);
+      return incoming.length;
+    }
 
-  if (incoming.length < current.length) {
-    console.warn(
-      `[posts] kept ${current.length} posts (ignored client sync with ${incoming.length})`,
-    );
-    return current.length;
-  }
+    if (incoming.length < current.length) {
+      console.warn(
+        `[posts] kept ${current.length} posts (ignored client sync with ${incoming.length})`,
+      );
+      return current.length;
+    }
 
-  const merged = mergePostsPrepend(incoming, current);
-  if (merged.length < current.length) {
-    console.warn(`[posts] merge would shrink feed for ${id}; keeping ${current.length} posts`);
-    return current.length;
-  }
+    const merged = mergePostsPrepend(incoming, current);
+    if (merged.length < current.length) {
+      console.warn(`[posts] merge would shrink feed for ${id}; keeping ${current.length} posts`);
+      return current.length;
+    }
 
-  await writePostsForId(id, merged, normalizePost);
-  return merged.length;
+    await writePostsForId(id, merged, normalizePost);
+    return merged.length;
+  });
 }

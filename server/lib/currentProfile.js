@@ -6,7 +6,9 @@ import path from 'path';
  * This matches the UI behavior of picking GET /api/profiles[0] (newest first).
  */
 export async function getNewestProfileIdAndPath(profilesDir) {
-  const files = (await fs.readdir(profilesDir)).filter((f) => f.endsWith('.json'));
+  const files = (await fs.readdir(profilesDir)).filter(
+    (f) => f.endsWith('.json') && !f.startsWith('_'),
+  );
   if (files.length === 0) return null;
 
   const withStat = await Promise.all(
@@ -27,4 +29,3 @@ export async function readProfileJson(filepath) {
   const raw = await fs.readFile(filepath, 'utf8');
   return JSON.parse(raw);
 }
-
