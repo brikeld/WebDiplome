@@ -79,6 +79,19 @@ describe('mergePersonaPosts', () => {
     expect(merged[0].id).toBe('new-1');
   });
 
+  it('preserves client-revealed generated posts when an API reload is stale', () => {
+    const prev = [
+      { id: 'generated-2', content: 'second revealed', createdAt: 300, persona: 'productivite', _feedRevealSeq: 2 },
+      { id: 'generated-1', content: 'first revealed', createdAt: 200, persona: 'popularite', _feedRevealSeq: 1 },
+      { id: 'old-1', content: 'old', createdAt: 100, persona: 'securite' },
+    ];
+    const incoming = [{ id: 'old-1', content: 'old', createdAt: 100, persona: 'securite' }];
+
+    const merged = mergePersonaPostsFromApi(prev, incoming);
+
+    expect(merged.map((p) => p.id)).toEqual(['generated-2', 'generated-1', 'old-1']);
+  });
+
   it('clears all client posts when API returns an empty list (account delete)', () => {
     const prev = [
       { id: 'compliant-join', compliantJoin: { userDisplayName: 'Brikeld Hoxha' }, createdAt: 1 },

@@ -44,6 +44,7 @@ export async function runHostedPostGenerationWithReveal({
   getBaselinePosts,
   onGenerationPlan,
   onPostRevealed,
+  onNextPostChange,
   pollMs = 1000,
   timeoutMs = 120000,
   postJobDoneGraceMs = 12000,
@@ -53,6 +54,7 @@ export async function runHostedPostGenerationWithReveal({
     getBaseline: getBaselinePosts,
     onPostsChange: applyRevealedPosts,
     onPostRevealed,
+    onNextPostChange,
   });
   queue.markBaseline(getBaselinePosts());
 
@@ -141,5 +143,5 @@ export async function runHostedPostGenerationWithReveal({
   }
 
   await queue.waitUntilIdle();
-  return reloadProfileFromApi({ skipPostsMerge: false, forcePostsMerge: true });
+  return reloadProfileFromApi({ skipPostsMerge: true });
 }

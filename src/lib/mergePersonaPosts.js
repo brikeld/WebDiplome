@@ -95,6 +95,10 @@ function dedupeCompliantSystemPosts(posts) {
   );
 }
 
+function isClientRevealedGeneratedPost(post) {
+  return !isCompliantSystemPost(post) && Number(post?._feedRevealSeq ?? 0) > 0;
+}
+
 export function postIdentityKey(post) {
   if (!post || typeof post !== 'object') return '';
   const id = post.id ?? post._id;
@@ -141,13 +145,16 @@ export function mergePersonaPostsFromApi(prevPosts, incomingPosts) {
   const incomingSystem = incoming.filter(isCompliantSystemPost);
   const prevRegular = prev.filter((p) => !isCompliantSystemPost(p));
   const incomingRegular = incoming.filter((p) => !isCompliantSystemPost(p));
+  const prevHasClientReveals = prevRegular.some(isClientRevealedGeneratedPost);
 
   const system = mergePostsPrepend(incomingSystem, prevSystem);
   const regular =
     incomingRegular.length === 0
       ? []
-      : prevRegular.length > incomingRegular.length
-        ? incomingRegular
+      : prevHasClientReveals && prevRegular.length > incomingRegular.length
+        ? mergePostsPrepend(prevRegular, incomingRegular)
+        : prevRegular.length > incomingRegular.length
+          ? incomingRegular
         : mergePostsPrepend(incomingRegular, prevRegular);
 
   return sortPostsNewestFirst(dedupeCompliantSystemPosts(mergePostsPrepend(system, regular)));

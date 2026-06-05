@@ -91,6 +91,22 @@ describe('createPostFeedRevealQueue', () => {
       await vi.advanceTimersByTimeAsync(10);
       expect(nextPersonas).toEqual(['securite', 'popularite', null]);
     });
+
+    it('commits the post to UI before firing the revealed callback', () => {
+      vi.useFakeTimers();
+      const events = [];
+      const queue = createPostFeedRevealQueue({
+        gapMs: 10,
+        getBaseline: () => [],
+        onPostsChange: () => events.push('posts-change'),
+        onPostRevealed: () => events.push('post-revealed'),
+      });
+      queue.markBaseline([]);
+
+      queue.enqueue([{ content: 'a', createdAt: 1, persona: 'popularite' }]);
+
+      expect(events).toEqual(['posts-change', 'post-revealed']);
+    });
   });
 
   describe('single-post drain wedge (regression)', () => {

@@ -528,6 +528,7 @@ function AppInner({
 
   useEffect(() => {
     if (!profile || !liveDominantPersona || !scoresLoaded) return;
+    if (updateSessionActive || postGen.loading) return;
 
     const previous = previousLivePersonaRef.current;
     if (previous === null) {
@@ -550,7 +551,14 @@ function AppInner({
       userDisplayName: displayNameFromProfileLite(profile),
     });
     prependCompliantPost(post);
-  }, [liveDominantPersona, profile, scoresLoaded, prependCompliantPost]);
+  }, [
+    liveDominantPersona,
+    profile,
+    scoresLoaded,
+    updateSessionActive,
+    postGen.loading,
+    prependCompliantPost,
+  ]);
 
   useEffect(() => {
     previousLivePersonaRef.current = null;
@@ -1113,9 +1121,10 @@ export default function App() {
     return true;
   }, []);
 
-  const flushDeferredCompliant = useCallback(() => {
+  const flushDeferredCompliant = useCallback(({ apply = true } = {}) => {
     deferCompliantRef.current = false;
     const pending = pendingCompliantRef.current.splice(0);
+    if (!apply) return;
     for (const apply of pending) apply();
   }, []);
 
@@ -1545,16 +1554,6 @@ export default function App() {
   const runBioAndPostGeneration = useCallback(async (profileSnapshot) => {
     let p = profileSnapshot ?? profile;
     if (!p) return;
-    if (profileNeedsCompliantJoin(p)) {
-      const joinPost = buildCompliantJoinPostForProfile(p, p.personaPosts ?? []);
-      if (joinPost) {
-        prependCompliantPost(joinPost);
-        p = {
-          ...p,
-          personaPosts: mergePostsPrepend([joinPost], p.personaPosts ?? []),
-        };
-      }
-    }
     streamPostsBaselineRef.current = Array.isArray(p.personaPosts) ? p.personaPosts : [];
 
     const existingBio = String(p.profileSummary || p.userDescription || '').trim();
@@ -1617,8 +1616,9 @@ export default function App() {
       },
       onNextPostChange: (persona) => {
         setPostGen((prev) => {
-          if (!prev.loading || prev.phase !== 'generating' || prev.generationPlan) return prev;
-          return { ...prev, generatingPersona: persona };
+          if (!prev.loading || prev.phase !== 'generating') return prev;
+          const plannedPersona = personaAfterReveal(prev.generationPlan, planRevealCount);
+          return { ...prev, generatingPersona: persona ?? plannedPersona };
         });
       },
       // No flushSync: the 2s gap between reveals already prevents update
@@ -1750,7 +1750,7 @@ export default function App() {
       }
 
       await revealQueue.waitUntilIdle();
-      await reloadProfileFromApi({ forcePostsMerge: true });
+      await reloadProfileFromApi({ skipPostsMerge: true });
       schedulePersonaDeltasClearAfterGenerate();
     } catch (e) {
       await revealQueue.waitUntilIdle().catch(() => {});
@@ -1760,7 +1760,6 @@ export default function App() {
     }
   }, [
     profile,
-    prependCompliantPost,
     reloadProfileFromApi,
     schedulePersonaDeltasClearAfterGenerate,
     applyGenerationPlan,
@@ -1852,6 +1851,13 @@ export default function App() {
                     }
                   : prev
               ));
+            },
+            onNextPostChange: (persona) => {
+              setPostGen((prev) => {
+                if (!prev.loading || prev.phase !== 'generating') return prev;
+                const plannedPersona = personaAfterReveal(prev.generationPlan, planRevealCount);
+                return { ...prev, generatingPersona: persona ?? plannedPersona };
+              });
             },
             applyRevealedPosts: (personaPosts) => {
               setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
@@ -1949,7 +1955,7 @@ export default function App() {
       }
       generationSessionActiveRef.current = false;
       setUpdateSessionActive(false);
-      flushDeferredCompliant();
+      flushDeferredCompliant({ apply: false });
       return;
     }
 
@@ -2035,6 +2041,13 @@ export default function App() {
                 : prev
             ));
           },
+          onNextPostChange: (persona) => {
+            setPostGen((prev) => {
+              if (!prev.loading || prev.phase !== 'generating') return prev;
+              const plannedPersona = personaAfterReveal(prev.generationPlan, planRevealCount);
+              return { ...prev, generatingPersona: persona ?? plannedPersona };
+            });
+          },
           applyRevealedPosts: (personaPosts) => {
             setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
           },
@@ -2048,19 +2061,18 @@ export default function App() {
       setPostGen({ loading: false, phase: 'idle', error: e?.message || 'Generation failed' });
       schedulePersonaDeltasClearAfterGenerate();
     } finally {
-      // End the session BEFORE the reconciling reload so forcePostsMerge wins
-      // (preserveClientPosts is gated on this ref).
-      generationSessionActiveRef.current = false;
-      setUpdateSessionActive(false);
-      flushDeferredCompliant();
-      // Always pull the server's canonical post list. The reveal stream can
-      // error, abort, or time out while the worker still wrote the posts to
-      // disk — without this, the user had to manually reload to see them.
+      // Discard COMPLIANT notices that were queued during the generation flow;
+      // generation should reveal only generated persona posts.
+      flushDeferredCompliant({ apply: false });
+      // Reconcile profile fields without replacing the animated client post list
+      // with a possibly stale API snapshot.
       try {
-        await reloadProfileFromApi({ forcePostsMerge: true });
+        await reloadProfileFromApi({ skipPostsMerge: true });
       } catch {
         /* network hiccup — next background poll will reconcile */
       }
+      generationSessionActiveRef.current = false;
+      setUpdateSessionActive(false);
       // Safety: guarantee the generate button is clickable again on every path.
       setPostGen((prev) => (prev.loading ? { loading: false, phase: 'idle', error: prev.error ?? null } : prev));
     }

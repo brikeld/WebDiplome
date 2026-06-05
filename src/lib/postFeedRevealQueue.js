@@ -115,14 +115,15 @@ export function createPostFeedRevealQueue({
         firstRevealFired = true;
         onFirstReveal?.();
       }
-      // Notify listeners (button + feed) that a post of this persona just
-      // entered, so they can flash the matching accent in sync.
+      flushToUi();
+      // Notify listeners after the post has been committed into the feed. This
+      // keeps the loading persona on the post being generated until it is
+      // actually posted, then advances to the next pending persona.
       try {
         onPostRevealed?.(raw?.persona ?? null);
       } catch {
         /* a flash listener must never break the reveal pipeline */
       }
-      flushToUi();
       scheduleEnterDone(feedKey);
       notifyNextPost();
     }
