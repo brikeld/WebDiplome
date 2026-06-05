@@ -225,11 +225,20 @@ export function createPostFeedRevealQueue({
 
 export function sortPostsForReveal(posts) {
   return [...(Array.isArray(posts) ? posts : [])].sort((a, b) => {
-    const at = Number(a?.createdAt ?? a?.created_at ?? 0) || 0;
-    const bt = Number(b?.createdAt ?? b?.created_at ?? 0) || 0;
+    const at = postRevealCreatedAtMs(a);
+    const bt = postRevealCreatedAtMs(b);
     if (at !== bt) return at - bt;
     return 0;
   });
+}
+
+function postRevealCreatedAtMs(post) {
+  const raw = post?.createdAt ?? post?.created_at ?? 0;
+  if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+  const numeric = Number(raw);
+  if (Number.isFinite(numeric)) return numeric;
+  const parsed = new Date(raw).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 export function findUnrevealedPosts(apiPosts, revealedKeys) {

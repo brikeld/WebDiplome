@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isCompliantSystemPost } from '../src/lib/mergePersonaPosts.js';
-import { createPostFeedRevealQueue, POST_REVEAL_GAP_MS } from '../src/lib/postFeedRevealQueue.js';
+import {
+  createPostFeedRevealQueue,
+  POST_REVEAL_GAP_MS,
+  sortPostsForReveal,
+} from '../src/lib/postFeedRevealQueue.js';
 
 describe('createPostFeedRevealQueue', () => {
   it('tracks only generated posts for completion (ignores new COMPLIANT posts)', () => {
@@ -67,6 +71,16 @@ describe('createPostFeedRevealQueue', () => {
       { content: 'new-b', createdAt: 3, persona: 'popularite' },
     ];
     expect(queue.countNewGeneratedInApi(apiPosts)).toBe(2);
+  });
+
+  it('sorts ISO createdAt strings from oldest to newest for reveal order', () => {
+    const posts = [
+      { content: 'third', createdAt: '2026-06-05T12:00:00.002Z', persona: 'popularite' },
+      { content: 'first', createdAt: '2026-06-05T12:00:00.000Z', persona: 'productivite' },
+      { content: 'second', createdAt: '2026-06-05T12:00:00.001Z', persona: 'securite' },
+    ];
+
+    expect(sortPostsForReveal(posts).map((p) => p.content)).toEqual(['first', 'second', 'third']);
   });
 
   describe('onPostRevealed (animation bridge)', () => {
