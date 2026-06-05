@@ -1739,7 +1739,7 @@ export default function App() {
         }
       }
 
-      await revealQueue.waitUntilIdle();
+      await revealQueue.waitUntilIdle({ waitForEnterAnimation: false });
       await reloadProfileFromApi({ skipPostsMerge: true });
       schedulePersonaDeltasClearAfterGenerate();
     } catch (e) {

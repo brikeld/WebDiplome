@@ -202,7 +202,7 @@ export function createPostFeedRevealQueue({
       }
       return added;
     },
-    async waitUntilIdle() {
+    async waitUntilIdle({ waitForEnterAnimation = true } = {}) {
       // Loop until both the queue is empty AND no drain is in flight. Each
       // awaited drain may append more work (or finish synchronously), so we
       // re-check both conditions every pass rather than awaiting once.
@@ -215,7 +215,9 @@ export function createPostFeedRevealQueue({
           await Promise.resolve();
         }
       }
-      await sleep(POST_FEED_ENTER_ANIM_MS);
+      if (waitForEnterAnimation) {
+        await sleep(POST_FEED_ENTER_ANIM_MS);
+      }
     },
     isIdle() {
       return pending.length === 0 && !drainPromise;

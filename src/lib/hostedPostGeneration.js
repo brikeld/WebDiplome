@@ -107,6 +107,10 @@ export async function runHostedPostGenerationWithReveal({
     // from "completing" the moment the first post reveals.
     const expectedFloor = Math.max(expectedCount ?? 0, EXPECTED_GENERATED_POST_COUNT);
     const reachedExpected = newGeneratedCount >= expectedFloor;
+    if (jobDone && reachedExpected) {
+      await queue.waitUntilIdle({ waitForEnterAnimation: false });
+      return reloadProfileFromApi({ skipPostsMerge: true });
+    }
     // CRITICAL: anchor the stall timer to the LATER of last-progress and
     // job-done. The hosted DB has read-after-write lag, so at the poll where
     // the job flips to `complete` the freshly written posts usually have NOT
