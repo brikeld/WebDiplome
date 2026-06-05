@@ -17,7 +17,10 @@ import { readPostsForId, appendPersonaPosts } from './server/lib/postsStore.js';
 import { generateCommentSuggestions } from './server/lib/commentSuggestions.js';
 import { generatePersonaBlurbs } from './server/lib/personaBlurbs.js';
 import { computeAllBoardStandings } from './server/lib/leaderboards.js';
-import { ensureLmModelLoaded } from './server/lib/lmStudioLoad.js';
+import { ensureLmModelLoaded, resetLmModelLoadCache } from './server/lib/lmStudioLoad.js';
+import { resolveLmStudioConfig } from './server/lib/lmStudioResolver.js';
+
+let lastResolvedLmEndpointKey = null;
 import { buildLmUserPayload } from './server/lib/compactHarvestData.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41,20 +44,21 @@ async function readJsonOrNull(filepath) {
   }
 }
 
-async function readLmStudioConfig() {
+async function readLmStudioConfigSources() {
   const fromElectron = (await readJsonOrNull(ELECTRON_LM_STUDIO_CONFIG)) || {};
   const fromLocal = (await readJsonOrNull(LOCAL_LM_STUDIO_CONFIG)) || {};
-  const cfg = { ...fromElectron, ...fromLocal };
-  return {
-    baseUrl:
-      process.env.LM_STUDIO_BASE_URL ||
-      cfg.baseUrl ||
-      'http://192.168.1.109:1234',
-    model:
-      process.env.LM_STUDIO_MODEL ||
-      cfg.model ||
-      'google/gemma-4-e2b',
-  };
+  return { json: { ...fromElectron, ...fromLocal } };
+}
+
+async function readLmStudioConfig(options = {}) {
+  const sources = await readLmStudioConfigSources();
+  const cfg = await resolveLmStudioConfig(sources, options);
+  const endpointKey = `${cfg.baseUrl}|${cfg.model}`;
+  if (lastResolvedLmEndpointKey && lastResolvedLmEndpointKey !== endpointKey) {
+    resetLmModelLoadCache();
+  }
+  lastResolvedLmEndpointKey = endpointKey;
+  return cfg;
 }
 const LM_STUDIO_TIMEOUT_MS = parseInt(process.env.LM_STUDIO_TIMEOUT_MS || '180000', 10);
 const LM_STUDIO_RETRIES = parseInt(process.env.LM_STUDIO_RETRIES || '1', 10);
@@ -306,9 +310,11 @@ async function prepareGenerationContext() {
   }
 
   const lmCfg = await readLmStudioConfig();
-  const rawBase = String(lmCfg.baseUrl).replace(/\/$/, '');
-  const baseUrl = rawBase.endsWith('/v1') ? rawBase.slice(0, -3) : rawBase;
+  const baseUrl = String(lmCfg.baseUrl).replace(/\/$/, '');
   const model = lmCfg.model;
+  if (!lmCfg.cached) {
+    console.log(`[lm-studio] using endpoint "${lmCfg.endpointName}" (${baseUrl}) model=${model}`);
+  }
 
   const prompts = await loadPrompts(ELECTRON_DATA_DIR);
 
@@ -597,8 +603,13 @@ app.post('/api/persona-blurbs/generate', async (req, res) => {
 
 const PORT = Number(process.env.GENERATE_PORT) || 3010;
 app.listen(PORT, async () => {
-  const lm = await readLmStudioConfig();
-  console.log(`Generator server running on http://localhost:${PORT}`);
-  console.log(`LM Studio: ${lm.baseUrl}  model: ${lm.model}`);
+  try {
+    const lm = await readLmStudioConfig();
+    console.log(`Generator server running on http://localhost:${PORT}`);
+    console.log(`LM Studio: ${lm.endpointName} → ${lm.baseUrl}  model: ${lm.model}`);
+  } catch (err) {
+    console.log(`Generator server running on http://localhost:${PORT}`);
+    console.warn('[lm-studio] no endpoint reachable at startup:', err?.message || err);
+  }
   console.log('[comments/suggest] assistant-prefill parser (text-only, sequential)');
 });

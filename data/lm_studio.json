@@ -1,4 +1,9 @@
 {
-  "baseUrl": "http://192.168.1.109:1234",
-  "model": "google/gemma-4-e2b"
+  "endpoints": [
+    {
+      "name": "home",
+      "baseUrl": "http://192.168.1.109:1234",
+      "model": "google/gemma-4-e2b"
+    }
+  ]
 }
