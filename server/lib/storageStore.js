@@ -15,6 +15,7 @@ const MIME_EXT = new Map([
 ]);
 
 const IMAGE_MIME_PREFIX = 'image/';
+export const DEFAULT_PUBLIC_ASSET_CACHE_CONTROL = '31536000';
 
 export function filenameForBuffer(buffer, originalName = '', mimeType = '', extOverride = null) {
   const hash = crypto.createHash('sha256').update(buffer).digest('hex');
@@ -51,7 +52,11 @@ export function createStorageStore({ supabase, bucket = 'uploads-public', config
       const objectPath = filename;
       const upload = await supabase.storage
         .from(bucket)
-        .upload(objectPath, payload, { contentType: outMime, upsert: true });
+        .upload(objectPath, payload, {
+          contentType: outMime,
+          cacheControl: DEFAULT_PUBLIC_ASSET_CACHE_CONTROL,
+          upsert: true,
+        });
       if (upload.error) throw new Error(`storage upload: ${upload.error.message}`);
 
       const row = {

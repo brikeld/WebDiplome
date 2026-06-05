@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { filenameForBuffer, publicStorageUrl } from '../server/lib/storageStore.js';
+import {
+  DEFAULT_PUBLIC_ASSET_CACHE_CONTROL,
+  filenameForBuffer,
+  publicStorageUrl,
+} from '../server/lib/storageStore.js';
 
 describe('storage helpers', () => {
   it('uses sha256 content addressing', () => {
@@ -11,5 +15,9 @@ describe('storage helpers', () => {
     expect(publicStorageUrl('https://demo.supabase.co', 'uploads-public', 'a.png')).toBe(
       'https://demo.supabase.co/storage/v1/object/public/uploads-public/a.png',
     );
+  });
+
+  it('uses long cache headers for content-addressed public assets', () => {
+    expect(DEFAULT_PUBLIC_ASSET_CACHE_CONTROL).toBe('31536000');
   });
 });
