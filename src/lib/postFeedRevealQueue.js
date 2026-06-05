@@ -28,6 +28,7 @@ export function createPostFeedRevealQueue({
   getBaseline,
   onFirstReveal,
   onPostRevealed,
+  onNextPostChange,
 }) {
   const revealedKeys = new Set();
   const baselineKeys = new Set();
@@ -38,6 +39,14 @@ export function createPostFeedRevealQueue({
   let revealSeq = 0;
   let revealedBatch = [];
   let firstRevealFired = false;
+  let nextPostPersona = Symbol('unset');
+
+  const notifyNextPost = () => {
+    const persona = pending[0]?.persona ?? null;
+    if (Object.is(persona, nextPostPersona)) return;
+    nextPostPersona = persona;
+    onNextPostChange?.(persona);
+  };
 
   const markBaseline = (posts) => {
     revealedKeys.clear();
@@ -87,7 +96,10 @@ export function createPostFeedRevealQueue({
       const raw = pending.shift();
       const key = postIdentityKey(raw);
       if (key) pendingKeys.delete(key);
-      if (!key || revealedKeys.has(key)) continue;
+      if (!key || revealedKeys.has(key)) {
+        notifyNextPost();
+        continue;
+      }
       revealedKeys.add(key);
       revealSeq += 1;
       const feedKey =
@@ -112,6 +124,7 @@ export function createPostFeedRevealQueue({
       }
       flushToUi();
       scheduleEnterDone(feedKey);
+      notifyNextPost();
     }
   };
 
@@ -182,6 +195,7 @@ export function createPostFeedRevealQueue({
         added = true;
       }
       if (added) {
+        notifyNextPost();
         ensureDrain();
       }
       return added;

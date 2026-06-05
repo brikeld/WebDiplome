@@ -3,7 +3,7 @@ function trimSlash(value, fallback = '') {
   return v.replace(/\/+$/, '');
 }
 
-export function buildServerConfig(env = process.env) {
+export function buildServerConfig(env = globalThis.process?.env ?? {}) {
   const supabaseUrl = trimSlash(env.SUPABASE_URL);
   const supabaseAnonKey = String(env.SUPABASE_ANON_KEY || '').trim();
   const supabaseServiceRoleKey = String(env.SUPABASE_SERVICE_ROLE_KEY || '').trim();

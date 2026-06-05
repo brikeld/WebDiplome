@@ -11,6 +11,10 @@ import { generatePersonaBlurbs } from '../server/lib/personaBlurbs.js';
 import { loadPrompts } from '../server/lib/prompts.js';
 import { buildLmUserPayload } from '../server/lib/compactHarvestData.js';
 import {
+  stampPostForRevealSlot,
+  stampPostsForRevealSlots,
+} from '../server/lib/generationRevealOrder.js';
+import {
   nextAssetPersona,
   pickUnusedAssetCandidate,
 } from '../server/lib/pickGenerationAsset.js';
@@ -254,6 +258,7 @@ async function processPostsJob(payload, jobId, ownerUserId) {
     }
   }
 
+  const revealBaseTimeMs = Date.now();
   const slotResults = await generatePersonaPosts({
     baseUrl: LM_STUDIO_BASE_URL,
     model: LM_STUDIO_MODEL,
@@ -268,8 +273,10 @@ async function processPostsJob(payload, jobId, ownerUserId) {
     chartUploadDir: CHART_UPLOAD_DIR,
     skipLeaderboard: isFirstGeneration,
     preferMetadataFallback: true,
-    onEachPost: async (post) => {
+    onEachPost: async (post, meta) => {
       if (!post?.content) return;
+      const slotIndex = meta && typeof meta.slotIndex === 'number' ? meta.slotIndex : 0;
+      stampPostForRevealSlot(post, slotIndex, revealBaseTimeMs);
       const [rewritten] = await rewritePostAssetUrls([post], ownerUserId);
       if (!rewritten) return;
       if (await reportJobProgress(jobId, { posts: [rewritten] })) {
@@ -278,6 +285,7 @@ async function processPostsJob(payload, jobId, ownerUserId) {
     },
   });
 
+  stampPostsForRevealSlots(slotResults, revealBaseTimeMs);
   const posts = await rewritePostAssetUrls(slotResults.filter(Boolean), ownerUserId);
   const allPostsSavedViaProgress = posts.length > 0 && progressPostsSaved >= posts.length;
 

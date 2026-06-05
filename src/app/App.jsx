@@ -1593,14 +1593,8 @@ export default function App() {
 
     const baseline = streamPostsBaselineRef.current;
     let revealQueue;
+    let planRevealCount = 0;
     const slotBuffer = createOrderedSlotRevealBuffer({
-      onActiveSlotChange: (persona) => {
-        setPostGen((prev) => (
-          prev.loading && prev.phase === 'generating'
-            ? { ...prev, generatingPersona: persona }
-            : prev
-        ));
-      },
       onRelease: (post) => {
         revealQueue.enqueue([post]);
       },
@@ -1609,7 +1603,24 @@ export default function App() {
     revealQueue = createPostFeedRevealQueue({
       gapMs: POST_REVEAL_GAP_MS,
       getBaseline: () => streamPostsBaselineRef.current,
-      onPostRevealed: (persona) => handlePostRevealedRef.current?.(persona),
+      onPostRevealed: (persona) => {
+        handlePostRevealedRef.current?.(persona);
+        planRevealCount += 1;
+        setPostGen((prev) => (
+          prev.loading && prev.phase === 'generating'
+            ? {
+                ...prev,
+                generatingPersona: personaAfterReveal(prev.generationPlan, planRevealCount),
+              }
+            : prev
+        ));
+      },
+      onNextPostChange: (persona) => {
+        setPostGen((prev) => {
+          if (!prev.loading || prev.phase !== 'generating' || prev.generationPlan) return prev;
+          return { ...prev, generatingPersona: persona };
+        });
+      },
       // No flushSync: the 2s gap between reveals already prevents update
       // coalescing, and forcing synchronous renders here stalls the main
       // thread when the feed has 50+ cards — which in turn blocks the

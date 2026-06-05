@@ -91,7 +91,10 @@ function postCreatedAtMs(createdAt) {
   return typeof createdAt === 'number' ? createdAt : new Date(createdAt).getTime();
 }
 
-function sortNewestFirst(a, b) {
+export function sortNewestFirst(a, b) {
+  const aRevealSeq = Number(a?._feedRevealSeq ?? 0) || 0;
+  const bRevealSeq = Number(b?._feedRevealSeq ?? 0) || 0;
+  if (aRevealSeq !== bRevealSeq) return bRevealSeq - aRevealSeq;
   const at = postCreatedAtMs(a.createdAt);
   const bt = postCreatedAtMs(b.createdAt);
   const cmp = (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);

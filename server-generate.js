@@ -17,6 +17,10 @@ import { extractDocText } from './server/lib/docText.js';
 import { readPostsForId, appendPersonaPosts } from './server/lib/postsStore.js';
 import { generateCommentSuggestions } from './server/lib/commentSuggestions.js';
 import { generatePersonaBlurbs } from './server/lib/personaBlurbs.js';
+import {
+  stampPostForRevealSlot,
+  stampPostsForRevealSlots,
+} from './server/lib/generationRevealOrder.js';
 import { computeAllBoardStandings } from './server/lib/leaderboards.js';
 import { ensureLmModelLoaded, resetLmModelLoadCache } from './server/lib/lmStudioLoad.js';
 import { resolveLmStudioConfig } from './server/lib/lmStudioResolver.js';
@@ -456,6 +460,8 @@ app.post('/api/posts/generate', async (_req, res) => {
       chartUploadDir: UPLOADS_DIR,
     });
 
+    stampPostsForRevealSlots(slotResults);
+
     if (asset) {
       const p = slotResults[ASSET_SLOT_INDEX];
       if (p?.attachedAsset) patchPostAttachedAssetFromUpload(p, asset);
@@ -502,6 +508,7 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
     if (typeof res.flush === 'function') res.flush();
 
     const bySlot = new Array(4).fill(null);
+    const revealBaseTimeMs = Date.now();
     const slotResults = await generatePersonaPosts({
       baseUrl,
       model,
@@ -519,6 +526,7 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
           patchPostAttachedAssetFromUpload(post, asset);
         }
         const idx = meta && typeof meta.slotIndex === 'number' ? meta.slotIndex : 0;
+        stampPostForRevealSlot(post, idx, revealBaseTimeMs);
         bySlot[idx] = post;
         await appendPersonaPosts(newest.id, [post]);
         res.write(`${JSON.stringify({ post, slotIndex: idx })}\n`);
@@ -526,6 +534,7 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
       },
     });
 
+    stampPostsForRevealSlots(slotResults, revealBaseTimeMs);
     const posts = slotResults.filter(Boolean);
     const merged = await appendPersonaPosts(newest.id, posts);
     res.write(`${JSON.stringify({ done: true, success: true, posts: merged })}\n`);
