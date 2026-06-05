@@ -921,6 +921,46 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
 
 // ─── Public API ────────────────────────────────────────────────────────────
 
+async function buildPersonaGenerationSlots({
+  userPayload,
+  assetAssignment,
+  prompts: promptsParam,
+  dataJson,
+  profile,
+  existingPosts = [],
+  chartUploadDir,
+  skipLeaderboard = false,
+  model = null,
+}) {
+  const SP = promptsParam?.slotPrompts ?? DEFAULT_SLOT_PROMPTS;
+  const personaScores = profile?.personaScores ? normalizePersonaPercentTriplet(profile.personaScores) : null;
+  const chartSlot = await buildChartSlot(dataJson, profile, userPayload, existingPosts, chartUploadDir, personaScores);
+  const textSlot = buildTextSlot(dataJson, userPayload, existingPosts, SP, personaScores);
+  const assetSlot = buildAssetSlot(userPayload, assetAssignment);
+  const leaderboardSlot = skipLeaderboard
+    ? null
+    : buildLeaderboardSlot(dataJson, profile, userPayload, existingPosts, Date.now());
+
+  const slots = [textSlot, assetSlot, chartSlot, leaderboardSlot]
+    .map((s) => (s ? { ...s, _model: model } : null));
+
+  return { slots, SP };
+}
+
+function slotsToPlan(slots) {
+  return slots
+    .map((slot, slotIndex) => (
+      slot ? { slotIndex, id: slot.id, persona: slot.persona } : null
+    ))
+    .filter(Boolean);
+}
+
+/** Pre-compute slot personas (score-weighted) before LM calls — for UI tinting. */
+export async function preparePersonaPostSlotPlan(opts) {
+  const { slots } = await buildPersonaGenerationSlots(opts);
+  return slotsToPlan(slots);
+}
+
 /**
  * @param {object} opts
  * @param {string}      opts.baseUrl
@@ -936,7 +976,7 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
  * @param {string|null} [opts.chartUploadDir]     - absolute dir to write chart PNG
  * @param {boolean}     [opts.skipLeaderboard]     - omit rank-change post (first setup)
  * @param {boolean}     [opts.preferMetadataFallback] - skip extra LM call for inferenceChain metadata
- * @param {function}    [opts.onEachPost]
+ * @param {function}    [opts.onEachPost}
  * @returns {Promise<(object|null)[]>} up to four entries [text, asset, chart, leaderboard]
  */
 export async function generatePersonaPosts({
@@ -955,18 +995,17 @@ export async function generatePersonaPosts({
   preferMetadataFallback = false,
   onEachPost,
 }) {
-  const SP = promptsParam?.slotPrompts ?? DEFAULT_SLOT_PROMPTS;
-
-  const personaScores = profile?.personaScores ? normalizePersonaPercentTriplet(profile.personaScores) : null;
-  const chartSlot = await buildChartSlot(dataJson, profile, userPayload, existingPosts, chartUploadDir, personaScores);
-  const textSlot = buildTextSlot(dataJson, userPayload, existingPosts, SP, personaScores);
-  const assetSlot = buildAssetSlot(userPayload, assetAssignment);
-  const leaderboardSlot = skipLeaderboard
-    ? null
-    : buildLeaderboardSlot(dataJson, profile, userPayload, existingPosts, Date.now());
-
-  const slots = [textSlot, assetSlot, chartSlot, leaderboardSlot]
-    .map((s) => (s ? { ...s, _model: model } : null));
+  const { slots, SP } = await buildPersonaGenerationSlots({
+    userPayload,
+    assetAssignment,
+    prompts: promptsParam,
+    dataJson,
+    profile,
+    existingPosts,
+    chartUploadDir,
+    skipLeaderboard,
+    model,
+  });
 
   const results = new Array(slots.length).fill(null);
   const slotRunOpts = { baseUrl, timeoutMs, retries, SP, preferMetadataFallback };

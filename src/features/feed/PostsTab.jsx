@@ -201,6 +201,7 @@ export default function PostsTab({
   aiFeaturesEnabled = true,
   feedContext = 'home',
   isGeneratingPosts = false,
+  generatingPersona = null,
   postRevealFlash = null,
   hideInteractions = false,
   highlightedPostId = null,
@@ -288,6 +289,8 @@ export default function PostsTab({
     return all.sort(sortNewestFirst);
   }, [feedContext, feedProfiles, personaBadgePersona, profile, deletedProfileIds]);
 
+  const generatingAccent = personaUiColor(generatingPersona);
+
   const leaderboardDirectorySlugs = useMemo(() => {
     const sources = feedContext === 'home' && Array.isArray(feedProfiles) && feedProfiles.length > 0
       ? feedProfiles
@@ -319,6 +322,10 @@ export default function PostsTab({
           className={`posts-generating-placeholder${
             placeholderLeaving ? ' posts-generating-placeholder--leaving' : ''
           }`}
+          style={{
+            '--persona-accent': generatingAccent,
+            '--post-accent': generatingAccent,
+          }}
           aria-busy={!placeholderLeaving}
           aria-label="Generating posts"
         >

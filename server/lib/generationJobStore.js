@@ -17,6 +17,7 @@ function mapJobRow(row) {
     error: row.error ?? null,
     result,
     posts: jobType === 'posts' && Array.isArray(result) ? result : null,
+    generationPlan: Array.isArray(payload.generationPlan) ? payload.generationPlan : null,
     createdAt: row.created_at,
     completedAt: row.completed_at,
   };
@@ -211,6 +212,24 @@ export function createGenerationJobStore(supabase) {
           .select('*')
           .maybeSingle(),
         'update queued generation job payload',
+      );
+    },
+
+    async patchRequestPayload(jobId, patch = {}) {
+      const row = await this.getJobById(jobId);
+      if (!row) return null;
+      const current = row.request_payload && typeof row.request_payload === 'object'
+        ? row.request_payload
+        : {};
+      const next = { ...current, ...patch };
+      return throwIfError(
+        await supabase
+          .from('generation_jobs')
+          .update({ request_payload: next })
+          .eq('id', jobId)
+          .select('*')
+          .maybeSingle(),
+        'patch generation job payload',
       );
     },
 

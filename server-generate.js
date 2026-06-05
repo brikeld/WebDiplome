@@ -9,6 +9,7 @@ import { getNewestProfileIdAndPath, readProfileJson } from './server/lib/current
 import {
   generatePersonaPosts,
   generateUserSummary,
+  preparePersonaPostSlotPlan,
   ASSET_SLOT_INDEX,
 } from './server/lib/personaPostGenerator.js';
 import { loadPrompts } from './server/lib/prompts.js';
@@ -486,6 +487,19 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
       return;
     }
     const { newest, existing, profile, userPayload, asset, assetAssignment, baseUrl, model, prompts, electronData } = ctx;
+
+    const generationPlan = await preparePersonaPostSlotPlan({
+      userPayload,
+      assetAssignment,
+      prompts,
+      dataJson: electronData,
+      profile,
+      existingPosts: existing,
+      chartUploadDir: UPLOADS_DIR,
+      skipLeaderboard: existing.length === 0,
+    });
+    res.write(`${JSON.stringify({ plan: generationPlan })}\n`);
+    if (typeof res.flush === 'function') res.flush();
 
     const bySlot = new Array(4).fill(null);
     const slotResults = await generatePersonaPosts({

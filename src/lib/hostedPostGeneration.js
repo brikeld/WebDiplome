@@ -42,16 +42,16 @@ export async function runHostedPostGenerationWithReveal({
   reloadProfileFromApi,
   applyRevealedPosts,
   getBaselinePosts,
-  onDismissGeneratingUi,
+  onGenerationPlan,
   onPostRevealed,
   pollMs = 1000,
   timeoutMs = 120000,
   postJobDoneGraceMs = 12000,
 }) {
+  let planReported = false;
   const queue = createPostFeedRevealQueue({
     getBaseline: getBaselinePosts,
     onPostsChange: applyRevealedPosts,
-    onFirstReveal: onDismissGeneratingUi,
     onPostRevealed,
   });
   queue.markBaseline(getBaselinePosts());
@@ -71,6 +71,10 @@ export async function runHostedPostGenerationWithReveal({
   while (Date.now() - start < timeoutMs) {
     if (jobId && !jobDone) {
       const job = await fetchGenerationJob(jobId);
+      if (!planReported && Array.isArray(job.generationPlan) && job.generationPlan.length > 0) {
+        planReported = true;
+        onGenerationPlan?.(job.generationPlan);
+      }
       if (job.status === 'complete') {
         jobDone = true;
         jobDoneAt = Date.now();

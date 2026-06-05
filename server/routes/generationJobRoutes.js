@@ -347,6 +347,11 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
 
       const profileSummary = req.body?.profileSummary ?? req.body?.profile_summary ?? '';
       const posts = req.body?.posts ?? [];
+      const generationPlan = req.body?.generationPlan ?? req.body?.generation_plan ?? null;
+
+      if (Array.isArray(generationPlan) && generationPlan.length > 0) {
+        await jobStore.patchRequestPayload(jobRow.id, { generationPlan });
+      }
 
       if (String(profileSummary).trim()) {
         await profileStore.updateProfileSummary({

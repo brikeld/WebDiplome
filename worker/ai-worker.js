@@ -1,7 +1,11 @@
 import os from 'os';
 import path from 'path';
 import { promises as fs } from 'fs';
-import { generatePersonaPosts, generateUserSummary } from '../server/lib/personaPostGenerator.js';
+import {
+  generatePersonaPosts,
+  generateUserSummary,
+  preparePersonaPostSlotPlan,
+} from '../server/lib/personaPostGenerator.js';
 import { generateCommentSuggestions } from '../server/lib/commentSuggestions.js';
 import { generatePersonaBlurbs } from '../server/lib/personaBlurbs.js';
 import { loadPrompts } from '../server/lib/prompts.js';
@@ -218,6 +222,18 @@ async function processPostsJob(payload, jobId, ownerUserId) {
   }
 
   await fs.mkdir(CHART_UPLOAD_DIR, { recursive: true });
+
+  const generationPlan = await preparePersonaPostSlotPlan({
+    userPayload,
+    assetAssignment,
+    prompts,
+    dataJson,
+    profile,
+    existingPosts,
+    chartUploadDir: CHART_UPLOAD_DIR,
+    skipLeaderboard: isFirstGeneration,
+  });
+  await reportJobProgress(jobId, { generationPlan });
 
   const existingBio = String(profile.profileSummary || profile.userDescription || '').trim();
   let profileSummary = existingBio;

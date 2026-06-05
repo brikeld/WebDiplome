@@ -67,6 +67,10 @@ import {
   stripFeedRevealMetaFromPosts,
 } from '@/lib/postFeedRevealQueue.js';
 import {
+  createOrderedSlotRevealBuffer,
+  personaAfterReveal,
+} from '@/lib/orderedSlotReveal.js';
+import {
   filterProfilesNotDeleted,
   isProfileSlugDeleted,
   purgeClientAccountState,
@@ -214,7 +218,13 @@ const HARVEST_WAIT_MS = 12 * 60 * 1000;
 const PERSONA_DELTA_DISPLAY_MS = 7000;
 /** Ring score deltas (= / + / −) stay after generation finishes. */
 const PERSONA_RING_DELTA_CLEAR_MS = 15_000;
-const POST_GEN_IDLE = { loading: false, phase: 'idle', error: null };
+const POST_GEN_IDLE = {
+  loading: false,
+  phase: 'idle',
+  error: null,
+  generatingPersona: null,
+  generationPlan: null,
+};
 
 function sleep(ms) {
   return feedRevealSleep(ms);
@@ -968,7 +978,8 @@ function AppInner({
                 feedProfiles={feedProfiles}
                 viewerProfile={viewerProfile}
                 aiFeaturesEnabled={accountFeaturesEnabled}
-                isGeneratingPosts={postGen.phase === 'generating' && !postGen.firstRevealed}
+                isGeneratingPosts={postGen.phase === 'generating' && postGen.loading}
+                generatingPersona={postGen.generatingPersona}
                 postRevealFlash={postRevealFlash}
                 highlightedPostId={highlightedPost?.id ?? null}
                 onHighlightPost={handleHighlightPost}
@@ -993,7 +1004,8 @@ function AppInner({
             onOpenProfile={handleOpenProfile}
             deletedProfileIds={deletedProfileIds}
             mainScoreEntryReplayKey={profileScoreReplayNonce}
-            isGeneratingPosts={!viewedProfile && postGen.phase === 'generating' && !postGen.firstRevealed}
+            isGeneratingPosts={!viewedProfile && postGen.phase === 'generating' && postGen.loading}
+            generatingPersona={postGen.generatingPersona}
             generateApiOrigin={GENERATE_API_ORIGIN}
           />
         )}
@@ -1087,7 +1099,6 @@ export default function App() {
     spectateRevealRef.current = createFeedSpectatorRevealController({ setAllProfiles });
   }
   const personaDeltasClearRef = useRef(null);
-  const dismissGeneratingUiRef = useRef(() => {});
   /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
   const prevMainViewRef = useRef(null);
@@ -1123,20 +1134,14 @@ export default function App() {
     }, PERSONA_RING_DELTA_CLEAR_MS);
   }, [cancelPersonaDeltasClear]);
 
-  // First reveal: retract the in-feed placeholder spinner only. The dashboard
-  // "Generating content" screen intentionally stays up (phase remains
-  // 'generating') until every post has finished revealing — it is dismissed by
-  // the final setPostGen(POST_GEN_IDLE) in the generation handler.
-  const dismissGeneratingUi = useCallback(() => {
-    setPostGen((prev) => {
-      if (!prev.loading || prev.phase !== 'generating' || prev.firstRevealed) return prev;
-      return { ...prev, firstRevealed: true };
-    });
+  const applyGenerationPlan = useCallback((plan) => {
+    if (!Array.isArray(plan) || plan.length === 0) return;
+    setPostGen((prev) => ({
+      ...prev,
+      generationPlan: plan,
+      generatingPersona: personaAfterReveal(plan, 0),
+    }));
   }, []);
-
-  useEffect(() => {
-    dismissGeneratingUiRef.current = dismissGeneratingUi;
-  }, [dismissGeneratingUi]);
 
   const handlePostRevealed = useCallback((persona) => {
     setPostRevealFlash((prev) => ({
@@ -1587,10 +1592,23 @@ export default function App() {
     }
 
     const baseline = streamPostsBaselineRef.current;
-    const revealQueue = createPostFeedRevealQueue({
+    let revealQueue;
+    const slotBuffer = createOrderedSlotRevealBuffer({
+      onActiveSlotChange: (persona) => {
+        setPostGen((prev) => (
+          prev.loading && prev.phase === 'generating'
+            ? { ...prev, generatingPersona: persona }
+            : prev
+        ));
+      },
+      onRelease: (post) => {
+        revealQueue.enqueue([post]);
+      },
+    });
+
+    revealQueue = createPostFeedRevealQueue({
       gapMs: POST_REVEAL_GAP_MS,
       getBaseline: () => streamPostsBaselineRef.current,
-      onFirstReveal: () => dismissGeneratingUiRef.current(),
       onPostRevealed: (persona) => handlePostRevealedRef.current?.(persona),
       // No flushSync: the 2s gap between reveals already prevents update
       // coalescing, and forcing synchronous renders here stalls the main
@@ -1602,8 +1620,12 @@ export default function App() {
     });
     revealQueue.markBaseline(baseline);
 
-    const enqueueArrivedPost = (post) => {
+    const enqueueArrivedPost = (post, slotIndex) => {
       if (!post || typeof post !== 'object') return;
+      if (typeof slotIndex === 'number') {
+        slotBuffer.push(post, slotIndex);
+        return;
+      }
       revealQueue.enqueue([post]);
     };
 
@@ -1666,8 +1688,14 @@ export default function App() {
         if (row.success === false && row.error) throw new Error(row.error);
         if (row.done) return;
         if (row.error && !row.post) throw new Error(row.error);
+        if (Array.isArray(row.plan) && row.plan.length > 0) {
+          slotBuffer.setPlan(row.plan);
+          applyGenerationPlan(row.plan);
+          return;
+        }
         if (row.post) {
-          enqueueArrivedPost(row.post);
+          const slotIndex = typeof row.slotIndex === 'number' ? row.slotIndex : undefined;
+          enqueueArrivedPost(row.post, slotIndex);
         }
       };
 
@@ -1693,7 +1721,13 @@ export default function App() {
           if (row.success === false && row.error) throw new Error(row.error);
           if (!row.done) {
             if (row.error && !row.post) throw new Error(row.error);
-            if (row.post) enqueueArrivedPost(row.post);
+            if (Array.isArray(row.plan) && row.plan.length > 0) {
+              slotBuffer.setPlan(row.plan);
+              applyGenerationPlan(row.plan);
+            } else if (row.post) {
+              const slotIndex = typeof row.slotIndex === 'number' ? row.slotIndex : undefined;
+              enqueueArrivedPost(row.post, slotIndex);
+            }
           }
         } catch (e) {
           if (e instanceof SyntaxError) {
@@ -1705,7 +1739,6 @@ export default function App() {
       }
 
       await revealQueue.waitUntilIdle();
-      dismissGeneratingUiRef.current();
       await reloadProfileFromApi({ forcePostsMerge: true });
       schedulePersonaDeltasClearAfterGenerate();
     } catch (e) {
@@ -1719,6 +1752,7 @@ export default function App() {
     prependCompliantPost,
     reloadProfileFromApi,
     schedulePersonaDeltasClearAfterGenerate,
+    applyGenerationPlan,
   ]);
 
   const runBioAndPostGenerationRef = useRef(runBioAndPostGeneration);
@@ -1760,11 +1794,18 @@ export default function App() {
     }
 
     autoPostGenProfileIdRef.current = profileId;
-    setPostGen({ loading: true, phase: 'generating', error: null, firstRevealed: false });
+    setPostGen({
+      loading: true,
+      phase: 'generating',
+      error: null,
+      generatingPersona: null,
+      generationPlan: null,
+    });
 
     (async () => {
       try {
         if (hosted) {
+          let planRevealCount = 0;
           const triggerRes = await fetch(`${API_ORIGIN}/api/generation-jobs/trigger-initial`, {
             method: 'POST',
             headers: {
@@ -1788,8 +1829,19 @@ export default function App() {
             jobId,
             reloadProfileFromApi,
             getBaselinePosts: () => streamPostsBaselineRef.current,
-            onDismissGeneratingUi: dismissGeneratingUi,
-            onPostRevealed: handlePostRevealed,
+            onGenerationPlan: applyGenerationPlan,
+            onPostRevealed: (persona) => {
+              handlePostRevealed(persona);
+              planRevealCount += 1;
+              setPostGen((prev) => (
+                prev.loading && prev.phase === 'generating'
+                  ? {
+                      ...prev,
+                      generatingPersona: personaAfterReveal(prev.generationPlan, planRevealCount),
+                    }
+                  : prev
+              ));
+            },
             applyRevealedPosts: (personaPosts) => {
               setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
             },
@@ -1814,7 +1866,7 @@ export default function App() {
     harvestPhase,
     countAiGeneratedPosts,
     reloadProfileFromApi,
-    dismissGeneratingUi,
+    applyGenerationPlan,
     handlePostRevealed,
     schedulePersonaDeltasClearAfterGenerate,
   ]);
@@ -1896,7 +1948,13 @@ export default function App() {
     const scoresAfter = getPersonaScoresNormalized(freshProfile ?? {});
     setPersonaDeltas(computePersonaDeltas(scoresBefore, scoresAfter));
 
-    setPostGen({ loading: true, phase: 'deltas', error: null });
+    setPostGen({
+      loading: true,
+      phase: 'deltas',
+      error: null,
+      generatingPersona: null,
+      generationPlan: null,
+    });
 
     let generationJobId = null;
     if (hosted) {
@@ -1938,17 +1996,34 @@ export default function App() {
 
     setPostGen((prev) => {
       if (!prev.loading || prev.phase !== 'deltas') return prev;
-      return { ...prev, phase: 'generating', firstRevealed: false };
+      return {
+        ...prev,
+        phase: 'generating',
+        generatingPersona: null,
+        generationPlan: null,
+      };
     });
 
     try {
       if (hosted) {
+        let planRevealCount = 0;
         await runHostedPostGenerationWithReveal({
           jobId: generationJobId,
           reloadProfileFromApi,
           getBaselinePosts: () => streamPostsBaselineRef.current,
-          onDismissGeneratingUi: dismissGeneratingUi,
-          onPostRevealed: handlePostRevealed,
+          onGenerationPlan: applyGenerationPlan,
+          onPostRevealed: (persona) => {
+            handlePostRevealed(persona);
+            planRevealCount += 1;
+            setPostGen((prev) => (
+              prev.loading && prev.phase === 'generating'
+                ? {
+                    ...prev,
+                    generatingPersona: personaAfterReveal(prev.generationPlan, planRevealCount),
+                  }
+                : prev
+            ));
+          },
           applyRevealedPosts: (personaPosts) => {
             setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
           },

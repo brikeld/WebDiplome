@@ -25,6 +25,7 @@ export default function ProfileView({
   deletedProfileIds = [],
   mainScoreEntryReplayKey,
   isGeneratingPosts,
+  generatingPersona = null,
   personaBadgePersona = null,
   generateApiOrigin,
 }) {
@@ -65,6 +66,7 @@ export default function ProfileView({
                       feedContext="profile"
                       hideInteractions
                       isGeneratingPosts={isGeneratingPosts}
+                      generatingPersona={generatingPersona}
                       personaBadgePersona={themePersonaKey}
                       onOpenProfile={onOpenProfile}
                       deletedProfileIds={deletedProfileIds}
