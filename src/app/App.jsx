@@ -37,11 +37,12 @@ import {
 import {
   createCompliantLowScorePost,
   createCompliantPersonaChangePost,
+  shouldCreateLowScorePostOnce,
+  shouldCreatePersonaChangePost,
   stripLowScorePostsForPersona,
 } from '@/lib/compliantSystemPosts.js';
 import { markLowScoreFired, loadLowScoreFiredPersonas } from '@/lib/compliantLowScoreStorage.js';
 import {
-  isCompliantPersonaChangePost,
   mergePersonaPostsFromApi,
   mergePostsPrepend,
 } from '@/lib/mergePersonaPosts.js';
@@ -541,8 +542,7 @@ function AppInner({
     previousLivePersonaRef.current = liveDominantPersona;
 
     const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
-    const latestChange = posts.find(isCompliantPersonaChangePost);
-    if (latestChange?.compliantPersonaChange?.toPersona === liveDominantPersona) return;
+    if (!shouldCreatePersonaChangePost(posts, previous, liveDominantPersona)) return;
 
     const post = createCompliantPersonaChangePost({
       profile,
@@ -586,26 +586,16 @@ function AppInner({
       { ui: 'popularity', key: 'social' },
     ];
     // Personas that have already been reminded (persisted across sessions).
-    // A reminder fires once per genuine above→below crossing; while a persona
-    // stays below the threshold we do NOT keep re-adding the notice (that was
-    // the disappear/reappear flicker after each generation). It is fine for the
-    // notice to not be visible — we just never nag with a duplicate.
+    // Each persona gets one low-score notice for the lifetime of this profile.
     const firedPersonas = loadLowScoreFiredPersonas(profileId);
+    const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
 
-    const ensureLowScorePost = (ui, key, prevScores) => {
+    const ensureLowScorePost = (ui, key) => {
       const score = Math.max(0, Math.min(100, Number(adjustedScores[key]) || 0));
       const rounded = Math.round(score);
       if (rounded >= PERSONA_SCORE_RESTRICT_THRESHOLD) return;
 
-      const wasAbove =
-        prevScores !== null &&
-        (Number(prevScores[key]) || 0) >= PERSONA_SCORE_RESTRICT_THRESHOLD;
-      const alreadyFired = firedPersonas.includes(ui);
-
-      // Fire on a fresh drop (was above, now below) or the very first time we
-      // ever observe this persona below threshold. Otherwise stay silent.
-      const needsPost = wasAbove || !alreadyFired;
-      if (!needsPost) return;
+      if (!shouldCreateLowScorePostOnce(posts, firedPersonas, ui)) return;
 
       prependCompliantLowScorePost(
         ui,
@@ -621,7 +611,7 @@ function AppInner({
 
     if (prev === null) {
       for (const { ui, key } of scoreKeys) {
-        ensureLowScorePost(ui, key, null);
+        ensureLowScorePost(ui, key);
       }
       previousPersonaScoresRef.current = {
         productivity: adjustedScores.productivity,
@@ -632,7 +622,7 @@ function AppInner({
     }
 
     for (const { ui, key } of scoreKeys) {
-      ensureLowScorePost(ui, key, prev);
+      ensureLowScorePost(ui, key);
     }
 
     previousPersonaScoresRef.current = {

@@ -18,6 +18,38 @@ export function hasLowScorePostForPersona(posts, uiPersonaKey) {
   return posts.some((p) => p?.compliantLowScore?.uiPersonaKey === uiPersonaKey);
 }
 
+function postCreatedAtMs(post) {
+  const v = post?.createdAt ?? post?.created_at ?? 0;
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  const d = new Date(v);
+  return Number.isFinite(d.getTime()) ? d.getTime() : 0;
+}
+
+export function shouldCreateLowScorePostOnce(posts, firedPersonas, uiPersonaKey) {
+  if (!uiPersonaKey) return false;
+  if (hasLowScorePostForPersona(posts, uiPersonaKey)) return false;
+  const fired = Array.isArray(firedPersonas) ? firedPersonas.map(String) : [];
+  return !fired.includes(String(uiPersonaKey));
+}
+
+export function shouldCreatePersonaChangePost(posts, fromPersona, toPersona) {
+  if (!fromPersona || !toPersona || fromPersona === toPersona) return false;
+  if (!Array.isArray(posts)) return true;
+
+  let latest = null;
+  let latestMs = -1;
+  for (const p of posts) {
+    if (!p?.compliantPersonaChange) continue;
+    const ms = postCreatedAtMs(p);
+    if (ms > latestMs) {
+      latest = p;
+      latestMs = ms;
+    }
+  }
+
+  return latest?.compliantPersonaChange?.toPersona !== toPersona;
+}
+
 export function findLowScorePostForPersona(posts, uiPersonaKey) {
   if (!uiPersonaKey || !Array.isArray(posts)) return null;
   return posts.find((p) => p?.compliantLowScore?.uiPersonaKey === uiPersonaKey) ?? null;
