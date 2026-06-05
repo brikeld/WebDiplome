@@ -189,6 +189,7 @@ export function createPostFeedRevealQueue({
       const list = Array.isArray(posts) ? posts : [];
       let added = false;
       for (const p of list) {
+        if (isCompliantSystemPost(p)) continue;
         const key = postIdentityKey(p);
         if (!key || revealedKeys.has(key) || pendingKeys.has(key)) continue;
         pendingKeys.add(key);
@@ -234,6 +235,7 @@ export function sortPostsForReveal(posts) {
 export function findUnrevealedPosts(apiPosts, revealedKeys) {
   const out = [];
   for (const p of Array.isArray(apiPosts) ? apiPosts : []) {
+    if (isCompliantSystemPost(p)) continue;
     const key = postIdentityKey(p);
     if (!key || revealedKeys.has(key)) continue;
     out.push(p);

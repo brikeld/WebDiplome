@@ -24,6 +24,30 @@ describe('createPostFeedRevealQueue', () => {
     expect(queue.allNewGeneratedRevealed(apiWithCompliant)).toBe(true);
   });
 
+  it('does not return COMPLIANT posts as unrevealed generation posts', () => {
+    const baseline = [{ content: 'old', createdAt: 1, persona: 'securite' }];
+    const queue = createPostFeedRevealQueue({
+      gapMs: 50,
+      getBaseline: () => baseline,
+      onPostsChange: () => {},
+    });
+    queue.markBaseline(baseline);
+    const apiPosts = [
+      ...baseline,
+      {
+        content: 'COMPLIANT notice',
+        createdAt: 2,
+        persona: 'securite',
+        compliantLowScore: { uiPersonaKey: 'security', score: 12 },
+      },
+      { content: 'new generated', createdAt: 3, persona: 'productivite' },
+    ];
+
+    expect(queue.findUnrevealed(apiPosts)).toEqual([
+      { content: 'new generated', createdAt: 3, persona: 'productivite' },
+    ]);
+  });
+
   it('uses default gap near 2s', () => {
     expect(POST_REVEAL_GAP_MS).toBeGreaterThanOrEqual(1800);
     expect(POST_REVEAL_GAP_MS).toBeLessThanOrEqual(2500);
