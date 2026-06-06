@@ -119,15 +119,11 @@ export default function LeaderboardRationaleView({ leaderboard, holdLoadingOverl
                     className={`lb2__sig${sig.shown?.length ? ' lb2__sig--named' : ''}${activeSignal === i ? ' is-active' : ''}`}
                     onClick={() => handleSignalClick(i)}
                   >
-                    <span className="lb2__sig-mark">
-                      {sig.sign}{Math.abs(sig.weight)}
-                    </span>
                     <span className="lb2__sig-copy">
                       <span className="lb2__sig-text">{sig.label}</span>
                       {sig.shown?.length > 0 ? (
                         <span className="lb2__sig-examples">
                           {sig.shown.join(' · ')}
-                          {sig.overflow > 0 ? ` +${sig.overflow}` : ''}
                         </span>
                       ) : null}
                     </span>
@@ -151,11 +147,6 @@ export default function LeaderboardRationaleView({ leaderboard, holdLoadingOverl
                           <li key={idx} className="lb2__sig-example-item">{name}</li>
                         ))}
                       </ul>
-                      {signals[activeSignal].overflow > 0 ? (
-                        <p className="lb2__sig-example-more">
-                          +{signals[activeSignal].overflow} more
-                        </p>
-                      ) : null}
                     </div>
                   ) : null}
                 </div>

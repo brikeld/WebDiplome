@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebDiplome · Tell Me More Showcase</title>
+    <link rel="stylesheet" href="../src/features/inferenceChain/inferenceChain.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="theme-prod">
+    <div class="stage">
+      <header class="top">
+        <div class="top__brand">
+          <b>WebDiplome</b>
+          <span>Tell me more showcase</span>
+        </div>
+        <div class="top__controls">
+          <nav class="showcase-switch" aria-label="Showcase">
+            <a href="../timer-button-states/index.html" class="showcase-switch__btn">Timer</a>
+            <a href="./index.html" class="showcase-switch__btn is-on" aria-current="page">Tell me more</a>
+          </nav>
+          <div class="themeswitch" aria-label="Persona theme">
+            <button type="button" data-theme="prod" class="is-on">Prod</button>
+            <button type="button" data-theme="sec">Sec</button>
+            <button type="button" data-theme="soc">Soc</button>
+          </div>
+          <button type="button" class="top__play" id="playSequence">Play flow</button>
+        </div>
+      </header>
+
+      <nav class="rail" id="rail" aria-label="Tell me more states"></nav>
+
+      <main class="frame-area">
+        <div class="capsule-host" id="capsuleHost"></div>
+        <div class="frame-ctrl">
+          <button type="button" id="prevState">Prev</button>
+          <span id="frameMeta">Idle · collapsed</span>
+          <button type="button" id="nextState">Next</button>
+        </div>
+      </main>
+
+      <aside class="notes" id="notes"></aside>
+    </div>
+
+    <script src="./tell-states.js"></script>
+  </body>
+</html>

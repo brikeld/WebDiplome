@@ -10,7 +10,6 @@ import {
   buildFileExtSlice,
   buildStorageChart,
   buildBatteryHardwareChart,
-  buildPersonaScoresChart,
   buildBrowserDomainsChart,
   buildLanguageChart,
   buildAIToolChart,
@@ -170,12 +169,6 @@ describe('Chart builders — smoke tests', () => {
     expect(result.svg).toContain('Apple M3 Max');
     expect(result.svg).toContain('36 GB');
     expect(result.svg).not.toContain('>—<');
-  });
-  it('buildPersonaScoresChart returns valid svg', () => {
-    expectChart(buildPersonaScoresChart(mockProfile, 'securite'));
-  });
-  it('buildPersonaScoresChart returns null without scores', () => {
-    expect(buildPersonaScoresChart({}, 'productivite')).toBeNull();
   });
   it('buildBrowserDomainsChart returns valid svg', () => {
     expectChart(buildBrowserDomainsChart(mockData, 'popularite'));

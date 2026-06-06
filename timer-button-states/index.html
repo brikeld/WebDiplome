@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebDiplome · Timer Showcase</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="theme-sec">
+    <div class="stage">
+      <header class="top">
+        <div class="top__brand">
+          <b>WebDiplome</b>
+          <span>Timer button showcase</span>
+        </div>
+        <div class="top__controls">
+          <nav class="showcase-switch" aria-label="Showcase">
+            <a href="./index.html" class="showcase-switch__btn is-on" aria-current="page">Timer</a>
+            <a href="../tell-more-states/index.html" class="showcase-switch__btn">Tell me more</a>
+          </nav>
+          <div class="themeswitch" aria-label="Persona theme">
+            <button type="button" data-theme="prod">Prod</button>
+            <button type="button" data-theme="sec" class="is-on">Sec</button>
+            <button type="button" data-theme="soc">Soc</button>
+          </div>
+          <button type="button" class="top__play" id="playSequence">Play flow</button>
+        </div>
+      </header>
+
+      <nav class="rail" id="rail" aria-label="Timer states"></nav>
+
+      <main class="frame-area">
+        <div class="dashboard-capsule dashboard-capsule--figma">
+          <div class="dashboard-actions-row" id="timerSlot"></div>
+        </div>
+        <div class="frame-ctrl">
+          <button type="button" id="prevState">Prev</button>
+          <span id="frameMeta">Idle · clickable</span>
+          <button type="button" id="nextState">Next</button>
+        </div>
+      </main>
+
+      <aside class="notes" id="notes"></aside>
+    </div>
+
+    <script src="./timer-states.js"></script>
+  </body>
+</html>

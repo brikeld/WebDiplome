@@ -5,7 +5,7 @@
  *
  *   • Leaderboard posts → `LeaderboardRationaleView` (lb2 capsule layout).
  *   • Normal posts      → np2 layout: bigger post quote + 3 capsule tiles
- *                         (Thinking process / Ingredients / Inference chain),
+ *                         (Thinking process / Ingredients / Reasoning steps),
  *                         each with small interactable chips that reveal a
  *                         per-tile detail strip on click.
  *
@@ -21,8 +21,8 @@ import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 import { synthesiseChartMetadata } from '@/lib/chartPostMetadata.js';
 
-const CHAIN_LABELS = ['DATA', 'CLASSIFY', 'INFER', 'GENERATE'];
-const CHAIN_KEYS = ['data', 'classify', 'infer', 'generate'];
+const CHAIN_LABELS = ['DATA', 'CLASSIFY', 'INFER'];
+const CHAIN_KEYS = ['data', 'classify', 'infer'];
 
 function looksLikeInternalKey(s) {
   const t = String(s || '').trim();
@@ -42,7 +42,7 @@ function readableSource(source) {
 }
 
 function isValidChain(chain) {
-  if (!Array.isArray(chain) || chain.length !== 4) return false;
+  if (!Array.isArray(chain)) return false;
   return CHAIN_KEYS.every((s) => {
     const entry = chain.find((c) => c && c.step === s);
     return entry && typeof entry.value === 'string' && entry.value.trim();
@@ -139,7 +139,7 @@ export default function InferenceChainPanel({ post, personaLabel, holdLoadingOve
 
   // Click on a phrase in the post text → open the linked capsule.
   const handleHighlightSelect = ({ stepIndex, ingredientIndex }) => {
-    const validStep = Number.isFinite(stepIndex) && stepIndex >= 0 && stepIndex <= 3;
+    const validStep = Number.isFinite(stepIndex) && stepIndex >= 0 && stepIndex < CHAIN_KEYS.length;
     const validIng = Number.isFinite(ingredientIndex) && hasIngredients && ingredientIndex >= 0 && ingredientIndex < ingredients.length;
     if (hasIngredients && validIng) {
       setActiveIngredient(ingredientIndex);
@@ -155,7 +155,7 @@ export default function InferenceChainPanel({ post, personaLabel, holdLoadingOve
       <div
         className="inference-panel inference-panel--leaderboard"
         role="region"
-        aria-label="Algorithm inference chain"
+        aria-label="Tell me more analysis"
       >
         <div className="inference-panel__body">
           <LeaderboardRationaleView
@@ -172,14 +172,13 @@ export default function InferenceChainPanel({ post, personaLabel, holdLoadingOve
   const dataStep = validChain ? findChain('data') : null;
   const classifyStep = validChain ? findChain('classify') : null;
   const inferStep = validChain ? findChain('infer') : null;
-  const generateStep = validChain ? findChain('generate') : null;
-  const chainBuckets = [dataStep, classifyStep, inferStep, generateStep];
+  const chainBuckets = [dataStep, classifyStep, inferStep];
 
   return (
     <div
       className={`inference-panel${ready ? ' is-ready' : ''}`}
       role="region"
-      aria-label="Algorithm inference chain"
+      aria-label="Tell me more analysis"
     >
       <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
 
@@ -267,12 +266,12 @@ export default function InferenceChainPanel({ post, personaLabel, holdLoadingOve
           </section>
         ) : null}
 
-        {/* ── Inference chain tile ───────────────────────────────── */}
+        {/* ── From data to post tile ─────────────────────────────── */}
         {validChain ? (
           <section className="np2__tile np2__tile--chain">
             <header className="np2__tile-head">
-              <span className="np2__label">INFERENCE CHAIN</span>
-              <span className="np2__label np2__label--hint">how it got here</span>
+              <span className="np2__label">FROM DATA TO POST</span>
+              <span className="np2__label np2__label--hint">step by step</span>
             </header>
             <div className="np2__chip-grid np2__chip-grid--chain">
               {chainBuckets.map((entry, i) => (

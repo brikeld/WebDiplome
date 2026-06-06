@@ -64,9 +64,220 @@ export function extractAppCategorySlice(data) {
   };
 }
 
+export const WIFI_POST_ANGLES = [
+  'funny_name',
+  'cafe_habit',
+  'work_vs_home',
+  'travel_footprint',
+  'sheer_diversity',
+  'security_read',
+];
+
+const WIFI_ANGLE_LABELS = {
+  funny_name: 'a memorable or absurd network name',
+  cafe_habit: 'a café / coffee-shop wifi pattern',
+  work_vs_home: 'contrast between work/school and home networks',
+  travel_footprint: 'travel, hotels, or guest networks',
+  sheer_diversity: 'sheer number of different networks saved',
+  security_read: 'public footprint and security vibes',
+};
+
+const WIFI_CATEGORY_ORDER = [
+  'cafe', 'home', 'office', 'hotel', 'hotspot', 'guest', 'public', 'isp', 'other',
+];
+
+const WIFI_CATEGORY_PATTERNS = [
+  { key: 'cafe', re: /caf[eé]|coffee|starbucks|blue\s*bottle|espresso|boulanger|brunch/i },
+  { key: 'home', re: /home|fibre|fiber|livebox|freebox|bbox|sfr|wanadoo|domicile|box_/i },
+  { key: 'office', re: /office|work|corp|ecal|school|university|uni|eduroam|enterprise|staff|student/i },
+  { key: 'hotel', re: /hotel|ibis|marriott|hilton|airbnb|lodging|resort|hostel/i },
+  { key: 'hotspot', re: /hotspot|iphone|android|tether|personal\s*area|ipad/i },
+  { key: 'guest', re: /guest|visitor|invite|gratuit|free[\s_-]?wifi|wifi[\s_-]?free|public[\s_-]?wifi/i },
+  { key: 'public', re: /library|biblioth|sncf|train|airport|aeroport|metro|city[\s_-]?wifi|municipal/i },
+  { key: 'isp', re: /^(?:upc|ziggo|virgin|comcast|fritz|netgear|linksys|tp-link)\d|fibrebox|livebox|bbox|^\d{6,}$/i },
+];
+
+function normalizeWifiName(entry) {
+  return String(entry ?? '').trim();
+}
+
+export function categorizeWifiNetwork(name) {
+  const n = normalizeWifiName(name);
+  if (!n) return 'other';
+  for (const { key, re } of WIFI_CATEGORY_PATTERNS) {
+    if (re.test(n)) return key;
+  }
+  return 'other';
+}
+
+function findWifiClusters(networks) {
+  const byPrefix = new Map();
+  for (const raw of networks) {
+    const name = normalizeWifiName(raw);
+    if (name.length < 4) continue;
+    const prefix = name.slice(0, 4).toUpperCase();
+    if (!/^[A-Z0-9]{3,4}$/.test(prefix)) continue;
+    const list = byPrefix.get(prefix) ?? [];
+    list.push(name);
+    byPrefix.set(prefix, list);
+  }
+  return [...byPrefix.entries()]
+    .filter(([, list]) => list.length >= 2)
+    .map(([prefix, list]) => ({ prefix, networks: list }))
+    .sort((a, b) => b.networks.length - a.networks.length)
+    .slice(0, 4);
+}
+
+function findNotableWifiNames(networks) {
+  const out = [];
+  for (const raw of networks) {
+    const name = normalizeWifiName(raw);
+    if (!name) continue;
+    const lower = name.toLowerCase();
+    const reasons = [];
+    if (name.length >= 22) reasons.push('long name');
+    if (/[^\w\s\-'.]/.test(name)) reasons.push('unusual characters');
+    if (/pretty\s*fly|fbi|surveillance|cursed|hack|password|dont.?connect|virus|free\s*virus/i.test(name)) {
+      reasons.push('joke or warning tone');
+    }
+    if (/\d{4,}/.test(name) && name.length <= 14) reasons.push('router default vibe');
+    if (/guest|gratuit|free/i.test(name) && !reasons.length) reasons.push('open-network hint');
+    if (reasons.length) out.push({ name, reason: reasons[0] });
+    if (out.length >= 6) break;
+  }
+  if (out.length < 3) {
+    for (const raw of networks) {
+      const name = normalizeWifiName(raw);
+      if (!name || out.some((e) => e.name === name)) continue;
+      if (name.length >= 12) out.push({ name, reason: 'distinctive SSID' });
+      if (out.length >= 5) break;
+    }
+  }
+  return out;
+}
+
+export function enrichWifiSlice(slice) {
+  const networks = (Array.isArray(slice?.networks) ? slice.networks : [])
+    .map(normalizeWifiName)
+    .filter(Boolean);
+  const categories = Object.fromEntries(WIFI_CATEGORY_ORDER.map((k) => [k, []]));
+  for (const name of networks) {
+    categories[categorizeWifiNetwork(name)].push(name);
+  }
+  const categoryCounts = Object.fromEntries(
+    WIFI_CATEGORY_ORDER.map((k) => [k, categories[k].length]),
+  );
+  return {
+    networks,
+    count: networks.length,
+    categories,
+    categoryCounts,
+    notableNames: findNotableWifiNames(networks),
+    clusters: findWifiClusters(networks),
+  };
+}
+
 export function extractWifiSlice(data) {
   const wifi = Array.isArray(data?.PAST_HISTORY?.wifi_history) ? data.PAST_HISTORY.wifi_history : [];
-  return { networks: wifi, count: wifi.length };
+  return enrichWifiSlice({ networks: wifi, count: wifi.length });
+}
+
+export function pickWifiPostAngle(recentAngles = [], rng = Math.random) {
+  const exclude = new Set(recentAngles.filter(Boolean));
+  const available = WIFI_POST_ANGLES.filter((a) => !exclude.has(a));
+  const pool = available.length > 0 ? available : WIFI_POST_ANGLES;
+  const idx = Math.floor(rng() * pool.length);
+  return pool[idx];
+}
+
+function wifiSamplesForAngle(enriched, angle) {
+  const { categories, notableNames, clusters } = enriched;
+  switch (angle) {
+    case 'funny_name':
+      return notableNames.map((e) => e.name).slice(0, 8);
+    case 'cafe_habit':
+      return categories.cafe.slice(0, 8);
+    case 'work_vs_home':
+      return [...categories.office, ...categories.home].slice(0, 8);
+    case 'travel_footprint':
+      return [...categories.hotel, ...categories.guest, ...categories.public].slice(0, 8);
+    case 'security_read':
+      return [...categories.guest, ...categories.public, ...categories.hotspot].slice(0, 8);
+    case 'sheer_diversity':
+    default:
+      return enriched.networks.slice(0, 10);
+  }
+}
+
+function angleContextLines(enriched, angle) {
+  const lines = [];
+  const { categoryCounts, clusters, notableNames } = enriched;
+  const nonZero = WIFI_CATEGORY_ORDER
+    .filter((k) => categoryCounts[k] > 0)
+    .map((k) => `${k}: ${categoryCounts[k]}`);
+  if (nonZero.length) lines.push(`Category mix: ${nonZero.join(', ')}`);
+  if (clusters.length) {
+    lines.push(`Name clusters: ${clusters.map((c) => `${c.prefix}* (${c.networks.length})`).join(', ')}`);
+  }
+  if (notableNames.length) {
+    lines.push(`Notable SSIDs: ${notableNames.map((e) => e.name).slice(0, 5).join(', ')}`);
+  }
+  switch (angle) {
+    case 'cafe_habit':
+      if (categoryCounts.cafe > 0) lines.push(`Café/coffee networks spotted: ${categoryCounts.cafe}`);
+      break;
+    case 'work_vs_home':
+      lines.push(`Work/school: ${categoryCounts.office}, home: ${categoryCounts.home}`);
+      break;
+    case 'travel_footprint':
+      lines.push(`Travel/guest/public combined: ${categoryCounts.hotel + categoryCounts.guest + categoryCounts.public}`);
+      break;
+    case 'sheer_diversity':
+      lines.push(`Total saved networks: ${enriched.count}`);
+      break;
+    case 'security_read':
+      lines.push(`Public/guest/hotspot combined: ${categoryCounts.guest + categoryCounts.public + categoryCounts.hotspot}`);
+      break;
+    default:
+      break;
+  }
+  return lines;
+}
+
+export function formatWifiSliceAsText(slice, options = {}) {
+  const enriched = enrichWifiSlice(slice);
+  if (!enriched.networks.length) return null;
+
+  const angle = options.angle && WIFI_POST_ANGLES.includes(options.angle) ? options.angle : null;
+  if (!angle) {
+    return `[WiFi networks — ${enriched.count} known networks]\n${enriched.networks.slice(0, 20).map((n, i) => `  ${i + 1}. ${n}`).join('\n')}`;
+  }
+
+  const lines = [
+    `[WiFi networks — ${enriched.count} known, angle: ${angle.replace(/_/g, ' ')}]`,
+    ...angleContextLines(enriched, angle),
+    `Suggested angle for this post: ${WIFI_ANGLE_LABELS[angle]}.`,
+    'Sample networks for this angle:',
+  ];
+  const samples = wifiSamplesForAngle(enriched, angle);
+  if (samples.length) {
+    samples.forEach((n, i) => lines.push(`  ${i + 1}. ${n}`));
+  } else {
+    enriched.networks.slice(0, 8).forEach((n, i) => lines.push(`  ${i + 1}. ${n}`));
+  }
+  return lines.join('\n');
+}
+
+export function buildWifiPostContext(slice, angle) {
+  const enriched = enrichWifiSlice(slice);
+  const resolvedAngle = WIFI_POST_ANGLES.includes(angle) ? angle : 'sheer_diversity';
+  return {
+    angle: resolvedAngle,
+    count: enriched.count,
+    categoryCounts: enriched.categoryCounts,
+    clusters: enriched.clusters.map((c) => c.prefix),
+    samples: wifiSamplesForAngle(enriched, resolvedAngle),
+  };
 }
 
 export function extractDownloadsSlice(data) {
@@ -88,11 +299,6 @@ export function formatBrowserSliceAsText(slice) {
     lines.push(`Recent tab titles: ${slice.recentTitles.slice(0, 4).join(' | ')}`);
   }
   return lines.join('\n');
-}
-
-export function formatWifiSliceAsText(slice) {
-  if (!slice.networks.length) return null;
-  return `[WiFi networks — ${slice.count} known networks]\n${slice.networks.slice(0, 20).map((n, i) => `  ${i + 1}. ${n}`).join('\n')}`;
 }
 
 export function formatDownloadsAsText(slice) {

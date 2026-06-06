@@ -9,7 +9,6 @@ const CHART_LABELS = {
   file_extensions: 'File types created',
   storage_usage: 'Storage usage',
   battery_hardware: 'Battery & hardware',
-  persona_scores: 'Persona scores',
   browser_domains: 'Browser domains',
   language_fingerprint: 'Language fingerprint',
   ai_tool_exposure: 'AI tool exposure',
@@ -111,6 +110,118 @@ export function synthesiseChartMetadata({ content, chartType, persona }) {
     {
       label: 'PERSONA LENS',
       detail: clip(`I filtered the takeaway through the ${persona || 'productivite'} persona tone.`, 180),
+    },
+  ];
+
+  return { inferenceChain, ingredients, highlights, thinking };
+}
+
+const WIFI_ANGLE_LABELS = {
+  funny_name: 'Memorable network name',
+  cafe_habit: 'Café wifi habit',
+  work_vs_home: 'Work vs home networks',
+  travel_footprint: 'Travel footprint',
+  sheer_diversity: 'Network diversity',
+  security_read: 'Security footprint',
+};
+
+/**
+ * Deterministic Tell-Me-More metadata when wifi text-slot LM output omits analysis fields.
+ * @param {{ content: string, angle?: string, wifiContext?: object, persona?: string }} input
+ */
+export function synthesiseWifiTextMetadata({ content, angle, wifiContext, persona }) {
+  const body = String(content || '').trim();
+  if (!body) return null;
+
+  const angleKey = String(angle || 'sheer_diversity').trim();
+  const angleLabel = WIFI_ANGLE_LABELS[angleKey] || angleKey.replace(/_/g, ' ');
+  const generateValue = longestContentSubstring(body, 180);
+  const count = Number(wifiContext?.count) || 0;
+  const categoryLine = wifiContext?.categoryCounts
+    ? Object.entries(wifiContext.categoryCounts)
+      .filter(([, n]) => n > 0)
+      .map(([k, n]) => `${k} ${n}`)
+      .slice(0, 5)
+      .join(', ')
+    : '';
+
+  const dataValue = count > 0
+    ? `${count} saved Wi‑Fi networks${categoryLine ? ` (${categoryLine})` : ''} fed a ${angleLabel.toLowerCase()} caption.`
+    : `Saved Wi‑Fi network history fed a ${angleLabel.toLowerCase()} caption.`;
+
+  const inferenceChain = [
+    {
+      step: 'data',
+      value: dataValue,
+      source: 'Wi‑Fi history',
+    },
+    { step: 'classify', value: angleLabel, confidence: 'high' },
+    {
+      step: 'infer',
+      value: 'One SSID or category pattern was treated as a stand-in for your whole location story.',
+      confidence: 'low',
+      isBiased: true,
+      biasNote: 'A single network name cannot capture everywhere you have actually worked or traveled.',
+    },
+    { step: 'generate', value: generateValue },
+  ];
+
+  const dataPoints = [];
+  if (count > 0) dataPoints.push(`${count} networks`);
+  if (categoryLine) dataPoints.push(categoryLine);
+  const samples = Array.isArray(wifiContext?.samples) ? wifiContext.samples.slice(0, 4) : [];
+  for (const s of samples) dataPoints.push(String(s));
+  if (!dataPoints.length) dataPoints.push(angleLabel);
+
+  const ingredients = [
+    {
+      label: 'Wi‑Fi signals',
+      weight: 86,
+      dataPoints: dataPoints.slice(0, 6),
+    },
+    {
+      label: 'Post caption',
+      weight: 74,
+      dataPoints: [clip(body, 80)],
+    },
+    {
+      label: 'Persona lens',
+      weight: 44,
+      dataPoints: [String(persona || 'securite')],
+    },
+  ];
+
+  const highlights = [];
+  if (generateValue && body.includes(generateValue)) {
+    highlights.push({ phrase: generateValue, stepIndex: 3, ingredientIndex: 1 });
+  }
+  for (const sample of samples) {
+    if (sample && body.toLowerCase().includes(String(sample).toLowerCase()) && highlights.length < 3) {
+      highlights.push({ phrase: String(sample), stepIndex: 0, ingredientIndex: 0 });
+    }
+  }
+  const numberMatch = body.match(/\d+[\d,.]*/);
+  if (numberMatch && body.includes(numberMatch[0]) && highlights.length < 3) {
+    highlights.push({ phrase: numberMatch[0], stepIndex: 0, ingredientIndex: 0 });
+  }
+
+  const thinking = [
+    {
+      label: 'ANGLE PICK',
+      detail: clip(`I leaned into the ${angleLabel.toLowerCase()} angle instead of another café joke.`, 180),
+    },
+    {
+      label: 'SSID HOOK',
+      detail: clip(
+        samples[0]
+          ? `I anchored on “${samples[0]}” because it was the most concrete name in the slice.`
+          : 'I picked the loudest SSID or stat visible in the Wi‑Fi slice.',
+        180,
+      ),
+    },
+    {
+      label: 'PERSONA LENS',
+      detail: clip(`I filtered the takeaway through the ${persona || 'securite'} persona tone.`, 180),
     },
   ];
 

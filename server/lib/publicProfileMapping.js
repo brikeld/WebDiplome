@@ -137,6 +137,7 @@ const POST_METADATA_KEYS = [
   'thinking',
   'chartType',
   'textSliceType',
+  'wifiPostAngle',
   'compliantPersonaChange',
   'compliantLowScore',
   'compliantJoin',

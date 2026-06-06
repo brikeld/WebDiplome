@@ -194,35 +194,46 @@ export function buildMostUsedAppsChart(data, persona = 'productivite') {
   const apps = slice.apps.slice(0, 10).filter(a => a.last_used);
   if (!apps.length) return null;
   const { text, viz } = palette;
-  const W = 640; const H = 280;
-  const ML = 48; const MR = 48; const MT = 48; const MB = 56;
+  const W = 640;
+  const ML = 168;
+  const MR = 72;
+  const ROW_H = 32;
+  const PAD_V = 72;
+  const H = PAD_V + apps.length * ROW_H + 48;
   const CW = W - ML - MR;
-  const axisY = H - MB;
   const now = Date.now();
   const rangeMs = 7 * 24 * 60 * 60 * 1000;
   const toX = (ds) => {
     const frac = Math.max(0, Math.min(1, (new Date(ds).getTime() - (now - rangeMs)) / rangeMs));
     return Math.round(ML + frac * CW);
   };
+  const formatDaysAgo = (ds) => {
+    const days = Math.round((now - new Date(ds).getTime()) / 86400000);
+    if (days <= 0) return 'today';
+    if (days === 1) return '1d ago';
+    return `${days}d ago`;
+  };
+  const sorted = [...apps].sort((a, b) => new Date(b.last_used) - new Date(a.last_used));
+  const axisY = PAD_V - 8;
   const axis = `<line x1="${ML}" y1="${axisY}" x2="${W - MR}" y2="${axisY}" stroke="${text}" stroke-width="0.8" opacity="0.2"/>`;
   const ticks = [{ f: 0, l: '7d ago' }, { f: 0.5, l: '3d' }, { f: 1, l: 'now' }].map(({ f, l }) => {
     const tx = ML + f * CW;
-    return `<line x1="${tx}" y1="${axisY}" x2="${tx}" y2="${axisY + 6}" stroke="${text}" stroke-width="0.8" opacity="0.2"/>
-  <text x="${tx}" y="${axisY + 18}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.45">${esc(l)}</text>`;
+    return `<line x1="${tx}" y1="${axisY}" x2="${tx}" y2="${axisY + 5}" stroke="${text}" stroke-width="0.8" opacity="0.2"/>
+  <text x="${tx}" y="${axisY - 6}" fill="${text}" font-size="8" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.45">${esc(l)}</text>`;
   }).join('');
-  const rowY = [MT + 38, MT + 96];
-  const dots = apps.map((a, i) => {
+  const rows = sorted.map((a, i) => {
+    const cy = PAD_V + i * ROW_H + ROW_H / 2;
     const cx = toX(a.last_used);
-    const cy = rowY[i % 2];
     const name = String(a.app || '');
-    const displayName = name.length > 13 ? name.slice(0, 12) + '…' : name;
+    const displayName = name.length > 17 ? name.slice(0, 16) + '…' : name;
     return `
-  <line x1="${cx}" y1="${cy + 7}" x2="${cx}" y2="${axisY}" stroke="${text}" stroke-width="0.5" opacity="0.12" stroke-dasharray="3,3"/>
+  <text x="${ML - 10}" y="${cy + 4}" fill="${text}" font-size="10" text-anchor="end" font-family="'SF Mono',monospace" opacity="0.7">${esc(displayName)}</text>
+  <line x1="${ML}" y1="${cy}" x2="${W - MR}" y2="${cy}" stroke="${text}" stroke-width="0.5" opacity="0.12"/>
   <circle cx="${cx}" cy="${cy}" r="6" fill="${viz}"/>
-  <text x="${cx}" y="${cy - 10}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.7">${esc(displayName)}</text>`;
+  <text x="${W - MR + 8}" y="${cy + 4}" fill="${text}" font-size="9" font-family="'SF Mono',monospace" opacity="0.55">${esc(formatDaysAgo(a.last_used))}</text>`;
   }).join('');
-  const sub = `<text x="${W / 2}" y="${H - 6}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.38">${slice.count} apps tracked · last 7 days</text>`;
-  return { svg: svgWrap(W, H, 'Recently Used Apps (7 days)', axis + ticks + dots + sub, palette), w: W, h: H };
+  const sub = `<text x="${W / 2}" y="${H - 10}" fill="${text}" font-size="9" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.38">${slice.count} apps tracked · last 7 days</text>`;
+  return { svg: svgWrap(W, H, 'Recently Used Apps (7 days)', axis + ticks + rows + sub, palette), w: W, h: H };
 }
 
 export function buildStorageChart(data, profile, persona = 'productivite') {
@@ -306,44 +317,6 @@ export function buildBatteryHardwareChart(data, profile, persona = 'productivite
   <text x="${mx + 24}" y="${my + 58}" fill="${text}" font-size="20" font-weight="800" font-family="'SF Mono',monospace">${esc(condition)}</text>
   <text x="${mx + 24}" y="${my + 78}" fill="${text}" font-size="11" font-family="'SF Mono',monospace" opacity="0.5">${esc(String(cycles))} cycles</text>`;
   return { svg: svgWrap(W, H, 'Hardware Spec', dividers + quadrants, palette), w: W, h: H };
-}
-
-export function buildPersonaScoresChart(profile, persona = 'productivite') {
-  const palette = chartPalette(persona);
-  const scores = profile?.personaScores
-    ? normalizePersonaPercentTriplet(profile.personaScores) : null;
-  if (!scores) return null;
-  const { text, viz } = palette;
-  const W = 640; const H = 340;
-  const cx = 240; const cy = 176;
-  const items = [
-    { label: 'Productivity', value: scores.productivity ?? 0, r: 96 },
-    { label: 'Security',     value: scores.security     ?? 0, r: 68 },
-    { label: 'Social',       value: scores.social       ?? 0, r: 40 },
-  ];
-  const rings = items.map(({ value, r }) => {
-    const circ = 2 * Math.PI * r;
-    const offset = circ * (1 - value / 100);
-    return `
-  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${text}" stroke-width="14" opacity="0.1"/>
-  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${viz}" stroke-width="14"
-    stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
-    stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/>`;
-  }).join('');
-  const globalScore = profile?.globalScore
-    ?? Math.round(items.reduce((s, { value }) => s + value, 0) / 3);
-  const center = `
-  <text x="${cx}" y="${cy - 8}" fill="${text}" font-size="36" font-weight="800" text-anchor="middle" font-family="'SF Mono',monospace">${esc(String(globalScore))}</text>
-  <text x="${cx}" y="${cy + 14}" fill="${text}" font-size="10" text-anchor="middle" font-family="'SF Mono',monospace" opacity="0.5">global</text>`;
-  const legendX = 400;
-  const legend = items.map(({ label, value }, i) => {
-    const ly = 120 + i * 44;
-    return `
-  <text x="${legendX}" y="${ly}" fill="${text}" font-size="10" font-family="'SF Mono',monospace" opacity="0.5">${esc(label)}</text>
-  <text x="${legendX}" y="${ly + 22}" fill="${text}" font-size="22" font-weight="800" font-family="'SF Mono',monospace">${value}</text>
-  ${i < 2 ? `<line x1="${legendX}" y1="${ly + 30}" x2="${W - 48}" y2="${ly + 30}" stroke="${text}" stroke-width="0.5" opacity="0.15"/>` : ''}`;
-  }).join('');
-  return { svg: svgWrap(W, H, 'Persona Scores', rings + center + legend, palette), w: W, h: H };
 }
 
 export function buildBrowserDomainsChart(data, persona = 'popularite') {
@@ -613,18 +586,6 @@ const CHART_POOL = [
     id: 'battery_hardware',
     persona: 'productivite',
     build: (data, profile, persona) => buildBatteryHardwareChart(data, profile, persona),
-  },
-  {
-    id: 'persona_scores',
-    persona: null,
-    build: (_data, profile, persona) => buildPersonaScoresChart(profile, persona),
-    resolvePersna: (profile) => {
-      const s = profile?.personaScores || {};
-      const max = Math.max(s.productivity ?? 0, s.security ?? 0, s.social ?? 0);
-      if (max === (s.security ?? 0)) return 'securite';
-      if (max === (s.social ?? 0)) return 'popularite';
-      return 'productivite';
-    },
   },
   {
     id: 'browser_domains',

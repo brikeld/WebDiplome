@@ -21,6 +21,8 @@ import {
   formatWifiSliceAsText,
   formatDownloadsAsText,
   formatAppUsageAsText,
+  pickWifiPostAngle,
+  buildWifiPostContext,
 } from './dataSlices.js';
 import { pickAndBuildChart } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
@@ -35,7 +37,7 @@ import {
   fallbackClimbTip,
 } from './leaderboardRationales.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
-import { synthesiseChartMetadata } from '../../src/lib/chartPostMetadata.js';
+import { synthesiseChartMetadata, synthesiseWifiTextMetadata } from '../../src/lib/chartPostMetadata.js';
 import { prepareVisionImageData, truncateUserPayloadString } from './lmContextBudget.js';
 
 /** Slot index for the asset slot (image or document from disk). */
@@ -558,7 +560,10 @@ async function fetchPostMetadataOnly({
   const chartNote = slot.chartType
     ? `\nChart annex type: ${slot.chartType} (user saw a chart image with this post).`
     : '';
-  const userPayload = `LOCKED post content (must appear verbatim in highlights and in inferenceChain "generate" step):\n${JSON.stringify(content)}${chartNote}\n\n---\n${slot.userPayload}`;
+  const wifiNote = slot.wifiPostAngle
+    ? `\nWiFi text angle: ${slot.wifiPostAngle}.`
+    : '';
+  const userPayload = `LOCKED post content (must appear verbatim in highlights and in inferenceChain "generate" step):\n${JSON.stringify(content)}${chartNote}${wifiNote}\n\n---\n${slot.userPayload}`;
 
   const body = buildChatBody({
     model: slot._model,
@@ -579,6 +584,25 @@ async function fetchPostMetadataOnly({
     ingredients: parsed.ingredients,
     highlights: parsed.highlights,
     thinking: parsed.thinking,
+  };
+}
+
+function applyTextSliceMetadataFallback(parsed, slot) {
+  if (!parsed.content || parsed.inferenceChain) return parsed;
+  if (slot.textSliceType !== 'wifi') return parsed;
+  const synth = synthesiseWifiTextMetadata({
+    content: parsed.content,
+    angle: slot.wifiPostAngle || 'sheer_diversity',
+    wifiContext: slot.wifiContext,
+    persona: slot.persona,
+  });
+  if (!synth) return parsed;
+  return {
+    ...parsed,
+    inferenceChain: parsed.inferenceChain || synth.inferenceChain,
+    ingredients: parsed.ingredients || synth.ingredients,
+    highlights: parsed.highlights || synth.highlights,
+    thinking: parsed.thinking || synth.thinking,
   };
 }
 
@@ -612,7 +636,17 @@ function buildTextSlot(dataJson, baseUserPayload, existingPosts, SP, personaScor
     };
   }
   const slice = chosen.extract(dataJson);
-  const ctx = chosen.format(slice);
+  let ctx;
+  let wifiPostAngle = null;
+  let wifiContext = null;
+  if (chosen.id === 'wifi') {
+    const recentAngles = getRecentFieldValues(existingPosts, 'wifiPostAngle');
+    wifiPostAngle = pickWifiPostAngle(recentAngles);
+    wifiContext = buildWifiPostContext(slice, wifiPostAngle);
+    ctx = formatWifiSliceAsText(slice, { angle: wifiPostAngle });
+  } else {
+    ctx = chosen.format(slice);
+  }
   return {
     id: 'text',
     persona: chosen.persona,
@@ -623,6 +657,7 @@ function buildTextSlot(dataJson, baseUserPayload, existingPosts, SP, personaScor
     docFilename: null,
     attachedAsset: null,
     textSliceType: chosen.id,
+    ...(wifiPostAngle ? { wifiPostAngle, wifiContext } : {}),
   };
 }
 
@@ -848,6 +883,7 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
   }
 
   parsed = applyChartMetadataFallback(parsed, slot);
+  parsed = applyTextSliceMetadataFallback(parsed, slot);
 
   const post = {
     persona: slot.persona,
@@ -865,6 +901,7 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
     if (slot.attachedAsset.kind === 'image') post.attachedAsset.visionAnalysed = visionSucceeded;
   }
   if (slot.textSliceType) post.textSliceType = slot.textSliceType;
+  if (slot.wifiPostAngle) post.wifiPostAngle = slot.wifiPostAngle;
   if (slot.chartType) post.chartType = slot.chartType;
   if (slot.leaderboard && slot.leaderboardContext) {
     const { board, standing, cloneHidden } = slot.leaderboardContext;

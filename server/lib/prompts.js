@@ -23,8 +23,8 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 900,
   },
   wifi: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. Your WiFi network history is listed above. Make a wry, location-aware comment — maybe about the number of cafés, a trip pattern, or a funny network name (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
-    temperature: 0.85,
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. WiFi network context is listed above, including a suggested angle line. Follow that angle — pick ONE concrete SSID, cluster, or stat from the data. Do not default to generic café jokes unless the angle is café-related. Vary tone: dry, self-aware, paranoid, or amused as fits the angle (max 200 chars). No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
+    temperature: 0.88,
     maxTokens: 900,
   },
   downloads: {
