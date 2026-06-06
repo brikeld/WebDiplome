@@ -22,7 +22,7 @@ import {
 } from './dataSlices.js';
 
 const PERSONA_ORDER = ['productivite', 'securite', 'popularite'];
-const MAX_BLURB_CHARS = 120;
+const MAX_BLURB_CHARS = 200;
 
 const PERSONA_HINTS = {
   productivite: 'productivity, focus, throughput, tools and file activity',
@@ -122,14 +122,14 @@ function buildBlurbPrompt(persona, mainPersona, scorePercent) {
   return [
     'Complete the in-progress assistant JSON. It already starts {"content":',
     `Write ONLY the blurb text (max ${MAX_BLURB_CHARS} chars), then close with "}.`,
-    `One sentence about the user's ${persona} score (${scorePercent}%) grounded in the harvest JSON.`,
+    `One complete sentence about the user's ${persona} score (${scorePercent}%) grounded in the harvest JSON.`,
     `Tone: sharp profile copy, third person, mentions the % naturally. ${PERSONA_HINTS[persona]}. ${dominantNote}`,
-    'One concrete detail from harvest. English. No lists. No markdown. /no_think',
+    'One concrete detail from harvest. English. Must end with . ! or ? — never cut off mid-sentence. No lists. No markdown. /no_think',
   ].join(' ');
 }
 
 function buildMinimalBlurbPrompt(persona, scorePercent) {
-  return `Finish {"content":" with one ${persona} blurb (max ${MAX_BLURB_CHARS} chars) about a ${scorePercent}% score. Mention the %. English. Close with "}. /no_think`;
+  return `Finish {"content":" with one ${persona} blurb (max ${MAX_BLURB_CHARS} chars) about a ${scorePercent}% score. Mention the %. One complete sentence ending with . ! or ?. English. Close with "}. /no_think`;
 }
 
 async function generateOneBlurb({

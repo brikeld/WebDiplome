@@ -598,7 +598,7 @@ app.post('/api/comments/suggest', async (req, res) => {
   }
 });
 
-// POST /api/persona-blurbs/generate — 3 persona axis blurbs (max 120 chars each)
+// POST /api/persona-blurbs/generate — 3 persona axis blurbs (max 200 chars each)
 app.post('/api/persona-blurbs/generate', async (req, res) => {
   try {
     const ctx = await prepareGenerationContext();

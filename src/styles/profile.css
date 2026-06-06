@@ -900,7 +900,7 @@ button.profile-last-analysis-pill:disabled {
   transform: translate(-50%, -50%);
 }
 
-/* Persona scores — no inner scroll; blurbs capped at 120 chars (see railBlurb.js) */
+/* Persona scores — no inner scroll; blurbs capped at 200 chars (see railBlurb.js) */
 .profile-rail-capsule .profile-rail-persona-scores {
   grid-row: 2;
   min-height: 0;

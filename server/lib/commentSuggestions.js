@@ -25,16 +25,31 @@ const PERSONA_ALIASES = {
 
 const LIST_KEYS = ['suggestions', 'comments', 'replies', 'options', 'propositions'];
 
-export function clampComment(text, maxChars = MAX_COMMENT_CHARS) {
-  const t = String(text ?? '')
+/** Prefer ending on sentence punctuation; fall back to a word boundary. */
+export function clampProseText(text, maxChars) {
+  let t = String(text ?? '')
     .replace(/\s+/g, ' ')
     .trim();
+  t = t.replace(/\.{2,}$|…$/u, '').trim();
   if (t.length <= maxChars) return t;
-  const cut = t.slice(0, maxChars);
-  const lastSpace = cut.lastIndexOf(' ');
-  const minBreak = Math.max(24, Math.floor(maxChars * 0.65));
-  if (lastSpace > minBreak) return cut.slice(0, lastSpace).trim();
-  return cut.trim();
+
+  const slice = t.slice(0, maxChars);
+  let lastPunct = -1;
+  for (let i = 0; i < slice.length; i += 1) {
+    if ('.!?'.includes(slice[i])) lastPunct = i;
+  }
+  const minBreak = Math.max(24, Math.floor(maxChars * 0.35));
+  if (lastPunct >= minBreak) return slice.slice(0, lastPunct + 1).trim();
+
+  const lastSpace = slice.lastIndexOf(' ');
+  if (lastSpace > minBreak) {
+    return slice.slice(0, lastSpace).replace(/[,;:]\s*$/, '').trim();
+  }
+  return slice.trim();
+}
+
+export function clampComment(text, maxChars = MAX_COMMENT_CHARS) {
+  return clampProseText(text, maxChars);
 }
 
 function isLikelyThinkingText(text) {

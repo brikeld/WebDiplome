@@ -66,6 +66,7 @@ import {
   freshnessWeight,
   formatRecencyLead,
 } from './recencyRanking.js';
+import { clampProseText } from './commentSuggestions.js';
 
 /** Slot index for the asset slot (image or document from disk). */
 export const ASSET_SLOT_INDEX = 1;
@@ -1264,17 +1265,10 @@ export async function generatePersonaPosts({
 
 // ─── Profile bio (user summary) ─────────────────────────────────────────────
 
-const USER_SUMMARY_MAX_LEN = 120;
+const USER_SUMMARY_MAX_LEN = 200;
 
 function clampSummary(s) {
-  let t = String(s || '').replace(/\s+/g, ' ').trim();
-  t = t.replace(/\.{2,}$|…$/u, '').trim();
-  if (t.length <= USER_SUMMARY_MAX_LEN) return t;
-  const cut = t.slice(0, USER_SUMMARY_MAX_LEN);
-  const lastSpace = cut.lastIndexOf(' ');
-  return (lastSpace > USER_SUMMARY_MAX_LEN / 2 ? cut.slice(0, lastSpace) : cut)
-    .replace(/[,;:]\s*$/, '')
-    .trim();
+  return clampProseText(s, USER_SUMMARY_MAX_LEN);
 }
 
 function decodeJsonStringLiteral(s) {
