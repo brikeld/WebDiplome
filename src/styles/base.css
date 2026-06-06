@@ -1889,10 +1889,11 @@ button.profile-name-link.leaderboard-row__name {
   grid-template-columns: 1fr;
   gap: var(--dashboard-btn-gap, 10px);
   width: 100%;
-  /* Timer row — flex/min-height tuned via .dashboard-capsule--figma tokens */
-  flex: var(--dashboard-timer-flex, 0.85) 1 0;
-  min-height: var(--dashboard-actions-min-h, clamp(128px, 15vh, 176px));
-  height: auto;
+  /* Timer row — bounded so tall screens don't make the button oversized. */
+  flex: 0 0 var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
+  min-height: var(--dashboard-actions-min-h, var(--dashboard-actions-h, clamp(128px, 15vh, 176px)));
+  height: var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
+  max-height: var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
   /* Clipping happens only while tell-me-more is collapsing (see inferenceChain.css). */
   transition:
     flex 520ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -2006,8 +2007,9 @@ button.profile-name-link.leaderboard-row__name {
 
 .dashboard-actions-row--confirm {
   grid-template-columns: 1fr;
-  flex-basis: auto;
-  height: auto;
+  flex-basis: var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
+  height: var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
+  max-height: var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
 }
 
 .dashboard-actions-row--confirm-leaving {
@@ -2017,7 +2019,7 @@ button.profile-name-link.leaderboard-row__name {
 .dashboard-timer-card--confirm {
   cursor: default;
   text-transform: none;
-  padding: clamp(16px, 2vw, 24px) clamp(18px, 2.2vw, 28px);
+  padding: clamp(11px, 1.35vh, 17px) clamp(16px, 2vw, 24px);
   background: var(--card, #fff);
   border: 2px solid var(--hide-pill-accent, var(--persona-accent, #759aef));
   border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
@@ -2066,7 +2068,7 @@ button.profile-name-link.leaderboard-row__name {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(10px, 1.2vh, 16px);
+  gap: clamp(7px, 0.85vh, 11px);
   min-width: 0;
   width: 100%;
   text-align: center;
@@ -2075,7 +2077,7 @@ button.profile-name-link.leaderboard-row__name {
 .dashboard-hide-confirm__title {
   margin: 0;
   font-family: var(--font-avant);
-  font-size: clamp(24px, 2.8vw, 34px);
+  font-size: clamp(21px, 2.5vw, 30px);
   font-weight: 800;
   letter-spacing: -0.02em;
   text-transform: none;
@@ -2087,7 +2089,7 @@ button.profile-name-link.leaderboard-row__name {
 .dashboard-hide-confirm__message {
   margin: 0;
   font-family: var(--font-avant);
-  font-size: clamp(17px, 1.85vw, 23px);
+  font-size: clamp(15px, 1.65vw, 20px);
   font-weight: 600;
   letter-spacing: -0.01em;
   text-transform: none;
@@ -2114,7 +2116,7 @@ button.profile-name-link.leaderboard-row__name {
   justify-content: center;
   flex-wrap: wrap;
   gap: clamp(8px, 1vw, 14px);
-  margin-top: clamp(6px, 0.8vh, 12px);
+  margin-top: clamp(3px, 0.45vh, 7px);
   width: 100%;
 }
 
@@ -2122,9 +2124,9 @@ button.profile-name-link.leaderboard-row__name {
   appearance: none;
   border: none;
   border-radius: var(--radius-pill);
-  padding: clamp(8px, 1vh, 11px) clamp(16px, 2vw, 22px);
+  padding: clamp(6px, 0.75vh, 9px) clamp(14px, 1.8vw, 20px);
   font-family: var(--font-avant);
-  font-size: clamp(15px, 1.55vw, 20px);
+  font-size: clamp(13px, 1.35vw, 17px);
   font-weight: 800;
   letter-spacing: -0.01em;
   text-transform: none;
@@ -2239,8 +2241,8 @@ button.profile-name-link.leaderboard-row__name {
   position: relative;
   align-items: center;
   justify-content: center;
-  gap: clamp(10px, 1.2vw, 14px);
-  padding: clamp(14px, 1.8vh, 20px);
+  gap: clamp(7px, 0.85vw, 10px);
+  padding: clamp(10px, 1.25vh, 15px);
   border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
   overflow: hidden;
   background: var(--card, #fff);
@@ -2249,7 +2251,7 @@ button.profile-name-link.leaderboard-row__name {
 .dashboard-timer-card--action-update {
   height: 100%;
   min-height: 0;
-  padding: clamp(10px, 1.2vh, 14px) clamp(12px, 1.4vw, 16px);
+  padding: clamp(7px, 0.85vh, 11px) clamp(12px, 1.4vw, 16px);
   border-radius: var(--dashboard-timer-radius, var(--capsule-radius));
   display: flex;
   align-items: center;
@@ -2275,22 +2277,22 @@ button.profile-name-link.leaderboard-row__name {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(10px, 1.1vh, 14px);
+  gap: clamp(7px, 0.75vh, 10px);
   width: 100%;
   min-height: 0;
 }
 
 .dashboard-timer-card--action-update .dashboard-update-label {
-  font-size: clamp(15px, 1.45vw, 20px);
+  font-size: clamp(13px, 1.25vw, 17px);
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1;
 }
 
 .dashboard-timer-card--action-update .dashboard-update-time {
-  min-width: clamp(96px, 9vw, 128px);
-  padding: 0.32em 0.55em;
-  font-size: clamp(26px, 3vw, 40px);
+  min-width: clamp(84px, 8vw, 112px);
+  padding: 0.24em 0.5em;
+  font-size: clamp(23px, 2.65vw, 35px);
   line-height: 1;
   align-self: center;
 }
@@ -2360,7 +2362,7 @@ button.profile-name-link.leaderboard-row__name {
 
 /* Idle countdown — white outer shell + persona time capsule (compact) */
 .dashboard-timer-card--idle-countdown.dashboard-timer-card--action-update {
-  padding: clamp(12px, 1.4vh, 18px) clamp(14px, 1.5vw, 20px);
+  padding: clamp(8px, 0.95vh, 13px) clamp(14px, 1.5vw, 20px);
   background: var(--card, #fff);
   border: none;
 }
@@ -2370,13 +2372,13 @@ button.profile-name-link.leaderboard-row__name {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: clamp(8px, 1vh, 12px);
+  gap: clamp(5px, 0.65vh, 8px);
   min-height: 0;
-  padding-top: clamp(6px, 0.75vh, 10px);
+  padding-top: clamp(3px, 0.38vh, 6px);
 }
 
 .dashboard-timer-card--idle-countdown .dashboard-update-label {
-  font-size: clamp(15px, 1.45vw, 20px);
+  font-size: clamp(13px, 1.25vw, 17px);
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -2384,9 +2386,9 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-timer-card--idle-countdown .dashboard-update-time {
-  min-width: clamp(88px, 8vw, 120px);
-  padding: 0.42em 0.55em 0.34em;
-  font-size: clamp(22px, 2.35vw, 30px);
+  min-width: clamp(78px, 7.4vw, 108px);
+  padding: 0.32em 0.5em 0.27em;
+  font-size: clamp(20px, 2.1vw, 27px);
   line-height: 1;
   align-self: center;
   display: inline-flex;
@@ -2478,12 +2480,13 @@ button.profile-name-link.leaderboard-row__name {
 /* Fills the dashboard capsule: timer row + idle Tell-Me-More (flex tokens below).
    Timer is taller so harvest / generating copy is not clipped; idle tell shrinks proportionally. */
 .dashboard-capsule--figma {
-  --dashboard-btn-gap: 10px;
-  --dashboard-pad: 18px;
-  --dashboard-timer-flex: 1.28;
-  --dashboard-tell-idle-flex: 2.45;
-  --dashboard-actions-min-h: clamp(168px, 19vh, 220px);
-  --dashboard-tell-idle-min-h: clamp(176px, 23vh, 272px);
+  --dashboard-y-scale: 0.9;
+  --dashboard-btn-gap: clamp(7px, 0.85vh, 9px);
+  --dashboard-pad: clamp(14px, 1.6vh, 16px);
+  --dashboard-tell-idle-flex: 2.62;
+  --dashboard-actions-h: clamp(132px, 14.5vh, 180px);
+  --dashboard-actions-min-h: var(--dashboard-actions-h);
+  --dashboard-tell-idle-min-h: clamp(168px, 22vh, 260px);
   --dashboard-timer-radius: 28px;
   --dashboard-timer-time-radius: 20px;
   --dashboard-shell-radius: var(--capsule-radius);
@@ -2507,7 +2510,7 @@ button.profile-name-link.leaderboard-row__name {
 /* Tell-Me-More expanded: dashboard shell is the frame; content tiles keep their own padding */
 .dashboard-capsule--figma.is-tell-expanded,
 .dashboard-capsule--figma.is-tell-closing {
-  --dashboard-tell-pad: clamp(14px, 1.45vw, 18px);
+  --dashboard-tell-pad: clamp(12px, 1.25vw, 16px);
   background: var(--tell-pill-pastel, #bccdf5);
   border-color: var(--persona-accent, #759aef);
   padding: var(--dashboard-tell-pad);
@@ -2519,7 +2522,7 @@ button.profile-name-link.leaderboard-row__name {
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing,
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanded,
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing {
-  padding: var(--dashboard-tell-pad, clamp(14px, 1.45vw, 18px));
+  padding: var(--dashboard-tell-pad, clamp(12px, 1.25vw, 16px));
   gap: 0;
 }
 

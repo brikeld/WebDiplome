@@ -75,15 +75,15 @@
   justify-content: stretch;
   align-items: stretch;
   padding: clamp(
-    calc(20px * var(--tell-idle-scale, 1)),
-    calc(2.4vw * var(--tell-idle-scale, 1)),
-    calc(32px * var(--tell-idle-scale, 1))
+    calc(16px * var(--tell-idle-scale, 1)),
+    calc(1.9vw * var(--tell-idle-scale, 1)),
+    calc(25px * var(--tell-idle-scale, 1))
   );
   box-sizing: border-box;
   gap: clamp(
-    calc(11px * var(--tell-idle-scale, 1)),
-    calc(1.45vh * var(--tell-idle-scale, 1)),
-    calc(16px * var(--tell-idle-scale, 1))
+    calc(8px * var(--tell-idle-scale, 1)),
+    calc(1.05vh * var(--tell-idle-scale, 1)),
+    calc(12px * var(--tell-idle-scale, 1))
   );
 }
 
@@ -152,7 +152,7 @@
   background: transparent;
   /* Dashboard capsule supplies outer pad — no double gutter here */
   padding: 0;
-  gap: clamp(8px, 0.9vh, 12px);
+  gap: clamp(6px, 0.65vh, 9px);
 }
 
 .tell-more-pill--expanded.tell-more-pill--closing {
@@ -178,8 +178,8 @@
   flex-direction: column;
   background: transparent;
   color: #000;
-  padding: clamp(10px, 1.15vw, 14px);
-  gap: clamp(8px, 0.9vh, 12px);
+  padding: clamp(8px, 0.9vw, 11px);
+  gap: clamp(6px, 0.65vh, 9px);
   text-align: left;
   overflow: hidden;
 }
@@ -188,11 +188,11 @@
 .inference-panel:not(.inference-panel--leaderboard) {
   --lb-acc: var(--tell-pill-accent, #759aef);
   --lb-radius: 14px;
-  --lb-gap: clamp(6px, 0.9vh, 12px);
+  --lb-gap: clamp(5px, 0.65vh, 9px);
   position: relative;
   background: transparent;
-  padding: clamp(10px, 1.15vw, 14px);
-  gap: clamp(8px, 0.9vh, 12px);
+  padding: clamp(8px, 0.9vw, 11px);
+  gap: clamp(6px, 0.65vh, 9px);
 }
 
 .inference-panel__stack {
@@ -220,7 +220,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: clamp(6px, 0.75vh, 8px);
+  gap: clamp(4px, 0.5vh, 6px);
   min-width: 0;
 }
 
@@ -232,7 +232,7 @@
   background: var(--tell-pill-accent, #759aef);
   color: #000;
   font-family: var(--font-avant);
-  font-size: clamp(11px, 1.1vw, 14px);
+  font-size: clamp(10px, 1vw, 12px);
   font-weight: 800;
   letter-spacing: 0;
   text-transform: lowercase;
@@ -242,7 +242,7 @@
 .inference-panel__title {
   margin: 0;
   font-family: var(--font-avant);
-  font-size: clamp(18px, 2.1vw, 26px);
+  font-size: clamp(16px, 1.85vw, 22px);
   font-weight: 800;
   letter-spacing: -0.02em;
   text-transform: none;
@@ -273,19 +273,19 @@
 /* Leaderboard — pastel shell comes from .dashboard-capsule.is-tell-expanded */
 .inference-panel--leaderboard {
   background: transparent;
-  padding: clamp(10px, 1.15vw, 14px);
-  gap: clamp(8px, 0.9vh, 12px);
+  padding: clamp(8px, 0.9vw, 11px);
+  gap: clamp(6px, 0.65vh, 9px);
 }
 
 .tell-more-pill--expanded .lb2 {
-  --lb-fs-label: clamp(12px, 1.2vw, 15px);
-  --lb-fs-value: clamp(17px, 1.85vw, 22px);
-  --lb-gap: clamp(10px, 1vh, 13px);
-  --lb-shell-inset: clamp(10px, 1.1vw, 14px);
+  --lb-fs-label: clamp(11px, 1.05vw, 13px);
+  --lb-fs-value: clamp(15px, 1.6vw, 19px);
+  --lb-gap: clamp(7px, 0.75vh, 10px);
+  --lb-shell-inset: clamp(8px, 0.85vw, 11px);
   --lb-radius: 12px;
-  --lb-space-md: clamp(10px, 1vh, 12px);
-  --lb-tile-pad-y: clamp(11px, 1.05vw, 14px);
-  --lb-tile-pad-x: clamp(13px, 1.2vw, 16px);
+  --lb-space-md: clamp(7px, 0.75vh, 9px);
+  --lb-tile-pad-y: clamp(8px, 0.8vw, 11px);
+  --lb-tile-pad-x: clamp(11px, 1vw, 14px);
   --lb-signals-inset: clamp(5px, 0.55vw, 7px);
   box-sizing: border-box;
   padding: var(--lb-shell-inset);
@@ -303,7 +303,7 @@
 
 .inference-panel__post-quote {
   flex-shrink: 0;
-  margin-bottom: clamp(4px, 0.5vh, 8px);
+  margin-bottom: clamp(2px, 0.25vh, 5px);
 }
 
 .inference-panel__post-text {
@@ -311,7 +311,7 @@
   font-family: var(--font-avant);
   font-style: oblique;
   font-weight: 800;
-  font-size: clamp(14px, 1.5vw, 18px);
+  font-size: clamp(12px, 1.25vw, 15px);
   letter-spacing: -0.005em;
   line-height: 1.45;
   color: #000;
@@ -367,9 +367,9 @@
   border: none;
   background: transparent;
   border-radius: var(--radius-pill);
-  padding: 5px 14px 6px;
+  padding: 4px 12px 5px;
   font-family: var(--font-avant);
-  font-size: clamp(12px, 1.15vw, 14px);
+  font-size: clamp(11px, 1vw, 13px);
   font-weight: 800;
   letter-spacing: 0;
   color: rgba(0, 0, 0, 0.55);
@@ -462,14 +462,14 @@
 
 .inference-step {
   position: relative;
-  padding: 9px 12px;
+  padding: 7px 10px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 35%, transparent);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 14px;
+  gap: 3px;
+  margin-bottom: 10px;
   animation: inference-step-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -511,7 +511,7 @@
 .inference-step__value {
   margin: 0;
   font-family: var(--font-avant);
-  font-size: clamp(13px, 1.35vw, 16px);
+  font-size: clamp(12px, 1.2vw, 14px);
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.005em;
@@ -524,7 +524,7 @@
   align-items: center;
   gap: 6px;
   font-family: var(--font-avant);
-  font-size: clamp(11px, 1.1vw, 13px);
+  font-size: clamp(10px, 1vw, 12px);
   font-weight: 600;
   color: rgba(0, 0, 0, 0.62);
   letter-spacing: 0;
