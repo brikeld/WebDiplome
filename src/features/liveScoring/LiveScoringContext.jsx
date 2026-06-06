@@ -187,7 +187,7 @@ export function LiveScoringProvider({ profile, children }) {
   }, []);
 
   const hidePost = useCallback(
-    (post, sourcePillRect) => {
+    (post, sourcePillRect, options = {}) => {
       const postKey = normalizePostHideKey(post.createdAt);
       if (!postKey || isPostHidden(state.records, postKey)) return;
       setOptimisticHidden((prev) => new Set(prev).add(postKey));
@@ -197,6 +197,7 @@ export function LiveScoringProvider({ profile, children }) {
         persona: String(post.persona ?? '').toLowerCase(),
         delta: Math.abs(Number(post.systemDeltaPct) || 1),
         sourcePillRect,
+        waypointRect: options.waypointRect ?? null,
         onCommit: () => {
           dispatch({
             type: 'HIDE',
@@ -274,7 +275,7 @@ export function LiveScoringProvider({ profile, children }) {
   );
 
   const hideLeaderboardSelf = useCallback(
-    (post, sourcePillRect) => {
+    (post, sourcePillRect, options = {}) => {
       const boardId = post?.leaderboard?.boardId;
       if (!boardId || isLeaderboardSelfHidden(state.records, boardId)) return;
       setOptimisticLeaderboardHidden((prev) => new Set(prev).add(boardId));
@@ -285,6 +286,7 @@ export function LiveScoringProvider({ profile, children }) {
         persona: String(post.leaderboard.persona ?? post.persona ?? '').toLowerCase(),
         delta: Math.abs(Number(post.systemDeltaPct) || 1),
         sourcePillRect,
+        waypointRect: options.waypointRect ?? null,
         onCommit: () => {
           dispatch({
             type: 'HIDE_LEADERBOARD_SELF',

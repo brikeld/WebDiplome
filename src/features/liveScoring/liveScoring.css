@@ -184,6 +184,11 @@
   display: grid;
   place-items: center;
   isolation: isolate;
+  filter: none;
+  backdrop-filter: none;
+  mix-blend-mode: normal;
+  transform: translateZ(0);
+  will-change: left, top, opacity;
 }
 
 .lsc-particle--reveal {

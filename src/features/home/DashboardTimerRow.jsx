@@ -286,7 +286,7 @@ export default function DashboardTimerRow({
     if (confirmHideVisible) {
       return (
         <div
-          className={`${timerBaseClass} dashboard-timer-card--confirm${confirmCardClass('hide')}`}
+          className={`${timerBaseClass} dashboard-timer-card--confirm dashboard-timer-card--confirm-hide${leaderboardSelected ? ' dashboard-timer-card--confirm-ranking' : ' dashboard-timer-card--confirm-post'}${confirmCardClass('hide')}`}
           role="alertdialog"
           aria-labelledby="hide-confirm-title-inline"
           style={timerStyle}
@@ -322,6 +322,7 @@ export default function DashboardTimerRow({
               <button
                 type="button"
                 className="dashboard-hide-confirm__btn dashboard-hide-confirm__btn--hide"
+                data-hide-confirm-action="hide"
                 onClick={onConfirmHide}
               >
                 {leaderboardSelected ? 'Hide ranking' : 'Hide anyway'}

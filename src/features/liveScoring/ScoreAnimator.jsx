@@ -223,6 +223,9 @@ function Particle({ event, onComplete, scoringApi }) {
     const postY = sourcePillRect.y + sourcePillRect.height / 2;
     const ringX = targetRect.x + targetRect.width / 2;
     const ringY = targetRect.y + targetRect.height / 2;
+    const waypointRect = !isReveal && event.waypointRect ? event.waypointRect : null;
+    const waypointX = waypointRect ? waypointRect.x + waypointRect.width / 2 : null;
+    const waypointY = waypointRect ? waypointRect.y + waypointRect.height / 2 : null;
     const sx = isReveal ? ringX : postX;
     const sy = isReveal ? ringY : postY;
     const tx = isReveal ? postX : ringX;
@@ -265,9 +268,28 @@ function Particle({ event, onComplete, scoringApi }) {
       const progress = Math.max(0, Math.min(raw, 1));
       const t = easeOutCubic(progress);
 
-      const x = sx + dx * t;
-      const arcY = arcHeight * Math.sin(Math.PI * progress);
-      const y = sy + dy * t + arcY;
+      let x;
+      let y;
+      if (waypointRect && waypointX != null && waypointY != null) {
+        if (progress < 0.42) {
+          const legProgress = progress / 0.42;
+          const legT = easeOutCubic(legProgress);
+          x = sx + (waypointX - sx) * legT;
+          y = sy + (waypointY - sy) * legT - Math.sin(Math.PI * legProgress) * 44;
+        } else {
+          const legProgress = (progress - 0.42) / 0.58;
+          const legT = easeOutCubic(legProgress);
+          x = waypointX + (tx - waypointX) * legT;
+          y =
+            waypointY +
+            (ty - waypointY) * legT -
+            Math.sin(Math.PI * legProgress) * Math.min(Math.abs(tx - waypointX) * 0.48 + 64, 220);
+        }
+      } else {
+        x = sx + dx * t;
+        const arcY = arcHeight * Math.sin(Math.PI * progress);
+        y = sy + dy * t + arcY;
+      }
 
       const opacity = progress > 0.75 ? 1 - (progress - 0.75) / 0.25 : 1;
 

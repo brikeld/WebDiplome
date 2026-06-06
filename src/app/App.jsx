@@ -730,12 +730,23 @@ function AppInner({
       ?.getBoundingClientRect() ??
     getHighlightedPostRect();
 
+  const getDashboardHideActionRect = () =>
+    document
+      .querySelector('[data-hide-confirm-action="hide"]')
+      ?.getBoundingClientRect() ??
+    null;
+
   const handleConfirmHide = () => {
     if (highlightedPost) {
+      const actionRect = getDashboardHideActionRect();
       if (highlightedPost.leaderboard) {
-        hideLeaderboardSelf(highlightedPost, getHighlightedLeaderboardSelfRect());
+        hideLeaderboardSelf(highlightedPost, actionRect ?? getHighlightedLeaderboardSelfRect(), {
+          waypointRect: getHighlightedLeaderboardSelfRect(),
+        });
       } else {
-        hidePost(highlightedPost, getHighlightedPostRect());
+        hidePost(highlightedPost, actionRect ?? getHighlightedPostRect(), {
+          waypointRect: getHighlightedPostRect(),
+        });
       }
     }
     setConfirmingHide(false);
