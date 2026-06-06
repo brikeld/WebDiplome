@@ -4,9 +4,9 @@
  * Slots:
  *   0 — text   : LLM-only; context from a rotating data slice
  *   1 — asset  : LLM + random file (image/pdf/screenshot) from Electron assets
- *   2 — chart  : LLM + algorithmically generated chart PNG
+ *   2 — chart OR leaderboard (alternates each generation)
  *
- * Persona is data-driven: determined by the slice/chart type chosen, not the slot.
+ * Persona is data-driven: determined by the slice/chart/board type chosen, not the slot.
  */
 
 import crypto from 'crypto';
@@ -17,12 +17,34 @@ import {
   extractWifiSlice,
   extractDownloadsSlice,
   extractMostUsedAppsSlice,
+  extractAppCategorySlice,
+  extractRecentFilesSlice,
+  extractSecuritySlice,
+  extractAIToolsSlice,
   formatBrowserSliceAsText,
   formatWifiSliceAsText,
   formatDownloadsAsText,
   formatAppUsageAsText,
+  formatAppStackAsText,
+  formatRecentFilesAsText,
+  formatSecuritySliceAsText,
+  formatAIToolsAsText,
   pickWifiPostAngle,
+  pickBrowserPostAngle,
+  pickDownloadsPostAngle,
+  pickAppUsagePostAngle,
+  pickAppStackPostAngle,
+  pickRecentFilesPostAngle,
+  pickSecurityPostAngle,
+  pickAiToolsPostAngle,
   buildWifiPostContext,
+  buildBrowserPostContext,
+  buildDownloadsPostContext,
+  buildAppUsagePostContext,
+  buildAppStackPostContext,
+  buildRecentFilesPostContext,
+  buildSecurityPostContext,
+  buildAiToolsPostContext,
 } from './dataSlices.js';
 import { pickAndBuildChart } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
@@ -37,11 +59,33 @@ import {
   fallbackClimbTip,
 } from './leaderboardRationales.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
-import { synthesiseChartMetadata, synthesiseWifiTextMetadata } from '../../src/lib/chartPostMetadata.js';
+import { synthesiseChartMetadata, synthesiseTextSliceMetadata } from '../../src/lib/chartPostMetadata.js';
 import { prepareVisionImageData, truncateUserPayloadString } from './lmContextBudget.js';
+import {
+  scoreTextSliceFreshness,
+  freshnessWeight,
+  formatRecencyLead,
+} from './recencyRanking.js';
 
 /** Slot index for the asset slot (image or document from disk). */
 export const ASSET_SLOT_INDEX = 1;
+
+/** Slot index for the alternating chart / leaderboard slot. */
+export const THIRD_SLOT_INDEX = 2;
+
+/**
+ * Pick chart vs leaderboard for slot 2. Walks newest posts first; alternates after the
+ * most recent chart or leaderboard post. Defaults to chart when none exist yet.
+ * @param {object[]} existingPosts
+ * @returns {'chart'|'leaderboard'}
+ */
+export function pickThirdSlotKind(existingPosts) {
+  for (const post of existingPosts ?? []) {
+    if (post?.leaderboard?.boardId) return 'chart';
+    if (post?.chartType) return 'leaderboard';
+  }
+  return 'chart';
+}
 
 // ─── Text slice pool ───────────────────────────────────────────────────────
 
@@ -74,7 +118,78 @@ const TEXT_SLICE_POOL = [
     extract: (data) => extractMostUsedAppsSlice(data || {}),
     format: formatAppUsageAsText,
   },
+  {
+    id: 'recent_files',
+    persona: 'productivite',
+    promptKey: 'recent_files',
+    extract: (data) => extractRecentFilesSlice(data || {}),
+    format: formatRecentFilesAsText,
+  },
+  {
+    id: 'app_stack',
+    persona: 'productivite',
+    promptKey: 'app_stack',
+    extract: (data) => extractAppCategorySlice(data || {}),
+    format: formatAppStackAsText,
+  },
+  {
+    id: 'security_posture',
+    persona: 'securite',
+    promptKey: 'security_posture',
+    extract: (data) => extractSecuritySlice(data || {}),
+    format: formatSecuritySliceAsText,
+  },
+  {
+    id: 'ai_tools',
+    persona: 'popularite',
+    promptKey: 'ai_tools',
+    extract: (data) => extractAIToolsSlice(data || {}),
+    format: formatAIToolsAsText,
+  },
 ];
+
+const TEXT_SLICE_ENRICHMENT = {
+  browser: {
+    pickAngle: pickBrowserPostAngle,
+    buildContext: buildBrowserPostContext,
+    format: (slice, angle) => formatBrowserSliceAsText(slice, { angle }),
+  },
+  wifi: {
+    pickAngle: pickWifiPostAngle,
+    buildContext: buildWifiPostContext,
+    format: (slice, angle) => formatWifiSliceAsText(slice, { angle }),
+  },
+  downloads: {
+    pickAngle: pickDownloadsPostAngle,
+    buildContext: buildDownloadsPostContext,
+    format: (slice, angle) => formatDownloadsAsText(slice, { angle }),
+  },
+  app_usage: {
+    pickAngle: pickAppUsagePostAngle,
+    buildContext: buildAppUsagePostContext,
+    format: (slice, angle) => formatAppUsageAsText(slice, { angle }),
+  },
+  recent_files: {
+    pickAngle: pickRecentFilesPostAngle,
+    buildContext: buildRecentFilesPostContext,
+    format: (slice, angle) => formatRecentFilesAsText(slice, { angle }),
+  },
+  app_stack: {
+    pickAngle: pickAppStackPostAngle,
+    buildContext: buildAppStackPostContext,
+    format: (slice, angle) => formatAppStackAsText(slice, { angle }),
+  },
+  security_posture: {
+    pickAngle: pickSecurityPostAngle,
+    buildContext: buildSecurityPostContext,
+    format: (slice, angle) => formatSecuritySliceAsText(slice, { angle }),
+  },
+  ai_tools: {
+    pickAngle: pickAiToolsPostAngle,
+    buildContext: buildAiToolsPostContext,
+    format: (slice, angle) => formatAIToolsAsText(slice, { angle }),
+  },
+};
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -104,11 +219,70 @@ function weightedPick(items, getWeight) {
   return items[items.length - 1];
 }
 
-function pickWithRecencyGuard(pool, recentIds, personaScores) {
+function pickWithRecencyGuard(pool, recentIds, personaScores, dataJson = null) {
   const excludeSet = new Set(recentIds);
   const available = pool.filter((item) => !excludeSet.has(item.id));
   const candidates = available.length > 0 ? available : pool;
-  return weightedPick(candidates, (item) => personaScoreFor(item.persona, personaScores));
+  return weightedPick(candidates, (item) => {
+    const personaW = personaScoreFor(item.persona, personaScores);
+    if (!dataJson) return personaW;
+    const { ageMs } = scoreTextSliceFreshness(item.id, dataJson);
+    return freshnessWeight(ageMs) + personaW;
+  });
+}
+
+function pickTextSlice(dataJson, existingPosts, personaScores) {
+  const recentTypes = getRecentFieldValues(existingPosts, 'textSliceType', 4);
+  let pool = TEXT_SLICE_POOL.slice();
+  const scored = [];
+  for (const chosen of pool) {
+    if (recentTypes.includes(chosen.id)) continue;
+    const slice = chosen.extract(dataJson);
+    const formatted = formatTextSliceContext(chosen, slice, existingPosts);
+    if (!formatted.ctx) continue;
+    const { ageMs } = scoreTextSliceFreshness(chosen.id, dataJson);
+    const weight = freshnessWeight(ageMs) + personaScoreFor(chosen.persona, personaScores);
+    scored.push({ chosen, slice, formatted, weight });
+  }
+  if (scored.length > 0) {
+    const picked = weightedPick(scored, (s) => s.weight);
+    return { chosen: picked.chosen, slice: picked.slice, ...picked.formatted };
+  }
+  for (let attempt = 0; attempt < pool.length; attempt += 1) {
+    const chosen = pickWithRecencyGuard(pool, recentTypes, personaScores, dataJson);
+    const slice = chosen.extract(dataJson);
+    const formatted = formatTextSliceContext(chosen, slice, existingPosts);
+    if (formatted.ctx) return { chosen, slice, ...formatted };
+    pool = pool.filter((item) => item.id !== chosen.id);
+    if (!pool.length) break;
+  }
+  const fallback = TEXT_SLICE_POOL[0];
+  const slice = fallback.extract(dataJson);
+  return { chosen: fallback, slice, ...formatTextSliceContext(fallback, slice, existingPosts) };
+}
+
+function getRecentAnglesForSlice(existingPosts, sliceId, n = 3) {
+  return existingPosts
+    .filter((p) => p?.textSliceType === sliceId)
+    .slice(0, n)
+    .map((p) => p.textSliceAngle || (sliceId === 'wifi' ? p.wifiPostAngle : null))
+    .filter(Boolean);
+}
+
+function formatTextSliceContext(chosen, slice, existingPosts) {
+  const enrich = TEXT_SLICE_ENRICHMENT[chosen.id];
+  if (!enrich) {
+    return { ctx: chosen.format(slice), extra: {} };
+  }
+  const angle = enrich.pickAngle(getRecentAnglesForSlice(existingPosts, chosen.id));
+  const textSliceContext = enrich.buildContext(slice, angle);
+  const ctx = enrich.format(slice, angle);
+  const extra = {
+    textSliceAngle: angle,
+    textSliceContext,
+    ...(chosen.id === 'wifi' ? { wifiPostAngle: angle, wifiContext: textSliceContext } : {}),
+  };
+  return { ctx, extra };
 }
 
 function imageTextFallbackNote(filename) {
@@ -560,10 +734,10 @@ async function fetchPostMetadataOnly({
   const chartNote = slot.chartType
     ? `\nChart annex type: ${slot.chartType} (user saw a chart image with this post).`
     : '';
-  const wifiNote = slot.wifiPostAngle
-    ? `\nWiFi text angle: ${slot.wifiPostAngle}.`
+  const sliceNote = slot.textSliceType
+    ? `\nText slice: ${slot.textSliceType}${slot.textSliceAngle ? ` (angle: ${slot.textSliceAngle})` : ''}.`
     : '';
-  const userPayload = `LOCKED post content (must appear verbatim in highlights and in inferenceChain "generate" step):\n${JSON.stringify(content)}${chartNote}${wifiNote}\n\n---\n${slot.userPayload}`;
+  const userPayload = `LOCKED post content (must appear verbatim in highlights and in inferenceChain "generate" step):\n${JSON.stringify(content)}${chartNote}${sliceNote}\n\n---\n${slot.userPayload}`;
 
   const body = buildChatBody({
     model: slot._model,
@@ -588,12 +762,12 @@ async function fetchPostMetadataOnly({
 }
 
 function applyTextSliceMetadataFallback(parsed, slot) {
-  if (!parsed.content || parsed.inferenceChain) return parsed;
-  if (slot.textSliceType !== 'wifi') return parsed;
-  const synth = synthesiseWifiTextMetadata({
+  if (!parsed.content || parsed.inferenceChain || !slot.textSliceType) return parsed;
+  const synth = synthesiseTextSliceMetadata({
     content: parsed.content,
-    angle: slot.wifiPostAngle || 'sheer_diversity',
-    wifiContext: slot.wifiContext,
+    textSliceType: slot.textSliceType,
+    angle: slot.textSliceAngle || slot.wifiPostAngle,
+    context: slot.textSliceContext || slot.wifiContext,
     persona: slot.persona,
   });
   if (!synth) return parsed;
@@ -626,38 +800,22 @@ function applyChartMetadataFallback(parsed, slot) {
 // ─── Slot builders ─────────────────────────────────────────────────────────
 
 function buildTextSlot(dataJson, baseUserPayload, existingPosts, SP, personaScores) {
-  const recentTypes = getRecentFieldValues(existingPosts, 'textSliceType');
-  const chosen = pickWithRecencyGuard(TEXT_SLICE_POOL, recentTypes, personaScores);
-  if (!chosen) {
-    return {
-      id: 'text', persona: 'popularite', promptKey: 'browser',
-      userPayload: baseUserPayload, imageData: null, docText: null,
-      docFilename: null, attachedAsset: null, textSliceType: 'browser',
-    };
-  }
-  const slice = chosen.extract(dataJson);
-  let ctx;
-  let wifiPostAngle = null;
-  let wifiContext = null;
-  if (chosen.id === 'wifi') {
-    const recentAngles = getRecentFieldValues(existingPosts, 'wifiPostAngle');
-    wifiPostAngle = pickWifiPostAngle(recentAngles);
-    wifiContext = buildWifiPostContext(slice, wifiPostAngle);
-    ctx = formatWifiSliceAsText(slice, { angle: wifiPostAngle });
-  } else {
-    ctx = chosen.format(slice);
-  }
+  const picked = pickTextSlice(dataJson, existingPosts, personaScores);
+  const { chosen, ctx, extra } = picked;
+  const freshness = scoreTextSliceFreshness(chosen.id, dataJson);
+  const recencyLead = formatRecencyLead(freshness);
+  const sliceBlock = [recencyLead, ctx].filter(Boolean).join('\n');
   return {
     id: 'text',
     persona: chosen.persona,
     promptKey: chosen.promptKey,
-    userPayload: ctx ? `${ctx}\n\n---\n${baseUserPayload}` : baseUserPayload,
+    userPayload: sliceBlock ? `${sliceBlock}\n\n---\n${baseUserPayload}` : baseUserPayload,
     imageData: null,
     docText: null,
     docFilename: null,
     attachedAsset: null,
     textSliceType: chosen.id,
-    ...(wifiPostAngle ? { wifiPostAngle, wifiContext } : {}),
+    ...extra,
   };
 }
 
@@ -723,15 +881,23 @@ function buildAssetSlot(baseUserPayload, assetAssignment) {
   if (!assetAssignment) return slot;
 
   const asset = assetAssignment.asset;
+  const mtimeMs = asset.mtimeMs ?? assetAssignment.mtimeMs ?? null;
+  const recencyLead = mtimeMs
+    ? formatRecencyLead({ freshestMs: mtimeMs, hook: asset.filename || asset.sourceFilename || 'attached file' })
+    : '';
+  const payloadBase = recencyLead ? `${recencyLead}\n\n${baseUserPayload}` : baseUserPayload;
+
   if (asset.kind === 'image' && !asset.textFallbackOnly && asset.base64) {
+    slot.userPayload = payloadBase;
     slot.imageData = { base64: asset.base64, mime: asset.mime };
     slot.promptKey = 'image';
     slot.persona = 'popularite';
   } else if (asset.kind === 'image') {
-    slot.userPayload = baseUserPayload + imageTextFallbackNote(asset.filename || 'image');
+    slot.userPayload = payloadBase + imageTextFallbackNote(asset.filename || 'image');
     slot.promptKey = 'image';
     slot.persona = 'popularite';
   } else {
+    slot.userPayload = payloadBase;
     slot.docText = asset.text;
     slot.docFilename = asset.filename;
     slot.promptKey = 'document';
@@ -901,6 +1067,8 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
     if (slot.attachedAsset.kind === 'image') post.attachedAsset.visionAnalysed = visionSucceeded;
   }
   if (slot.textSliceType) post.textSliceType = slot.textSliceType;
+  if (slot.textSliceAngle) post.textSliceAngle = slot.textSliceAngle;
+  if (slot.textSliceContext) post.textSliceContext = slot.textSliceContext;
   if (slot.wifiPostAngle) post.wifiPostAngle = slot.wifiPostAngle;
   if (slot.chartType) post.chartType = slot.chartType;
   if (slot.leaderboard && slot.leaderboardContext) {
@@ -958,6 +1126,25 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
 
 // ─── Public API ────────────────────────────────────────────────────────────
 
+async function buildThirdSlot({
+  userPayload,
+  dataJson,
+  profile,
+  existingPosts,
+  chartUploadDir,
+  personaScores,
+  skipLeaderboard = false,
+}) {
+  const kind = skipLeaderboard ? 'chart' : pickThirdSlotKind(existingPosts);
+
+  if (kind === 'leaderboard') {
+    const leaderboardSlot = buildLeaderboardSlot(dataJson, profile, userPayload, existingPosts, Date.now());
+    if (leaderboardSlot) return leaderboardSlot;
+  }
+
+  return buildChartSlot(dataJson, profile, userPayload, existingPosts, chartUploadDir, personaScores);
+}
+
 async function buildPersonaGenerationSlots({
   userPayload,
   assetAssignment,
@@ -971,14 +1158,19 @@ async function buildPersonaGenerationSlots({
 }) {
   const SP = promptsParam?.slotPrompts ?? DEFAULT_SLOT_PROMPTS;
   const personaScores = profile?.personaScores ? normalizePersonaPercentTriplet(profile.personaScores) : null;
-  const chartSlot = await buildChartSlot(dataJson, profile, userPayload, existingPosts, chartUploadDir, personaScores);
   const textSlot = buildTextSlot(dataJson, userPayload, existingPosts, SP, personaScores);
   const assetSlot = buildAssetSlot(userPayload, assetAssignment);
-  const leaderboardSlot = skipLeaderboard
-    ? null
-    : buildLeaderboardSlot(dataJson, profile, userPayload, existingPosts, Date.now());
+  const thirdSlot = await buildThirdSlot({
+    userPayload,
+    dataJson,
+    profile,
+    existingPosts,
+    chartUploadDir,
+    personaScores,
+    skipLeaderboard,
+  });
 
-  const slots = [textSlot, assetSlot, chartSlot, leaderboardSlot]
+  const slots = [textSlot, assetSlot, thirdSlot]
     .map((s) => (s ? { ...s, _model: model } : null));
 
   return { slots, SP };
@@ -1011,10 +1203,10 @@ export async function preparePersonaPostSlotPlan(opts) {
  * @param {object|null} opts.profile              - WebDiplome profile (for chart builders needing scores/storage)
  * @param {object[]}    opts.existingPosts         - current posts array (for recency guard)
  * @param {string|null} [opts.chartUploadDir]     - absolute dir to write chart PNG
- * @param {boolean}     [opts.skipLeaderboard]     - omit rank-change post (first setup)
+ * @param {boolean}     [opts.skipLeaderboard]     - force chart for slot 2 (first setup)
  * @param {boolean}     [opts.preferMetadataFallback] - skip extra LM call for inferenceChain metadata
  * @param {function}    [opts.onEachPost}
- * @returns {Promise<(object|null)[]>} up to four entries [text, asset, chart, leaderboard]
+ * @returns {Promise<(object|null)[]>} three entries [text, asset, chart|leaderboard]
  */
 export async function generatePersonaPosts({
   baseUrl,

@@ -102,18 +102,24 @@ async function fileExists(p) {
 async function listAssetsInDir(spec) {
   try {
     const entries = await fs.readdir(spec.path, { withFileTypes: true });
-    return entries
-      .filter((e) => e.isFile())
-      .map((e) => ({
-        fullPath: path.join(spec.path, e.name),
+    const files = entries.filter((e) => e.isFile());
+    const out = [];
+    for (const e of files) {
+      const ext = path.extname(e.name).toLowerCase();
+      if (!spec.allowedExts.has(ext) || spec.excludeBasenames.has(e.name)) continue;
+      const fullPath = path.join(spec.path, e.name);
+      let mtimeMs = 0;
+      try {
+        mtimeMs = (await fs.stat(fullPath)).mtimeMs;
+      } catch { /* keep 0 */ }
+      out.push({
+        fullPath,
         basename: e.name,
         kind: spec.kind,
-      }))
-      .filter(
-        (a) =>
-          spec.allowedExts.has(path.extname(a.basename).toLowerCase()) &&
-          !spec.excludeBasenames.has(a.basename),
-      );
+        mtimeMs,
+      });
+    }
+    return out;
   } catch {
     return [];
   }
@@ -163,15 +169,11 @@ async function pickAndImportAsset(candidates, usedUploadFilenames) {
   if (!Array.isArray(candidates) || candidates.length === 0) return null;
   const used = usedUploadFilenames instanceof Set ? usedUploadFilenames : new Set();
 
-  const pool = candidates.slice();
-  // shuffle
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
+  const ranked = candidates
+    .slice()
+    .sort((a, b) => (b.mtimeMs ?? 0) - (a.mtimeMs ?? 0));
 
-  while (pool.length > 0) {
-    const chosen = pool.pop();
+  for (const chosen of ranked) {
     const buf = await fs.readFile(chosen.fullPath);
     if (!buf.length) continue;
     const hash = crypto.createHash('sha256').update(buf).digest('hex');
@@ -194,11 +196,11 @@ async function pickAndImportAsset(candidates, usedUploadFilenames) {
         uploadFilename,
         uploadRelativePath: `public/uploads/${uploadFilename}`,
         uploadUrl: `/uploads/${uploadFilename}`,
+        mtimeMs: chosen.mtimeMs ?? null,
       };
     }
-    // kind === 'document'
     const text = await extractDocText(buf, ext);
-    if (!text) continue; // try next candidate if extraction fails
+    if (!text) continue;
     return {
       kind: 'document',
       sourceFilename: chosen.basename,
@@ -207,6 +209,7 @@ async function pickAndImportAsset(candidates, usedUploadFilenames) {
       uploadFilename,
       uploadRelativePath: `public/uploads/${uploadFilename}`,
       uploadUrl: `/uploads/${uploadFilename}`,
+      mtimeMs: chosen.mtimeMs ?? null,
     };
   }
 
@@ -507,7 +510,7 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
     res.write(`${JSON.stringify({ plan: generationPlan })}\n`);
     if (typeof res.flush === 'function') res.flush();
 
-    const bySlot = new Array(4).fill(null);
+    const bySlot = new Array(3).fill(null);
     const revealBaseTimeMs = Date.now();
     const slotResults = await generatePersonaPosts({
       baseUrl,
@@ -521,6 +524,7 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
       profile,
       existingPosts: existing,
       chartUploadDir: UPLOADS_DIR,
+      skipLeaderboard: existing.length === 0,
       onEachPost: async (post, meta) => {
         if (asset && post.attachedAsset && meta?.slotIndex === ASSET_SLOT_INDEX) {
           patchPostAttachedAssetFromUpload(post, asset);

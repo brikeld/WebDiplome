@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { generatePersonaPosts } from '../server/lib/personaPostGenerator.js';
+import {
+  generatePersonaPosts,
+  pickThirdSlotKind,
+} from '../server/lib/personaPostGenerator.js';
 import { BOARDS, computeBoardStanding } from '../server/lib/leaderboards.js';
 
 const NOW = new Date('2026-05-25T11:00:00Z').getTime();
@@ -20,7 +23,6 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(NOW));
 
-  // Stub the LM Studio HTTP call so we can run without a server.
   global.fetch = vi.fn(async (_url, init) => {
     const body = JSON.parse(init.body);
     const isLeaderboardSlot = body.messages.some((m) =>
@@ -42,8 +44,24 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('generatePersonaPosts — leaderboard slot', () => {
-  it('returns 4 entries (text, asset, chart, leaderboard) when nothing is excluded', async () => {
+describe('pickThirdSlotKind', () => {
+  it('defaults to chart when no prior chart or leaderboard posts exist', () => {
+    expect(pickThirdSlotKind([])).toBe('chart');
+  });
+
+  it('alternates to leaderboard after a chart post', () => {
+    expect(pickThirdSlotKind([{ chartType: 'browser_domains', createdAt: '2026-05-25T10:00:00Z' }])).toBe('leaderboard');
+  });
+
+  it('alternates back to chart after a leaderboard post', () => {
+    expect(pickThirdSlotKind([
+      { leaderboard: { boardId: 'most_productive' }, createdAt: '2026-05-25T10:00:00Z' },
+    ])).toBe('chart');
+  });
+});
+
+describe('generatePersonaPosts — third slot alternation', () => {
+  it('returns 3 entries with chart at slot 2 on first generation', async () => {
     const results = await generatePersonaPosts({
       baseUrl: 'http://stub',
       model: 'test-model',
@@ -57,19 +75,35 @@ describe('generatePersonaPosts — leaderboard slot', () => {
       existingPosts: [],
     });
 
-    expect(results).toHaveLength(4);
-    const leaderboardPost = results[3];
-    expect(leaderboardPost).not.toBeNull();
-    expect(leaderboardPost.leaderboard).toBeTruthy();
-    expect(leaderboardPost.leaderboard.boardId).toMatch(/^most_|^closest_|^ignoring_/);
-    expect(Array.isArray(leaderboardPost.leaderboard.entries)).toBe(true);
-    expect(leaderboardPost.leaderboard.entries).toHaveLength(5);
-    expect(leaderboardPost.leaderboard.userRank).toBeGreaterThanOrEqual(1);
-    expect(leaderboardPost.leaderboard.userRank).toBeLessThanOrEqual(5);
+    expect(results).toHaveLength(3);
+    expect(results[2]?.chartType || results[2]?.attachedAsset?.url).toBeTruthy();
+    expect(results[2]?.leaderboard).toBeFalsy();
   });
 
-  it('returns null for the leaderboard slot when no board rank has changed', async () => {
-    // Lock every board at its current rank via prior posts.
+  it('uses leaderboard at slot 2 after a prior chart post', async () => {
+    const results = await generatePersonaPosts({
+      baseUrl: 'http://stub',
+      model: 'test-model',
+      userPayload: JSON.stringify({ user: {}, profile: fakeProfile }),
+      timeoutMs: 1000,
+      retries: 0,
+      assetAssignment: null,
+      prompts: null,
+      dataJson: fakeData,
+      profile: fakeProfile,
+      existingPosts: [{ chartType: 'browser_domains', createdAt: '2026-05-25T09:00:00Z' }],
+    });
+
+    expect(results).toHaveLength(3);
+    const third = results[2];
+    expect(third).not.toBeNull();
+    expect(third.leaderboard).toBeTruthy();
+    expect(third.leaderboard.boardId).toMatch(/^most_|^closest_|^ignoring_/);
+    expect(Array.isArray(third.leaderboard.entries)).toBe(true);
+    expect(third.leaderboard.entries).toHaveLength(5);
+  });
+
+  it('falls back to chart at slot 2 when leaderboard turn has no rank change', async () => {
     const lockingPosts = BOARDS.map((b) => {
       const s = computeBoardStanding(b, fakeData, fakeProfile, NOW);
       return {
@@ -88,14 +122,19 @@ describe('generatePersonaPosts — leaderboard slot', () => {
       prompts: null,
       dataJson: fakeData,
       profile: fakeProfile,
-      existingPosts: lockingPosts,
+      existingPosts: [
+        { chartType: 'browser_domains', createdAt: '2026-05-25T09:30:00Z' },
+        ...lockingPosts,
+      ],
     });
 
-    expect(results).toHaveLength(4);
-    expect(results[3]).toBeNull();
+    expect(results).toHaveLength(3);
+    expect(results[2]).not.toBeNull();
+    expect(results[2].leaderboard).toBeFalsy();
+    expect(results[2].chartType || results[2].attachedAsset?.url).toBeTruthy();
   });
 
-  it('the leaderboard post carries previousUserRank=null on first appearance', async () => {
+  it('leaderboard post carries previousUserRank=null on first appearance', async () => {
     const results = await generatePersonaPosts({
       baseUrl: 'http://stub',
       model: 'test-model',
@@ -106,8 +145,8 @@ describe('generatePersonaPosts — leaderboard slot', () => {
       prompts: null,
       dataJson: fakeData,
       profile: fakeProfile,
-      existingPosts: [],
+      existingPosts: [{ chartType: 'browser_domains', createdAt: '2026-05-25T09:00:00Z' }],
     });
-    expect(results[3].leaderboard.previousUserRank).toBeNull();
+    expect(results[2].leaderboard.previousUserRank).toBeNull();
   });
 });

@@ -86,15 +86,28 @@ describe('scoreCloneFor', () => {
 });
 
 describe('BOARDS', () => {
-  it('declares all 7 boards in priority order', () => {
+  it('declares all 20 boards in priority order', () => {
     expect(BOARDS.map(b => b.id)).toEqual([
       'most_productive',
       'closest_to_burnout',
       'most_likely_change_jobs',
       'ignoring_health',
+      'most_likely_miss_deadline',
+      'replaced_by_ai_90_days',
+      'least_with_expensive_setup',
+      'procrastinate_right_now',
+      'quit_to_countryside',
       'most_secure',
+      'get_hacked_this_month',
+      'tracked_by_third_parties',
+      'ignoring_system_warnings',
+      'leak_confidential_accident',
+      'messiest_digital_life',
       'most_socially_isolated',
       'most_likely_ghost',
+      'havent_left_house',
+      'talking_to_ais_not_people',
+      'least_sleep',
     ]);
   });
 

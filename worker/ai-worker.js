@@ -16,7 +16,7 @@ import {
 } from '../server/lib/generationRevealOrder.js';
 import {
   nextAssetPersona,
-  pickUnusedAssetCandidate,
+  pickRecencyFirstUnusedAssetCandidate,
 } from '../server/lib/pickGenerationAsset.js';
 import {
   extensionFromAssetCandidate,
@@ -210,7 +210,7 @@ async function processPostsJob(payload, jobId, ownerUserId) {
   const isFirstGeneration = existingPosts.length === 0;
   const userPayload = buildUserPayload(user, dataJson);
   const prompts = await loadPrompts(process.cwd());
-  const assetCandidate = pickUnusedAssetCandidate(
+  const assetCandidate = pickRecencyFirstUnusedAssetCandidate(
     Array.isArray(payload.assetCandidates) ? payload.assetCandidates : [],
     existingPosts,
   );

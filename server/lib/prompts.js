@@ -3,8 +3,8 @@ import path from 'path';
 
 export const DEFAULT_SLOT_PROMPTS = {
   browser: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. The user's browser history data is listed above. Pick ONE specific site or browsing pattern, make a witty self-aware observation about it (max 200 chars). Touch of humor. No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
-    temperature: 0.85,
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Browser context is listed above with a suggested angle line. Follow that angle — pick ONE concrete domain, tab title, or browsing pattern. Vary tone: dry, self-aware, amused, or quietly guilty (max 200 chars). No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
+    temperature: 0.88,
     maxTokens: 900,
   },
   chart: {
@@ -13,8 +13,8 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 900,
   },
   app_usage: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. Your recently used apps are listed above. Pick ONE app or usage pattern that reveals something about you — honest, slightly self-aware, maybe funny (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
-    temperature: 0.85,
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Recently used apps are listed above with a suggested angle line. Follow that angle — pick ONE app or usage pattern. Honest, slightly self-aware, maybe funny — not a résumé of every app (max 200 chars). No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
+    temperature: 0.88,
     maxTokens: 900,
   },
   image: {
@@ -28,8 +28,28 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 900,
   },
   downloads: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. Your recent downloads are listed above. Pick ONE download that reveals something about you — funny, honest, maybe slightly embarrassing (max 200 chars). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
-    temperature: 0.85,
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Recent downloads are listed above with a suggested angle line. Follow that angle — pick ONE download. Funny, honest, maybe slightly embarrassing — not a file inventory (max 200 chars). No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
+    temperature: 0.88,
+    maxTokens: 900,
+  },
+  recent_files: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Recent file activity is listed above with a suggested angle line. Follow that angle — pick ONE file type, folder, late-night habit, or volume stat. Sound like you noticed something about how you work (max 200 chars). No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
+    temperature: 0.86,
+    maxTokens: 900,
+  },
+  app_stack: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Installed-app categories are listed above with a suggested angle line. Follow that angle — pick ONE category contrast, hoarding habit, or creative-stack detail. Dry wit, not a software list (max 200 chars). No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
+    temperature: 0.86,
+    maxTokens: 900,
+  },
+  security_posture: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Security posture data is listed above with a suggested angle line. Follow that angle — SIP/FileVault/VPN apps or honest anxiety. No corporate security jargon (max 200 chars). No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
+    temperature: 0.84,
+    maxTokens: 900,
+  },
+  ai_tools: {
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. AI tool signals are listed above with a suggested angle line. Follow that angle — installed stack, recent use, or stack creep. Playful self-awareness, not a product review (max 200 chars). No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
+    temperature: 0.88,
     maxTokens: 900,
   },
   document: {
@@ -154,6 +174,123 @@ export const RATIONALE_TEMPLATES = {
       'last seen yesterday',
       'half-typed messages everywhere',
       'inbox at 0, replies at 0',
+    ],
+  },
+  most_likely_miss_deadline: {
+    selfPhrase: 'one more episode before the draft',
+    clonePhrases: [
+      'tabs open, nothing shipped',
+      'deadline tomorrow, vibes today',
+      'scrolling through the brief again',
+      'almost started, technically',
+    ],
+  },
+  replaced_by_ai_90_days: {
+    selfPhrase: 'delegating the thinking to the bots',
+    clonePhrases: [
+      'copilot does the first pass',
+      'prompt engineer by accident',
+      'human in the loop, barely',
+      'automating themselves out slowly',
+    ],
+  },
+  least_with_expensive_setup: {
+    selfPhrase: 'max spec, min output',
+    clonePhrases: [
+      'studio rig, hobby pace',
+      'M-chip, S-tier procrastination',
+      'gear envy bait',
+      'render farm for one png',
+    ],
+  },
+  procrastinate_right_now: {
+    selfPhrase: 'just checking one thing first',
+    clonePhrases: [
+      'afternoon scroll spiral',
+      'inbox zero cosplay',
+      'organizing folders instead',
+      'one more coffee break',
+    ],
+  },
+  quit_to_countryside: {
+    selfPhrase: 'saved a farmhouse listing at 2am',
+    clonePhrases: [
+      'homestead tab hoarder',
+      'job board then cottage pinterest',
+      'off-grid curious lately',
+      'vanlife research phase',
+    ],
+  },
+  get_hacked_this_month: {
+    selfPhrase: 'public wifi and no vpn',
+    clonePhrases: [
+      'torrent client still installed',
+      'password reuse energy',
+      'updates snoozed since spring',
+      'guest network regular',
+    ],
+  },
+  tracked_by_third_parties: {
+    selfPhrase: 'every domain knows their name',
+    clonePhrases: [
+      'ad pixels everywhere',
+      'social logins on everything',
+      'browser history is the product',
+      'no vpn, full footprint',
+    ],
+  },
+  ignoring_system_warnings: {
+    selfPhrase: 'dismissed the dialog three weeks ago',
+    clonePhrases: [
+      'disk almost full, still downloading',
+      'battery service recommended, ignored',
+      'filevault off, vibes on',
+      'red badge collector',
+    ],
+  },
+  leak_confidential_accident: {
+    selfPhrase: 'wrong slack thread, right attachment',
+    clonePhrases: [
+      'sync folder chaos',
+      'screenshot with metadata',
+      'reply-all energy',
+      'cloud link, no password',
+    ],
+  },
+  messiest_digital_life: {
+    selfPhrase: 'downloads folder as filing system',
+    clonePhrases: [
+      '200 saved wifi networks',
+      'installs everything, uses nothing',
+      'storage bar permanently red',
+      'desktop as inbox',
+    ],
+  },
+  havent_left_house: {
+    selfPhrase: 'same home wifi for days',
+    clonePhrases: [
+      'delivery apps only social life',
+      'outside network: not found',
+      'couch orbit stable',
+      'fresh air last seen: unclear',
+    ],
+  },
+  talking_to_ais_not_people: {
+    selfPhrase: 'long chat with claude, zero texts sent',
+    clonePhrases: [
+      'ai therapist hours',
+      'group chat mute, llm unmute',
+      'prompts not people',
+      'social battery routed to bots',
+    ],
+  },
+  least_sleep: {
+    selfPhrase: 'files saved after midnight again',
+    clonePhrases: [
+      'no sleep app, many late tabs',
+      '3am creative burst routine',
+      'alarm is a suggestion',
+      'circadian rhythm optional',
     ],
   },
 };

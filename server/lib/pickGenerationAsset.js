@@ -1,4 +1,5 @@
 import { filterVisualGenerationAssets } from './generationAssetTypes.js';
+import { parseHarvestTimestamp } from './recencyRanking.js';
 
 /** @param {object[]} existingPosts */
 export function collectUsedAssetFilenames(existingPosts) {
@@ -53,6 +54,34 @@ export function pickUnusedAssetCandidate(candidates, existingPosts) {
 
   const idx = Math.floor(Math.random() * available.length);
   return available[idx];
+}
+
+/**
+ * Pick the freshest unused visual asset (images/PDFs). Skips assets already posted;
+ * next generation naturally takes the second-newest, and so on.
+ */
+export function pickRecencyFirstUnusedAssetCandidate(candidates, existingPosts) {
+  const visualCandidates = filterVisualGenerationAssets(candidates);
+  if (visualCandidates.length === 0) return null;
+
+  const used = collectUsedAssetFilenames(existingPosts);
+  const available = visualCandidates.filter((c) => {
+    const fn = candidateContentFilename(c);
+    return fn && !used.has(fn);
+  });
+  if (available.length === 0) return null;
+
+  const ranked = available
+    .map((c) => ({
+      candidate: c,
+      mtimeMs: Number(c.mtimeMs ?? c.modifiedMs ?? parseHarvestTimestamp(c.modified) ?? 0),
+    }))
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+  const topMs = ranked[0]?.mtimeMs ?? 0;
+  const topTier = ranked.filter((r) => r.mtimeMs === topMs);
+  const pick = topTier[Math.floor(Math.random() * topTier.length)];
+  return pick?.candidate ?? ranked[0].candidate;
 }
 
 export const ASSET_PERSONA_CYCLE = ['popularite', 'securite', 'productivite'];

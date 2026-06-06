@@ -227,3 +227,105 @@ export function synthesiseWifiTextMetadata({ content, angle, wifiContext, person
 
   return { inferenceChain, ingredients, highlights, thinking };
 }
+
+const TEXT_SLICE_LABELS = {
+  browser: 'Browser history',
+  wifi: 'Wi‑Fi history',
+  downloads: 'Recent downloads',
+  app_usage: 'App usage',
+  recent_files: 'Recent files',
+  app_stack: 'Installed apps',
+  security_posture: 'Security posture',
+  ai_tools: 'AI tools',
+};
+
+const TEXT_SLICE_SOURCES = {
+  browser: 'Browser history',
+  wifi: 'Wi‑Fi history',
+  downloads: 'Recent downloads',
+  app_usage: 'App usage (last 7 days)',
+  recent_files: 'Recent files',
+  app_stack: 'Installed apps',
+  security_posture: 'Security settings',
+  ai_tools: 'AI tool signals',
+};
+
+/**
+ * Deterministic Tell-Me-More metadata when any text-slot LM output omits analysis fields.
+ * @param {{ content: string, textSliceType?: string, angle?: string, context?: object, persona?: string }} input
+ */
+export function synthesiseTextSliceMetadata({ content, textSliceType, angle, context, persona }) {
+  const body = String(content || '').trim();
+  const typeKey = String(textSliceType || '').trim();
+  if (!body || !typeKey) return null;
+
+  if (typeKey === 'wifi') {
+    return synthesiseWifiTextMetadata({
+      content: body,
+      angle: angle || 'sheer_diversity',
+      wifiContext: context,
+      persona,
+    });
+  }
+
+  const sliceLabel = TEXT_SLICE_LABELS[typeKey] || typeKey.replace(/_/g, ' ');
+  const sourceLabel = TEXT_SLICE_SOURCES[typeKey] || sliceLabel;
+  const angleLabel = angle ? String(angle).replace(/_/g, ' ') : sliceLabel.toLowerCase();
+  const generateValue = longestContentSubstring(body, 180);
+  const count = Number(context?.count ?? context?.totalVisits ?? context?.installedCount ?? 0);
+  const samples = Array.isArray(context?.samples) ? context.samples.slice(0, 4) : [];
+
+  const dataValue = count > 0
+    ? `${count} ${sliceLabel.toLowerCase()} signal(s) fed a ${angleLabel} caption.`
+    : `${sliceLabel} data fed a ${angleLabel} caption.`;
+
+  const inferenceChain = [
+    { step: 'data', value: dataValue, source: sourceLabel },
+    { step: 'classify', value: angleLabel, confidence: 'high' },
+    {
+      step: 'infer',
+      value: 'One hook in the slice was treated as the whole story.',
+      confidence: 'low',
+      isBiased: true,
+      biasNote: 'A single detail from this slice cannot represent your full digital habits.',
+    },
+    { step: 'generate', value: generateValue },
+  ];
+
+  const dataPoints = [];
+  if (count > 0) dataPoints.push(String(count));
+  for (const s of samples) dataPoints.push(String(s));
+  if (!dataPoints.length) dataPoints.push(sliceLabel);
+
+  const ingredients = [
+    { label: `${sliceLabel} signals`, weight: 86, dataPoints: dataPoints.slice(0, 6) },
+    { label: 'Post caption', weight: 74, dataPoints: [clip(body, 80)] },
+    { label: 'Persona lens', weight: 44, dataPoints: [String(persona || 'productivite')] },
+  ];
+
+  const highlights = [];
+  if (generateValue && body.includes(generateValue)) {
+    highlights.push({ phrase: generateValue, stepIndex: 3, ingredientIndex: 1 });
+  }
+  for (const sample of samples) {
+    if (sample && body.toLowerCase().includes(String(sample).toLowerCase()) && highlights.length < 3) {
+      highlights.push({ phrase: String(sample), stepIndex: 0, ingredientIndex: 0 });
+    }
+  }
+
+  const thinking = [
+    { label: 'ANGLE PICK', detail: clip(`I leaned into the ${angleLabel} angle for this ${sliceLabel.toLowerCase()} post.`, 180) },
+    {
+      label: 'DATA HOOK',
+      detail: clip(
+        samples[0]
+          ? `I anchored on “${samples[0]}” because it was the most concrete signal in the slice.`
+          : `I picked the loudest pattern visible in the ${sliceLabel.toLowerCase()} slice.`,
+        180,
+      ),
+    },
+    { label: 'PERSONA LENS', detail: clip(`I filtered the takeaway through the ${persona || 'productivite'} persona tone.`, 180) },
+  ];
+
+  return { inferenceChain, ingredients, highlights, thinking };
+}

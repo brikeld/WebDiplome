@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   collectUsedAssetFilenames,
   mergeAssetCandidatePool,
+  pickRecencyFirstUnusedAssetCandidate,
   pickUnusedAssetCandidate,
   nextAssetPersona,
 } from '../server/lib/pickGenerationAsset.js';
@@ -67,5 +68,19 @@ describe('pickGenerationAsset', () => {
       [],
     );
     expect(picked?.uploadFilename).toBe(`${hash}.jpg`);
+  });
+
+  it('picks freshest unused asset and skips already posted newest', () => {
+    const hashNew = 'a'.repeat(64);
+    const hashOld = 'b'.repeat(64);
+    const newest = { filename: `${hashNew}.png`, url: '/x/new.png', mtimeMs: 1000 };
+    const older = { filename: `${hashOld}.png`, url: '/x/old.png', mtimeMs: 500 };
+    const first = pickRecencyFirstUnusedAssetCandidate([older, newest], []);
+    expect(first?.filename).toBe(`${hashNew}.png`);
+
+    const second = pickRecencyFirstUnusedAssetCandidate([older, newest], [
+      { attachedAsset: { filename: `${hashNew}.png` } },
+    ]);
+    expect(second?.filename).toBe(`${hashOld}.png`);
   });
 });

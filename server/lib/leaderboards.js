@@ -7,6 +7,7 @@
 
 import { avatarSrcFromProfile } from '../../src/lib/profileUtils.js';
 import { seededFloat } from '../../src/lib/seededRandom.js';
+import { categorizeWifiNetwork } from './dataSlices.js';
 
 /** Diverse clone identities — no avatarSrc so they never show a photo. */
 export const CLONE_IDENTITIES = Object.freeze([
@@ -158,6 +159,13 @@ const TORRENT_APPS = new Set([
 const HEALTH_APPS = new Set([
   'Health','Strava','Apple Fitness','Sleep Cycle','MyFitnessPal','Headspace','Calm',
 ]);
+const AI_APPS = new Set([
+  'ChatGPT','Claude','Codex','LM Studio','Ollama','DiffusionBee','Perplexity',
+  'Cursor','Windsurf','GitHub Copilot',
+]);
+const CLOUD_SYNC_APPS = new Set([
+  'Dropbox','Google Drive','OneDrive','iCloud Drive','Box','Sync','Mega',
+]);
 
 function isCreative(app) {
   if (CREATIVE_APPS.has(app)) return true;
@@ -218,6 +226,101 @@ function hourOf(nowMs) {
   return new Date(nowMs).getUTCHours();
 }
 
+function safeDownloads(data) {
+  return Array.isArray(data?.PAST_HISTORY?.recent_downloads)
+    ? data.PAST_HISTORY.recent_downloads
+    : [];
+}
+
+function safeSecurity(data) {
+  return data?.MACHINE_IDENTITY?.security || {};
+}
+
+function safeStorage(data) {
+  return data?.MACHINE_IDENTITY?.storage || {};
+}
+
+function safeBattery(data) {
+  return data?.MACHINE_IDENTITY?.battery || {};
+}
+
+function safeHardware(data) {
+  return data?.MACHINE_IDENTITY?.hardware_snapshot || {};
+}
+
+function hardwareFromProfile(profile, data) {
+  return {
+    chip: String(profile?.hardwareChip ?? profile?.hardware_chip ?? safeHardware(data).chip ?? ''),
+    ram: String(profile?.ram ?? safeHardware(data).ram ?? ''),
+  };
+}
+
+function parseRamGb(profile, data) {
+  const m = String(hardwareFromProfile(profile, data).ram).match(/(\d+)/);
+  return m ? Number(m[1]) : 8;
+}
+
+/** Higher = more expensive kit on paper. */
+function hardwareTierScore(profile, data) {
+  const chip = hardwareFromProfile(profile, data).chip.toLowerCase();
+  let tier = 10;
+  if (/ultra|m3\s*max|m2\s*max|m1\s*max/i.test(chip)) tier += 45;
+  else if (/m3\s*pro|m2\s*pro|m1\s*pro/i.test(chip)) tier += 32;
+  else if (/m3|m2|m1/i.test(chip)) tier += 22;
+  else if (/i9|i7/i.test(chip)) tier += 18;
+  tier += Math.min(parseRamGb(profile, data), 128) * 0.6;
+  return Math.round(tier * 10) / 10;
+}
+
+function countAiUsage(usage) {
+  return countInUsage(usage, (a) => AI_APPS.has(a) || /copilot|ollama|chatgpt|claude/i.test(String(a)));
+}
+
+function systemWarningCount(data) {
+  const sec = safeSecurity(data);
+  const storage = safeStorage(data);
+  const battery = safeBattery(data);
+  let n = 0;
+  const fv = String(sec.filevault ?? '').toLowerCase();
+  const sip = String(sec.sip ?? '').toLowerCase();
+  const gk = String(sec.gatekeeper ?? '').toLowerCase();
+  if (fv.includes('off') || fv === 'disabled') n++;
+  if (sip.includes('disabled') || sip === 'off') n++;
+  if (gk.includes('disabled') || gk === 'off') n++;
+  if (parseFloat(storage.use_percent) >= 85) n++;
+  if (/service|replace/i.test(String(battery.condition ?? ''))) n++;
+  const pct = parseFloat(battery.percent);
+  if (Number.isFinite(pct) && pct > 0 && pct < 10) n++;
+  return n;
+}
+
+function wifiCategoryCounts(data) {
+  const wifi = safeWifi(data);
+  const counts = { home: 0, outOfHome: 0, total: wifi.length };
+  for (const w of wifi) {
+    const cat = categorizeWifiNetwork(w);
+    if (cat === 'home') counts.home++;
+    else counts.outOfHome++;
+  }
+  return counts;
+}
+
+function ruralBrowseHits(data) {
+  const urls = safeBrowserUrls(data);
+  return urls.filter((u) => /homestead|off[\s-]?grid|countryside|farmhouse|tinyhouse|vanlife|permaculture|allotment|cabin|rural/i.test(u)).length;
+}
+
+function sensitiveDownloadCount(data) {
+  return safeDownloads(data).filter((d) => /contract|nda|confidential|password|secret|salary|invoice|passport|resume|brief/i.test(String(d.name ?? ''))).length;
+}
+
+function productivityOutputScore(data) {
+  const usage = safeUsage(data);
+  const work = countInUsage(usage, (a) => WORK_APPS.has(a) || isCreative(a));
+  const files = safeFiles(data).length;
+  return work * 6 + files * 4;
+}
+
 // ─── BOARDS ────────────────────────────────────────────────────────────────
 
 /**
@@ -264,7 +367,7 @@ export const BOARDS = [
   },
   {
     id: 'most_likely_change_jobs',
-    title: 'Top 5 Most Likely to Change Jobs (30d)',
+    title: 'Top 5 Most Likely to Change Jobs',
     persona: 'productivite',
     peakHour: 15,
     scoreFn: (data, _profile, nowMs) => {
@@ -301,6 +404,99 @@ export const BOARDS = [
     },
   },
   {
+    id: 'most_likely_miss_deadline',
+    title: 'Top 5 Most Likely to Miss Their Own Deadline',
+    persona: 'productivite',
+    peakHour: 16,
+    scoreFn: (data, _profile, nowMs) => {
+      const usage = safeUsage(data);
+      const ent = countInUsage(usage, (a) => ENTERTAINMENT_APPS.has(a));
+      const social = countInUsage(usage, (a) => SOCIAL_APPS.has(a));
+      const files = safeFiles(data).length;
+      const browserVisits = safeBrowserUrls(data).length;
+      const outputGap = Math.max(0, 8 - files);
+      const baseline = ent * 7 + social * 5 + browserVisits * 0.8 + outputGap * 4;
+      const d = decay(hourOf(nowMs), 16);
+      return {
+        score: baseline * (1 + 0.35 * d),
+        hint: `${ent} entertainment app(s), ${social} social app(s), ${files} recent file(s), ${browserVisits} browser visit(s).`,
+      };
+    },
+  },
+  {
+    id: 'replaced_by_ai_90_days',
+    title: 'Top 5 Most Likely to Be Replaced by an AI in 90 Days',
+    persona: 'productivite',
+    peakHour: 13,
+    scoreFn: (data, _profile, nowMs) => {
+      const usage = safeUsage(data);
+      const ai = countAiUsage(usage);
+      const installed = safeInstalled(data);
+      const aiInstalled = installed.filter((a) => AI_APPS.has(a) || /copilot|ollama|chatgpt|claude/i.test(String(a))).length;
+      const files = safeFiles(data).length;
+      const baseline = ai * 12 + aiInstalled * 8 + Math.max(0, 6 - files) * 5;
+      const d = decay(hourOf(nowMs), 13);
+      return {
+        score: baseline * (1 + 0.3 * d),
+        hint: `${ai} AI app session(s), ${aiInstalled} AI tool(s) installed, ${files} recent file(s).`,
+      };
+    },
+  },
+  {
+    id: 'least_with_expensive_setup',
+    title: 'Top 5 Doing Least with the Most Expensive Setup',
+    persona: 'productivite',
+    peakHour: 12,
+    scoreFn: (data, profile, nowMs) => {
+      const tier = hardwareTierScore(profile, data);
+      const output = productivityOutputScore(data);
+      const ent = countInUsage(safeUsage(data), (a) => ENTERTAINMENT_APPS.has(a));
+      const baseline = tier * 1.4 - output * 0.6 + ent * 3;
+      const d = decay(hourOf(nowMs), 12);
+      return {
+        score: baseline * (1 + 0.25 * d),
+        hint: `hardware tier ${Math.round(tier)}, ${output} output signal, ${ent} entertainment app(s).`,
+      };
+    },
+  },
+  {
+    id: 'procrastinate_right_now',
+    title: 'Top 5 Most Likely to Procrastinate Right Now',
+    persona: 'productivite',
+    peakHour: 14,
+    scoreFn: (data, _profile, nowMs) => {
+      const usage = safeUsage(data);
+      const ent = countInUsage(usage, (a) => ENTERTAINMENT_APPS.has(a));
+      const social = countInUsage(usage, (a) => SOCIAL_APPS.has(a));
+      const work = countInUsage(usage, (a) => WORK_APPS.has(a) || isCreative(a));
+      const baseline = ent * 9 + social * 6 - work * 3 + Math.max(0, 4 - safeFiles(data).length) * 4;
+      const d = decay(hourOf(nowMs), 14);
+      return {
+        score: baseline * (1 + 0.45 * d),
+        hint: `${ent} entertainment app(s), ${social} social app(s), ${work} work app(s).`,
+      };
+    },
+  },
+  {
+    id: 'quit_to_countryside',
+    title: 'Top 5 Most Likely to Quit Everything and Move to the Countryside',
+    persona: 'productivite',
+    peakHour: 19,
+    scoreFn: (data, _profile, nowMs) => {
+      const urls = safeBrowserUrls(data);
+      const jobs = urls.filter((u) => /linkedin\.com\/jobs|indeed\.com|glassdoor\.com|welcometothejungle/i.test(u)).length;
+      const rural = ruralBrowseHits(data);
+      const comms = countInUsage(safeUsage(data), (a) => COMMS_APPS.has(a));
+      const files = safeFiles(data).length;
+      const baseline = jobs * 10 + rural * 18 + Math.max(0, 5 - comms) * 3 + Math.max(0, 4 - files) * 4;
+      const d = decay(hourOf(nowMs), 19);
+      return {
+        score: baseline * (1 + 0.3 * d),
+        hint: `${jobs} job-board visit(s), ${rural} rural-life browse(s), ${comms} comms session(s), ${files} recent file(s).`,
+      };
+    },
+  },
+  {
     id: 'most_secure',
     title: 'Top 5 Most Secure',
     persona: 'securite',
@@ -316,6 +512,99 @@ export const BOARDS = [
       return {
         score: baseline * (1 + 0.2 * d),
         hint: `${vpnCount} VPN app(s), ${wifiCount} known wifi network(s), ${torrentCount} torrent app(s).`,
+      };
+    },
+  },
+  {
+    id: 'get_hacked_this_month',
+    title: 'Top 5 Most Likely to Get Hacked This Month',
+    persona: 'securite',
+    peakHour: 3,
+    scoreFn: (data, _profile, nowMs) => {
+      const installed = safeInstalled(data);
+      const vpnCount = installed.filter((a) => VPN_APPS.has(a)).length;
+      const torrentCount = installed.filter((a) => TORRENT_APPS.has(a)).length;
+      const wifiCount = safeWifi(data).length;
+      const warnings = systemWarningCount(data);
+      const baseline = Math.max(0, 18 - wifiCount) * -1 + wifiCount * 4 + torrentCount * 22 - vpnCount * 18 + warnings * 10;
+      const d = decay(hourOf(nowMs), 3);
+      return {
+        score: baseline * (1 + 0.35 * d),
+        hint: `${wifiCount} known wifi network(s), ${torrentCount} torrent app(s), ${vpnCount} VPN app(s), ${warnings} system warning(s).`,
+      };
+    },
+  },
+  {
+    id: 'tracked_by_third_parties',
+    title: 'Top 5 Most Likely Already Tracked by Third Parties',
+    persona: 'securite',
+    peakHour: 10,
+    scoreFn: (data, _profile, nowMs) => {
+      const browserVisits = safeBrowserUrls(data).length;
+      const social = countInUsage(safeUsage(data), (a) => SOCIAL_APPS.has(a));
+      const installed = safeInstalled(data);
+      const vpnCount = installed.filter((a) => VPN_APPS.has(a)).length;
+      const trackingDomains = safeBrowserUrls(data).filter((u) => /google|facebook|meta|tiktok|amazon|doubleclick|analytics|ads/i.test(u)).length;
+      const baseline = browserVisits * 0.6 + social * 5 + trackingDomains * 3 - vpnCount * 12;
+      const d = decay(hourOf(nowMs), 10);
+      return {
+        score: baseline * (1 + 0.3 * d),
+        hint: `${browserVisits} browser visit(s), ${social} social app(s), ${trackingDomains} ad-tracker domain(s), ${vpnCount} VPN app(s).`,
+      };
+    },
+  },
+  {
+    id: 'ignoring_system_warnings',
+    title: 'Top 5 Ignoring System Warnings the Longest',
+    persona: 'securite',
+    peakHour: 8,
+    scoreFn: (data, _profile, nowMs) => {
+      const warnings = systemWarningCount(data);
+      const storagePct = parseFloat(safeStorage(data).use_percent) || 0;
+      const batteryPct = parseFloat(safeBattery(data).percent) || 100;
+      const baseline = warnings * 14 + Math.max(0, storagePct - 70) * 0.8 + Math.max(0, 20 - batteryPct) * 0.5;
+      const d = decay(hourOf(nowMs), 8);
+      return {
+        score: baseline * (1 + 0.25 * d),
+        hint: `${warnings} system warning(s), ${Math.round(storagePct)}% storage use, ${Math.round(batteryPct)}% battery.`,
+      };
+    },
+  },
+  {
+    id: 'leak_confidential_accident',
+    title: 'Top 5 Most Likely to Leak Something Confidential by Accident',
+    persona: 'securite',
+    peakHour: 17,
+    scoreFn: (data, _profile, nowMs) => {
+      const usage = safeUsage(data);
+      const comms = countInUsage(usage, (a) => COMMS_APPS.has(a));
+      const cloud = countInUsage(usage, (a) => CLOUD_SYNC_APPS.has(a));
+      const sensitive = sensitiveDownloadCount(data);
+      const social = countInUsage(usage, (a) => SOCIAL_APPS.has(a));
+      const baseline = comms * 6 + cloud * 8 + sensitive * 12 + social * 3;
+      const d = decay(hourOf(nowMs), 17);
+      return {
+        score: baseline * (1 + 0.3 * d),
+        hint: `${comms} comms session(s), ${cloud} cloud-sync app(s), ${sensitive} sensitive download(s), ${social} social app(s).`,
+      };
+    },
+  },
+  {
+    id: 'messiest_digital_life',
+    title: 'Top 5 with the Messiest Digital Life',
+    persona: 'securite',
+    peakHour: 18,
+    scoreFn: (data, _profile, nowMs) => {
+      const installed = safeInstalled(data).length;
+      const wifiCount = safeWifi(data).length;
+      const downloads = safeDownloads(data).length;
+      const files = safeFiles(data).length;
+      const storagePct = parseFloat(safeStorage(data).use_percent) || 0;
+      const baseline = installed * 0.8 + wifiCount * 3 + downloads * 4 + files * 2 + storagePct * 0.5;
+      const d = decay(hourOf(nowMs), 18);
+      return {
+        score: baseline * (1 + 0.2 * d),
+        hint: `${installed} installed app(s), ${wifiCount} wifi network(s), ${downloads} recent download(s), ${Math.round(storagePct)}% storage use.`,
       };
     },
   },
@@ -351,6 +640,58 @@ export const BOARDS = [
       return {
         score: baseline * (1 + 0.3 * d),
         hint: `${comms} comms session(s) out of ${total} tracked app session(s).`,
+      };
+    },
+  },
+  {
+    id: 'havent_left_house',
+    title: 'Top 5 Who Haven\'t Left the House in the Longest Time',
+    persona: 'popularite',
+    peakHour: 21,
+    scoreFn: (data, _profile, nowMs) => {
+      const wifi = wifiCategoryCounts(data);
+      const social = countInUsage(safeUsage(data), (a) => SOCIAL_APPS.has(a));
+      const baseline = Math.max(0, 12 - wifi.outOfHome) * 5 + wifi.home * 3 - social * 2;
+      const d = decay(hourOf(nowMs), 21);
+      return {
+        score: baseline * (1 + 0.35 * d),
+        hint: `${wifi.home} home wifi network(s), ${wifi.outOfHome} out-of-home wifi network(s), ${social} social app(s).`,
+      };
+    },
+  },
+  {
+    id: 'talking_to_ais_not_people',
+    title: 'Top 5 Spending the Most Time Talking to AIs Instead of People',
+    persona: 'popularite',
+    peakHour: 22,
+    scoreFn: (data, _profile, nowMs) => {
+      const usage = safeUsage(data);
+      const ai = countAiUsage(usage);
+      const comms = countInUsage(usage, (a) => COMMS_APPS.has(a));
+      const social = countInUsage(usage, (a) => SOCIAL_APPS.has(a));
+      const baseline = ai * 14 + Math.max(0, 8 - comms) * 4 + Math.max(0, 6 - social) * 3;
+      const d = decay(hourOf(nowMs), 22);
+      return {
+        score: baseline * (1 + 0.35 * d),
+        hint: `${ai} AI app session(s), ${comms} comms session(s), ${social} social app(s).`,
+      };
+    },
+  },
+  {
+    id: 'least_sleep',
+    title: 'Top 5 Running on the Least Sleep',
+    persona: 'popularite',
+    peakHour: 2,
+    scoreFn: (data, _profile, nowMs) => {
+      const lateFiles = lateNightFileCount(data);
+      const installed = safeInstalled(data);
+      const hasSleepApp = installed.some((a) => /sleep|headspace|calm|fitness|health/i.test(String(a)));
+      const lateApps = countInUsage(safeUsage(data), (a) => ENTERTAINMENT_APPS.has(a) || WORK_APPS.has(a));
+      const baseline = lateFiles * 9 + lateApps * 2 + (hasSleepApp ? 0 : 12);
+      const d = decay(hourOf(nowMs), 2);
+      return {
+        score: baseline * (1 + 0.4 * d),
+        hint: `${lateFiles} late-night file edit(s), ${lateApps} late-session app(s), sleep app installed: ${hasSleepApp}.`,
       };
     },
   },

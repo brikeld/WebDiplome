@@ -123,6 +123,19 @@ const CLIMB_TIP_FALLBACK = {
   most_secure: 'To climb this board, use VPN tools and stick to a small set of known networks.',
   most_socially_isolated: 'To climb this board, use fewer social apps and keep your wifi footprint small.',
   most_likely_ghost: 'To climb this board, cut comms apps while keeping everything else busy.',
+  most_likely_miss_deadline: 'To climb this board, open more entertainment tabs and keep file output low.',
+  replaced_by_ai_90_days: 'To climb this board, lean harder on AI tools and ship fewer files yourself.',
+  least_with_expensive_setup: 'To climb this board, upgrade hardware and keep entertainment time high.',
+  procrastinate_right_now: 'To climb this board, favor social and entertainment apps over work right now.',
+  quit_to_countryside: 'To climb this board, browse rural listings and job boards while cutting comms.',
+  get_hacked_this_month: 'To climb this board, drop VPN use, add torrents, and ignore system warnings.',
+  tracked_by_third_parties: 'To climb this board, browse more ad-heavy sites without a VPN.',
+  ignoring_system_warnings: 'To climb this board, let storage fill up and leave security toggles off.',
+  leak_confidential_accident: 'To climb this board, sync more files through comms and cloud apps.',
+  messiest_digital_life: 'To climb this board, install more apps, download more, and save every wifi network.',
+  havent_left_house: 'To climb this board, stay on home wifi and skip out-of-home networks.',
+  talking_to_ais_not_people: 'To climb this board, spend more time in AI apps and less in comms.',
+  least_sleep: 'To climb this board, edit files late at night and skip the sleep app.',
 };
 
 export function fallbackClimbTip(board, standing) {

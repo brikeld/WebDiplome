@@ -11,6 +11,7 @@ import {
   extractAppRecencySlice,
 } from './dataSlices.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
+import { freshnessWeight, scoreChartFreshness } from './recencyRanking.js';
 
 /** Matches feed persona accents (PostsTab / base.css). Charts: persona bg, black text, white data viz. */
 const WHITE = '#ffffff';
@@ -664,7 +665,9 @@ export function pickAndBuildChart(dataJson, profile, excludeTypes = [], personaS
   while (remaining.length > 0) {
     const picked = weightedPick(remaining, (entry) => {
       const persona = entry.persona ?? 'productivite';
-      return personaScoreFor(persona, scores);
+      const personaW = personaScoreFor(persona, scores);
+      const { ageMs } = scoreChartFreshness(entry.id, dataJson);
+      return freshnessWeight(ageMs) + personaW;
     });
     ordered.push(picked);
     remaining.splice(remaining.indexOf(picked), 1);

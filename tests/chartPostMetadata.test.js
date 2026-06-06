@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { synthesiseChartMetadata, synthesiseWifiTextMetadata } from '../src/lib/chartPostMetadata.js';
+import { synthesiseChartMetadata, synthesiseWifiTextMetadata, synthesiseTextSliceMetadata } from '../src/lib/chartPostMetadata.js';
 
 describe('synthesiseChartMetadata', () => {
   it('returns chain, ingredients, and thinking for chart posts missing analysis', () => {
@@ -48,5 +48,30 @@ describe('synthesiseWifiTextMetadata', () => {
 
   it('returns null without content', () => {
     expect(synthesiseWifiTextMetadata({ content: '', angle: 'funny_name' })).toBeNull();
+  });
+});
+
+describe('synthesiseTextSliceMetadata', () => {
+  it('returns metadata for non-wifi text slices', () => {
+    const result = synthesiseTextSliceMetadata({
+      content: 'My Downloads folder is a museum of abandoned installers.',
+      textSliceType: 'downloads',
+      angle: 'embarrassing_name',
+      context: { count: 3, samples: ['setup.dmg', 'final-final.zip'] },
+      persona: 'securite',
+    });
+    expect(result?.ingredients).toHaveLength(3);
+    expect(result?.inferenceChain).toHaveLength(4);
+  });
+
+  it('delegates wifi slices to wifi-specific fallback', () => {
+    const result = synthesiseTextSliceMetadata({
+      content: 'ECALNET again.',
+      textSliceType: 'wifi',
+      angle: 'work_vs_home',
+      context: { count: 5, samples: ['ECALNET'] },
+      persona: 'securite',
+    });
+    expect(result?.ingredients?.[0]?.label).toBe('Wi‑Fi signals');
   });
 });
