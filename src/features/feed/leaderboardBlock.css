@@ -361,11 +361,12 @@ button.profile-avatar-link.leaderboard-row__avatar {
 
 .leaderboard-row--revealing .leaderboard-row__name,
 .leaderboard-row--revealing .leaderboard-row__handle,
-.leaderboard-row--revealing .leaderboard-row__bar-fill {
-  animation: leaderboard-row-unblur-surface 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
+.leaderboard-row--revealing .leaderboard-row__bar-fill,
 .leaderboard-row--revealing .leaderboard-row__avatar-img,
 .leaderboard-row--revealing .leaderboard-row__avatar-initials {
-  animation: leaderboard-row-unblur-avatar 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  filter: none;
+  opacity: 1;
+  transform: none;
+  color: inherit;
+  animation: none;
 }

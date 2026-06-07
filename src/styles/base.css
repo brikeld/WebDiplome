@@ -1441,17 +1441,13 @@ body {
   transition: filter 0.3s ease;
 }
 
-.post-card--hidden .post-unified-capsule {
-  filter: blur(18px);
+.post-card--hidden:not(.post-card--highlighted) .post-unified-capsule {
+  animation: post-full-redact 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
   pointer-events: none;
   user-select: none;
 }
 
-.post-card--has-leaderboard.post-card--hidden .post-unified-capsule {
-  animation: leaderboard-post-full-redact 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes leaderboard-post-full-redact {
+@keyframes post-full-redact {
   0% {
     filter: blur(0) saturate(1);
     opacity: 1;
@@ -1469,39 +1465,11 @@ body {
   }
 }
 
-@keyframes post-card-unblur-reveal {
-  0% {
-    filter: blur(18px) saturate(0.3);
-    opacity: 0.38;
-    transform: scale(0.992);
-  }
-  55% {
-    filter: blur(8px) saturate(0.72);
-    opacity: 0.82;
-    transform: scale(1.006);
-  }
-  100% {
-    filter: blur(0) saturate(1);
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.post-card--has-leaderboard.post-card--revealing .post-unified-capsule {
-  animation: leaderboard-post-full-unredact 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes leaderboard-post-full-unredact {
-  0% {
-    filter: blur(18px) saturate(0.34);
-  }
-  100% {
-    filter: blur(0) saturate(1);
-  }
-}
-
 .post-card--revealing .post-unified-capsule {
-  animation: post-card-unblur-reveal 920ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  filter: blur(0) saturate(1);
+  opacity: 1;
+  transform: scale(1);
+  animation: none;
 }
 
 /* ── Post highlight (clickable selection for HIDE / tell-me-more) ── */

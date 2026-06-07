@@ -135,6 +135,7 @@ function pulseRing(persona) {
 }
 
 const TARGET_PULSE_MS = 980;
+const WAYPOINT_IMPACT_RADIUS = 22;
 
 export function getParticleFlightPlan({
   isHide,
@@ -220,11 +221,9 @@ function pulseRevealTarget(sourceRect, variant, event, className = 'lsc-target-p
 
   const card = findPostCardByRect(sourceRect);
   if (!card) return;
-  const capsule = card.querySelector('.post-unified-capsule');
-  if (!capsule) return;
   const accentFromCard = getComputedStyle(card).getPropertyValue('--post-accent').trim();
-  capsule.style.setProperty('--hit-accent', accentFromCard || accent);
-  pulseTargetEl(capsule, className);
+  card.style.setProperty('--hit-accent', accentFromCard || accent);
+  pulseTargetEl(card, className);
 }
 
 function Particle({ event, onComplete, scoringApi }) {
@@ -293,6 +292,15 @@ function Particle({ event, onComplete, scoringApi }) {
     }
 
     let waypointCommitted = false;
+    const commitWaypointHit = (x, y, progress, hitEnd) => {
+      if (waypointCommitted) return;
+      const dist = Math.hypot(x - waypointX, y - waypointY);
+      if (dist > WAYPOINT_IMPACT_RADIUS && progress < hitEnd) return;
+      waypointCommitted = true;
+      event.onWaypoint?.();
+      pulseRevealTarget(waypointRect, event.variant, event, 'lsc-target-pulse--hide-hit');
+    };
+
     function step(ts) {
       if (ts < startTime) {
         el.style.left = `${sx - particleSize / 2}px`;
@@ -317,22 +325,15 @@ function Particle({ event, onComplete, scoringApi }) {
           x = sx + (waypointX - sx) * legT;
           y = sy + (waypointY - sy) * legT - Math.sin(Math.PI * legProgress) * 54;
           el.classList.remove('lsc-particle--impacting');
+          commitWaypointHit(x, y, progress, hitEnd);
         } else if (progress < holdEnd) {
-          if (!waypointCommitted) {
-            waypointCommitted = true;
-            event.onWaypoint?.();
-            pulseRevealTarget(waypointRect, event.variant, event, 'lsc-target-pulse--hide-hit');
-          }
+          commitWaypointHit(waypointX, waypointY, progress, hitEnd);
           const holdProgress = (progress - hitEnd) / Math.max(holdEnd - hitEnd, 0.001);
           x = waypointX + Math.sin(holdProgress * Math.PI * 2) * 4;
           y = waypointY - Math.sin(Math.PI * holdProgress) * 10;
           el.classList.add('lsc-particle--impacting');
         } else {
-          if (!waypointCommitted) {
-            waypointCommitted = true;
-            event.onWaypoint?.();
-            pulseRevealTarget(waypointRect, event.variant, event, 'lsc-target-pulse--hide-hit');
-          }
+          commitWaypointHit(waypointX, waypointY, progress, hitEnd);
           el.classList.remove('lsc-particle--impacting');
           const legProgress = (progress - holdEnd) / Math.max(1 - holdEnd, 0.001);
           const legT = easeOutCubic(legProgress);

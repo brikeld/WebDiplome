@@ -17,6 +17,7 @@
 import { useEffect, useState } from 'react';
 import PostTextHighlights from './PostTextHighlights.jsx';
 import LeaderboardRationaleView from './LeaderboardRationaleView.jsx';
+import RedactedAnalysisBackdrop from './RedactedAnalysisBackdrop.jsx';
 import RedactedAnalysisOverlay from './RedactedAnalysisOverlay.jsx';
 import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
@@ -165,10 +166,14 @@ export default function InferenceChainPanel({
         aria-label="Tell me more analysis"
       >
         <div className="inference-panel__redacted-content">
-          <LeaderboardRationaleView
-            leaderboard={leaderboard}
-            holdLoadingOverlay={holdLoadingOverlay}
-          />
+          {redacted ? (
+            <RedactedAnalysisBackdrop leaderboard />
+          ) : (
+            <LeaderboardRationaleView
+              leaderboard={leaderboard}
+              holdLoadingOverlay={holdLoadingOverlay}
+            />
+          )}
         </div>
         {redacted ? (
           <RedactedAnalysisOverlay
@@ -195,9 +200,12 @@ export default function InferenceChainPanel({
       role="region"
       aria-label="Tell me more analysis"
     >
-      <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
+      {!redacted ? <TellMeMoreLoadingOverlay loadingKey={loadingKey} /> : null}
 
       <div className="inference-panel__redacted-content">
+      {redacted ? (
+        <RedactedAnalysisBackdrop />
+      ) : (
       <div className="np2">
         {/* ── Post quote (big) ───────────────────────────────────── */}
         {post?.content ? (
@@ -318,6 +326,7 @@ export default function InferenceChainPanel({
           </div>
         ) : null}
       </div>
+      )}
       </div>
       {redacted ? (
         <RedactedAnalysisOverlay

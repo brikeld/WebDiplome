@@ -30,6 +30,8 @@ describe('<TellMeMorePill> hidden redaction', () => {
     expect(html).toContain('Hidden post analysis remains blurred');
     expect(html).toContain('Unhide this post?');
     expect(html).toContain('Unhide anyway');
+    expect(html).not.toContain('Sensitive browser history');
+    expect(html).toContain('inference-panel__redacted-backdrop');
   });
 
   it('does not redact visible leaderboard ranking analysis by default', () => {

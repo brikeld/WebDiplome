@@ -726,6 +726,12 @@ function AppInner({
     return el?.getBoundingClientRect() ?? null;
   }, []);
 
+  const getPostCapsuleRect = useCallback((postId) => {
+    if (!postId) return null;
+    const el = document.querySelector(`[data-post-id="${CSS.escape(String(postId))}"]`);
+    return el?.querySelector('.post-unified-capsule')?.getBoundingClientRect() ?? null;
+  }, []);
+
   const getHighlightedLeaderboardSelfRect = () =>
     document
       .querySelector('.post-card--highlighted .leaderboard-row--self')
@@ -746,8 +752,10 @@ function AppInner({
           waypointRect: getHighlightedLeaderboardSelfRect(),
         });
       } else {
-        hidePost(highlightedPost, actionRect ?? getHighlightedPostRect(), {
-          waypointRect: getHighlightedPostRect(),
+        const postWaypointRect =
+          getPostCapsuleRect(highlightedPost.id) ?? getPostCardRect(highlightedPost.id);
+        hidePost(highlightedPost, actionRect ?? postWaypointRect, {
+          waypointRect: postWaypointRect,
         });
       }
     }
