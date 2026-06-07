@@ -82,7 +82,7 @@ export default function LeaderboardBlock({
   const {
     isLeaderboardSelfHidden,
     isLeaderboardSelfRowHidden,
-    isLeaderboardSelfRevealing,
+    isLeaderboardSelfRowRevealing,
   } = useLiveScoring();
   const reactId = useId();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
@@ -96,7 +96,7 @@ export default function LeaderboardBlock({
   } = leaderboard;
   const selfHidden = isLeaderboardSelfHidden(boardId);
   const selfRowHidden = isLeaderboardSelfRowHidden?.(boardId) ?? selfHidden;
-  const selfRevealing = isLeaderboardSelfRevealing(boardId);
+  const selfRevealing = isLeaderboardSelfRowRevealing?.(boardId) ?? false;
   const titleId = `leaderboard-title-${boardId}-${reactId}`;
 
   const hiddenForEntry = mapLeaderboardEntryHiddenFlags(entries, {

@@ -217,7 +217,7 @@ export default function PostsTab({
   onOpenProfile,
 }) {
   const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
-  const { isHidden, isRevealing, isLeaderboardSelfHidden } = useLiveScoring();
+  const { isHidden, isRevealing, isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
   const [placeholderMounted, setPlaceholderMounted] = useState(isGeneratingPosts);
   const [placeholderLeaving, setPlaceholderLeaving] = useState(false);
   const placeholderTimerRef = useRef(null);
@@ -370,7 +370,10 @@ export default function PostsTab({
             isRevealing={
               p.compliantPersonaChange || p.compliantLowScore || p.compliantJoin
                 ? false
-                : isRevealing(normalizePostHideKey(p.createdAt))
+                : p.leaderboard
+                  ? isLeaderboardSelfRevealing(p.leaderboard.boardId)
+                    && !isLeaderboardSelfHidden(p.leaderboard.boardId)
+                  : isRevealing(normalizePostHideKey(p.createdAt))
             }
             isHighlightable={
               !hideInteractions

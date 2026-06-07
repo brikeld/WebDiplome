@@ -103,13 +103,15 @@ export function LiveScoringProvider({ profile, children }) {
   const [optimisticLeaderboardRowHidden, setOptimisticLeaderboardRowHidden] = useState(() => new Set());
   const [optimisticLeaderboardHidden, setOptimisticLeaderboardHidden] = useState(() => new Set());
   const [optimisticLeaderboardRevealing, setOptimisticLeaderboardRevealing] = useState(() => new Set());
-  const [revealPendingLeaderboardHidden, setRevealPendingLeaderboardHidden] = useState(() => new Set());
+  const [optimisticLeaderboardRowRevealing, setOptimisticLeaderboardRowRevealing] = useState(() => new Set());
+  const [revealPendingLeaderboardPostHidden, setRevealPendingLeaderboardPostHidden] = useState(() => new Set());
   const [revealPendingHidden, setRevealPendingHidden] = useState(() => new Set());
   const [revealingKeys, setRevealingKeys] = useState(() => new Set());
   const animationQueueRef = useRef([]);
   const animationListenersRef = useRef(new Set());
   const adjustedScoresRef = useRef(ringScores);
   const leaderboardFullHideTimersRef = useRef(new Map());
+  const leaderboardFullRevealTimersRef = useRef(new Map());
 
   // Load from localStorage when profileId changes
   useEffect(() => {
@@ -118,11 +120,14 @@ export function LiveScoringProvider({ profile, children }) {
     setOptimisticLeaderboardRowHidden(new Set());
     setOptimisticLeaderboardHidden(new Set());
     setOptimisticLeaderboardRevealing(new Set());
-    setRevealPendingLeaderboardHidden(new Set());
+    setOptimisticLeaderboardRowRevealing(new Set());
+    setRevealPendingLeaderboardPostHidden(new Set());
     setRevealPendingHidden(new Set());
     setRevealingKeys(new Set());
     for (const timer of leaderboardFullHideTimersRef.current.values()) clearTimeout(timer);
     leaderboardFullHideTimersRef.current.clear();
+    for (const timer of leaderboardFullRevealTimersRef.current.values()) clearTimeout(timer);
+    leaderboardFullRevealTimersRef.current.clear();
     const records = loadFromStorage(profileId);
     dispatch({ type: 'LOAD', records });
   }, [profileId]);
@@ -131,6 +136,8 @@ export function LiveScoringProvider({ profile, children }) {
     () => () => {
       for (const timer of leaderboardFullHideTimersRef.current.values()) clearTimeout(timer);
       leaderboardFullHideTimersRef.current.clear();
+      for (const timer of leaderboardFullRevealTimersRef.current.values()) clearTimeout(timer);
+      leaderboardFullRevealTimersRef.current.clear();
     },
     [],
   );
@@ -351,12 +358,16 @@ export function LiveScoringProvider({ profile, children }) {
   );
 
   const revealLeaderboardSelf = useCallback(
-    (post, sourcePillRect) => {
+    (post, sourcePillRect, options = {}) => {
       const boardId = post?.leaderboard?.boardId;
       if (!boardId || !isLeaderboardSelfHidden(state.records, boardId)) return;
       const restored = state.records[leaderboardSelfKey(boardId)]?.restorable ?? 0;
+      const rowRevealDelayMs = Math.max(0, Number(options.rowRevealDelayMs ?? options.fullHideDelayMs ?? 360) || 0);
+
       setOptimisticLeaderboardRevealing((prev) => new Set(prev).add(boardId));
-      setRevealPendingLeaderboardHidden((prev) => new Set(prev).add(boardId));
+      setRevealPendingLeaderboardPostHidden((prev) => new Set(prev).add(boardId));
+      setOptimisticLeaderboardRowHidden((prev) => new Set(prev).add(boardId));
+
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'reveal',
@@ -365,15 +376,48 @@ export function LiveScoringProvider({ profile, children }) {
         delta: restored,
         sourcePillRect,
         onCommit: () => {
+          setRevealPendingLeaderboardPostHidden((prev) => {
+            const next = new Set(prev);
+            next.delete(boardId);
+            return next;
+          });
           dispatch({ type: 'REVEAL_LEADERBOARD_SELF', boardId });
+
+          const existingTimer = leaderboardFullRevealTimersRef.current.get(boardId);
+          if (existingTimer) clearTimeout(existingTimer);
+          const timer = setTimeout(() => {
+            leaderboardFullRevealTimersRef.current.delete(boardId);
+            setOptimisticLeaderboardRowHidden((prev) => {
+              const next = new Set(prev);
+              next.delete(boardId);
+              return next;
+            });
+            setOptimisticLeaderboardRowRevealing((prev) => new Set(prev).add(boardId));
+          }, rowRevealDelayMs);
+          leaderboardFullRevealTimersRef.current.set(boardId, timer);
         },
         onAnimationComplete: () => {
+          const pendingTimer = leaderboardFullRevealTimersRef.current.get(boardId);
+          if (pendingTimer) {
+            clearTimeout(pendingTimer);
+            leaderboardFullRevealTimersRef.current.delete(boardId);
+            setOptimisticLeaderboardRowHidden((prev) => {
+              const next = new Set(prev);
+              next.delete(boardId);
+              return next;
+            });
+            setOptimisticLeaderboardRowRevealing((prev) => {
+              const next = new Set(prev);
+              next.delete(boardId);
+              return next;
+            });
+          }
           setOptimisticLeaderboardRevealing((prev) => {
             const next = new Set(prev);
             next.delete(boardId);
             return next;
           });
-          setRevealPendingLeaderboardHidden((prev) => {
+          setRevealPendingLeaderboardPostHidden((prev) => {
             const next = new Set(prev);
             next.delete(boardId);
             return next;
@@ -386,7 +430,7 @@ export function LiveScoringProvider({ profile, children }) {
 
   const isLeaderboardSelfHiddenForBoard = useCallback(
     (boardId) =>
-      revealPendingLeaderboardHidden.has(boardId) ||
+      revealPendingLeaderboardPostHidden.has(boardId) ||
       (
         !optimisticLeaderboardRevealing.has(boardId) &&
         (optimisticLeaderboardHidden.has(boardId) || isLeaderboardSelfHidden(state.records, boardId))
@@ -395,27 +439,34 @@ export function LiveScoringProvider({ profile, children }) {
       state.records,
       optimisticLeaderboardHidden,
       optimisticLeaderboardRevealing,
-      revealPendingLeaderboardHidden,
+      revealPendingLeaderboardPostHidden,
     ],
   );
 
   const isLeaderboardSelfRowHiddenForBoard = useCallback(
     (boardId) =>
-      revealPendingLeaderboardHidden.has(boardId) ||
       optimisticLeaderboardRowHidden.has(boardId) ||
       optimisticLeaderboardHidden.has(boardId) ||
-      isLeaderboardSelfHidden(state.records, boardId),
+      (
+        !optimisticLeaderboardRevealing.has(boardId) &&
+        isLeaderboardSelfHidden(state.records, boardId)
+      ),
     [
       state.records,
       optimisticLeaderboardRowHidden,
       optimisticLeaderboardHidden,
-      revealPendingLeaderboardHidden,
+      optimisticLeaderboardRevealing,
     ],
   );
 
   const isLeaderboardSelfRevealingForBoard = useCallback(
     (boardId) => optimisticLeaderboardRevealing.has(boardId),
     [optimisticLeaderboardRevealing],
+  );
+
+  const isLeaderboardSelfRowRevealingForBoard = useCallback(
+    (boardId) => optimisticLeaderboardRowRevealing.has(boardId),
+    [optimisticLeaderboardRowRevealing],
   );
 
   const isHidden = useCallback(
@@ -447,6 +498,7 @@ export function LiveScoringProvider({ profile, children }) {
       isLeaderboardSelfHidden: isLeaderboardSelfHiddenForBoard,
       isLeaderboardSelfRowHidden: isLeaderboardSelfRowHiddenForBoard,
       isLeaderboardSelfRevealing: isLeaderboardSelfRevealingForBoard,
+      isLeaderboardSelfRowRevealing: isLeaderboardSelfRowRevealingForBoard,
       boostFromComment,
       isHidden,
       isRevealing,
@@ -468,6 +520,7 @@ export function LiveScoringProvider({ profile, children }) {
       isLeaderboardSelfHiddenForBoard,
       isLeaderboardSelfRowHiddenForBoard,
       isLeaderboardSelfRevealingForBoard,
+      isLeaderboardSelfRowRevealingForBoard,
       boostFromComment,
       isHidden,
       isRevealing,

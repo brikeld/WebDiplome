@@ -163,12 +163,10 @@ export default function InferenceChainPanel({
         aria-label="Tell me more analysis"
       >
         <div className="inference-panel__redacted-content">
-          <div className="inference-panel__body">
           <LeaderboardRationaleView
             leaderboard={leaderboard}
             holdLoadingOverlay={holdLoadingOverlay}
           />
-          </div>
         </div>
         {redacted ? <RedactedAnalysisNotice leaderboard /> : null}
       </div>

@@ -1487,6 +1487,28 @@ body {
   }
 }
 
+.post-card--has-leaderboard.post-card--revealing .post-unified-capsule {
+  animation: leaderboard-post-full-unredact 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes leaderboard-post-full-unredact {
+  0% {
+    filter: blur(18px) saturate(0.34);
+    opacity: 1;
+    transform: scale(1);
+  }
+  52% {
+    filter: blur(8px) saturate(0.68);
+    opacity: 0.82;
+    transform: scale(0.997);
+  }
+  100% {
+    filter: blur(0) saturate(1);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .post-card--revealing .post-unified-capsule {
   animation: post-card-unblur-reveal 920ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -2683,7 +2705,6 @@ button.profile-name-link.leaderboard-row__name {
   gap: 14px;
   min-height: 280px;
   padding: 18px;
-  border: 4px solid #000;
   border-radius: 22px;
   background: var(--persona-accent, #759aef);
   color: #000;
@@ -2751,7 +2772,6 @@ button.profile-name-link.leaderboard-row__name {
   flex: 0 0 auto;
   min-width: 64px;
   padding: 8px 11px;
-  border: 2px solid #000;
   border-radius: 999px;
   color: var(--persona-accent, #759aef);
   background: #000;
@@ -2783,7 +2803,6 @@ button.profile-name-link.leaderboard-row__name {
   align-items: center;
   gap: 10px;
   padding: 9px 11px;
-  border: 2px solid #000;
   border-radius: 12px;
   color: #000;
   transition:
@@ -2798,14 +2817,9 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
   height: 28px;
   flex-shrink: 0;
   overflow: hidden;
-  border: 2px solid #000;
   border-radius: 999px;
   padding: 0;
   background: #fff;
-}
-
-.profile-leaderboard-row.is-self .profile-leaderboard-row__avatar {
-  border-color: var(--persona-accent, #759aef);
 }
 
 .profile-leaderboard-row__avatar-img {
