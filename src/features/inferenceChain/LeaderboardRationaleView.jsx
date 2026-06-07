@@ -33,7 +33,13 @@ export default function LeaderboardRationaleView({ leaderboard, holdLoadingOverl
     setActiveSignal(null);
   }, [boardId]);
 
-  if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
+  if (!leaderboard || !Array.isArray(leaderboard.entries) || leaderboard.entries.length === 0) {
+    return (
+      <div className="lb2 lb2--empty is-ready">
+        <p className="lb2__value">Leaderboard data is unavailable for this post.</p>
+      </div>
+    );
+  }
 
   const {
     entries,
@@ -41,15 +47,18 @@ export default function LeaderboardRationaleView({ leaderboard, holdLoadingOverl
     rationales,
     climbTip,
     userRank,
+    hint,
   } = leaderboard;
 
   const userEntry = entries.find((e) => e.isUser);
+  const resolvedUserRank = userRank ?? userEntry?.rank ?? null;
   const userRationale = Array.isArray(rationales)
-    ? rationales.find((r) => r.rank === userEntry?.rank)
+    ? rationales.find((r) => r.rank === (userEntry?.rank ?? resolvedUserRank))
     : null;
-  const signals = parseUserSignals(userRationale?.signal ?? '', boardId);
-  const tip = climbTip || fallbackClimbTip(boardId, userRank);
-  const verdict = atmosphericVerdict(userRank, boardId);
+  const signalSource = userRationale?.signal ?? hint ?? '';
+  const signals = parseUserSignals(signalSource, boardId);
+  const tip = climbTip || fallbackClimbTip(boardId, resolvedUserRank);
+  const verdict = atmosphericVerdict(resolvedUserRank, boardId);
   const boardDesc = BOARD_DESCRIPTIONS[boardId] ?? null;
 
   // Others screen: real users always visible; only bots use cloneHidden[].
@@ -74,14 +83,13 @@ export default function LeaderboardRationaleView({ leaderboard, holdLoadingOverl
 
       {/* ── Main screen ─────────────────────────────────────── */}
       <div
-        className={`lb2__screen lb2__screen--main${showOthers ? ' is-gone' : ''}`}
-        style={signals.length === 0 ? { gridTemplateRows: 'auto auto auto' } : undefined}
+        className={`lb2__screen lb2__screen--main${showOthers ? ' is-gone' : ''}${signals.length === 0 ? ' lb2__screen--no-signals' : ''}`}
       >
 
         {/* Rank tile */}
         <div className="lb2__tile lb2__tile--rank">
           <span className="lb2__rank-label">RANK</span>
-          <span className="lb2__rank-value">#{userRank ?? '—'}</span>
+          <span className="lb2__rank-value">#{resolvedUserRank ?? '—'}</span>
           <span className="lb2__rank-of">of {entries.length}</span>
         </div>
 

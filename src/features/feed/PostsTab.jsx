@@ -184,7 +184,8 @@ function buildEnrichedPosts(
         );
         return {
           ...base,
-          userRank: remixed.userRank ?? base.userRank,
+          userRank: remixed.userRank ?? base.userRank ?? null,
+          hint: remixed.hint ?? p.leaderboard.hint ?? null,
           entries: enrichLeaderboardEntries(remixed.entries ?? []),
         };
       })() : null,

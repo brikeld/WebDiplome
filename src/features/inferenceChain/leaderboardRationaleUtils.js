@@ -658,8 +658,20 @@ const ATMOSPHERIC_BY_BOARD = {
  */
 export function atmosphericVerdict(rank, boardId) {
   const templates = ATMOSPHERIC_BY_BOARD[boardId];
-  if (!templates) return `Your trace placed you at rank ${rank} on this board.`;
-  const idx = Math.max(0, Math.min(rank - 1, templates.length - 1));
+  const rankNum = Number(rank);
+  const hasRank = Number.isFinite(rankNum) && rankNum >= 1;
+
+  if (!templates) {
+    return hasRank
+      ? `Your trace placed you at rank ${rankNum} on this board.`
+      : 'Your trace was scored on this board, but no rank is assigned yet.';
+  }
+
+  if (!hasRank) {
+    return 'The system scored your trace on this board, but no rank is assigned yet.';
+  }
+
+  const idx = Math.max(0, Math.min(rankNum - 1, templates.length - 1));
   return templates[idx];
 }
 

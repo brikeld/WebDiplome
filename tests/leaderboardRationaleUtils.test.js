@@ -49,7 +49,6 @@ describe('buildSignalExamples', () => {
     expect(a.shown.length).toBe(2);
   });
 });
-
 describe('parseUserSignals', () => {
   it('attaches example names for vpn and café wifi chips', () => {
     const hint = '2 VPN app(s), 2 café wifi network(s), health app installed: false.';

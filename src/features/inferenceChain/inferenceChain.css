@@ -1087,6 +1087,26 @@
   display: none;
 }
 
+.lb2__screen--main.lb2__screen--no-signals {
+  grid-template-rows: auto auto auto;
+}
+
+.lb2__screen--main.lb2__screen--no-signals .lb2__cta {
+  grid-row: 3;
+}
+
+.lb2--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--lb-tile-pad-y) var(--lb-tile-pad-x);
+  min-height: 120px;
+}
+
+.lb2--empty .lb2__value {
+  text-align: center;
+}
+
 .lb2__screen--others.is-active {
   display: flex;
   flex-direction: column;
