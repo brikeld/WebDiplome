@@ -296,11 +296,11 @@
 }
 
 .lp-app-step {
-  min-height: clamp(72px, 12vh, 112px);
+  min-height: clamp(88px, 14vh, 132px);
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);
   align-items: start;
-  gap: clamp(24px, 9vw, 180px);
+  gap: clamp(24px, 4vw, 48px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.72);
   padding: 0 0 clamp(18px, 3vh, 28px);
   position: relative;
@@ -325,9 +325,10 @@
 
 .lp-app-step p {
   margin: 2px 0 0;
-  font-size: clamp(14px, 1.4vw, 18px);
-  font-weight: 800;
-  line-height: 1.1;
+  font-size: clamp(13px, 1.2vw, 16px);
+  font-weight: 500;
+  line-height: 1.45;
+  max-width: 42ch;
 }
 
 .lp-app-step::after {

@@ -11,14 +11,14 @@ describe('<LandingPage> expanded content', () => {
     expect(html).toContain('YOUR COMPLIANT IDENTITY');
   });
 
-  it('renders the five requested app carousel screen labels', () => {
+  it('renders the five app carousel step descriptions', () => {
     const html = renderToStaticMarkup(<LandingPage />);
 
-    expect(html).toContain('intro');
-    expect(html).toContain('welcome - name');
-    expect(html).toContain('collect scan');
-    expect(html).toContain('verdict');
-    expect(html).toContain('profile');
+    expect(html).toContain('Your first touchpoint with the platform');
+    expect(html).toContain('We recognize you instantly from your Mac account');
+    expect(html).toContain('A guided, four-phase scan of your machine');
+    expect(html).toContain('Your moment of truth');
+    expect(html).toContain('Your complete digital identity dashboard');
   });
 
   it('uses a Mac app preview instead of a phone frame', () => {

@@ -33,7 +33,8 @@ const APP_SCREENS = [
   {
     id: 'intro',
     number: '01',
-    label: 'intro',
+    description:
+      'Your first touchpoint with the platform: a clear value proposition, transparent disclosure, and a single action to begin enrollment into automated digital profiling.',
     theme: 'none',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-intro">
@@ -60,7 +61,8 @@ const APP_SCREENS = [
   {
     id: 'welcome',
     number: '02',
-    label: 'welcome - name',
+    description:
+      'We recognize you instantly from your Mac account and confirm that your profile is being built from real, local system data—personal, credible, and ready to go.',
     theme: 'social',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-welcome">
@@ -74,7 +76,8 @@ const APP_SCREENS = [
   {
     id: 'collect',
     number: '03',
-    label: 'collect scan',
+    description:
+      'A guided, four-phase scan of your machine that turns everyday usage into structured intelligence: identity, history, assets, and scoring signals—delivered with live progress you can trust.',
     theme: 'security',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-collect">
@@ -105,7 +108,8 @@ const APP_SCREENS = [
   {
     id: 'verdict',
     number: '04',
-    label: 'verdict',
+    description:
+      'Your moment of truth: the system reveals your dominant persona and an AI-crafted profile bio that captures who you are, distilled from what your Mac actually shows.',
     theme: 'social',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-verdict">
@@ -125,7 +129,8 @@ const APP_SCREENS = [
   {
     id: 'profile',
     number: '05',
-    label: 'profile',
+    description:
+      'Your complete digital identity dashboard—global score, persona breakdown, system stats, and public-ready profile—one place to review, publish, and share your synthesized presence.',
     theme: 'productivity',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-profile">
@@ -217,7 +222,7 @@ function AppCarousel() {
               style={{ '--step-i': index }}
             >
               <span>{screen.number}</span>
-              <p>{screen.label}</p>
+              <p>{screen.description}</p>
             </div>
           ))}
         </div>
