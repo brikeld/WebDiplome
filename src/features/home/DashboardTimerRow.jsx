@@ -4,6 +4,12 @@ import PersonaDeltaSummary from '@/features/harvest/PersonaDeltaSummary.jsx';
 import GeneratingContentLabel from '@/features/harvest/GeneratingContentLabel.jsx';
 import { personaToUiKey, resolveHideContentPersona } from '@/lib/personaScoreCompliance.js';
 import { personaUiColor } from '@/lib/personaColors.js';
+import {
+  formatRestorePointsLabel,
+  unhideConfirmActionLabel,
+  unhideConfirmCancelLabel,
+  unhideConfirmTitle,
+} from '@/lib/hideConfirmMessages.js';
 
 /** Keep in sync with `post-reveal-flash` in harvest.css. */
 const ACTION_FLASH_MS = 1100;
@@ -92,9 +98,7 @@ export default function DashboardTimerRow({
     confirmClosing === kind ? ' dashboard-timer-card--confirm-closing' : '';
   const idleTimerActive = dashboardLayout.actionSlot === 'timer';
   const points = Math.abs(Number(highlightedPost?.systemDeltaPct) || 1);
-  const restorePoints = points * 0.5;
-  const restorePointsLabel =
-    restorePoints % 1 === 0 ? String(restorePoints) : restorePoints.toFixed(1).replace(/\.0$/, '');
+  const restorePointsLabel = formatRestorePointsLabel(highlightedPost?.systemDeltaPct);
   const personaLabelLower = (
     highlightedPostPersonaLabel ?? personaLabels[personaKey] ?? 'Social'
   ).toLowerCase();
@@ -244,7 +248,7 @@ export default function DashboardTimerRow({
         >
           <div className="dashboard-hide-confirm__body">
             <h3 id="unhide-confirm-title-inline" className="dashboard-hide-confirm__title">
-              {leaderboardSelected ? 'Unhide your ranking?' : 'Unhide this post?'}
+              {unhideConfirmTitle(leaderboardSelected)}
             </h3>
             <p className="dashboard-hide-confirm__message">
               {leaderboardSelected ? (
@@ -268,14 +272,14 @@ export default function DashboardTimerRow({
                 onClick={() => dismissConfirm('unhide', onCancelHide)}
                 disabled={confirmClosing === 'unhide'}
               >
-                {leaderboardSelected ? 'Stay hidden' : 'Keep hidden'}
+                {unhideConfirmCancelLabel(leaderboardSelected)}
               </button>
               <button
                 type="button"
                 className="dashboard-hide-confirm__btn dashboard-hide-confirm__btn--hide"
                 onClick={onConfirmUnhide}
               >
-                {leaderboardSelected ? 'Show ranking' : 'Unhide anyway'}
+                {unhideConfirmActionLabel(leaderboardSelected)}
               </button>
             </div>
           </div>

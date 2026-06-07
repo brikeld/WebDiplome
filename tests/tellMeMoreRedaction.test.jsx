@@ -21,12 +21,15 @@ describe('<TellMeMorePill> hidden redaction', () => {
         highlightedPost={post}
         expanded
         isAnalysisRedacted
+        onRedactedUnhideConfirm={() => {}}
       />,
     );
 
     expect(html).toContain('tell-more-pill--redacted');
     expect(html).toContain('inference-panel--redacted');
     expect(html).toContain('Hidden post analysis remains blurred');
+    expect(html).toContain('Unhide this post?');
+    expect(html).toContain('Unhide anyway');
   });
 
   it('does not redact visible leaderboard ranking analysis by default', () => {
@@ -64,6 +67,7 @@ describe('<TellMeMorePill> hidden redaction', () => {
         }}
         expanded
         isAnalysisRedacted
+        onRedactedUnhideConfirm={() => {}}
       />,
     );
 
@@ -71,6 +75,8 @@ describe('<TellMeMorePill> hidden redaction', () => {
     expect(html).toContain('inference-panel--redacted');
     expect(html).toContain('Hidden ranking analysis remains blurred');
     expect(html).toContain('Reveal the ranking to inspect the analysis.');
+    expect(html).toContain('Unhide your ranking?');
+    expect(html).toContain('Show ranking');
     expect(html).not.toContain('Hidden post analysis remains blurred');
   });
 });

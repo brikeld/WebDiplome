@@ -17,6 +17,7 @@
 import { useEffect, useState } from 'react';
 import PostTextHighlights from './PostTextHighlights.jsx';
 import LeaderboardRationaleView from './LeaderboardRationaleView.jsx';
+import RedactedAnalysisOverlay from './RedactedAnalysisOverlay.jsx';
 import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 import { synthesiseChartMetadata } from '@/lib/chartPostMetadata.js';
@@ -115,6 +116,7 @@ export default function InferenceChainPanel({
   personaLabel,
   holdLoadingOverlay = false,
   redacted = false,
+  onRedactedUnhideConfirm = null,
 }) {
   const { chain, ingredients, highlights, rawThinking } = resolvePostAnalysis(post);
   const validChain = isValidChain(chain);
@@ -168,7 +170,14 @@ export default function InferenceChainPanel({
             holdLoadingOverlay={holdLoadingOverlay}
           />
         </div>
-        {redacted ? <RedactedAnalysisNotice leaderboard /> : null}
+        {redacted ? (
+          <RedactedAnalysisOverlay
+            leaderboard
+            post={post}
+            personaLabel={personaLabel}
+            onUnhideConfirm={onRedactedUnhideConfirm}
+          />
+        ) : null}
       </div>
     );
   }
@@ -310,24 +319,13 @@ export default function InferenceChainPanel({
         ) : null}
       </div>
       </div>
-      {redacted ? <RedactedAnalysisNotice /> : null}
-    </div>
-  );
-}
-
-function RedactedAnalysisNotice({ leaderboard = false }) {
-  return (
-    <div className="inference-panel__redacted-notice" aria-live="polite">
-      <span>
-        {leaderboard
-          ? 'Hidden ranking analysis remains blurred'
-          : 'Hidden post analysis remains blurred'}
-      </span>
-      <p>
-        {leaderboard
-          ? 'Reveal the ranking to inspect the analysis.'
-          : 'Reveal the post to inspect the inference chain.'}
-      </p>
+      {redacted ? (
+        <RedactedAnalysisOverlay
+          post={post}
+          personaLabel={personaLabel}
+          onUnhideConfirm={onRedactedUnhideConfirm}
+        />
+      ) : null}
     </div>
   );
 }

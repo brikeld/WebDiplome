@@ -47,6 +47,7 @@ export default function TellMeMorePill({
   personaPastel = null,
   holdLoadingOverlay = false,
   isAnalysisRedacted = false,
+  onRedactedUnhideConfirm = null,
 }) {
   const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
   const postPersonaKey = String(highlightedPost?.persona ?? mainPersonaKey).toLowerCase();
@@ -81,6 +82,7 @@ export default function TellMeMorePill({
           personaLabel={label}
           holdLoadingOverlay={holdLoadingOverlay}
           redacted={isAnalysisRedacted}
+          onRedactedUnhideConfirm={onRedactedUnhideConfirm}
         />
       </div>
     );
