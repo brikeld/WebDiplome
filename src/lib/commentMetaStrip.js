@@ -44,5 +44,5 @@ export function mockCommentSystemDeltaPct(postId, personaKey) {
 export function commentMetaCenterLine(postId, personaKey) {
   const pct = mockCommentSystemDeltaPct(postId, personaKey);
   const label = personaLabelFromCommentPersona(personaKey);
-  return `System note [${label}] [+${pct}%]`;
+  return `${label} [+${pct}%]`;
 }

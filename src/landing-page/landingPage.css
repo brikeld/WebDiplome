@@ -1895,18 +1895,29 @@
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  background: #000;
-  transform: translateY(101%);
+  background:
+    radial-gradient(circle at 50% 46%, rgba(0, 0, 0, 0) 0 17%, rgba(0, 0, 0, 0.18) 28%, rgba(0, 0, 0, 0.72) 100%);
+  opacity: 0;
+  transform: scale(1.08);
 }
 
 .lp-login-root--opening .lp-login-transition {
-  animation: lp-login-wipe 620ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  animation: lp-login-focus-fade 650ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@keyframes lp-login-wipe {
-  0% { transform: translateY(101%); }
-  52% { transform: translateY(0); }
-  100% { transform: translateY(-101%); }
+@keyframes lp-login-focus-fade {
+  0% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  46% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.92;
+    transform: scale(0.98);
+  }
 }
 
 .lp-login-avatar-button {
@@ -1930,13 +1941,22 @@
 }
 
 .lp-login-root--opening .lp-login-avatar-button {
-  animation: lp-login-avatar-open 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: lp-login-avatar-open 650ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 @keyframes lp-login-avatar-open {
-  0% { transform: translateY(0) scale(1); }
-  42% { transform: translateY(-16px) scale(1.08); }
-  100% { transform: translateY(-34px) scale(0.92); }
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 18px 0 #000;
+  }
+  44% {
+    transform: translateY(-8px) scale(1.04);
+    box-shadow: 0 24px 0 #000;
+  }
+  100% {
+    transform: translateY(-10px) scale(0.98);
+    box-shadow: 0 10px 0 #000;
+  }
 }
 
 .lp-login-avatar-button:active {
@@ -1999,7 +2019,7 @@
 @keyframes lp-login-text-open {
   to {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
   }
 }
 

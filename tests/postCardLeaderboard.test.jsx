@@ -48,4 +48,10 @@ describe('<PostCard> with leaderboard post', () => {
     const html = renderWithProvider(<PostCard post={{ ...leaderboardPost, leaderboard: undefined }} />);
     expect(html).not.toContain('leaderboard-block');
   });
+
+  it('renders persona delta without the system note prefix', () => {
+    const html = renderWithProvider(<PostCard post={{ ...leaderboardPost, leaderboard: undefined }} />);
+    expect(html).toContain('Productivity [+1%]');
+    expect(html).not.toContain('System note [Productivity]');
+  });
 });

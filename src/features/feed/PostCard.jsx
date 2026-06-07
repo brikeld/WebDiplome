@@ -270,7 +270,7 @@ function PostCard({
               </div>
               {!isCompliantSystemPost ? (
                 <span ref={systemNotePillRef} className="post-system-note-pill">
-                  System note [{personaLabel}] [+{systemDeltaPct}%]
+                  {personaLabel} [+{systemDeltaPct}%]
                 </span>
               ) : null}
             </div>
@@ -319,7 +319,7 @@ function PostCard({
             isOpen={isCommentsOpen}
             onToggle={onToggleComments}
             timeLabel={`${timeAgo} ago`}
-            systemNoteLabel={`System note [${personaLabel}] [+${systemDeltaPct}%]`}
+            systemNoteLabel={`${personaLabel} [+${systemDeltaPct}%]`}
             capsuleId={`commenting-${post.id}`}
             displayName={displayName}
             handle={handle}

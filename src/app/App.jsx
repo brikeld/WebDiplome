@@ -1072,7 +1072,7 @@ function AppInner({
                   personaAccent={personaColor}
                   personaPastel={PERSONA_PASTEL_COLORS[personaKey] ?? PERSONA_PASTEL_COLORS.security}
                   holdLoadingOverlay={postGen.loading && isFeedGenerationPhase(postGen.phase)}
-                  isAnalysisRedacted={Boolean(tellDisplayPost && highlightedPostIsHidden)}
+                  isAnalysisRedacted={Boolean(tellDisplayPost && !tellDisplayPost.leaderboard && highlightedPostIsHidden)}
                 />
               </div>
             </div>

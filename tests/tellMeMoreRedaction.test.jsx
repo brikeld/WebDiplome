@@ -28,4 +28,24 @@ describe('<TellMeMorePill> hidden redaction', () => {
     expect(html).toContain('inference-panel--redacted');
     expect(html).toContain('Hidden post analysis remains blurred');
   });
+
+  it('does not redact leaderboard ranking analysis by default', () => {
+    const html = renderToStaticMarkup(
+      <TellMeMorePill
+        highlightedPost={{
+          ...post,
+          leaderboard: {
+            boardId: 'most_secure',
+            title: 'Most Secure',
+            userRank: 2,
+            entries: [],
+          },
+        }}
+        expanded
+      />,
+    );
+
+    expect(html).not.toContain('tell-more-pill--redacted');
+    expect(html).not.toContain('Hidden post analysis remains blurred');
+  });
 });
