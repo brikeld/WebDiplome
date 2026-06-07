@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import { useProfileLeaderboards } from '@/features/profile/useProfileLeaderboards.js';
+import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
+import { slugsReferToSameAccount } from '@/lib/accountDeletionClient.js';
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -39,16 +41,29 @@ function ordinalSuffix(rank) {
   }
 }
 
-function LeaderboardCard({ board }) {
+function slugsMatch(a, b) {
+  const left = String(a ?? '').trim();
+  const right = String(b ?? '').trim();
+  if (!left || !right) return false;
+  return left === right || slugsReferToSameAccount(left, right);
+}
+
+export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug = null }) {
   const rank = Number(board.userRank);
   const hasRank = Number.isFinite(rank);
+  const fullHidden = hiddenMode === 'full';
+  const rowHidden = hiddenMode === 'row';
+  const title = String(board.title ?? 'Leaderboard');
 
   return (
-    <article className="profile-leaderboard-card">
+    <article
+      className={`profile-leaderboard-card${fullHidden ? ' profile-leaderboard-card--hidden' : ''}`}
+      aria-label={fullHidden ? `Hidden ranking: ${title} standings` : undefined}
+    >
       <header className="profile-leaderboard-card__head">
         <div>
           <p className="profile-leaderboard-card__eyebrow">leaderboards</p>
-          <h3 className="profile-leaderboard-card__title">{board.title}</h3>
+          <h3 className="profile-leaderboard-card__title">{title}</h3>
         </div>
         <span className="profile-leaderboard-card__rank">
           {hasRank ? Math.trunc(rank) : '—'}
@@ -56,13 +71,15 @@ function LeaderboardCard({ board }) {
         </span>
       </header>
 
-      <ol className="profile-leaderboard-card__rows" aria-label={`${board.title} standings`}>
+      <ol className="profile-leaderboard-card__rows" aria-label={`${title} standings`}>
         {(board.entries || []).map((entry) => {
           const isBot = entry.source === 'bot';
+          const hideOwnedRow = rowHidden && entry.source === 'real' && slugsMatch(entry.slug, ownedProfileSlug);
           return (
           <li
             key={`${board.boardId}-${entry.rank}-${entry.handle}-${entry.isUser ? 'self' : 'clone'}`}
-            className={`profile-leaderboard-row${entry.isUser ? ' is-self' : ''}`}
+            className={`profile-leaderboard-row${entry.isUser ? ' is-self' : ''}${hideOwnedRow ? ' profile-leaderboard-row--hidden' : ''}`}
+            aria-label={hideOwnedRow ? `Hidden row for ${entry.name}` : undefined}
           >
             <span className="profile-leaderboard-row__rank">{entry.rank}</span>
             <ProfileAvatarLink
@@ -82,8 +99,11 @@ function LeaderboardCard({ board }) {
   );
 }
 
-export default function LeaderboardsTab({ profile }) {
+export default function LeaderboardsTab({ profile, isOwnProfile = true, ownedProfileSlug = null }) {
   const { leaderboards } = useProfileLeaderboards(profile);
+  const { isLeaderboardSelfHidden } = useLiveScoring();
+  const resolvedOwnedProfileSlug =
+    ownedProfileSlug ?? (isOwnProfile ? (profile?.slug ?? profile?.id ?? null) : null);
 
   const grouped = useMemo(() => {
     const out = { productivite: [], securite: [], popularite: [] };
@@ -110,7 +130,16 @@ export default function LeaderboardsTab({ profile }) {
             </h2>
             <div className="profile-leaderboards-grid">
               {boards.map((board) => (
-                <LeaderboardCard key={board.boardId} board={board} />
+                <LeaderboardCard
+                  key={board.boardId}
+                  board={board}
+                  hiddenMode={
+                    isLeaderboardSelfHidden(board.boardId)
+                      ? (isOwnProfile ? 'full' : 'row')
+                      : 'none'
+                  }
+                  ownedProfileSlug={resolvedOwnedProfileSlug}
+                />
               ))}
             </div>
           </section>

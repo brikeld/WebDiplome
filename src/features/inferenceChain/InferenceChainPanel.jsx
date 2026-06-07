@@ -170,7 +170,7 @@ export default function InferenceChainPanel({
           />
           </div>
         </div>
-        {redacted ? <RedactedAnalysisNotice /> : null}
+        {redacted ? <RedactedAnalysisNotice leaderboard /> : null}
       </div>
     );
   }
@@ -317,11 +317,19 @@ export default function InferenceChainPanel({
   );
 }
 
-function RedactedAnalysisNotice() {
+function RedactedAnalysisNotice({ leaderboard = false }) {
   return (
     <div className="inference-panel__redacted-notice" aria-live="polite">
-      <span>Hidden post analysis remains blurred</span>
-      <p>Reveal the post to inspect the inference chain.</p>
+      <span>
+        {leaderboard
+          ? 'Hidden ranking analysis remains blurred'
+          : 'Hidden post analysis remains blurred'}
+      </span>
+      <p>
+        {leaderboard
+          ? 'Reveal the ranking to inspect the analysis.'
+          : 'Reveal the post to inspect the inference chain.'}
+      </p>
     </div>
   );
 }

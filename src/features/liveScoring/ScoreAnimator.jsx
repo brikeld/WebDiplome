@@ -143,20 +143,18 @@ export function getParticleFlightPlan({
   isLeaderboardReveal,
   hasWaypoint = false,
 }) {
-  const startDelay = isLeaderboardHide
-    ? 1850 + 150
-    : hasWaypoint && isHide && !isReveal
+  const startDelay = hasWaypoint && isHide && !isReveal
+    ? 40
+    : isHide
       ? 120
-      : isHide
-        ? 260
-        : 0;
+      : 0;
 
   const duration = isLeaderboardHide || isLeaderboardReveal
-    ? 1540
+    ? 1120
     : hasWaypoint && isHide && !isReveal
-      ? 1580
+      ? 1080
       : isHide || isReveal
-        ? 1180
+        ? 920
         : 760;
 
   return {
@@ -164,8 +162,8 @@ export function getParticleFlightPlan({
     startDelay,
     waypoint: hasWaypoint && isHide && !isReveal
       ? {
-          hitEnd: 0.16,
-          holdEnd: 0.34,
+          hitEnd: isLeaderboardHide ? 0.3 : 0.28,
+          holdEnd: isLeaderboardHide ? 0.5 : 0.44,
         }
       : {
           hitEnd: 0.42,
@@ -236,8 +234,6 @@ function Particle({ event, onComplete, scoringApi }) {
   const isLeaderboardHide = isHide && event.variant === 'leaderboard-self';
   const isLeaderboardReveal = isReveal && event.variant === 'leaderboard-self';
   const particleSize = isHide || isReveal ? 32 : 18;
-  const LEADERBOARD_REDACTION_MS = 1850;
-  const LEADERBOARD_ORB_PAUSE_MS = 150;
 
   useEffect(() => {
     const { sourcePillRect, persona } = event;
@@ -401,10 +397,11 @@ function Particle({ event, onComplete, scoringApi }) {
     isLeaderboardHide ? 'lsc-particle--leaderboard-hide' : '',
     isLeaderboardReveal ? 'lsc-particle--leaderboard-reveal' : '',
   ].filter(Boolean).join(' ');
+  const redactionRect = isLeaderboardHide && event.waypointRect ? event.waypointRect : sourceRect;
 
   return (
     <>
-      {(isLeaderboardHide || isLeaderboardReveal) && sourceRect ? (
+      {(isLeaderboardHide || isLeaderboardReveal) && redactionRect ? (
         <div
           className={
             isLeaderboardReveal
@@ -413,10 +410,10 @@ function Particle({ event, onComplete, scoringApi }) {
           }
           style={{
             '--lsc-color': color,
-            left: `${sourceRect.x}px`,
-            top: `${sourceRect.y}px`,
-            width: `${sourceRect.width}px`,
-            height: `${sourceRect.height}px`,
+            left: `${redactionRect.x}px`,
+            top: `${redactionRect.y}px`,
+            width: `${redactionRect.width}px`,
+            height: `${redactionRect.height}px`,
           }}
           aria-hidden
         >

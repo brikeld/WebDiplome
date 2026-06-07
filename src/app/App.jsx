@@ -1025,6 +1025,8 @@ function AppInner({
             isGeneratingPosts={!viewedProfile && postGen.phase === 'generating' && postGen.loading}
             generatingPersona={postGen.generatingPersona}
             generateApiOrigin={GENERATE_API_ORIGIN}
+            isOwnProfile={!viewedProfile}
+            ownedProfileSlug={ownProfileSlug}
           />
         )}
 
@@ -1072,7 +1074,7 @@ function AppInner({
                   personaAccent={personaColor}
                   personaPastel={PERSONA_PASTEL_COLORS[personaKey] ?? PERSONA_PASTEL_COLORS.security}
                   holdLoadingOverlay={postGen.loading && isFeedGenerationPhase(postGen.phase)}
-                  isAnalysisRedacted={Boolean(tellDisplayPost && !tellDisplayPost.leaderboard && highlightedPostIsHidden)}
+                  isAnalysisRedacted={Boolean(tellDisplayPost && highlightedPostIsHidden)}
                 />
               </div>
             </div>

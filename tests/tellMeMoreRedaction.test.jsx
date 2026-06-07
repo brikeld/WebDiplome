@@ -29,7 +29,7 @@ describe('<TellMeMorePill> hidden redaction', () => {
     expect(html).toContain('Hidden post analysis remains blurred');
   });
 
-  it('does not redact leaderboard ranking analysis by default', () => {
+  it('does not redact visible leaderboard ranking analysis by default', () => {
     const html = renderToStaticMarkup(
       <TellMeMorePill
         highlightedPost={{
@@ -46,6 +46,31 @@ describe('<TellMeMorePill> hidden redaction', () => {
     );
 
     expect(html).not.toContain('tell-more-pill--redacted');
+    expect(html).not.toContain('Hidden post analysis remains blurred');
+    expect(html).not.toContain('Hidden ranking analysis remains blurred');
+  });
+
+  it('redacts hidden leaderboard ranking analysis with ranking-specific copy', () => {
+    const html = renderToStaticMarkup(
+      <TellMeMorePill
+        highlightedPost={{
+          ...post,
+          leaderboard: {
+            boardId: 'most_secure',
+            title: 'Most Secure',
+            userRank: 2,
+            entries: [],
+          },
+        }}
+        expanded
+        isAnalysisRedacted
+      />,
+    );
+
+    expect(html).toContain('tell-more-pill--redacted');
+    expect(html).toContain('inference-panel--redacted');
+    expect(html).toContain('Hidden ranking analysis remains blurred');
+    expect(html).toContain('Reveal the ranking to inspect the analysis.');
     expect(html).not.toContain('Hidden post analysis remains blurred');
   });
 });

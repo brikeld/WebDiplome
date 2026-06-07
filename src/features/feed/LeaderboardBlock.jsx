@@ -79,7 +79,11 @@ export default function LeaderboardBlock({
   onOpenProfile,
   leaderboardDirectorySlugs = [],
 }) {
-  const { isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
+  const {
+    isLeaderboardSelfHidden,
+    isLeaderboardSelfRowHidden,
+    isLeaderboardSelfRevealing,
+  } = useLiveScoring();
   const reactId = useId();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
   const {
@@ -91,11 +95,12 @@ export default function LeaderboardBlock({
     cloneHidden = [false, false, false, false],
   } = leaderboard;
   const selfHidden = isLeaderboardSelfHidden(boardId);
+  const selfRowHidden = isLeaderboardSelfRowHidden?.(boardId) ?? selfHidden;
   const selfRevealing = isLeaderboardSelfRevealing(boardId);
   const titleId = `leaderboard-title-${boardId}-${reactId}`;
 
   const hiddenForEntry = mapLeaderboardEntryHiddenFlags(entries, {
-    selfHidden,
+    selfHidden: selfRowHidden,
     cloneHidden,
   });
   const directorySlugs = new Set(

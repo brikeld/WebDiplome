@@ -61,6 +61,7 @@
 }
 
 .leaderboard-row {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -68,6 +69,10 @@
   background: transparent;
   color: var(--leaderboard-ink);
   font-family: var(--font-avant);
+  transition:
+    filter 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 320ms ease,
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .leaderboard-row:not(.leaderboard-row--self) {
@@ -196,8 +201,23 @@ button.profile-avatar-link.leaderboard-row__avatar {
 }
 
 /* Hidden-row variant — applies to self-hidden user OR seeded-hidden clones. */
-.leaderboard-row--hidden {
-  position: relative;
+.leaderboard-row--hidden { position: relative; }
+
+.leaderboard-row--hidden.leaderboard-row--self::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 16px;
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--leaderboard-ink) 46%, transparent), transparent),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 5px,
+      color-mix(in srgb, var(--leaderboard-ink) 18%, transparent) 5px 8px
+    );
+  pointer-events: none;
+  mix-blend-mode: screen;
+  animation: leaderboard-row-hide-fuse 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .leaderboard-row--hidden .leaderboard-row__name {
@@ -279,6 +299,38 @@ button.profile-avatar-link.leaderboard-row__avatar {
   background: var(--leaderboard-track);
 }
 
+.leaderboard-row__name,
+.leaderboard-row__handle,
+.leaderboard-row__rank,
+.leaderboard-row__bar-fill,
+.leaderboard-row__avatar-img,
+.leaderboard-row__avatar-initials {
+  transition:
+    filter 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 320ms ease,
+    color 240ms ease,
+    background-color 320ms ease,
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes leaderboard-row-hide-fuse {
+  0% {
+    opacity: 0;
+    transform: translateX(-18%) scaleX(0.32);
+    filter: blur(0);
+  }
+  42% {
+    opacity: 0.95;
+    transform: translateX(0) scaleX(1);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(8%) scaleX(1.04);
+    filter: blur(9px);
+  }
+}
+
 @keyframes leaderboard-row-unblur-surface {
   0% {
     filter: blur(6px) saturate(0.35);
@@ -322,10 +374,10 @@ button.profile-avatar-link.leaderboard-row__avatar {
 .leaderboard-row--revealing .leaderboard-row__name,
 .leaderboard-row--revealing .leaderboard-row__handle,
 .leaderboard-row--revealing .leaderboard-row__bar-fill {
-  animation: leaderboard-row-unblur-surface 1.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: leaderboard-row-unblur-surface 920ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .leaderboard-row--revealing .leaderboard-row__avatar-img,
 .leaderboard-row--revealing .leaderboard-row__avatar-initials {
-  animation: leaderboard-row-unblur-avatar 1.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: leaderboard-row-unblur-avatar 920ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }

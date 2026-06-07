@@ -28,6 +28,8 @@ export default function ProfileView({
   generatingPersona = null,
   personaBadgePersona = null,
   generateApiOrigin,
+  isOwnProfile = true,
+  ownedProfileSlug = null,
 }) {
   const { displayProfile, phase: identityPhase } = useProfileIdentityTransition(profile);
   const resolvedProfile = displayProfile ?? profile;
@@ -73,7 +75,11 @@ export default function ProfileView({
                     />
                   )}
                   {displayTab === 'leaderboards' && (
-                    <LeaderboardsTab profile={resolvedProfile} />
+                    <LeaderboardsTab
+                      profile={resolvedProfile}
+                      isOwnProfile={isOwnProfile}
+                      ownedProfileSlug={ownedProfileSlug}
+                    />
                   )}
                 </div>
               </div>

@@ -1294,7 +1294,10 @@ body {
 }
 
 .post-unified-capsule {
-  transition: filter 0.3s ease;
+  transition:
+    filter 0.46s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .post-card-meta-row {
@@ -1444,6 +1447,28 @@ body {
   user-select: none;
 }
 
+.post-card--has-leaderboard.post-card--hidden .post-unified-capsule {
+  animation: leaderboard-post-full-redact 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes leaderboard-post-full-redact {
+  0% {
+    filter: blur(0) saturate(1);
+    opacity: 1;
+    transform: scale(1);
+  }
+  48% {
+    filter: blur(8px) saturate(0.68);
+    opacity: 0.72;
+    transform: scale(0.997);
+  }
+  100% {
+    filter: blur(18px) saturate(0.34);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes post-card-unblur-reveal {
   0% {
     filter: blur(18px) saturate(0.3);
@@ -1463,7 +1488,7 @@ body {
 }
 
 .post-card--revealing .post-unified-capsule {
-  animation: post-card-unblur-reveal 1.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: post-card-unblur-reveal 920ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ── Post highlight (clickable selection for HIDE / tell-me-more) ── */
@@ -2652,6 +2677,7 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .profile-leaderboard-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -2662,6 +2688,37 @@ button.profile-name-link.leaderboard-row__name {
   background: var(--persona-accent, #759aef);
   color: #000;
   font-family: var(--font-avant);
+}
+
+.profile-leaderboard-card > * {
+  transition:
+    filter 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-leaderboard-card--hidden > * {
+  filter: blur(16px) saturate(0.35);
+  opacity: 0.58;
+  pointer-events: none;
+  user-select: none;
+}
+
+.profile-leaderboard-card--hidden::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 16px;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      115deg,
+      transparent 0 12px,
+      rgb(255 255 255 / 0.22) 12px 18px
+    ),
+    color-mix(in srgb, var(--persona-accent, #759aef) 22%, transparent);
+  mix-blend-mode: screen;
+  animation: profile-leaderboard-full-redact 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .profile-leaderboard-card__head {
@@ -2720,6 +2777,7 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .profile-leaderboard-row {
+  position: relative;
   display: grid;
   grid-template-columns: 34px 28px minmax(0, 1fr) auto;
   align-items: center;
@@ -2728,6 +2786,10 @@ button.profile-name-link.leaderboard-row__name {
   border: 2px solid #000;
   border-radius: 12px;
   color: #000;
+  transition:
+    filter 460ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 360ms ease,
+    transform 460ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .profile-leaderboard-row__avatar,
@@ -2790,6 +2852,68 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
   font-weight: 800;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.profile-leaderboard-row--hidden {
+  pointer-events: none;
+}
+
+.profile-leaderboard-row--hidden .profile-leaderboard-row__rank,
+.profile-leaderboard-row--hidden .profile-leaderboard-row__avatar,
+.profile-leaderboard-row--hidden .profile-leaderboard-row__name,
+.profile-leaderboard-row--hidden .profile-leaderboard-row__score {
+  filter: blur(8px) saturate(0.35);
+  opacity: 0.52;
+  user-select: none;
+}
+
+.profile-leaderboard-row--hidden::after {
+  content: "";
+  position: absolute;
+  inset: 4px 8px;
+  border-radius: 10px;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent),
+    color-mix(in srgb, var(--persona-accent, #759aef) 30%, transparent);
+  mix-blend-mode: screen;
+  animation: profile-leaderboard-row-redact 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes profile-leaderboard-full-redact {
+  0% {
+    opacity: 0;
+    transform: scale(0.992);
+    filter: blur(0);
+  }
+  42% {
+    opacity: 0.92;
+    transform: scale(1);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 0.72;
+    transform: scale(1);
+    filter: blur(7px);
+  }
+}
+
+@keyframes profile-leaderboard-row-redact {
+  0% {
+    opacity: 0;
+    transform: translateX(-18%) scaleX(0.36);
+    filter: blur(0);
+  }
+  48% {
+    opacity: 0.95;
+    transform: translateX(0) scaleX(1);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(9%) scaleX(1.03);
+    filter: blur(8px);
+  }
 }
 
 .profile-leaderboards-stack {
