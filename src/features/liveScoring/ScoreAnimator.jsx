@@ -398,16 +398,13 @@ function Particle({ event, onComplete, scoringApi }) {
     isLeaderboardReveal ? 'lsc-particle--leaderboard-reveal' : '',
   ].filter(Boolean).join(' ');
   const redactionRect = isLeaderboardHide && event.waypointRect ? event.waypointRect : sourceRect;
+  const showLeaderboardRedaction = isLeaderboardHide && redactionRect;
 
   return (
     <>
-      {(isLeaderboardHide || isLeaderboardReveal) && redactionRect ? (
+      {showLeaderboardRedaction ? (
         <div
-          className={
-            isLeaderboardReveal
-              ? 'lsc-leaderboard-blur-redaction lsc-leaderboard-blur-redaction--reveal'
-              : 'lsc-leaderboard-blur-redaction'
-          }
+          className="lsc-leaderboard-blur-redaction"
           style={{
             '--lsc-color': color,
             left: `${redactionRect.x}px`,

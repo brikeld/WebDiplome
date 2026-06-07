@@ -1488,24 +1488,15 @@ body {
 }
 
 .post-card--has-leaderboard.post-card--revealing .post-unified-capsule {
-  animation: leaderboard-post-full-unredact 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: leaderboard-post-full-unredact 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes leaderboard-post-full-unredact {
   0% {
     filter: blur(18px) saturate(0.34);
-    opacity: 1;
-    transform: scale(1);
-  }
-  52% {
-    filter: blur(8px) saturate(0.68);
-    opacity: 0.82;
-    transform: scale(0.997);
   }
   100% {
     filter: blur(0) saturate(1);
-    opacity: 1;
-    transform: scale(1);
   }
 }
 

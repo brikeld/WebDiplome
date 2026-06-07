@@ -333,32 +333,20 @@ button.profile-avatar-link.leaderboard-row__avatar {
 
 @keyframes leaderboard-row-unblur-surface {
   0% {
-    filter: blur(6px) saturate(0.35);
-    opacity: 0.46;
-    transform: translateY(2px) scale(0.992);
-  }
-  58% {
-    filter: blur(2px) saturate(0.82);
-    opacity: 0.84;
-    transform: translateY(0) scale(1.004);
+    filter: blur(8px) saturate(0.45);
+    opacity: 0.55;
   }
   100% {
     filter: blur(0) saturate(1);
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
 @keyframes leaderboard-row-unblur-avatar {
   0% {
-    filter: blur(10px) saturate(0.2) brightness(1.35);
-    opacity: 0.42;
-    transform: scale(1.18);
-  }
-  62% {
-    filter: blur(4px) saturate(0.72) brightness(1.12);
-    opacity: 0.78;
-    transform: scale(1.06);
+    filter: blur(10px) saturate(0.35) brightness(1.15);
+    opacity: 0.5;
+    transform: scale(1.08);
   }
   100% {
     filter: blur(0) saturate(1) brightness(1);
@@ -374,10 +362,10 @@ button.profile-avatar-link.leaderboard-row__avatar {
 .leaderboard-row--revealing .leaderboard-row__name,
 .leaderboard-row--revealing .leaderboard-row__handle,
 .leaderboard-row--revealing .leaderboard-row__bar-fill {
-  animation: leaderboard-row-unblur-surface 920ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: leaderboard-row-unblur-surface 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .leaderboard-row--revealing .leaderboard-row__avatar-img,
 .leaderboard-row--revealing .leaderboard-row__avatar-initials {
-  animation: leaderboard-row-unblur-avatar 920ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: leaderboard-row-unblur-avatar 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
