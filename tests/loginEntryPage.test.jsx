@@ -18,5 +18,6 @@ describe('<LoginEntryPage>', () => {
     expect(html).toContain('login');
     expect(html).toContain('/imgs/AlexP.png');
     expect(html).toContain('lp-login-avatar-button');
+    expect(html).toContain('lp-login-transition');
   });
 });

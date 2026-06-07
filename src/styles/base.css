@@ -541,14 +541,6 @@ body {
   font: inherit;
 }
 
-.project-name--button:hover {
-  transform: translateY(-1px);
-}
-
-.project-name--button:active {
-  transform: translateY(0);
-}
-
 .project-name--button:focus-visible {
   outline: 2px solid var(--persona-accent, #000);
   outline-offset: 3px;
@@ -2049,7 +2041,8 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-timer-card--confirm-hide,
-.dashboard-timer-card--confirm-blocked {
+.dashboard-timer-card--confirm-blocked,
+.dashboard-timer-card--confirm-unhide {
   padding: clamp(7px, 0.85vh, 10px) clamp(10px, 1.15vw, 14px);
 }
 
@@ -2103,7 +2096,8 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-timer-card--confirm-hide .dashboard-hide-confirm__body,
-.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__body {
+.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__body,
+.dashboard-timer-card--confirm-unhide .dashboard-hide-confirm__body {
   gap: clamp(4px, 0.5vh, 7px);
 }
 
@@ -2120,7 +2114,8 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-timer-card--confirm-hide .dashboard-hide-confirm__title,
-.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__title {
+.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__title,
+.dashboard-timer-card--confirm-unhide .dashboard-hide-confirm__title {
   font-size: clamp(16px, 1.65vw, 20px);
   line-height: 1;
 }
@@ -2139,7 +2134,8 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-timer-card--confirm-hide .dashboard-hide-confirm__message,
-.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__message {
+.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__message,
+.dashboard-timer-card--confirm-unhide .dashboard-hide-confirm__message {
   font-size: clamp(10px, 1.05vw, 13px);
   line-height: 1.12;
   max-width: 42ch;
@@ -2157,7 +2153,8 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-timer-card--confirm-hide .dashboard-hide-confirm__chip,
-.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__chip {
+.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__chip,
+.dashboard-timer-card--confirm-unhide .dashboard-hide-confirm__chip {
   padding: 1px 7px 2px;
 }
 
@@ -2172,7 +2169,8 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-timer-card--confirm-hide .dashboard-hide-confirm__actions,
-.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__actions {
+.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__actions,
+.dashboard-timer-card--confirm-unhide .dashboard-hide-confirm__actions {
   gap: clamp(5px, 0.6vw, 8px);
   margin-top: 0;
 }
@@ -2192,7 +2190,8 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-timer-card--confirm-hide .dashboard-hide-confirm__btn,
-.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__btn {
+.dashboard-timer-card--confirm-blocked .dashboard-hide-confirm__btn,
+.dashboard-timer-card--confirm-unhide .dashboard-hide-confirm__btn {
   padding: clamp(5px, 0.55vh, 7px) clamp(10px, 1.2vw, 14px);
   font-size: clamp(10px, 1.05vw, 13px);
 }

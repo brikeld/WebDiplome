@@ -11,11 +11,11 @@ import './landingPage.css';
 const MOCK_AVATAR = '/imgs/AlexP.png';
 
 const MOCK_PROFILE = {
-  id: 'landing-brikeld-hoxha',
-  slug: 'landing-brikeld-hoxha',
-  firstname: 'Brikeld',
-  lastname: 'Hoxha',
-  machineName: 'Brikelds MacBook Pro',
+  id: 'landing-alex-johnson',
+  slug: 'landing-alex-johnson',
+  firstname: 'Alex',
+  lastname: 'Johnson',
+  machineName: 'Alexs MacBook Pro',
   dominantPersona: 'productivity',
   globalScore: 78,
   personaScores: {
@@ -25,7 +25,7 @@ const MOCK_PROFILE = {
   },
   avatarUrl: MOCK_AVATAR,
   wallpaperBase64: MOCK_AVATAR,
-  profileSummary: 'I save every screenshot and asset folder just in case my digital existence ever needs to be perfectly optimized for compliance.',
+  profileSummary: 'I keep every signal tidy, every system current, and every conversation moving just in case my digital identity needs to pass inspection.',
   personaPosts: [],
 };
 
@@ -66,7 +66,7 @@ const APP_SCREENS = [
     theme: 'social',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-welcome">
-        <h3>Brikeld Hoxha</h3>
+        <h3>Alex Johnson</h3>
         <p>We found your account on this Mac. Your profile is being built from real system data — no input required.</p>
         <span>Source · macOS account · local harvest</span>
         <button type="button" className="lp-mac-btn lp-mac-btn--primary">Continue <span>→</span></button>
@@ -140,7 +140,7 @@ const APP_SCREENS = [
             <div>
               <div className="lp-mac-profile-id">
                 <img src={MOCK_AVATAR} alt="" />
-                <div><h3>Brikeld Hoxha</h3><span>@Brikelds MacBook Pro</span></div>
+                <div><h3>Alex Johnson</h3><span>@Alexs MacBook Pro</span></div>
               </div>
               <p>Always online, endlessly connected — a digital socialite whose every signal broadcasts presence over privacy.</p>
             </div>
@@ -206,6 +206,14 @@ const FAKE_POSTS = [
     noteColor: '#759AEF',
     content: "The list of saved Wi-Fi networks is a digital breadcrumb trail. From my secure home router to that 'Guest' network... I swear someone is tracking every single stop. 📶 paranoia mode activated. 😱🧐",
     systemDeltaPct: 2,
+  },
+  {
+    id: 'landing-social-post',
+    persona: 'popularite',
+    personaBadgePersona: 'popularity',
+    noteColor: '#CCF847',
+    content: 'Three chat apps open, two group threads revived, and somehow every calendar invite has become a personality test. Presence is the product.',
+    systemDeltaPct: 4,
   },
 ];
 
@@ -289,6 +297,7 @@ function IdentitySection() {
         </div>
       </div>
       <LiveScoringProvider profile={MOCK_PROFILE}>
+        <div className="lp-identity-post-capsule">
         <div className="lp-identity-feed" aria-label="Fake posts">
           {FAKE_POSTS.map((post) => (
             <PostCard
@@ -296,15 +305,16 @@ function IdentitySection() {
               post={{
                 ...post,
                 createdAt: '2026-06-07T15:45:00.000Z',
-                displayName: 'Brikeld Hoxha',
-                handle: '@Brikelds MacBook Pro',
-                avatarInitials: 'BH',
+                displayName: 'Alex Johnson',
+                handle: '@Alexs MacBook Pro',
+                avatarInitials: 'AJ',
                 avatarSrc: MOCK_AVATAR,
               }}
               pillsMode="bottom-only"
               aiSuggestionsEnabled={false}
             />
           ))}
+        </div>
         </div>
       </LiveScoringProvider>
     </section>

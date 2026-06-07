@@ -255,6 +255,7 @@ function Particle({ event, onComplete, scoringApi }) {
       commitScoreOnHit(event, scoringApi);
     }
 
+    let waypointCommitted = false;
     function step(ts) {
       if (ts < startTime) {
         el.style.left = `${sx - particleSize / 2}px`;
@@ -277,6 +278,10 @@ function Particle({ event, onComplete, scoringApi }) {
           x = sx + (waypointX - sx) * legT;
           y = sy + (waypointY - sy) * legT - Math.sin(Math.PI * legProgress) * 44;
         } else {
+          if (!waypointCommitted) {
+            waypointCommitted = true;
+            event.onWaypoint?.();
+          }
           const legProgress = (progress - 0.42) / 0.58;
           const legT = easeOutCubic(legProgress);
           x = waypointX + (tx - waypointX) * legT;

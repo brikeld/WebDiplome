@@ -35,4 +35,22 @@ describe('<LandingPage> expanded content', () => {
     expect(html).toContain('post-card');
     expect(html).toContain('post-card-bubble');
   });
+
+  it('uses Alex Johnson consistently for every landing mockup', () => {
+    const html = renderToStaticMarkup(<LandingPage />);
+
+    expect(html).toContain('Alex Johnson');
+    expect(html).toContain('@Alexs MacBook Pro');
+    expect(html).not.toContain('Brikeld');
+    expect(html).not.toContain('Hoxha');
+  });
+
+  it('renders one identity post for each persona inside the post capsule', () => {
+    const html = renderToStaticMarkup(<LandingPage />);
+
+    expect(html).toContain('lp-identity-post-capsule');
+    expect(html).toContain('landing-productivity-post');
+    expect(html).toContain('landing-security-post');
+    expect(html).toContain('landing-social-post');
+  });
 });

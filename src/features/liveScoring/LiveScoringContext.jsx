@@ -102,6 +102,7 @@ export function LiveScoringProvider({ profile, children }) {
   const [optimisticHidden, setOptimisticHidden] = useState(() => new Set());
   const [optimisticLeaderboardHidden, setOptimisticLeaderboardHidden] = useState(() => new Set());
   const [optimisticLeaderboardRevealing, setOptimisticLeaderboardRevealing] = useState(() => new Set());
+  const [revealPendingHidden, setRevealPendingHidden] = useState(() => new Set());
   const [revealingKeys, setRevealingKeys] = useState(() => new Set());
   const animationQueueRef = useRef([]);
   const animationListenersRef = useRef(new Set());
@@ -113,6 +114,7 @@ export function LiveScoringProvider({ profile, children }) {
     setOptimisticHidden(new Set());
     setOptimisticLeaderboardHidden(new Set());
     setOptimisticLeaderboardRevealing(new Set());
+    setRevealPendingHidden(new Set());
     setRevealingKeys(new Set());
     const records = loadFromStorage(profileId);
     dispatch({ type: 'LOAD', records });
@@ -190,7 +192,6 @@ export function LiveScoringProvider({ profile, children }) {
     (post, sourcePillRect, options = {}) => {
       const postKey = normalizePostHideKey(post.createdAt);
       if (!postKey || isPostHidden(state.records, postKey)) return;
-      setOptimisticHidden((prev) => new Set(prev).add(postKey));
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'hide',
@@ -198,6 +199,9 @@ export function LiveScoringProvider({ profile, children }) {
         delta: Math.abs(Number(post.systemDeltaPct) || 1),
         sourcePillRect,
         waypointRect: options.waypointRect ?? null,
+        onWaypoint: () => {
+          setOptimisticHidden((prev) => new Set(prev).add(postKey));
+        },
         onCommit: () => {
           dispatch({
             type: 'HIDE',
@@ -252,7 +256,7 @@ export function LiveScoringProvider({ profile, children }) {
       const postKey = normalizePostHideKey(post.createdAt);
       if (!postKey || !isPostHidden(state.records, postKey)) return;
       const restored = state.records[postKey]?.restorable ?? 0;
-      setRevealingKeys((prev) => new Set(prev).add(postKey));
+      setRevealPendingHidden((prev) => new Set(prev).add(postKey));
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'reveal',
@@ -263,7 +267,7 @@ export function LiveScoringProvider({ profile, children }) {
           dispatch({ type: 'REVEAL', postKey });
         },
         onAnimationComplete: () => {
-          setRevealingKeys((prev) => {
+          setRevealPendingHidden((prev) => {
             const next = new Set(prev);
             next.delete(postKey);
             return next;
@@ -278,7 +282,6 @@ export function LiveScoringProvider({ profile, children }) {
     (post, sourcePillRect, options = {}) => {
       const boardId = post?.leaderboard?.boardId;
       if (!boardId || isLeaderboardSelfHidden(state.records, boardId)) return;
-      setOptimisticLeaderboardHidden((prev) => new Set(prev).add(boardId));
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'hide',
@@ -287,6 +290,9 @@ export function LiveScoringProvider({ profile, children }) {
         delta: Math.abs(Number(post.systemDeltaPct) || 1),
         sourcePillRect,
         waypointRect: options.waypointRect ?? null,
+        onWaypoint: () => {
+          setOptimisticLeaderboardHidden((prev) => new Set(prev).add(boardId));
+        },
         onCommit: () => {
           dispatch({
             type: 'HIDE_LEADERBOARD_SELF',
@@ -348,10 +354,11 @@ export function LiveScoringProvider({ profile, children }) {
   const isHidden = useCallback(
     (postKey) => {
       const key = String(postKey);
+      if (revealPendingHidden.has(key)) return true;
       if (revealingKeys.has(key)) return false;
       return isPostHidden(state.records, key) || optimisticHidden.has(key);
     },
-    [state.records, optimisticHidden, revealingKeys],
+    [state.records, optimisticHidden, revealingKeys, revealPendingHidden],
   );
 
   const isRevealing = useCallback(

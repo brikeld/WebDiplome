@@ -13,7 +13,8 @@ export default function LoginEntryPage({
   const initials = initialsFromProfile(profile);
 
   return (
-    <div className="lp-login-root">
+    <div className={`lp-login-root${loading ? ' lp-login-root--opening' : ''}`}>
+      <span className="lp-login-transition" aria-hidden="true" />
       <button
         type="button"
         className="lp-login-logo"
