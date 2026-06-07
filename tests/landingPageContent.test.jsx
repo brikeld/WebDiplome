@@ -15,11 +15,11 @@ describe('<LandingPage> expanded content', () => {
   it('renders the five app carousel step descriptions', () => {
     const html = renderToStaticMarkup(<LandingPage />);
 
-    expect(html).toContain('Your first touchpoint with the platform');
-    expect(html).toContain('We recognize you instantly from your Mac account');
-    expect(html).toContain('A guided, four-phase scan of your machine');
-    expect(html).toContain('Your moment of truth');
-    expect(html).toContain('Your complete digital identity dashboard');
+    expect(html).toContain('Clear value proposition and one enrollment action.');
+    expect(html).toContain('Recognized from your Mac — no input needed.');
+    expect(html).toContain('Four-phase machine scan with live progress.');
+    expect(html).toContain('Dominant persona revealed with AI-crafted bio.');
+    expect(html).toContain('Scores, stats, and public-ready identity dashboard.');
   });
 
   it('renders the expanded profile dashboard in the mac app carousel', () => {

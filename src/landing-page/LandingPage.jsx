@@ -33,8 +33,7 @@ const APP_SCREENS = [
   {
     id: 'intro',
     number: '01',
-    description:
-      'Your first touchpoint with the platform: a clear value proposition, transparent disclosure, and a single action to begin enrollment into automated digital profiling.',
+    description: 'Clear value proposition and one enrollment action.',
     theme: 'none',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-intro">
@@ -61,8 +60,7 @@ const APP_SCREENS = [
   {
     id: 'welcome',
     number: '02',
-    description:
-      'We recognize you instantly from your Mac account and confirm that your profile is being built from real, local system data—personal, credible, and ready to go.',
+    description: 'Recognized from your Mac — no input needed.',
     theme: 'social',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-welcome">
@@ -76,8 +74,7 @@ const APP_SCREENS = [
   {
     id: 'collect',
     number: '03',
-    description:
-      'A guided, four-phase scan of your machine that turns everyday usage into structured intelligence: identity, history, assets, and scoring signals—delivered with live progress you can trust.',
+    description: 'Four-phase machine scan with live progress.',
     theme: 'security',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-collect">
@@ -108,8 +105,7 @@ const APP_SCREENS = [
   {
     id: 'verdict',
     number: '04',
-    description:
-      'Your moment of truth: the system reveals your dominant persona and an AI-crafted profile bio that captures who you are, distilled from what your Mac actually shows.',
+    description: 'Dominant persona revealed with AI-crafted bio.',
     theme: 'social',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-verdict">
@@ -129,8 +125,7 @@ const APP_SCREENS = [
   {
     id: 'profile',
     number: '05',
-    description:
-      'Your complete digital identity dashboard—global score, persona breakdown, system stats, and public-ready profile—one place to review, publish, and share your synthesized presence.',
+    description: 'Scores, stats, and public-ready identity dashboard.',
     theme: 'productivity',
     render: () => (
       <div className="lp-mac-screen-content lp-mac-profile">
@@ -285,7 +280,10 @@ function AppCarousel() {
 function PersonaSections() {
   return (
     <section className="lp-screen lp-personas" aria-labelledby="lp-personas-title" style={{ '--stagger-i': 2 }}>
-      <h2 id="lp-personas-title">THE THREE PERSONAS</h2>
+      <header className="lp-personas-header">
+        <p className="lp-section-eyebrow">Scoring model</p>
+        <h2 id="lp-personas-title">THE THREE PERSONAS</h2>
+      </header>
       <div className="lp-persona-grid">
         {PERSONAS.map((persona) => (
           <article key={persona.name} className={`lp-persona-card ${persona.className}`}>
@@ -312,10 +310,12 @@ function IdentitySection() {
     <section className="lp-screen lp-identity" aria-labelledby="lp-identity-title" style={{ '--stagger-i': 3 }}>
       <div className="lp-identity-copy">
         <h2 id="lp-identity-title">YOUR COMPLIANT IDENTITY</h2>
-        <p>
-          Let <span className="lp-identity-emphasis">COMPLIANT</span> build your presence from who you already are.
-        </p>
-        <p>Your habits, rhythms, interactions, and behaviors become content automatically.</p>
+        <div className="lp-identity-lede">
+          <p>
+            Let <span className="lp-identity-emphasis">COMPLIANT</span> build your presence from who you already are.
+          </p>
+          <p>Your habits, rhythms, interactions, and behaviors become content automatically.</p>
+        </div>
         <div
           className="lp-identity-profile-card"
           style={{ '--persona-accent': '#D8D8D8', '--score-fill': '#D8D8D8' }}
