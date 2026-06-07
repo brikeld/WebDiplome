@@ -5,6 +5,7 @@ import ProfileView from '@/features/profile/ProfileView.jsx';
 import HomeTab from '@/features/home/HomeTab.jsx';
 import DashboardTimerRow from '@/features/home/DashboardTimerRow.jsx';
 import LandingPage from '@/landing-page/LandingPage.jsx';
+import LoginEntryPage from '@/landing-page/LoginEntryPage.jsx';
 import { LANDING_PROFILE_ENTRY_MS } from '@/landing-page/landingProfileEntry.js';
 import LeaderboardsTab from '@/features/profile/tabs/LeaderboardsTab.jsx';
 import {
@@ -327,6 +328,7 @@ function AppInner({
   postRevealFlash,
   deletedProfileIds = [],
   accountResetKey = 0,
+  onGoLanding,
 }) {
   const {
     adjustedScores,
@@ -976,7 +978,14 @@ function AppInner({
           {personaToggleLabel}
         </button>
       )}
-      <div className="project-name">COMPLIANT</div>
+      <button
+        type="button"
+        className="project-name project-name--button"
+        onClick={onGoLanding}
+        aria-label="Go to landing page"
+      >
+        COMPLIANT
+      </button>
       <Sidebar mainView={mainView} onSelectView={handleSelectView} />
       <div className="page">
         {mainView === 'home' && (
@@ -1115,6 +1124,7 @@ export default function App() {
   const [landingOwnedProfile, setLandingOwnedProfile] = useState(null);
   const [linkedProfileSlug, setLinkedProfileSlug] = useState(() => readLinkedProfileSlug());
   const landingEnterProfileTimerRef = useRef(null);
+  const landingManualReturnRef = useRef(false);
 
   const tryDeferCompliant = useCallback((apply) => {
     if (!deferCompliantRef.current) return false;
@@ -1180,6 +1190,7 @@ export default function App() {
   const handleLandingEnterProfile = useCallback(() => {
     const owned = landingOwnedProfile;
     if (landingEnteringProfile || !owned) return;
+    landingManualReturnRef.current = false;
     const slug = owned.slug || owned.id;
     if (slug) persistProfileSlug(slug);
     setLandingEnteringProfile(true);
@@ -1193,8 +1204,30 @@ export default function App() {
   }, [landingEnteringProfile, landingOwnedProfile]);
 
   const handleLandingBrowseFeed = useCallback(() => {
+    landingManualReturnRef.current = false;
     setMainView('home');
   }, []);
+
+  const handleGoLanding = useCallback(() => {
+    landingManualReturnRef.current = true;
+    setLandingEnteringProfile(false);
+    if (landingEnterProfileTimerRef.current) {
+      clearTimeout(landingEnterProfileTimerRef.current);
+      landingEnterProfileTimerRef.current = null;
+    }
+    setMainView('landing');
+  }, []);
+
+  useEffect(() => {
+    if (!landingOwnedProfile) {
+      landingManualReturnRef.current = false;
+      if (mainView === 'login') setMainView('landing');
+      return;
+    }
+    if (mainView !== 'landing') return;
+    if (landingManualReturnRef.current) return;
+    setMainView('login');
+  }, [landingOwnedProfile, mainView]);
 
   useEffect(() => {
     if (mainView === 'profile' && prevMainViewRef.current !== 'profile') {
@@ -1218,6 +1251,7 @@ export default function App() {
   const [accountResetKey, setAccountResetKey] = useState(0);
 
   const applyFullAccountReset = useCallback((profileIdForStorage = null) => {
+    landingManualReturnRef.current = false;
     purgeClientAccountState({ profileId: profileIdForStorage, clearSession: true });
     clearStoredProfileSlug();
     setLinkedProfileSlug(null);
@@ -2092,6 +2126,17 @@ export default function App() {
     );
   }
 
+  if (mainView === 'login') {
+    return (
+      <LoginEntryPage
+        profile={landingOwnedProfile}
+        onEnterProfile={handleLandingEnterProfile}
+        onBackToLanding={handleGoLanding}
+        loading={landingEnteringProfile}
+      />
+    );
+  }
+
   return (
     <LiveScoringProvider profile={profile}>
       <AppInner
@@ -2118,6 +2163,7 @@ export default function App() {
         tryDeferCompliant={tryDeferCompliant}
         updateSessionActive={updateSessionActive}
         postRevealFlash={postRevealFlash}
+        onGoLanding={handleGoLanding}
       />
     </LiveScoringProvider>
   );

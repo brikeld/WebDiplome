@@ -535,6 +535,25 @@ body {
   box-sizing: border-box;
 }
 
+.project-name--button {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.project-name--button:hover {
+  transform: translateY(-1px);
+}
+
+.project-name--button:active {
+  transform: translateY(0);
+}
+
+.project-name--button:focus-visible {
+  outline: 2px solid var(--persona-accent, #000);
+  outline-offset: 3px;
+}
+
 .icon-rail {
   display: flex;
   flex-direction: column;
