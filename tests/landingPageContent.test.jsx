@@ -8,7 +8,8 @@ describe('<LandingPage> expanded content', () => {
 
     expect(html).toContain('THE COMPLIANT APP');
     expect(html).toContain('THE THREE PERSONAS');
-    expect(html).toContain('YOUR COMPLIANT IDENTITY');
+    expect(html).toContain('lp-identity-emphasis');
+    expect(html).toContain('COMPLIANT</span> IDENTITY');
   });
 
   it('renders the five app carousel step descriptions', () => {
@@ -52,5 +53,15 @@ describe('<LandingPage> expanded content', () => {
     expect(html).toContain('landing-productivity-post');
     expect(html).toContain('landing-security-post');
     expect(html).toContain('landing-social-post');
+  });
+
+  it('renders a professional black website footer', () => {
+    const html = renderToStaticMarkup(<LandingPage />);
+
+    expect(html).toContain('lp-footer');
+    expect(html).toContain('Operational identity infrastructure');
+    expect(html).toContain('Privacy');
+    expect(html).toContain('Terms');
+    expect(html).toContain('Contact');
   });
 });

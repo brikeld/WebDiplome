@@ -280,7 +280,9 @@ function IdentitySection() {
   return (
     <section className="lp-screen lp-identity" aria-labelledby="lp-identity-title" style={{ '--stagger-i': 3 }}>
       <div className="lp-identity-copy">
-        <h2 id="lp-identity-title">YOUR COMPLIANT IDENTITY</h2>
+        <h2 id="lp-identity-title">
+          YOUR <span className="lp-identity-emphasis">COMPLIANT</span> IDENTITY
+        </h2>
         <p>Let COMPLIANT build your presence from who you already are.</p>
         <p>Your habits, rhythms, interactions, and behaviors become content automatically.</p>
         <div
@@ -318,6 +320,47 @@ function IdentitySection() {
         </div>
       </LiveScoringProvider>
     </section>
+  );
+}
+
+function LandingFooter() {
+  return (
+    <footer className="lp-footer">
+      <div className="lp-footer__top">
+        <div className="lp-footer__brand">
+          <h2>COMPLIANT</h2>
+          <p>Operational identity infrastructure for turning local machine behavior into public-facing persona signals.</p>
+        </div>
+        <div className="lp-footer__status" aria-label="Platform status">
+          <span>System status</span>
+          <strong>Profile ingestion online</strong>
+        </div>
+      </div>
+
+      <div className="lp-footer__grid">
+        <div>
+          <h3>Product</h3>
+          <a href="#lp-app-title">Mac app</a>
+          <a href="#lp-personas-title">Personas</a>
+          <a href="#lp-identity-title">Identity</a>
+        </div>
+        <div>
+          <h3>Company</h3>
+          <a href="mailto:hello@compliant.local">Contact</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#terms">Terms</a>
+        </div>
+        <div className="lp-footer__brief">
+          <h3>Deployment</h3>
+          <p>Designed for local-first profiling workflows, controlled demos, and live social-score presentation.</p>
+        </div>
+      </div>
+
+      <div className="lp-footer__bottom">
+        <span>© 2026 COMPLIANT Systems</span>
+        <span>Zurich / Paris / Localhost</span>
+      </div>
+    </footer>
   );
 }
 
@@ -403,6 +446,7 @@ export default function LandingPage({ profile, onEnterProfile, onBrowseFeed, onR
         <PersonaSections />
         <IdentitySection />
       </main>
+      <LandingFooter />
     </div>
   );
 }

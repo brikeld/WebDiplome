@@ -46,6 +46,7 @@ export default function TellMeMorePill({
   personaAccent = null,
   personaPastel = null,
   holdLoadingOverlay = false,
+  isAnalysisRedacted = false,
 }) {
   const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
   const postPersonaKey = String(highlightedPost?.persona ?? mainPersonaKey).toLowerCase();
@@ -70,7 +71,7 @@ export default function TellMeMorePill({
   if (expanded && highlightedPost) {
     return (
       <div
-        className={`tell-more-pill tell-more-pill--expanded${closing ? ' tell-more-pill--closing' : ''}`}
+        className={`tell-more-pill tell-more-pill--expanded${closing ? ' tell-more-pill--closing' : ''}${isAnalysisRedacted ? ' tell-more-pill--redacted' : ''}`}
         style={pillStyle}
         role="region"
         aria-label="Inference chain analysis"
@@ -79,6 +80,7 @@ export default function TellMeMorePill({
           post={highlightedPost}
           personaLabel={label}
           holdLoadingOverlay={holdLoadingOverlay}
+          redacted={isAnalysisRedacted}
         />
       </div>
     );

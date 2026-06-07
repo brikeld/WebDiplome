@@ -110,7 +110,12 @@ function resolvePostAnalysis(post) {
   return { chain, ingredients, highlights, rawThinking };
 }
 
-export default function InferenceChainPanel({ post, personaLabel, holdLoadingOverlay = false }) {
+export default function InferenceChainPanel({
+  post,
+  personaLabel,
+  holdLoadingOverlay = false,
+  redacted = false,
+}) {
   const { chain, ingredients, highlights, rawThinking } = resolvePostAnalysis(post);
   const validChain = isValidChain(chain);
   const hasIngredients = !!(ingredients && ingredients.length);
@@ -153,16 +158,19 @@ export default function InferenceChainPanel({ post, personaLabel, holdLoadingOve
   if (isLeaderboardPost) {
     return (
       <div
-        className="inference-panel inference-panel--leaderboard"
+        className={`inference-panel inference-panel--leaderboard${redacted ? ' inference-panel--redacted' : ''}`}
         role="region"
         aria-label="Tell me more analysis"
       >
-        <div className="inference-panel__body">
+        <div className="inference-panel__redacted-content">
+          <div className="inference-panel__body">
           <LeaderboardRationaleView
             leaderboard={leaderboard}
             holdLoadingOverlay={holdLoadingOverlay}
           />
+          </div>
         </div>
+        {redacted ? <RedactedAnalysisNotice /> : null}
       </div>
     );
   }
@@ -176,12 +184,13 @@ export default function InferenceChainPanel({ post, personaLabel, holdLoadingOve
 
   return (
     <div
-      className={`inference-panel${ready ? ' is-ready' : ''}`}
+      className={`inference-panel${ready ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}`}
       role="region"
       aria-label="Tell me more analysis"
     >
       <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
 
+      <div className="inference-panel__redacted-content">
       <div className="np2">
         {/* ── Post quote (big) ───────────────────────────────────── */}
         {post?.content ? (
@@ -302,6 +311,17 @@ export default function InferenceChainPanel({ post, personaLabel, holdLoadingOve
           </div>
         ) : null}
       </div>
+      </div>
+      {redacted ? <RedactedAnalysisNotice /> : null}
+    </div>
+  );
+}
+
+function RedactedAnalysisNotice() {
+  return (
+    <div className="inference-panel__redacted-notice" aria-live="polite">
+      <span>Hidden post analysis remains blurred</span>
+      <p>Reveal the post to inspect the inference chain.</p>
     </div>
   );
 }
