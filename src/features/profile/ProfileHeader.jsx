@@ -21,6 +21,7 @@ export default function ProfileHeader({
   onNavigateTab,
   onOpenProfile,
   variant = 'default',
+  statsOverride = null,
 }) {
   const name = displayNameFromProfile(profile ?? {});
   const firstName = String(profile?.firstname ?? '').trim();
@@ -49,8 +50,14 @@ export default function ProfileHeader({
   const rankingCount = profileRankingCount(profile ?? {}, { leaderboards, leaderboardsReady });
 
   const bio = profileBioText(profile ?? {});
-  const postLabel = `${postCount} ${postCount === 1 ? 'post' : 'posts'}`;
-  const rankingLabel = `${rankingCount} ${rankingCount === 1 ? 'ranking' : 'rankings'}`;
+  const displayPostCount = Number.isFinite(Number(statsOverride?.postCount))
+    ? Number(statsOverride.postCount)
+    : postCount;
+  const displayRankingCount = Number.isFinite(Number(statsOverride?.rankingCount))
+    ? Number(statsOverride.rankingCount)
+    : rankingCount;
+  const postLabel = `${displayPostCount} ${displayPostCount === 1 ? 'post' : 'posts'}`;
+  const rankingLabel = `${displayRankingCount} ${displayRankingCount === 1 ? 'ranking' : 'rankings'}`;
 
   const profileSlug = profile?.slug ?? profile?.id ?? null;
 
@@ -122,7 +129,7 @@ export default function ProfileHeader({
                   <svg className="profile-follow-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
                     <path d="M4 3.5A1.5 1.5 0 0 1 5.5 2h9A1.5 1.5 0 0 1 16 3.5v13a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 4 16.5v-13Zm3 2a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H7Zm0 4a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H7Zm0 4a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H7Z"/>
                   </svg>
-                  <span className="profile-follow-num">{postCount}</span>
+                  <span className="profile-follow-num">{displayPostCount}</span>
                 </button>
                 <button
                   type="button"
@@ -134,7 +141,7 @@ export default function ProfileHeader({
                   <svg className="profile-follow-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
                     <path d="M5 3h10v2h2a1 1 0 0 1 1 1v1.25A4.75 4.75 0 0 1 13.25 12H13a4.05 4.05 0 0 1-2 1.84V16h3a1 1 0 1 1 0 2H6a1 1 0 1 1 0-2h3v-2.16A4.05 4.05 0 0 1 7 12h-.25A4.75 4.75 0 0 1 2 7.25V6a1 1 0 0 1 1-1h2V3Zm0 4H4v.25A2.75 2.75 0 0 0 5.95 9.88 7.73 7.73 0 0 1 5 7V7Zm11 0h-1a7.73 7.73 0 0 1-.95 2.88A2.75 2.75 0 0 0 16 7.25V7Z"/>
                   </svg>
-                  <span className="profile-follow-num">{rankingCount}</span>
+                  <span className="profile-follow-num">{displayRankingCount}</span>
                 </button>
               </div>
               <div className="profile-bio-block">

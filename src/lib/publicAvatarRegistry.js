@@ -16,7 +16,12 @@ export function pickProfileMediaUrl(profile) {
     if (value == null || value === '') continue;
     const raw = String(value).trim();
     if (!raw || raw === 'null' || raw === 'undefined') continue;
-    if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) return raw;
+    if (
+      /^https?:\/\//i.test(raw)
+      || raw.startsWith('data:')
+      || raw.startsWith('/imgs/')
+      || raw.startsWith('/assets/')
+    ) return raw;
   }
   return null;
 }
