@@ -286,6 +286,8 @@
   flex-direction: column;
   justify-content: center;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .lp-app-left h2,
@@ -303,17 +305,22 @@
   display: flex;
   flex-direction: column;
   margin-top: clamp(20px, 3.5vh, 44px);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .lp-app-step {
-  min-height: clamp(62px, 10.2vh, 96px);
+  min-height: clamp(48px, 8vh, 84px);
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
+  grid-template-columns: clamp(48px, 5vw, 76px) minmax(0, 1fr);
   align-items: center;
-  gap: clamp(24px, 4vw, 48px);
+  gap: clamp(16px, 3vw, 40px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.72);
-  padding: 0 0 clamp(10px, 1.7vh, 18px);
+  padding: 0 0 clamp(8px, 1.4vh, 16px);
   position: relative;
+  flex-shrink: 0;
 }
 
 .lp-app-step + .lp-app-step {
@@ -337,10 +344,11 @@
 
 .lp-app-step p {
   margin: 0;
-  font-size: var(--lp-type-body);
+  font-size: clamp(13px, 1.25vw, 18px);
   font-weight: var(--lp-weight-demi);
-  line-height: 1.28;
-  max-width: 62ch;
+  line-height: 1.32;
+  max-width: none;
+  min-width: 0;
 }
 
 .lp-app-step::after {
@@ -1251,7 +1259,7 @@
   --persona-bg: #f4f4f4;
   min-width: 0;
   display: grid;
-  grid-template-rows: auto minmax(132px, 0.8fr) minmax(240px, 1.2fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: clamp(14px, 2vh, 22px);
 }
 
@@ -1267,29 +1275,36 @@
   font-weight: var(--lp-weight-bold);
 }
 
-.lp-persona-card > div {
+.lp-persona-card-content {
   border: 2px solid #000;
   border-radius: 8px;
-  background: var(--persona-bg);
-  padding: clamp(20px, 2.6vw, 34px);
+  background: var(--persona-content-bg, var(--persona-bg));
+  padding: clamp(22px, 2.8vw, 36px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 3.5vh, 44px);
+  min-height: 0;
 }
 
-.lp-persona-card h4 {
-  margin: 0 0 10px;
+.lp-persona-section h4 {
+  margin: 0 0 clamp(10px, 1.2vh, 16px);
   font-size: var(--lp-type-title);
   line-height: 1;
   font-weight: var(--lp-weight-bold);
 }
 
-.lp-persona-card p {
+.lp-persona-section p {
   margin: 0;
   font-size: var(--lp-type-body);
-  line-height: 1.05;
+  line-height: 1.12;
   font-weight: var(--lp-weight-demi);
 }
 
 .lp-persona-card--social { --persona-bg: var(--lp-green); }
-.lp-persona-card--productivity { --persona-bg: #f4f4f4; }
+.lp-persona-card--productivity {
+  --persona-bg: #f4f4f4;
+  --persona-content-bg: #fff;
+}
 .lp-persona-card--security { --persona-bg: var(--lp-blue); }
 
 /* ── IDENTITY ───────────────────────────────────────────────────────────── */
@@ -1301,21 +1316,18 @@
   display: grid;
   grid-template-columns: minmax(320px, 0.98fr) minmax(420px, 1.02fr);
   gap: clamp(24px, 3.2vw, 42px);
-  align-items: center;
+  align-items: stretch;
 }
 
 .lp-identity-copy {
   min-width: 0;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   gap: clamp(14px, 2.3vh, 22px);
 }
 
-.lp-identity h2 {
-  font-weight: var(--lp-weight-demi);
-}
-
-.lp-identity h2 .lp-identity-emphasis {
+.lp-identity-copy .lp-identity-emphasis {
   font-weight: var(--lp-weight-bold);
 }
 
@@ -1324,11 +1336,15 @@
   margin: 0;
   font-size: var(--lp-type-body);
   font-weight: var(--lp-weight-demi);
-  line-height: 1.05;
+  line-height: 1.12;
 }
 
 .lp-identity-post-capsule {
   min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
   border: 2px solid #000;
   border-radius: 36px;
   background: #fff;
@@ -1431,17 +1447,21 @@
   --post-body-size: clamp(13px, 1.08vw, 17px);
   --post-bubble-h: auto;
   --post-meta-pill-size: clamp(10px, 0.9vw, 12px);
-  min-height: auto;
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: clamp(8px, 1.1vh, 12px);
   min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .lp-identity-profile-card {
   min-width: 0;
+  margin-top: auto;
   background: #d8d8d8;
   border-radius: 46px;
   padding: 8px;
@@ -1904,6 +1924,21 @@
 
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 
+@media (max-height: 820px) {
+  .lp-app-step {
+    min-height: clamp(40px, 7vh, 68px);
+  }
+
+  .lp-app-step p {
+    font-size: clamp(12px, 1.1vw, 16px);
+    line-height: 1.28;
+  }
+
+  .lp-app-step-list {
+    margin-top: clamp(14px, 2.5vh, 28px);
+  }
+}
+
 @media (max-width: 900px) {
   .lp-hero-title {
     font-size: clamp(56px, 18vw, 120px);
@@ -1962,11 +1997,15 @@
   }
 
   .lp-persona-card {
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto 1fr;
   }
 
-  .lp-identity-feed {
-    min-height: auto;
+  .lp-identity {
+    align-items: stretch;
+  }
+
+  .lp-identity-post-capsule {
+    min-height: clamp(360px, 52vh, 640px);
   }
 
   .lp-identity-profile-card .profile-hero-capsule {

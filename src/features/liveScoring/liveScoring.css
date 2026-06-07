@@ -241,6 +241,19 @@
   transform: rotate(8deg);
 }
 
+.lsc-particle--impacting {
+  transform: translateZ(0) scale(1.26);
+  box-shadow:
+    0 0 0 7px #000,
+    0 0 0 12px #fff,
+    0 0 52px 20px color-mix(in srgb, var(--lsc-color, #759aef) 88%, transparent),
+    0 0 130px 52px color-mix(in srgb, var(--lsc-color, #759aef) 42%, transparent) !important;
+}
+
+.lsc-particle--impacting .lsc-particle__shock {
+  animation-duration: 520ms;
+}
+
 .lsc-particle__label {
   position: absolute;
   left: 50%;

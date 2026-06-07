@@ -215,6 +215,22 @@ const FAKE_POSTS = [
     content: 'Three chat apps open, two group threads revived, and somehow every calendar invite has become a personality test. Presence is the product.',
     systemDeltaPct: 4,
   },
+  {
+    id: 'landing-productivity-post-2',
+    persona: 'productivite',
+    personaBadgePersona: 'productivity',
+    noteColor: '#D8D8D8',
+    content: 'Terminal history tells the story — twelve commits, three rebases, and one suspiciously long grep session. Productivity is a performance.',
+    systemDeltaPct: 2,
+  },
+  {
+    id: 'landing-security-post-2',
+    persona: 'securite',
+    personaBadgePersona: 'security',
+    noteColor: '#759AEF',
+    content: 'Gatekeeper blocked something today. Good. But the download folder still has files from 2023. Compliance is a moving target.',
+    systemDeltaPct: 1,
+  },
 ];
 
 function AppCarousel() {
@@ -261,13 +277,15 @@ function PersonaSections() {
         {PERSONAS.map((persona) => (
           <article key={persona.name} className={`lp-persona-card ${persona.className}`}>
             <h3>{persona.name}</h3>
-            <div>
-              <h4>About</h4>
-              <p>{persona.about}</p>
-            </div>
-            <div>
-              <h4>Focus</h4>
-              <p>{persona.focus}</p>
+            <div className="lp-persona-card-content">
+              <div className="lp-persona-section">
+                <h4>About</h4>
+                <p>{persona.about}</p>
+              </div>
+              <div className="lp-persona-section">
+                <h4>Focus</h4>
+                <p>{persona.focus}</p>
+              </div>
             </div>
           </article>
         ))}
@@ -280,10 +298,10 @@ function IdentitySection() {
   return (
     <section className="lp-screen lp-identity" aria-labelledby="lp-identity-title" style={{ '--stagger-i': 3 }}>
       <div className="lp-identity-copy">
-        <h2 id="lp-identity-title">
-          YOUR <span className="lp-identity-emphasis">COMPLIANT</span> IDENTITY
-        </h2>
-        <p>Let COMPLIANT build your presence from who you already are.</p>
+        <h2 id="lp-identity-title">YOUR COMPLIANT IDENTITY</h2>
+        <p>
+          Let <span className="lp-identity-emphasis">COMPLIANT</span> build your presence from who you already are.
+        </p>
         <p>Your habits, rhythms, interactions, and behaviors become content automatically.</p>
         <div
           className="lp-identity-profile-card"

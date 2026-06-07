@@ -136,6 +136,35 @@ function pulseRing(persona) {
 
 const TARGET_PULSE_MS = 980;
 
+export function getParticleFlightPlan({
+  isHide,
+  isReveal,
+  isLeaderboardHide,
+  isLeaderboardReveal,
+  hasWaypoint = false,
+}) {
+  const duration = isLeaderboardHide || isLeaderboardReveal
+    ? 1540
+    : hasWaypoint && isHide && !isReveal
+      ? 1680
+      : isHide || isReveal
+        ? 1180
+        : 760;
+
+  return {
+    duration,
+    waypoint: hasWaypoint && isHide && !isReveal
+      ? {
+          hitEnd: 0.26,
+          holdEnd: 0.43,
+        }
+      : {
+          hitEnd: 0.42,
+          holdEnd: 0.42,
+        },
+  };
+}
+
 function rectContainsPoint(rect, x, y) {
   return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 }
@@ -234,7 +263,14 @@ function Particle({ event, onComplete, scoringApi }) {
     const dy = ty - sy;
     const arcHeight = -Math.min(Math.abs(dx) * 0.58, 220) - 90;
 
-    const DURATION = isLeaderboardHide || isLeaderboardReveal ? 1420 : isHide || isReveal ? 1180 : 760;
+    const flightPlan = getParticleFlightPlan({
+      isHide,
+      isReveal,
+      isLeaderboardHide,
+      isLeaderboardReveal,
+      hasWaypoint: Boolean(waypointRect),
+    });
+    const DURATION = flightPlan.duration;
     const START_DELAY = isLeaderboardHide
       ? LEADERBOARD_REDACTION_MS + LEADERBOARD_ORB_PAUSE_MS
       : isHide
@@ -272,17 +308,32 @@ function Particle({ event, onComplete, scoringApi }) {
       let x;
       let y;
       if (waypointRect && waypointX != null && waypointY != null) {
-        if (progress < 0.42) {
-          const legProgress = progress / 0.42;
+        const hitEnd = flightPlan.waypoint.hitEnd;
+        const holdEnd = flightPlan.waypoint.holdEnd;
+        if (progress < hitEnd) {
+          const legProgress = progress / hitEnd;
           const legT = easeOutCubic(legProgress);
           x = sx + (waypointX - sx) * legT;
-          y = sy + (waypointY - sy) * legT - Math.sin(Math.PI * legProgress) * 44;
+          y = sy + (waypointY - sy) * legT - Math.sin(Math.PI * legProgress) * 54;
+          el.classList.remove('lsc-particle--impacting');
+        } else if (progress < holdEnd) {
+          if (!waypointCommitted) {
+            waypointCommitted = true;
+            event.onWaypoint?.();
+            pulseRevealTarget(waypointRect, event.variant, event);
+          }
+          const holdProgress = (progress - hitEnd) / Math.max(holdEnd - hitEnd, 0.001);
+          x = waypointX + Math.sin(holdProgress * Math.PI * 2) * 4;
+          y = waypointY - Math.sin(Math.PI * holdProgress) * 10;
+          el.classList.add('lsc-particle--impacting');
         } else {
           if (!waypointCommitted) {
             waypointCommitted = true;
             event.onWaypoint?.();
+            pulseRevealTarget(waypointRect, event.variant, event);
           }
-          const legProgress = (progress - 0.42) / 0.58;
+          el.classList.remove('lsc-particle--impacting');
+          const legProgress = (progress - holdEnd) / Math.max(1 - holdEnd, 0.001);
           const legT = easeOutCubic(legProgress);
           x = waypointX + (tx - waypointX) * legT;
           y =
