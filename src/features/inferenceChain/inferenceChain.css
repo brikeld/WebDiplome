@@ -240,7 +240,7 @@
     0 16px 0 rgba(0, 0, 0, 0.24);
 }
 
-.inference-panel__redacted-notice span {
+.inference-panel__redacted-notice-title {
   display: block;
   font-family: var(--font-avant);
   font-size: clamp(18px, 1.6vw, 26px);
@@ -256,13 +256,16 @@
 }
 
 .inference-panel__redacted-chip {
-  display: inline-block;
-  padding: 1px 7px 2px;
-  border-radius: var(--radius-pill);
+  display: inline;
+  padding: 0 5px;
+  border-radius: 999px;
   background: var(--tell-pill-accent, #759aef);
   color: #000;
+  font-size: inherit;
   font-weight: 800;
+  line-height: inherit;
   white-space: nowrap;
+  vertical-align: baseline;
 }
 
 .inference-panel__redacted-unhide-actions {

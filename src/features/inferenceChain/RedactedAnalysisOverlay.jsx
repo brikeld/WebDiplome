@@ -38,7 +38,7 @@ export default function RedactedAnalysisOverlay({
   return (
     <div className="inference-panel__redacted-stack" aria-live="polite">
       <div className="inference-panel__redacted-notice">
-        <span>
+        <span className="inference-panel__redacted-notice-title">
           {leaderboard
             ? 'Hidden ranking analysis remains blurred'
             : 'Hidden post analysis remains blurred'}
@@ -46,7 +46,7 @@ export default function RedactedAnalysisOverlay({
         <p>
           {leaderboard
             ? 'Reveal the ranking to inspect the analysis.'
-            : 'Reveal the post to inspect the inference chain.'}
+            : 'Unhide the post to inspect it.'}
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export default function RedactedAnalysisOverlay({
           role="group"
           aria-label={unhideConfirmTitle(leaderboard)}
         >
-          <span>{unhideConfirmTitle(leaderboard)}</span>
+          <span className="inference-panel__redacted-notice-title">{unhideConfirmTitle(leaderboard)}</span>
           <p>
             <UnhideMessage
               leaderboard={leaderboard}
