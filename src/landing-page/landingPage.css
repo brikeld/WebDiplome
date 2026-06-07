@@ -307,24 +307,23 @@
   margin-top: clamp(20px, 3.5vh, 44px);
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  justify-content: space-between;
 }
 
 .lp-app-step {
-  min-height: clamp(48px, 8vh, 84px);
+  flex: 1 1 0;
+  min-height: 0;
   display: grid;
   grid-template-columns: clamp(48px, 5vw, 76px) minmax(0, 1fr);
   align-items: center;
   gap: clamp(16px, 3vw, 40px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.72);
-  padding: 0 0 clamp(8px, 1.4vh, 16px);
+  padding: 0 0 clamp(10px, 1.6vh, 18px);
   position: relative;
-  flex-shrink: 0;
 }
 
 .lp-app-step + .lp-app-step {
-  padding-top: clamp(10px, 1.7vh, 18px);
+  padding-top: clamp(14px, 2.2vh, 26px);
 }
 
 .lp-app-step span {
@@ -849,7 +848,8 @@
 }
 
 .lp-mac-profile {
-  gap: 10px;
+  gap: 8px;
+  padding-bottom: 18px;
 }
 
 .lp-mac-profile-block {
@@ -895,9 +895,9 @@
 }
 
 .lp-mac-profile-id img {
-  width: 64px;
-  height: 64px;
-  border-radius: 6px;
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
   object-fit: cover;
 }
 
@@ -915,36 +915,58 @@
 .lp-mac-profile-hero p {
   margin: 0;
   color: var(--lp-mac-ink);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 900;
   font-style: oblique;
-  line-height: 1.45;
+  line-height: 1.35;
 }
 
-.lp-mac-profile-score {
-  width: 112px;
-  height: 112px;
+.lp-mac-profile-rings {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.lp-mac-profile-ring {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
-  border: 10px solid var(--lp-mac-accent);
-  color: var(--lp-mac-ink);
-  font-size: 28px;
-  font-weight: 900;
+  background:
+    radial-gradient(circle, var(--lp-mac-surface-1) 62%, transparent 63%),
+    conic-gradient(
+      var(--ring-color) calc(var(--ring-score, 0) * 1%),
+      rgba(255, 255, 255, 0.08) 0
+    );
+}
+
+.lp-mac-profile-ring--security {
+  --ring-color: var(--lp-blue);
+  inset: 0;
+}
+
+.lp-mac-profile-ring--productivity {
+  --ring-color: var(--lp-gray);
+  inset: 12px;
+}
+
+.lp-mac-profile-ring--social {
+  --ring-color: var(--lp-green);
+  inset: 24px;
 }
 
 .lp-mac-profile-block--stats {
-  flex: 1;
+  flex: 0 0 auto;
 }
 
 .lp-mac-statgrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px;
+  gap: 4px;
   border: 1px solid var(--lp-mac-line-strong);
   border-radius: 6px;
   background: var(--lp-mac-surface-0);
-  padding: 7px;
+  padding: 6px;
 }
 
 .lp-mac-statgrid span,
@@ -953,41 +975,93 @@
   border: 1px solid var(--lp-mac-line-soft);
   border-radius: 4px;
   background: var(--lp-mac-surface-1);
-  padding: 8px;
+  padding: 6px 7px;
   color: var(--lp-mac-ink);
-  font-size: 12px;
+  font-size: 10px;
   line-height: 1.15;
 }
 
-.lp-mac-statgrid b,
-.lp-mac-algo b {
+.lp-mac-statgrid b {
   display: block;
   color: var(--lp-mac-ink-faint);
-  font-size: 9px;
+  font-size: 8px;
+  font-weight: 900;
   text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.lp-mac-algo > span {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 78px;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 8px;
+  font-weight: 900;
+  font-style: oblique;
+  color: var(--lp-mac-ink-faint);
+}
+
+.lp-mac-algo-gauge {
+  --gauge-size: 46px;
+  position: relative;
+  width: var(--gauge-size);
+  height: var(--gauge-size);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle, var(--lp-mac-surface-1) 58%, transparent 59%),
+    conic-gradient(
+      var(--gauge-color) calc(var(--ring-score, 0) * 1%),
+      rgba(255, 255, 255, 0.1) 0
+    );
+}
+
+.lp-mac-algo-gauge--security { --gauge-color: var(--lp-blue); }
+.lp-mac-algo-gauge--productivity { --gauge-color: var(--lp-gray); }
+.lp-mac-algo-gauge--social { --gauge-color: var(--lp-green); }
+
+.lp-mac-algo-gauge b {
+  position: relative;
+  color: var(--lp-mac-ink);
+  font-size: 15px;
+  font-weight: 900;
+  font-style: normal;
+  text-transform: none;
 }
 
 .lp-mac-algo {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.lp-mac-algo span {
-  display: grid;
-  place-items: center;
-  min-height: 84px;
-  text-align: center;
-  text-transform: uppercase;
+  gap: 6px;
 }
 
 .lp-mac-algo .is-main {
   background: var(--lp-mac-accent-dim);
 }
 
-.lp-mac-algo b {
-  color: var(--lp-mac-ink);
-  font-size: 22px;
+.lp-mac-profile-foot {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.lp-mac-btn--danger {
+  border-color: rgba(255, 95, 87, 0.72);
+  color: #ff5f57;
+  font-style: oblique;
+}
+
+.lp-mac-btn--ghost,
+.lp-mac-btn--danger {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 9px;
+  font-style: oblique;
 }
 
 @keyframes lp-phone-carousel {
@@ -1443,20 +1517,20 @@
 }
 
 .lp-identity-feed {
-  --post-avatar-size: clamp(3rem, 4.4vw, 4.6rem);
-  --post-body-size: clamp(13px, 1.08vw, 17px);
+  --post-avatar-size: clamp(4rem, 5.4vw, 5.75rem);
+  --post-body-size: clamp(12px, 1vw, 15px);
   --post-bubble-h: auto;
-  --post-meta-pill-size: clamp(10px, 0.9vw, 12px);
+  --post-meta-pill-size: clamp(9px, 0.82vw, 11px);
+  --radius-post-surface: 16px;
   flex: 1 1 auto;
   min-height: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  gap: clamp(8px, 1.1vh, 12px);
+  justify-content: space-between;
+  gap: clamp(18px, 2.6vh, 30px);
   min-width: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
 }
 
 .lp-identity-profile-card {
@@ -1540,6 +1614,13 @@
 .lp-identity-feed .post-card {
   width: 100%;
   padding: 0;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.lp-identity-feed .post-avatar,
+.lp-identity-feed .post-avatar-img {
+  border-radius: 16px;
 }
 
 .lp-identity-feed .post-card-meta-row {
@@ -1925,10 +2006,6 @@
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 
 @media (max-height: 820px) {
-  .lp-app-step {
-    min-height: clamp(40px, 7vh, 68px);
-  }
-
   .lp-app-step p {
     font-size: clamp(12px, 1.1vw, 16px);
     line-height: 1.28;
@@ -1936,6 +2013,10 @@
 
   .lp-app-step-list {
     margin-top: clamp(14px, 2.5vh, 28px);
+  }
+
+  .lp-app-step + .lp-app-step {
+    padding-top: clamp(10px, 1.6vh, 18px);
   }
 }
 
@@ -1978,7 +2059,6 @@
   }
 
   .lp-app-step {
-    min-height: 62px;
     grid-template-columns: 48px minmax(0, 1fr);
     gap: 26px;
   }
@@ -2082,7 +2162,7 @@
     grid-template-columns: 1fr;
   }
 
-  .lp-mac-profile-score {
+  .lp-mac-profile-rings {
     width: 84px;
     height: 84px;
     justify-self: center;
@@ -2094,9 +2174,11 @@
   }
 
   .lp-identity-feed {
-    --post-avatar-size: 4.75rem;
-    --post-body-size: 18px;
+    --post-avatar-size: 4.25rem;
+    --post-body-size: 14px;
     --post-bubble-h: auto;
+    --radius-post-surface: 14px;
+    gap: 16px;
   }
 
   .lp-identity-feed .post-card-head {

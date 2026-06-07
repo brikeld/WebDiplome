@@ -11,9 +11,11 @@ describe('score particle motion plan', () => {
       hasWaypoint: true,
     });
 
-    expect(plan.duration).toBeGreaterThanOrEqual(1600);
+    expect(plan.duration).toBeGreaterThanOrEqual(1500);
+    expect(plan.startDelay).toBeLessThanOrEqual(180);
+    expect(plan.waypoint.hitEnd).toBeLessThanOrEqual(0.18);
     expect(plan.waypoint.hitEnd).toBeLessThan(plan.waypoint.holdEnd);
-    expect(plan.waypoint.holdEnd).toBeLessThan(0.5);
+    expect(plan.waypoint.holdEnd).toBeLessThan(0.4);
     expect(1 - plan.waypoint.holdEnd).toBeGreaterThan(0.5);
   });
 });

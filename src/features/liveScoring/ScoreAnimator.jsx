@@ -143,20 +143,29 @@ export function getParticleFlightPlan({
   isLeaderboardReveal,
   hasWaypoint = false,
 }) {
+  const startDelay = isLeaderboardHide
+    ? 1850 + 150
+    : hasWaypoint && isHide && !isReveal
+      ? 120
+      : isHide
+        ? 260
+        : 0;
+
   const duration = isLeaderboardHide || isLeaderboardReveal
     ? 1540
     : hasWaypoint && isHide && !isReveal
-      ? 1680
+      ? 1580
       : isHide || isReveal
         ? 1180
         : 760;
 
   return {
     duration,
+    startDelay,
     waypoint: hasWaypoint && isHide && !isReveal
       ? {
-          hitEnd: 0.26,
-          holdEnd: 0.43,
+          hitEnd: 0.16,
+          holdEnd: 0.34,
         }
       : {
           hitEnd: 0.42,
@@ -189,15 +198,15 @@ function findLeaderboardSelfRowByRect(sourceRect) {
   return document.querySelector('.leaderboard-row--self');
 }
 
-function pulseTargetEl(el) {
+function pulseTargetEl(el, className = 'lsc-target-pulse') {
   if (!el) return;
-  el.classList.remove('lsc-target-pulse');
+  el.classList.remove(className);
   void el.offsetWidth;
-  el.classList.add('lsc-target-pulse');
-  setTimeout(() => el.classList.remove('lsc-target-pulse'), TARGET_PULSE_MS);
+  el.classList.add(className);
+  setTimeout(() => el.classList.remove(className), TARGET_PULSE_MS);
 }
 
-function pulseRevealTarget(sourceRect, variant, event) {
+function pulseRevealTarget(sourceRect, variant, event, className = 'lsc-target-pulse') {
   if (!sourceRect) return;
   const persona = String(event.persona ?? '').toLowerCase();
   const accent = PERSONA_COLORS[persona] ?? '#759AEF';
@@ -206,7 +215,7 @@ function pulseRevealTarget(sourceRect, variant, event) {
     const row = findLeaderboardSelfRowByRect(sourceRect);
     if (!row) return;
     row.style.setProperty('--hit-accent', accent);
-    pulseTargetEl(row);
+    pulseTargetEl(row, className);
     const header = row.querySelector('.leaderboard-row__header') ?? row;
     return;
   }
@@ -217,7 +226,7 @@ function pulseRevealTarget(sourceRect, variant, event) {
   if (!capsule) return;
   const accentFromCard = getComputedStyle(card).getPropertyValue('--post-accent').trim();
   capsule.style.setProperty('--hit-accent', accentFromCard || accent);
-  pulseTargetEl(capsule);
+  pulseTargetEl(capsule, className);
 }
 
 function Particle({ event, onComplete, scoringApi }) {
@@ -271,11 +280,7 @@ function Particle({ event, onComplete, scoringApi }) {
       hasWaypoint: Boolean(waypointRect),
     });
     const DURATION = flightPlan.duration;
-    const START_DELAY = isLeaderboardHide
-      ? LEADERBOARD_REDACTION_MS + LEADERBOARD_ORB_PAUSE_MS
-      : isHide
-        ? 650
-        : 0;
+    const START_DELAY = flightPlan.startDelay;
     const startTime = performance.now() + START_DELAY;
 
     const el = elRef.current;
@@ -320,7 +325,7 @@ function Particle({ event, onComplete, scoringApi }) {
           if (!waypointCommitted) {
             waypointCommitted = true;
             event.onWaypoint?.();
-            pulseRevealTarget(waypointRect, event.variant, event);
+            pulseRevealTarget(waypointRect, event.variant, event, 'lsc-target-pulse--hide-hit');
           }
           const holdProgress = (progress - hitEnd) / Math.max(holdEnd - hitEnd, 0.001);
           x = waypointX + Math.sin(holdProgress * Math.PI * 2) * 4;
@@ -330,7 +335,7 @@ function Particle({ event, onComplete, scoringApi }) {
           if (!waypointCommitted) {
             waypointCommitted = true;
             event.onWaypoint?.();
-            pulseRevealTarget(waypointRect, event.variant, event);
+            pulseRevealTarget(waypointRect, event.variant, event, 'lsc-target-pulse--hide-hit');
           }
           el.classList.remove('lsc-particle--impacting');
           const legProgress = (progress - holdEnd) / Math.max(1 - holdEnd, 0.001);

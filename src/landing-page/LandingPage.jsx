@@ -144,25 +144,46 @@ const APP_SCREENS = [
               </div>
               <p>Always online, endlessly connected — a digital socialite whose every signal broadcasts presence over privacy.</p>
             </div>
-            <div className="lp-mac-profile-score">78</div>
+            <div className="lp-mac-profile-rings" aria-hidden>
+              <span className="lp-mac-profile-ring lp-mac-profile-ring--security" style={{ '--ring-score': 64 }} />
+              <span className="lp-mac-profile-ring lp-mac-profile-ring--productivity" style={{ '--ring-score': 71 }} />
+              <span className="lp-mac-profile-ring lp-mac-profile-ring--social" style={{ '--ring-score': 84 }} />
+            </div>
           </div>
         </div>
         <div className="lp-mac-profile-block lp-mac-profile-block--stats">
           <header><span>System data</span><i /><b /></header>
           <div className="lp-mac-statgrid">
+            <span><b>Last analysis</b>11 hours ago</span>
             <span><b>OS Version</b>macOS 15.3</span>
             <span><b>Applications</b>142</span>
             <span><b>RAM</b>16 GB</span>
+            <span><b>Battery cycles</b>260</span>
             <span><b>Storage</b>61%</span>
+            <span><b>System languages</b>4</span>
+            <span><b>Appearance</b>Dark Mode</span>
           </div>
         </div>
         <div className="lp-mac-profile-block">
           <header><span>Persona scores</span><i /><b /></header>
           <div className="lp-mac-algo">
-            <span><b>71</b>productivity</span>
-            <span className="is-main"><b>84</b>social</span>
-            <span><b>64</b>security</span>
+            <span>
+              <span className="lp-mac-algo-gauge lp-mac-algo-gauge--security" style={{ '--ring-score': 64 }}><b>64</b></span>
+              security
+            </span>
+            <span>
+              <span className="lp-mac-algo-gauge lp-mac-algo-gauge--productivity" style={{ '--ring-score': 71 }}><b>71</b></span>
+              productivity
+            </span>
+            <span className="is-main">
+              <span className="lp-mac-algo-gauge lp-mac-algo-gauge--social" style={{ '--ring-score': 84 }}><b>84</b></span>
+              social
+            </span>
           </div>
+        </div>
+        <div className="lp-mac-profile-foot">
+          <button type="button" className="lp-mac-btn lp-mac-btn--ghost">View on web</button>
+          <button type="button" className="lp-mac-btn lp-mac-btn--danger">Delete all data</button>
         </div>
       </div>
     ),
@@ -222,14 +243,6 @@ const FAKE_POSTS = [
     noteColor: '#D8D8D8',
     content: 'Terminal history tells the story — twelve commits, three rebases, and one suspiciously long grep session. Productivity is a performance.',
     systemDeltaPct: 2,
-  },
-  {
-    id: 'landing-security-post-2',
-    persona: 'securite',
-    personaBadgePersona: 'security',
-    noteColor: '#759AEF',
-    content: 'Gatekeeper blocked something today. Good. But the download folder still has files from 2023. Compliance is a moving target.',
-    systemDeltaPct: 1,
   },
 ];
 

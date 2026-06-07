@@ -22,6 +22,15 @@ describe('<LandingPage> expanded content', () => {
     expect(html).toContain('Your complete digital identity dashboard');
   });
 
+  it('renders the expanded profile dashboard in the mac app carousel', () => {
+    const html = renderToStaticMarkup(<LandingPage />);
+
+    expect(html).toContain('Battery cycles');
+    expect(html).toContain('System languages');
+    expect(html).toContain('Appearance');
+    expect(html).toContain('Delete all data');
+  });
+
   it('uses a Mac app preview instead of a phone frame', () => {
     const html = renderToStaticMarkup(<LandingPage />);
 
@@ -54,7 +63,7 @@ describe('<LandingPage> expanded content', () => {
     expect(html).toContain('landing-security-post');
     expect(html).toContain('landing-social-post');
     expect(html).toContain('landing-productivity-post-2');
-    expect(html).toContain('landing-security-post-2');
+    expect(html).not.toContain('landing-security-post-2');
   });
 
   it('renders a professional black website footer', () => {
