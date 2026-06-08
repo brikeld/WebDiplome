@@ -15,7 +15,6 @@
 .dashboard-capsule--figma[data-tell-step="closing"] {
   --dash-timer-track: 0fr;
   --dash-tell-track: 1fr;
-  --dashboard-pad: clamp(8px, 0.85vh, 10px);
   gap: 0;
 }
 
@@ -66,7 +65,13 @@
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="loading"],
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="revealing"],
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="content"],
-.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="closing"] {
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="closing"],
+.view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="expanding"],
+.view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="loading"],
+.view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="revealing"],
+.view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="content"],
+.view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="closing"] {
+  padding: clamp(10px, 1.1vh, 14px);
   gap: 0;
 }
 
@@ -394,7 +399,7 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: clamp(8px, 0.9vw, 12px);
+  padding: clamp(14px, 1.35vw, 18px);
   box-sizing: border-box;
 }
 
@@ -563,7 +568,7 @@
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel {
-  --tell-content-pad: clamp(8px, 0.9vw, 12px);
+  --tell-content-pad: clamp(14px, 1.35vw, 18px);
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
@@ -757,7 +762,7 @@
 @container dash-tell (max-height: 460px) {
   .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
   .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel {
-    --tell-content-pad: clamp(6px, 0.75vw, 10px);
+    --tell-content-pad: clamp(10px, 1.1vw, 14px);
   }
 
   .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2 {

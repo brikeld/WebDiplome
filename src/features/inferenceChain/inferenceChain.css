@@ -192,6 +192,12 @@
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__label,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__label,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__pct {
   font-size: var(--dash-bar-fs);
