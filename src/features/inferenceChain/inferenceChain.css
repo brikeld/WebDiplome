@@ -414,9 +414,17 @@
   visibility: hidden;
   opacity: 1;
   transform: translateY(10px);
+  overflow: hidden;
+  contain: paint;
   transition:
     visibility 0s linear 360ms,
     transform 520ms var(--tell-motion-ease, cubic-bezier(0.32, 0.72, 0, 1));
+}
+
+.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-morph__idle {
+  opacity: 0;
+  visibility: hidden;
+  filter: none;
 }
 
 .dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader {
@@ -424,6 +432,24 @@
   opacity: 1 !important;
   transform: translateY(0);
   transition-delay: 0s;
+}
+
+.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader__card {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1);
+  box-shadow: none;
+}
+
+.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader__ring {
+  box-shadow: 0 0 0 12px color-mix(in srgb, var(--tell-pill-accent, #759aef) 12%, transparent) inset;
+}
+
+.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader__core {
+  box-shadow: none;
+}
+
+.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader__top b::before {
+  box-shadow: none;
 }
 
 .dashboard-capsule--figma.is-tell-revealing .tell-analysis-loader,
@@ -451,11 +477,6 @@
   transition:
     opacity 360ms ease,
     transform 520ms var(--tell-motion-ease, cubic-bezier(0.32, 0.72, 0, 1));
-}
-
-.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader__card {
-  opacity: 1 !important;
-  transform: translateY(0) scale(1);
 }
 
 .dashboard-capsule--figma.is-tell-revealing .tell-analysis-loader__card,
