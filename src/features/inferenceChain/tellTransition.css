@@ -1,0 +1,488 @@
+/* ── Tell me more — simple phase machine (data-tell-phase on .dashboard-capsule) ──
+   idle → expanding → loading → content → closing → collapsing → idle
+   Each phase shows exactly one layer: idle face | radar loader | analysis panel
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.dashboard-capsule--figma {
+  --tell-fade: 280ms;
+  --tell-radius: 420ms;
+}
+
+/* Layout open: timer row collapses, tell row fills capsule */
+.dashboard-capsule--figma[data-tell-phase="expanding"],
+.dashboard-capsule--figma[data-tell-phase="loading"],
+.dashboard-capsule--figma[data-tell-phase="content"],
+.dashboard-capsule--figma[data-tell-phase="closing"] {
+  --dash-timer-track: 0fr;
+  --dash-tell-track: 1fr;
+  --dashboard-tell-pad: clamp(12px, 1.15vw, 16px);
+  padding: var(--dashboard-tell-pad);
+  gap: 0;
+}
+
+.dashboard-capsule--figma[data-tell-phase="expanding"] {
+  --dashboard-tell-pad: 0px;
+  padding: 0;
+  background: #fff;
+  border-color: transparent;
+}
+
+.dashboard-capsule--figma[data-tell-phase="loading"],
+.dashboard-capsule--figma[data-tell-phase="content"],
+.dashboard-capsule--figma[data-tell-phase="closing"] {
+  background: #fff;
+  border-color: transparent;
+}
+
+.dashboard-capsule--figma[data-tell-phase="collapsing"] {
+  padding: var(--dashboard-pad);
+  gap: var(--dashboard-btn-gap);
+  background: var(--persona-accent, #759aef);
+  border-color: transparent;
+}
+
+.dashboard-capsule--figma[data-tell-phase="expanding"] .dashboard-tell-row,
+.dashboard-capsule--figma[data-tell-phase="loading"] .dashboard-tell-row,
+.dashboard-capsule--figma[data-tell-phase="content"] .dashboard-tell-row,
+.dashboard-capsule--figma[data-tell-phase="closing"] .dashboard-tell-row {
+  grid-row: 1 / -1;
+  z-index: 2;
+  align-self: stretch;
+  min-height: 100%;
+  height: 100%;
+}
+
+.dashboard-capsule--figma[data-tell-phase="expanding"] .dashboard-actions-row,
+.dashboard-capsule--figma[data-tell-phase="loading"] .dashboard-actions-row,
+.dashboard-capsule--figma[data-tell-phase="content"] .dashboard-actions-row,
+.dashboard-capsule--figma[data-tell-phase="closing"] .dashboard-actions-row {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dashboard-capsule--figma[data-tell-phase="collapsing"] .dashboard-actions-row {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: calc(var(--tell-layout-dur) * 0.15);
+}
+
+/* ── Morph shell ── */
+.tell-morph {
+  --tell-morph-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: var(--capsule-radius, var(--tell-pill-radius));
+  border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98),
+      color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
+    );
+  overflow: hidden;
+  transition:
+    border-radius var(--tell-radius) cubic-bezier(0.22, 1, 0.36, 1),
+    border-color var(--tell-fade) ease,
+    background var(--tell-fade) ease;
+}
+
+.dashboard-capsule--figma[data-tell-phase="expanding"] .tell-morph,
+.dashboard-capsule--figma[data-tell-phase="loading"] .tell-morph,
+.dashboard-capsule--figma[data-tell-phase="content"] .tell-morph,
+.dashboard-capsule--figma[data-tell-phase="closing"] .tell-morph {
+  border-radius: 0;
+  height: 100%;
+  min-height: 100%;
+}
+
+.dashboard-capsule--figma[data-tell-phase="loading"] .tell-morph,
+.dashboard-capsule--figma[data-tell-phase="content"] .tell-morph,
+.dashboard-capsule--figma[data-tell-phase="closing"] .tell-morph {
+  border-color: transparent;
+  background: transparent;
+}
+
+.dashboard-capsule--figma[data-tell-phase="collapsing"] .tell-morph {
+  border-radius: var(--capsule-radius, var(--tell-pill-radius));
+}
+
+/* ── Three layers — one active at a time (.is-active on each layer) ── */
+.tell-morph__layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--tell-fade) ease, visibility 0s linear var(--tell-fade);
+}
+
+.tell-morph__layer.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity var(--tell-fade) ease, visibility 0s linear 0s;
+}
+
+.tell-morph__layer--idle {
+  z-index: 1;
+  pointer-events: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.tell-morph__layer--idle.is-active {
+  pointer-events: none;
+}
+
+.tell-morph__layer--loader {
+  z-index: 2;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.tell-morph__layer--loader.is-active {
+  pointer-events: none;
+}
+
+.tell-morph__layer--panel {
+  z-index: 3;
+  border: none;
+  background: transparent;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* expanding → idle face stays visible via .is-active on component */
+.dashboard-capsule--figma[data-tell-phase="closing"] .tell-morph__layer--panel.is-active {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Radar loader (visible only in loading phase) ── */
+.tell-analysis-loader {
+  flex: 1 1 auto;
+  display: grid;
+  place-items: center;
+  padding: clamp(24px, 5vw, 56px);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.tell-analysis-loader__card {
+  width: min(360px, 100%);
+  border: 1px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 32%, rgba(0, 0, 0, 0.12));
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 40%, #fff)),
+    #fff;
+  padding: clamp(18px, 3vh, 26px);
+  color: #07101f;
+}
+
+.tell-analysis-loader__top,
+.tell-analysis-loader__metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tell-analysis-loader__top span {
+  color: rgba(7, 16, 31, 0.62);
+}
+
+.tell-analysis-loader__top b {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: #000;
+  color: var(--tell-pill-accent, #759aef);
+  padding: 7px 9px;
+  font-size: 8px;
+}
+
+.tell-analysis-loader__top b::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.tell-analysis-loader__scope {
+  position: relative;
+  width: clamp(126px, 19vh, 172px);
+  aspect-ratio: 1;
+  margin: clamp(18px, 3vh, 28px) auto;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--tell-pill-accent, #759aef) 20%, transparent) 0 22%, transparent 23%),
+    repeating-radial-gradient(circle, rgba(0, 0, 0, 0.14) 0 1px, transparent 1px 24px);
+  overflow: hidden;
+}
+
+.tell-analysis-loader__ring,
+.tell-analysis-loader__scan,
+.tell-analysis-loader__core {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.tell-analysis-loader__ring {
+  border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 58%, #000);
+  box-shadow: 0 0 0 12px color-mix(in srgb, var(--tell-pill-accent, #759aef) 12%, transparent) inset;
+  animation: tell-loader-pulse 1.8s ease-in-out infinite;
+}
+
+.tell-analysis-loader__scan {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--tell-pill-accent, #759aef) 64%, transparent) 28deg,
+    transparent 70deg
+  );
+  mask: radial-gradient(circle, transparent 0 28%, #000 29% 100%);
+  animation: tell-loader-scan 1.65s linear infinite;
+}
+
+.tell-analysis-loader__core {
+  inset: 39%;
+  background: #000;
+}
+
+.tell-analysis-loader__copy {
+  text-align: center;
+}
+
+.tell-analysis-loader__copy strong {
+  display: block;
+  font-size: clamp(18px, 2.5vw, 26px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tell-analysis-loader__copy span {
+  display: block;
+  margin-top: 8px;
+  color: rgba(7, 16, 31, 0.58);
+  font-size: clamp(11px, 1vw, 13px);
+  font-weight: 800;
+}
+
+.tell-analysis-loader__progress {
+  height: 8px;
+  margin-top: clamp(18px, 2.5vh, 24px);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.tell-analysis-loader__progress span {
+  display: block;
+  height: 100%;
+  width: 54%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #000, var(--tell-pill-accent, #759aef), #000);
+  animation: tell-loader-progress 1.55s var(--tell-morph-ease) infinite;
+}
+
+.tell-analysis-loader__metrics {
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.tell-analysis-loader__metrics span {
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 999px;
+  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.48);
+  color: rgba(7, 16, 31, 0.66);
+  font-size: 8px;
+}
+
+@keyframes tell-loader-scan {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes tell-loader-pulse {
+  0%, 100% { transform: scale(0.98); opacity: 0.76; }
+  50% { transform: scale(1.03); opacity: 1; }
+}
+
+@keyframes tell-loader-progress {
+  0% { transform: translateX(-82%); }
+  55% { transform: translateX(26%); }
+  100% { transform: translateX(112%); }
+}
+
+/* ── Idle face (tell-idle-a) ── */
+.tell-idle-a {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(13px, 1.75vh, 20px);
+  padding: clamp(20px, 2.55vw, 32px);
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.tell-idle-a__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.tell-idle-a__persona {
+  min-width: 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--tell-pill-accent, #759aef);
+  color: #000;
+  font-size: clamp(14px, 1.3vw, 18px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    background 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tell-idle-a__dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.tell-idle-a__dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--tell-pill-accent, #759aef);
+  animation: tell-a-dot 1.8s ease-in-out infinite;
+  transition: background 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tell-idle-a__dots i:nth-child(2) { animation-delay: 0.3s; }
+.tell-idle-a__dots i:nth-child(3) { animation-delay: 0.6s; }
+
+.tell-idle-a__bars {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(14px, 1.85vh, 21px);
+}
+
+.tell-idle-a__bars span {
+  height: clamp(24px, 3.25vh, 38px);
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--tell-pill-accent, #759aef) 18%, #fff),
+      color-mix(in srgb, var(--tell-pill-accent, #759aef) 44%, #fff),
+      color-mix(in srgb, var(--tell-pill-accent, #759aef) 18%, #fff)
+    );
+  background-size: 220% 100%;
+  animation: tell-a-bar 2.2s ease-in-out infinite;
+  transition: background 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tell-idle-a__bars span:nth-child(1) { width: 88%; }
+.tell-idle-a__bars span:nth-child(2) { width: 64%; animation-delay: 0.35s; }
+.tell-idle-a__bars span:nth-child(3) { width: 76%; animation-delay: 0.7s; }
+
+.tell-idle-a__cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: #07101f;
+  font-size: clamp(26px, 3.2vw, 44px);
+  font-weight: 800;
+  line-height: 0.96;
+}
+
+.tell-idle-a__cta span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tell-idle-a__cta b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: clamp(34px, 4vw, 48px);
+  height: clamp(34px, 4vw, 48px);
+  border-radius: 999px;
+  background: var(--tell-pill-accent, #759aef);
+  color: #000;
+  font-size: 0.78em;
+  font-style: normal;
+  line-height: 1;
+  transition: background 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes tell-a-dot {
+  0%, 100% { transform: translateY(0); opacity: 0.45; }
+  50% { transform: translateY(-3px); opacity: 1; }
+}
+
+@keyframes tell-a-bar {
+  0% { background-position: 110% center; }
+  100% { background-position: -110% center; }
+}
+
+.dashboard-capsule--figma:not([data-tell-phase="expanding"]) .tell-idle-a {
+  padding: clamp(22px, 2.8vw, 38px);
+  gap: clamp(16px, 2.2vh, 26px);
+}
+
+.dashboard-capsule--figma[data-tell-phase="expanding"] .tell-idle-a__bars span {
+  animation-duration: 1.35s;
+}
+
+/* Home/profile side panel — tighter pad when tell is open */
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-phase="expanding"],
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-phase="loading"],
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-phase="content"],
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-phase="closing"],
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-phase="expanding"],
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-phase="loading"],
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-phase="content"],
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-phase="closing"] {
+  padding: var(--dashboard-tell-pad, clamp(12px, 1.25vw, 16px));
+  gap: 0;
+}

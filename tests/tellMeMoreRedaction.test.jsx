@@ -21,7 +21,6 @@ describe('<TellMeMorePill> hidden redaction', () => {
     );
 
     expect(html).toContain('tell-morph');
-    expect(html).toContain('<button');
     expect(html).toContain('tell-morph__idle');
     expect(html).toContain('tell-idle-a');
     expect(html).toContain('tell-idle-a__bars');
