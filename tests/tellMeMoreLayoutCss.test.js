@@ -37,15 +37,17 @@ describe('tell-me-more expanded layout CSS contract', () => {
     expect(ingredientLabel).not.toContain('overflow: hidden');
   });
 
-  it('uses the prototype focus-detail capsule and loading scanner in production CSS', () => {
+  it('uses the prototype focus-detail capsule, morph shell, and loading scanner in production CSS', () => {
     const focusDetail = blockFor('.focus-detail');
     const focusPanel = blockFor('.tell-panel-a--has-focus');
+    const morph = blockFor('.tell-morph');
     const loader = blockFor('.tell-analysis-loader');
     const loaderVisible = blockFor('.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader');
 
     expect(focusPanel).toContain('--panel-a-gap');
     expect(focusDetail).toContain('width: 100%');
     expect(focusDetail).toContain('animation: focus-detail-in');
+    expect(morph).toContain('position: relative');
     expect(loader).toContain('place-items: center');
     expect(loaderVisible).toContain('visibility: visible');
   });

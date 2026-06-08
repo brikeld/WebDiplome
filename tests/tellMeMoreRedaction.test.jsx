@@ -20,7 +20,9 @@ describe('<TellMeMorePill> hidden redaction', () => {
       <TellMeMorePill fallbackPersona="security" expanded={false} />,
     );
 
+    expect(html).toContain('tell-morph');
     expect(html).toContain('<button');
+    expect(html).toContain('tell-morph__idle');
     expect(html).toContain('tell-idle-a');
     expect(html).toContain('tell-idle-a__bars');
     expect(html).toContain('tell-analysis-loader');
@@ -32,6 +34,7 @@ describe('<TellMeMorePill> hidden redaction', () => {
   it('renders expanded post analysis immediately when expanded', () => {
     const html = renderToStaticMarkup(<TellMeMorePill highlightedPost={post} expanded />);
 
+    expect(html).toContain('tell-morph__panel');
     expect(html).toContain('tell-panel-a');
     expect(html).toContain('tell-panel-a--alt-palette-2');
     expect(html).toContain('From data to post');

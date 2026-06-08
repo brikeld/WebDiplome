@@ -48,13 +48,215 @@
   outline-offset: 3px;
 }
 
-/* ── State: idle — shimmer strip (always loading) ── */
-.tell-more-pill--idle {
+/* ── tell-morph shell (both-states prototype) ── */
+.dashboard-capsule--figma.is-tell-expanding .tell-morph {
+  border-radius: 0;
+  border-color: transparent;
+  background: transparent;
+  transition:
+    border-radius var(--tell-morph-dur) var(--tell-morph-ease),
+    border-color var(--tell-morph-fade) ease,
+    background var(--tell-morph-fade) ease;
+}
+
+.dashboard-capsule--figma.is-tell-expanding .tell-idle-a__bars span {
+  animation-duration: 1.35s;
+}
+
+.dashboard-capsule--figma.is-tell-expanding .tell-morph__idle {
+  opacity: 1;
+}
+
+.tell-morph {
+  --tell-morph-dur: var(--tell-layout-dur, 1500ms);
+  --tell-morph-fade: 240ms;
+  --tell-morph-reveal: 640ms;
+  --tell-morph-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  border-radius: var(--capsule-radius, var(--tell-pill-radius));
+  border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98),
+      color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
+    );
+  overflow: hidden;
+  transition:
+    border-radius var(--tell-morph-dur) var(--tell-morph-ease),
+    border-color var(--tell-morph-fade) ease,
+    background var(--tell-morph-fade) ease;
+}
+
+.dashboard-capsule--figma.is-tell-expanded .tell-morph,
+.dashboard-capsule--figma.is-tell-expanding .tell-morph,
+.dashboard-capsule--figma.is-tell-loading .tell-morph,
+.dashboard-capsule--figma.is-tell-revealing .tell-morph {
+  border-radius: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.dashboard-capsule--figma.is-tell-closing:not(.is-tell-expanded) .tell-morph {
+  border-radius: var(--capsule-radius, var(--tell-pill-radius));
+  border-color: color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98),
+      color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
+    );
+}
+
+.tell-morph__idle {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity calc(var(--tell-morph-reveal) * 0.85) var(--tell-morph-ease);
+}
+
+.dashboard-capsule--figma.is-tell-content-ready:not(.is-tell-revealing) .tell-morph__idle {
+  opacity: 0;
+}
+
+.dashboard-capsule--figma.is-tell-revealing .tell-morph__idle {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.dashboard-capsule--figma.is-tell-closing:not(.is-tell-expanded) .tell-morph__idle {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.tell-morph__panel {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity calc(var(--tell-morph-reveal) * 0.75) var(--tell-morph-ease);
+}
+
+.dashboard-capsule--figma.is-tell-content-ready .tell-morph__panel {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dashboard-capsule--figma.is-tell-revealing .tell-morph__panel {
+  z-index: 3;
+}
+
+.dashboard-capsule--figma.is-tell-revealing .tell-morph__idle {
+  z-index: 2;
+}
+
+.dashboard-capsule--figma.is-tell-revealing.is-tell-loading .tell-idle-a__top,
+.dashboard-capsule--figma.is-tell-revealing.is-tell-loading .tell-idle-a__bars {
+  opacity: 0;
+  transition: opacity calc(var(--tell-morph-reveal) * 0.7) ease;
+}
+
+.dashboard-capsule--figma[data-tell-mode="expanding"] .tell-idle-a__persona,
+.dashboard-capsule--figma[data-tell-mode="expanding"] .tell-idle-a__cta,
+.dashboard-capsule--figma[data-tell-mode="loading"] .tell-idle-a__persona,
+.dashboard-capsule--figma[data-tell-mode="loading"] .tell-idle-a__cta,
+.dashboard-capsule--figma[data-tell-mode="revealing"] .tell-idle-a__persona,
+.dashboard-capsule--figma[data-tell-mode="revealing"] .tell-idle-a__cta,
+.dashboard-capsule--figma[data-tell-mode="expanded"] .tell-idle-a__persona,
+.dashboard-capsule--figma[data-tell-mode="expanded"] .tell-idle-a__cta,
+.dashboard-capsule--figma[data-tell-mode="closing"] .tell-idle-a__persona,
+.dashboard-capsule--figma[data-tell-mode="closing"] .tell-idle-a__cta {
+  opacity: 0 !important;
+  visibility: hidden;
+  max-height: 0 !important;
+  overflow: hidden;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0;
+  pointer-events: none;
+}
+
+.dashboard-capsule--figma.is-tell-revealing .tell-panel-a__stack > .post-quote-a,
+.dashboard-capsule--figma.is-tell-revealing .tell-panel-a__stack > .tape-section,
+.dashboard-capsule--figma.is-tell-revealing .tell-panel-a__stack > .reason-section,
+.dashboard-capsule--figma.is-tell-revealing .tell-panel-a__stack > .ing-section {
+  opacity: 0;
+  animation: tell-section-in var(--tell-morph-reveal) var(--tell-morph-ease) both;
+}
+
+.dashboard-capsule--figma.is-tell-revealing .tell-panel-a__stack > .post-quote-a {
+  animation-delay: 80ms;
+}
+
+.dashboard-capsule--figma.is-tell-revealing .tell-panel-a__stack > .tape-section {
+  animation-delay: 160ms;
+}
+
+.dashboard-capsule--figma.is-tell-revealing .tell-panel-a__stack > .reason-section {
+  animation-delay: 240ms;
+}
+
+.dashboard-capsule--figma.is-tell-revealing .tell-panel-a__stack > .ing-section {
+  animation-delay: 320ms;
+}
+
+.dashboard-capsule--figma.is-tell-closing .tell-panel-a__stack > .post-quote-a,
+.dashboard-capsule--figma.is-tell-closing .tell-panel-a__stack > .tape-section,
+.dashboard-capsule--figma.is-tell-closing .tell-panel-a__stack > .reason-section,
+.dashboard-capsule--figma.is-tell-closing .tell-panel-a__stack > .ing-section {
+  animation: tell-section-out calc(var(--tell-morph-fade) * 1.15) ease both;
+}
+
+@keyframes tell-section-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tell-section-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ── State: idle face inside morph ── */
+.tell-more-pill--idle,
+.tell-morph__idle {
   --lb-acc: var(--tell-pill-accent, #759aef);
   cursor: default;
   pointer-events: none;
-  background: var(--card, #fff);
-  border-color: var(--tell-pill-accent, #759aef);
+  background: transparent;
+  border: none;
   height: 100%;
   width: 100%;
   min-height: 0;
@@ -62,29 +264,9 @@
   justify-content: stretch;
 }
 
-.tell-more-pill--idle .tell-load {
-  position: relative;
-  inset: auto;
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  height: 100%;
-  width: 100%;
-  min-height: 0;
-  background: transparent;
-  justify-content: stretch;
-  align-items: stretch;
-  padding: clamp(
-    calc(16px * var(--tell-idle-scale, 1)),
-    calc(1.9vw * var(--tell-idle-scale, 1)),
-    calc(25px * var(--tell-idle-scale, 1))
-  );
-  box-sizing: border-box;
-  gap: clamp(
-    calc(8px * var(--tell-idle-scale, 1)),
-    calc(1.05vh * var(--tell-idle-scale, 1)),
-    calc(12px * var(--tell-idle-scale, 1))
-  );
+.dashboard-capsule--figma:not(.is-tell-expanded):not(.is-tell-expanding) .tell-idle-a {
+  padding: clamp(22px, 2.8vw, 38px);
+  gap: clamp(16px, 2.2vh, 26px);
 }
 
 .tell-idle-a {

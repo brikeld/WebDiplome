@@ -1,11 +1,12 @@
 /**
  * Dashboard "Tell me more" capsule.
  *
- * Collapsed: compact shimmer loading state. Expands when a feed post is highlighted.
- * Expanded: InferenceChainPanel for the highlighted post.
+ * tell-morph shell (both-states prototype): idle layer, analysis loader, panel layer.
+ * Capsule phase classes (is-tell-loading, is-tell-content-ready, …) drive crossfades.
  */
 
 import InferenceChainPanel from './InferenceChainPanel.jsx';
+import TellAnalysisLoader from './TellAnalysisLoader.jsx';
 
 const PERSONA_PASTEL = {
   productivity: '#EEEEEE',
@@ -38,6 +39,7 @@ const PERSONA_LABEL = {
 };
 
 export default function TellMeMorePill({
+  tellPhase = 'idle',
   highlightedPost,
   expanded,
   closing = false,
@@ -60,8 +62,10 @@ export default function TellMeMorePill({
     personaPastel ?? PERSONA_PASTEL[mainPersonaKey] ?? PERSONA_PASTEL.security;
   const accent = highlightedPost ? postAccent : mainAccent;
   const pastel = highlightedPost ? postPastel : mainPastel;
-  const label = PERSONA_LABEL[postPersonaKey] ?? 'Social';
+  const label = PERSONA_LABEL[postUiKey] ?? 'Social';
   const mainLabel = PERSONA_LABEL[mainPersonaKey] ?? 'Security';
+  const displayLabel = highlightedPost ? label : mainLabel;
+  const skipPanelLoader = Boolean(highlightedPost && !highlightedPost.leaderboard);
 
   const pillStyle = {
     '--tell-pill-accent': accent,
@@ -69,77 +73,56 @@ export default function TellMeMorePill({
     '--lb-acc': accent,
   };
 
-  if (expanded && highlightedPost) {
-    return (
+  return (
+    <div className="tell-morph" style={pillStyle}>
+      <button
+        type="button"
+        className="tell-more-pill tell-more-pill--idle tell-morph__idle"
+        aria-disabled="true"
+        aria-live="polite"
+        tabIndex={-1}
+        aria-label={`Tell me more - ${displayLabel} post`}
+      >
+        <div className="tell-idle-a">
+          <div className="tell-idle-a__top">
+            <span className="tell-idle-a__persona">{displayLabel} post</span>
+            <span className="tell-idle-a__dots" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+          </div>
+          <div className="tell-idle-a__bars" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="tell-idle-a__cta">
+            <span>Tell me why</span>
+            <b aria-hidden="true">→</b>
+          </div>
+        </div>
+      </button>
+
+      <TellAnalysisLoader />
+
       <div
-        className={`tell-more-pill tell-more-pill--expanded${closing ? ' tell-more-pill--closing' : ''}${isAnalysisRedacted ? ' tell-more-pill--redacted' : ''}`}
-        style={pillStyle}
+        className={`tell-morph__panel tell-more-pill tell-more-pill--expanded${closing ? ' tell-more-pill--closing' : ''}${isAnalysisRedacted ? ' tell-more-pill--redacted' : ''}`}
         role="region"
         aria-label="Inference chain analysis"
+        data-tell-phase={tellPhase}
       >
-        <InferenceChainPanel
-          post={highlightedPost}
-          personaLabel={label}
-          holdLoadingOverlay={holdLoadingOverlay}
-          redacted={isAnalysisRedacted}
-          onRedactedUnhideConfirm={onRedactedUnhideConfirm}
-        />
+        {expanded && highlightedPost ? (
+          <InferenceChainPanel
+            post={highlightedPost}
+            personaLabel={label}
+            holdLoadingOverlay={holdLoadingOverlay}
+            skipLoadingOverlay={skipPanelLoader}
+            redacted={isAnalysisRedacted}
+            onRedactedUnhideConfirm={onRedactedUnhideConfirm}
+          />
+        ) : null}
       </div>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      className="tell-more-pill tell-more-pill--idle"
-      style={pillStyle}
-      aria-disabled="true"
-      aria-live="polite"
-      tabIndex={-1}
-      aria-label={`Tell me more - loading analysis for ${mainLabel} post`}
-    >
-      <div className="tell-idle-a">
-        <div className="tell-idle-a__top">
-          <span className="tell-idle-a__persona">{mainLabel} post</span>
-          <span className="tell-idle-a__dots" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-        </div>
-        <div className="tell-idle-a__bars" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="tell-idle-a__cta">
-          <span>Tell me why</span>
-          <b aria-hidden="true">→</b>
-        </div>
-      </div>
-      <div className="tell-analysis-loader" aria-hidden="true">
-        <div className="tell-analysis-loader__card">
-          <div className="tell-analysis-loader__top">
-            <span>Signal analysis</span>
-            <b>Live trace</b>
-          </div>
-          <div className="tell-analysis-loader__scope">
-            <span className="tell-analysis-loader__ring" />
-            <span className="tell-analysis-loader__scan" />
-            <span className="tell-analysis-loader__core" />
-          </div>
-          <div className="tell-analysis-loader__copy">
-            <strong>Building inference chain</strong>
-            <span>Ranking evidence, confidence, and persona fit</span>
-          </div>
-          <div className="tell-analysis-loader__progress"><span /></div>
-          <div className="tell-analysis-loader__metrics">
-            <span>App signals</span>
-            <span>Recent files</span>
-            <span>Post rationale</span>
-          </div>
-        </div>
-      </div>
-    </button>
+    </div>
   );
 }

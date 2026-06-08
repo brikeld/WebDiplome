@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import Sidebar from '@/layout/Sidebar.jsx';
 import ScrollArea from '@/layout/ScrollArea.jsx';
 import ProfileView from '@/features/profile/ProfileView.jsx';
@@ -115,7 +116,8 @@ const PUBLIC_FEED_LIMIT = 20;
 const TELL_LAYOUT_MS = 1500;
 const TELL_LOADING_EXTRA_MS = 2000;
 const TELL_REVEAL_MS = 640;
-const TELL_CLOSE_MS = TELL_LAYOUT_MS + 280;
+const TELL_CLOSE_FADE_MS = 280;
+const TELL_CLOSE_MS = TELL_CLOSE_FADE_MS + TELL_LAYOUT_MS;
 
 const PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 const PERSONA_ALIASES = {
@@ -351,6 +353,7 @@ function AppInner({
   const [tellExpanded, setTellExpanded] = useState(false);
   const [tellClosing, setTellClosing] = useState(false);
   const [tellPhase, setTellPhase] = useState('idle');
+  const [tellLayoutCollapsed, setTellLayoutCollapsed] = useState(false);
   const tellCloseTimerRef = useRef(null);
   const tellPhaseTimersRef = useRef([]);
   const tellThemePostRef = useRef(null);
@@ -663,19 +666,7 @@ function AppInner({
     tellPhaseTimersRef.current = [];
   }, []);
 
-  const openTell = useCallback((post) => {
-    clearTellTimers();
-    setTellClosing(false);
-
-    if (post?.leaderboard) {
-      setTellPhase('expanded');
-      setTellExpanded(true);
-      return;
-    }
-
-    setTellExpanded(false);
-    setTellPhase('expanding');
-
+  const scheduleTellPhaseTimers = useCallback(() => {
     tellPhaseTimersRef.current = [
       setTimeout(() => setTellPhase('loading'), TELL_LAYOUT_MS),
       setTimeout(() => {
@@ -687,25 +678,56 @@ function AppInner({
         setTellPhase('expanded');
       }, TELL_LAYOUT_MS + TELL_LOADING_EXTRA_MS + TELL_REVEAL_MS),
     ];
-  }, [clearTellTimers]);
+  }, []);
+
+  const beginTellForPost = useCallback((post) => {
+    if (!post) return;
+    clearTellTimers();
+
+    if (post.leaderboard) {
+      flushSync(() => {
+        setHighlightedPost(post);
+        setTellClosing(false);
+        setTellLayoutCollapsed(false);
+        setTellPhase('expanded');
+        setTellExpanded(true);
+      });
+      return;
+    }
+
+    flushSync(() => {
+      setHighlightedPost(post);
+      setTellClosing(false);
+      setTellLayoutCollapsed(false);
+      setTellExpanded(false);
+      setTellPhase('expanding');
+    });
+    scheduleTellPhaseTimers();
+  }, [clearTellTimers, scheduleTellPhaseTimers]);
 
   const closeTell = useCallback(() => {
     clearTellTimers();
 
     if (!tellExpanded && tellPhase === 'idle') {
       setTellClosing(false);
+      setTellLayoutCollapsed(false);
       return;
     }
 
+    setTellLayoutCollapsed(false);
     setTellClosing(true);
     setTellPhase('closing');
 
     tellCloseTimerRef.current = setTimeout(() => {
-      setTellExpanded(false);
-      setTellClosing(false);
-      setTellPhase('idle');
-      tellCloseTimerRef.current = null;
-    }, TELL_CLOSE_MS);
+      setTellLayoutCollapsed(true);
+      tellCloseTimerRef.current = setTimeout(() => {
+        setTellExpanded(false);
+        setTellClosing(false);
+        setTellPhase('idle');
+        setTellLayoutCollapsed(false);
+        tellCloseTimerRef.current = null;
+      }, TELL_LAYOUT_MS);
+    }, TELL_CLOSE_FADE_MS);
   }, [clearTellTimers, tellExpanded, tellPhase]);
 
   useEffect(() => () => {
@@ -715,6 +737,13 @@ function AppInner({
   useEffect(() => {
     if (highlightedPost) tellThemePostRef.current = highlightedPost;
   }, [highlightedPost]);
+
+  // Safety net: any code path that sets highlightedPost without calling beginTellForPost.
+  useEffect(() => {
+    if (!highlightedPost || tellClosing) return;
+    if (tellPhase !== 'idle') return;
+    beginTellForPost(highlightedPost);
+  }, [highlightedPost?.id, tellClosing, tellPhase, beginTellForPost, highlightedPost]);
 
   const tellDisplayPost =
     highlightedPost ?? (tellClosing ? tellThemePostRef.current : null);
@@ -740,12 +769,11 @@ function AppInner({
       closeTell();
       return;
     }
-    setHighlightedPost(post);
     setConfirmingHide(false);
     setConfirmingUnhide(false);
     setHideBlocked(false);
-    openTell(post);
-  }, [highlightedPost?.id, closeTell, openTell]);
+    beginTellForPost(post);
+  }, [highlightedPost?.id, closeTell, beginTellForPost]);
 
   const highlightedPostIsHidden = highlightedPost
     ? (highlightedPost.leaderboard
@@ -873,12 +901,11 @@ function AppInner({
 
   const handlePostTellMeMoreClick = useCallback((post) => {
     if (!post) return;
-    setHighlightedPost(post);
     setHideBlocked(false);
     setConfirmingHide(false);
     setConfirmingUnhide(false);
-    openTell(post);
-  }, [openTell]);
+    beginTellForPost(post);
+  }, [beginTellForPost]);
 
   const ownProfileSlug = profile?.slug ?? profile?.id ?? null;
   const displayProfile = viewedProfile ?? profile;
@@ -896,6 +923,7 @@ function AppInner({
     setTellClosing(false);
     setTellExpanded(false);
     setTellPhase('idle');
+    setTellLayoutCollapsed(false);
   }, [clearTellTimers]);
 
   useEffect(() => {
@@ -1000,10 +1028,25 @@ function AppInner({
     harvestPhase,
     postPhase: postGen.phase,
   });
+  const tellLayoutExpanded =
+    ['expanding', 'loading', 'revealing', 'expanded'].includes(tellPhase) ||
+    (tellPhase === 'closing' && !tellLayoutCollapsed);
+  const tellLoadingVisible =
+    tellPhase === 'loading' ||
+    tellPhase === 'revealing' ||
+    tellPhase === 'closing';
+  const tellContentReady =
+    ['revealing', 'expanded', 'closing'].includes(tellPhase);
   const dashboardBusy = dashboardLayout.actionSlot !== 'timer';
-  const tellPhaseClass = ['expanding', 'loading', 'revealing'].includes(tellPhase)
-    ? ` is-tell-${tellPhase}`
-    : '';
+  const tellCapsuleClass = [
+    tellLayoutExpanded && 'is-tell-expanded',
+    tellPhase === 'expanding' && 'is-tell-expanding',
+    tellLoadingVisible && 'is-tell-loading',
+    tellPhase === 'revealing' && 'is-tell-revealing',
+    tellContentReady && 'is-tell-content-ready',
+    tellPhase === 'closing' && 'is-tell-closing',
+    tellLayoutExpanded && 'is-tell-alt-palette-2',
+  ].filter(Boolean).join(' ');
 
   return (
     <PersonaBlurbsProvider profile={displayProfile}>
@@ -1056,7 +1099,7 @@ function AppInner({
                 onHighlightPost={handleHighlightPost}
                 onPostHide={handlePostHideClick}
                 onPostTellMeMore={handlePostTellMeMoreClick}
-                tellMeMorePostId={tellExpanded ? (highlightedPost?.id ?? null) : null}
+                tellMeMorePostId={highlightedPost?.id ?? null}
                 personaBadgePersona={personaKey}
                 onOpenProfile={handleOpenProfile}
                 deletedProfileIds={deletedProfileIds}
@@ -1087,8 +1130,9 @@ function AppInner({
           <aside className="persona-side-panel" aria-label="Persona dashboard">
             <p className="dashboard-top-label">dashboard</p>
             <div
-              className={`dashboard-capsule dashboard-capsule--figma${tellExpanded ? ' is-tell-expanded' : ''}${tellClosing ? ' is-tell-closing' : ''}${tellPhaseClass}`}
+              className={`dashboard-capsule dashboard-capsule--figma${tellCapsuleClass ? ` ${tellCapsuleClass}` : ''}`}
               style={dashboardCapsuleStyle}
+              data-tell-mode={tellPhase}
             >
               <DashboardTimerRow
                 highlightedPost={highlightedPost}
@@ -1120,6 +1164,7 @@ function AppInner({
 
               <div className="dashboard-tell-row">
                 <TellMeMorePill
+                  tellPhase={tellPhase}
                   highlightedPost={tellDisplayPost}
                   expanded={tellExpanded}
                   closing={tellClosing}

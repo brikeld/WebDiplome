@@ -123,6 +123,7 @@ export default function InferenceChainPanel({
   post,
   personaLabel,
   holdLoadingOverlay = false,
+  skipLoadingOverlay = false,
   redacted = false,
   onRedactedUnhideConfirm = null,
 }) {
@@ -137,9 +138,10 @@ export default function InferenceChainPanel({
   const isLeaderboardPost = Boolean(leaderboard && Array.isArray(leaderboard.entries));
 
   const { ready, loadingKey } = useTellMeMoreLoading(
-    isLeaderboardPost ? [] : [post?.id],
-    { blocked: holdLoadingOverlay },
+    isLeaderboardPost || skipLoadingOverlay ? [] : [post?.id],
+    { blocked: holdLoadingOverlay || skipLoadingOverlay },
   );
+  const panelReady = skipLoadingOverlay || ready;
 
   const [panelUi, setPanelUi] = useState(() => freshPanelUi());
   const { activeThinking, activeIngredient, activeChainStep } = panelUi;
@@ -228,11 +230,13 @@ export default function InferenceChainPanel({
 
   return (
     <div
-      className={`tell-panel-a tell-panel-a--alt-palette-2 inference-panel${ready ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}${hasFocusDetail ? ' tell-panel-a--has-focus' : ''}`}
+      className={`tell-panel-a tell-panel-a--alt-palette-2 inference-panel${panelReady ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}${hasFocusDetail ? ' tell-panel-a--has-focus' : ''}`}
       role="region"
       aria-label="Tell me more analysis"
     >
-      <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
+      {!skipLoadingOverlay && !panelReady ? (
+        <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
+      ) : null}
 
       <div className="inference-panel__redacted-content">
       <div className="tell-panel-a__stack">
