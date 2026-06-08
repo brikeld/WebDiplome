@@ -51,15 +51,31 @@
 /* ── tell-morph shell (both-states prototype) ── */
 .dashboard-capsule--figma.is-tell-expanding .tell-morph {
   border-radius: 0;
-  transition: border-radius var(--tell-morph-dur) var(--tell-morph-ease);
+  transition:
+    border-radius var(--tell-morph-dur) var(--tell-morph-ease),
+    border-color var(--tell-morph-fade) ease,
+    background var(--tell-morph-fade) ease;
+}
+
+.dashboard-capsule--figma.is-tell-expanding .tell-morph__idle {
+  opacity: 1;
+  visibility: visible;
 }
 
 .dashboard-capsule--figma.is-tell-expanding .tell-idle-a__bars span {
   animation-duration: 1.35s;
 }
 
-.dashboard-capsule--figma.is-tell-expanding .tell-morph__idle {
-  opacity: 1;
+.dashboard-capsule--figma.is-tell-loading .tell-morph,
+.dashboard-capsule--figma.is-tell-revealing .tell-morph,
+.dashboard-capsule--figma.is-tell-expanded .tell-morph {
+  border-radius: 0;
+  border-color: transparent;
+  background: transparent;
+  transition:
+    border-radius var(--tell-morph-dur) var(--tell-morph-ease),
+    border-color var(--tell-morph-fade) ease,
+    background var(--tell-morph-fade) ease;
 }
 
 .tell-morph {
@@ -86,15 +102,6 @@
     border-radius var(--tell-morph-dur) var(--tell-morph-ease),
     border-color var(--tell-morph-fade) ease,
     background var(--tell-morph-fade) ease;
-}
-
-.dashboard-capsule--figma.is-tell-expanded .tell-morph,
-.dashboard-capsule--figma.is-tell-expanding .tell-morph,
-.dashboard-capsule--figma.is-tell-loading .tell-morph,
-.dashboard-capsule--figma.is-tell-revealing .tell-morph {
-  border-radius: 0;
-  border-color: transparent;
-  background: transparent;
 }
 
 .dashboard-capsule--figma.is-tell-closing:not(.is-tell-expanded) .tell-morph {
@@ -163,6 +170,12 @@
 .dashboard-capsule--figma.is-tell-content-ready .tell-morph__panel {
   opacity: 1;
   pointer-events: auto;
+}
+
+.dashboard-capsule--figma.is-tell-closing.is-tell-content-ready .tell-morph__panel {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--tell-morph-fade) ease;
 }
 
 .dashboard-capsule--figma.is-tell-revealing .tell-morph__panel {
@@ -438,6 +451,19 @@
   opacity: 1 !important;
   transform: translateY(0) scale(1);
   box-shadow: none;
+  animation: tell-loader-in 420ms var(--tell-morph-ease) both;
+}
+
+@keyframes tell-loader-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader__ring {
@@ -2907,6 +2933,62 @@
   border-color: var(--tell-pill-accent, #759aef);
 }
 
+.ing-chip {
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  min-height: clamp(40px, 4.8vh, 52px);
+}
+
+.ing-chip__label {
+  display: block;
+  width: 100%;
+  font-size: clamp(11px, 0.86vw, 13px);
+  font-weight: 800;
+  line-height: 1.15;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.ing-chip__pct {
+  display: block;
+  width: 100%;
+  font-size: clamp(10px, 0.74vw, 11px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  opacity: 0.72;
+}
+
+.tell-panel-a--alt-palette-2 .ing-chip {
+  background: #fff;
+  border: 2px solid #000;
+  color: #000;
+}
+
+.tell-panel-a--alt-palette-2 .ing-chip.is-open,
+.tell-panel-a--alt-palette-2 .ing-chip:hover {
+  background: #000;
+  color: var(--tell-pill-accent, #759aef);
+}
+
+.tell-panel-a--alt-palette-2 .ing-chip.is-open .ing-chip__pct,
+.tell-panel-a--alt-palette-2 .ing-chip:hover .ing-chip__pct {
+  opacity: 1;
+  color: var(--tell-pill-accent, #759aef);
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chips {
+  gap: 6px;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip {
+  min-height: 34px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: var(--dash-chip-fs);
+}
+
 .panel-a__detail {
   margin-top: 10px;
   padding: 11px 13px;
@@ -3235,7 +3317,7 @@
 }
 
 .tell-panel-a--has-focus .tape__content,
-.tell-panel-a--has-focus .ing-bar__row,
+.tell-panel-a--has-focus .ing-chip,
 .tell-panel-a--has-focus .reason-chip {
   min-height: 28px;
   padding: 6px 8px;

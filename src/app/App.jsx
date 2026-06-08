@@ -669,10 +669,10 @@ function AppInner({
   const scheduleTellPhaseTimers = useCallback(() => {
     tellPhaseTimersRef.current = [
       setTimeout(() => {
-        setTellExpanded(true);
         setTellPhase('loading');
       }, TELL_LAYOUT_MS),
       setTimeout(() => {
+        setTellExpanded(true);
         setTellPhase('revealing');
       }, TELL_LAYOUT_MS + TELL_LOADING_EXTRA_MS),
       setTimeout(() => {
@@ -720,9 +720,9 @@ function AppInner({
     setTellPhase('closing');
 
     tellCloseTimerRef.current = setTimeout(() => {
+      setTellExpanded(false);
       setTellLayoutCollapsed(true);
       tellCloseTimerRef.current = setTimeout(() => {
-        setTellExpanded(false);
         setTellClosing(false);
         setTellPhase('idle');
         setTellLayoutCollapsed(false);
@@ -1032,12 +1032,15 @@ function AppInner({
   const tellLayoutExpanded =
     ['expanding', 'loading', 'revealing', 'expanded'].includes(tellPhase) ||
     (tellPhase === 'closing' && !tellLayoutCollapsed);
-  const tellLoadingVisible =
+  const tellLoadingVisible = tellPhase === 'loading';
+  const tellContentReady =
+    ['revealing', 'expanded'].includes(tellPhase) ||
+    (tellPhase === 'closing' && tellExpanded);
+  const tellAltPalette =
     tellPhase === 'loading' ||
     tellPhase === 'revealing' ||
-    tellPhase === 'closing';
-  const tellContentReady =
-    ['revealing', 'expanded', 'closing'].includes(tellPhase);
+    tellPhase === 'expanded' ||
+    (tellPhase === 'closing' && !tellLayoutCollapsed);
   const dashboardBusy = dashboardLayout.actionSlot !== 'timer';
   const tellCapsuleClass = [
     tellLayoutExpanded && 'is-tell-expanded',
@@ -1046,7 +1049,7 @@ function AppInner({
     tellPhase === 'revealing' && 'is-tell-revealing',
     tellContentReady && 'is-tell-content-ready',
     tellPhase === 'closing' && 'is-tell-closing',
-    tellLayoutExpanded && 'is-tell-alt-palette-2',
+    tellAltPalette && 'is-tell-alt-palette-2',
   ].filter(Boolean).join(' ');
 
   return (

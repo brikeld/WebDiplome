@@ -309,44 +309,47 @@ export default function InferenceChainPanel({
         {hasIngredients ? (
           <section className={`ing-section${activeIngredient !== null ? ' ing-section--focus' : ''}`}>
             <header className="panel-a__head">Data used</header>
-            <div className="ing-bars">
+            <div className="reason-chips ing-chips">
               {ingredients.map((ing, i) => {
                 const weight = Math.max(5, Math.min(100, Math.round(Number(ing?.weight) || 50)));
-                const dataPoints = ing?.dataPoints || ing?.points || [];
                 return (
-                  <div className="ing-bar__item" key={`${ing.label}-${i}`}>
-                    <button
-                      type="button"
-                      className={`ing-bar__row${activeIngredient === i ? ' is-open' : ''}`}
-                      onClick={() => setActiveDetail('ingredient', i)}
-                    >
-                      <span className="ing-bar__label">{ing.label}</span>
-                      <span className="ing-bar__track">
-                        <span className="ing-bar__fill" style={{ width: `${weight}%` }} />
-                      </span>
-                      <span className="ing-bar__pct">{weight}%</span>
-                    </button>
-                    {activeIngredient === i ? (
-                      <FocusDetail eyebrow="evidence">
-                        <b>{ing.label}</b>
-                        {dataPoints.length ? (
-                          <ul>
-                            {dataPoints.slice(0, 12).map((dp, di) => (
-                              <li key={di}>{dp}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p>This signal contributed {weight}% to the post rationale.</p>
-                        )}
-                        {dataPoints.length > 12 ? (
-                          <p>+{dataPoints.length - 12} more</p>
-                        ) : null}
-                      </FocusDetail>
-                    ) : null}
-                  </div>
+                  <button
+                    key={`${ing.label}-${i}`}
+                    type="button"
+                    className={`reason-chip ing-chip${activeIngredient === i ? ' is-open' : ''}`}
+                    onClick={() => setActiveDetail('ingredient', i)}
+                  >
+                    <span className="ing-chip__label">{ing.label}</span>
+                    <span className="ing-chip__pct">{weight}%</span>
+                  </button>
                 );
               })}
             </div>
+            {activeIngredient !== null && ingredients[activeIngredient] ? (
+              <FocusDetail eyebrow="evidence">
+                <b>{ingredients[activeIngredient].label}</b>
+                {(ingredients[activeIngredient].dataPoints || ingredients[activeIngredient].points || []).length ? (
+                  <ul>
+                    {(ingredients[activeIngredient].dataPoints || ingredients[activeIngredient].points || [])
+                      .slice(0, 12)
+                      .map((dp, di) => (
+                        <li key={di}>{dp}</li>
+                      ))}
+                  </ul>
+                ) : (
+                  <p>
+                    This signal contributed{' '}
+                    {Math.max(5, Math.min(100, Math.round(Number(ingredients[activeIngredient]?.weight) || 50)))}%
+                    {' '}to the post rationale.
+                  </p>
+                )}
+                {(ingredients[activeIngredient].dataPoints || ingredients[activeIngredient].points || []).length > 12 ? (
+                  <p>
+                    +{(ingredients[activeIngredient].dataPoints || ingredients[activeIngredient].points || []).length - 12} more
+                  </p>
+                ) : null}
+              </FocusDetail>
+            ) : null}
           </section>
         ) : null}
 
