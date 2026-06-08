@@ -751,7 +751,12 @@ function AppInner({
 
   const dashboardCapsuleStyle = useMemo(() => {
     const base = { '--persona-accent': personaColor };
-    const themePost = tellDisplayPost;
+    const applyPostTheme =
+      tellPhase === 'loading' ||
+      tellPhase === 'revealing' ||
+      tellPhase === 'expanded' ||
+      (tellPhase === 'closing' && tellDisplayPost);
+    const themePost = applyPostTheme ? tellDisplayPost : null;
     if (!themePost) return base;
     const pk = String(themePost.persona ?? personaKey).toLowerCase();
     const uiKey = PERSONA_ALIASES[pk] ?? pk;
@@ -761,7 +766,7 @@ function AppInner({
       '--tell-pill-pastel':
         PERSONA_PASTEL_COLORS[pk] ?? PERSONA_PASTEL_COLORS[uiKey] ?? PERSONA_PASTEL_COLORS.security,
     };
-  }, [tellDisplayPost, personaColor, personaKey]);
+  }, [tellDisplayPost, tellPhase, personaColor, personaKey]);
 
   const handleHighlightPost = useCallback((post) => {
     const isDeselect = highlightedPost?.id === post.id;

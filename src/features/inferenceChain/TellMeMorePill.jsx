@@ -53,18 +53,23 @@ export default function TellMeMorePill({
   const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
   const postPersonaKey = String(highlightedPost?.persona ?? mainPersonaKey).toLowerCase();
   const postUiKey = PERSONA_ACCENT[postPersonaKey] ? postPersonaKey : mainPersonaKey;
-  const postAccent =
-    highlightedPost?.noteColor ?? PERSONA_ACCENT[postUiKey] ?? PERSONA_ACCENT.security;
-  const postPastel = PERSONA_PASTEL[postUiKey] ?? PERSONA_PASTEL.security;
   const mainAccent =
     personaAccent ?? PERSONA_ACCENT[mainPersonaKey] ?? PERSONA_ACCENT.security;
   const mainPastel =
     personaPastel ?? PERSONA_PASTEL[mainPersonaKey] ?? PERSONA_PASTEL.security;
-  const accent = highlightedPost ? postAccent : mainAccent;
-  const pastel = highlightedPost ? postPastel : mainPastel;
+  const postAccent =
+    highlightedPost?.noteColor ?? PERSONA_ACCENT[postUiKey] ?? PERSONA_ACCENT.security;
+  const postPastel = PERSONA_PASTEL[postUiKey] ?? PERSONA_PASTEL.security;
+  // Keep idle white/chrome locked until layout expand finishes — then swap to post theme.
+  const lockIdleTheme =
+    tellPhase === 'idle' ||
+    tellPhase === 'expanding' ||
+    (tellPhase === 'closing' && !expanded);
+  const accent = lockIdleTheme ? mainAccent : postAccent;
+  const pastel = lockIdleTheme ? mainPastel : postPastel;
   const label = PERSONA_LABEL[postUiKey] ?? 'Social';
   const mainLabel = PERSONA_LABEL[mainPersonaKey] ?? 'Security';
-  const displayLabel = highlightedPost ? label : mainLabel;
+  const displayLabel = lockIdleTheme ? mainLabel : label;
   const skipPanelLoader = Boolean(highlightedPost && !highlightedPost.leaderboard);
 
   const pillStyle = {

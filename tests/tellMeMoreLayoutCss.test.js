@@ -54,4 +54,14 @@ describe('tell-me-more expanded layout CSS contract', () => {
     expect(dashCompact).toContain('--dash-panel-gap');
     expect(dashCompact).toContain('padding: 0');
   });
+
+  it('keeps the white morph face visible during expand (not overridden by is-tell-expanded)', () => {
+    const expandingMorph = blockFor('.dashboard-capsule--figma.is-tell-expanding .tell-morph');
+    const expandedMorph = inferenceCss.match(
+      /\.dashboard-capsule--figma\.is-tell-expanded:not\(\.is-tell-expanding\) \.tell-morph\s*{[^}]+}/,
+    )?.[0] ?? '';
+
+    expect(expandingMorph).toContain('rgba(255, 255, 255, 0.98)');
+    expect(expandedMorph).toContain('background: transparent');
+  });
 });

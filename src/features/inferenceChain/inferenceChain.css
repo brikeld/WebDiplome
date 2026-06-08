@@ -49,13 +49,34 @@
 }
 
 /* ── tell-morph shell (both-states prototype) ── */
+/* Expanding: high-contrast white card grows inside the persona-colored dashboard frame */
+.dashboard-capsule--figma.is-tell-expanding {
+  background: var(--persona-accent, #759aef);
+  border-color: transparent;
+  padding: clamp(16px, 1.85vh, 22px);
+  gap: clamp(8px, 1vh, 12px);
+}
+
 .dashboard-capsule--figma.is-tell-expanding .tell-morph {
   border-radius: 0;
   height: 100%;
+  /* Same white face as idle — only size/layout changes during expand */
+  border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98),
+      color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
+    );
+  box-shadow: none;
   transition:
     border-radius var(--tell-morph-dur) var(--tell-morph-ease),
     border-color var(--tell-morph-fade) ease,
     background var(--tell-morph-fade) ease;
+}
+
+.dashboard-capsule--figma.is-tell-expanding .tell-idle-a__bars span {
+  animation-duration: 1.35s;
 }
 
 .dashboard-capsule--figma.is-tell-expanding .tell-morph__idle {
@@ -63,13 +84,9 @@
   visibility: visible;
 }
 
-.dashboard-capsule--figma.is-tell-expanding .tell-idle-a__bars span {
-  animation-duration: 1.35s;
-}
-
 .dashboard-capsule--figma.is-tell-loading .tell-morph,
 .dashboard-capsule--figma.is-tell-revealing .tell-morph,
-.dashboard-capsule--figma.is-tell-expanded .tell-morph {
+.dashboard-capsule--figma.is-tell-expanded:not(.is-tell-expanding) .tell-morph {
   border-radius: 0;
   border-color: transparent;
   background: transparent;
@@ -108,13 +125,14 @@
 
 .dashboard-capsule--figma.is-tell-closing:not(.is-tell-expanded) .tell-morph {
   border-radius: var(--capsule-radius, var(--tell-pill-radius));
-  border-color: color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
+  border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
   background:
     linear-gradient(
       180deg,
       rgba(255, 255, 255, 0.98),
       color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
     );
+  box-shadow: none;
 }
 
 .tell-morph__idle {
@@ -194,8 +212,6 @@
   transition: opacity calc(var(--tell-morph-reveal) * 0.7) ease;
 }
 
-.dashboard-capsule--figma[data-tell-mode="expanding"] .tell-idle-a__persona,
-.dashboard-capsule--figma[data-tell-mode="expanding"] .tell-idle-a__cta,
 .dashboard-capsule--figma[data-tell-mode="loading"] .tell-idle-a__persona,
 .dashboard-capsule--figma[data-tell-mode="loading"] .tell-idle-a__cta,
 .dashboard-capsule--figma[data-tell-mode="revealing"] .tell-idle-a__persona,

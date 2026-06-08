@@ -2685,12 +2685,7 @@ button.profile-name-link.leaderboard-row__name {
   gap: 0;
 }
 
-/* Expanding: keep persona shell — only the inner tell pill grows */
-.dashboard-capsule--figma.is-tell-expanding {
-  background: var(--persona-accent, #759aef);
-  border-color: transparent;
-}
-
+/* Expanding: persona frame stays visible while inner tell card grows (details in inferenceChain.css) */
 .dashboard-capsule--figma.is-tell-expanding .dashboard-actions-row {
   opacity: 0;
   pointer-events: none;
