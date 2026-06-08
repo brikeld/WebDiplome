@@ -8,6 +8,7 @@
 .dashboard-capsule--figma[data-tell-step="closing"] {
   --dash-timer-track: 0fr;
   --dash-tell-track: 1fr;
+  gap: 0;
 }
 
 .dashboard-capsule--figma[data-tell-step="expanding"] .dashboard-actions-row,
@@ -17,6 +18,15 @@
   opacity: 0;
   pointer-events: none;
   overflow: hidden;
+  /* Release fixed timer height so 0fr track can actually collapse */
+  flex: unset !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin-bottom: 0 !important;
+  transition:
+    opacity var(--tell-layout-dur) var(--tell-layout-ease),
+    margin-bottom var(--tell-layout-dur) var(--tell-layout-ease);
 }
 
 .dashboard-capsule--figma[data-tell-step="expanding"] .dashboard-tell-row,
@@ -27,9 +37,22 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
+  flex: unset;
   align-self: stretch;
-  min-height: 100%;
-  height: 100%;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="expanding"],
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="loading"],
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="content"],
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="closing"],
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="expanding"],
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="loading"],
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="content"],
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="closing"] {
+  gap: 0;
 }
 
 /* ── Morph shell (the tell-me-more button capsule) ── */
@@ -64,9 +87,7 @@
   flex: 1 1 auto;
   align-self: stretch;
   width: 100%;
-  height: 100%;
-  min-height: 100%;
-  max-height: 100%;
+  min-height: 0;
 }
 
 .dashboard-capsule--figma[data-tell-step="loading"] .tell-morph,
