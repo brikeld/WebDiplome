@@ -1,8 +1,6 @@
 /**
- * Dashboard "Tell me more" capsule.
- *
- * tell-morph shell (both-states prototype): idle layer, analysis loader, panel layer.
- * Capsule phase classes (is-tell-loading, is-tell-content-ready, …) drive crossfades.
+ * Dashboard "Tell me more" — 4 steps rendered one at a time:
+ * idle / expanding → loading (radar) → content (info)
  */
 
 import InferenceChainPanel from './InferenceChainPanel.jsx';
@@ -38,11 +36,35 @@ const PERSONA_LABEL = {
   social: 'Social',
 };
 
+function IdleFace({ displayLabel }) {
+  return (
+    <div className="tell-idle-a">
+      <div className="tell-idle-a__top">
+        <span className="tell-idle-a__persona">{displayLabel} post</span>
+        <span className="tell-idle-a__dots" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
+      </div>
+      <div className="tell-idle-a__bars" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="tell-idle-a__cta">
+        <span>Tell me why</span>
+        <b aria-hidden="true">→</b>
+      </div>
+    </div>
+  );
+}
+
 export default function TellMeMorePill({
   tellPhase = 'idle',
   highlightedPost,
-  expanded,
-  closing = false,
+  /** @deprecated tests only — same as tellPhase="content" */
+  expanded = false,
   fallbackPersona = 'security',
   personaAccent = null,
   personaPastel = null,
@@ -50,6 +72,7 @@ export default function TellMeMorePill({
   isAnalysisRedacted = false,
   onRedactedUnhideConfirm = null,
 }) {
+  const phase = expanded && tellPhase === 'idle' ? 'content' : tellPhase;
   const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
   const postPersonaKey = String(highlightedPost?.persona ?? mainPersonaKey).toLowerCase();
   const postUiKey = PERSONA_ACCENT[postPersonaKey] ? postPersonaKey : mainPersonaKey;
@@ -60,23 +83,12 @@ export default function TellMeMorePill({
   const postAccent =
     highlightedPost?.noteColor ?? PERSONA_ACCENT[postUiKey] ?? PERSONA_ACCENT.security;
   const postPastel = PERSONA_PASTEL[postUiKey] ?? PERSONA_PASTEL.security;
-  // Keep idle white/chrome locked until layout expand finishes — then swap to post theme.
-  const lockIdleTheme =
-    tellPhase === 'idle' ||
-    tellPhase === 'expanding' ||
-    (tellPhase === 'closing' && !expanded);
-  const accent = lockIdleTheme ? mainAccent : postAccent;
-  const pastel = lockIdleTheme ? mainPastel : postPastel;
+  const useMainTheme = phase === 'idle' || phase === 'expanding';
+  const accent = useMainTheme ? mainAccent : postAccent;
+  const pastel = useMainTheme ? mainPastel : postPastel;
   const label = PERSONA_LABEL[postUiKey] ?? 'Social';
   const mainLabel = PERSONA_LABEL[mainPersonaKey] ?? 'Security';
-  const displayLabel = lockIdleTheme ? mainLabel : label;
-  const skipPanelLoader = Boolean(highlightedPost && !highlightedPost.leaderboard);
-  const mountPanel = Boolean(
-    highlightedPost &&
-      (expanded ||
-        ['loading', 'revealing', 'expanded'].includes(tellPhase) ||
-        (tellPhase === 'closing' && expanded)),
-  );
+  const displayLabel = useMainTheme ? mainLabel : label;
 
   const pillStyle = {
     '--tell-pill-accent': accent,
@@ -84,55 +96,42 @@ export default function TellMeMorePill({
     '--lb-acc': accent,
   };
 
-  return (
-    <div className="tell-morph" style={pillStyle}>
-      <button
-        type="button"
-        className="tell-more-pill tell-more-pill--idle tell-morph__idle"
-        aria-disabled="true"
-        aria-live="polite"
-        tabIndex={-1}
-        aria-label={`Tell me more - ${displayLabel} post`}
-      >
-        <div className="tell-idle-a">
-          <div className="tell-idle-a__top">
-            <span className="tell-idle-a__persona">{displayLabel} post</span>
-            <span className="tell-idle-a__dots" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </span>
-          </div>
-          <div className="tell-idle-a__bars" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="tell-idle-a__cta">
-            <span>Tell me why</span>
-            <b aria-hidden="true">→</b>
-          </div>
-        </div>
-      </button>
+  if (phase === 'loading') {
+    return (
+      <div className="tell-morph tell-morph--radar" style={pillStyle}>
+        <TellAnalysisLoader />
+      </div>
+    );
+  }
 
-      <TellAnalysisLoader />
-
+  if ((phase === 'content' || phase === 'closing') && highlightedPost) {
+    return (
       <div
-        className={`tell-morph__panel tell-more-pill tell-more-pill--expanded${closing ? ' tell-more-pill--closing' : ''}${isAnalysisRedacted ? ' tell-more-pill--redacted' : ''}`}
-        role="region"
-        aria-label="Inference chain analysis"
-        data-tell-phase={tellPhase}
+        className={`tell-morph tell-morph--info${phase === 'closing' ? ' tell-morph--closing' : ''}`}
+        style={pillStyle}
       >
-        {mountPanel ? (
+        <div
+          className={`tell-more-pill tell-more-pill--expanded${isAnalysisRedacted ? ' tell-more-pill--redacted' : ''}`}
+          role="region"
+          aria-label="Inference chain analysis"
+        >
           <InferenceChainPanel
             post={highlightedPost}
             personaLabel={label}
             holdLoadingOverlay={holdLoadingOverlay}
-            skipLoadingOverlay={skipPanelLoader}
+            skipLoadingOverlay={!highlightedPost.leaderboard}
             redacted={isAnalysisRedacted}
             onRedactedUnhideConfirm={onRedactedUnhideConfirm}
           />
-        ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="tell-morph tell-morph--idle" style={pillStyle}>
+      <div className="tell-more-pill tell-more-pill--idle" aria-label={`Tell me more - ${displayLabel} post`}>
+        <IdleFace displayLabel={displayLabel} />
       </div>
     </div>
   );

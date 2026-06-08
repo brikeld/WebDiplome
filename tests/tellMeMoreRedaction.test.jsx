@@ -21,20 +21,17 @@ describe('<TellMeMorePill> hidden redaction', () => {
     );
 
     expect(html).toContain('tell-morph');
-    expect(html).toContain('<button');
-    expect(html).toContain('tell-morph__idle');
     expect(html).toContain('tell-idle-a');
     expect(html).toContain('tell-idle-a__bars');
-    expect(html).toContain('tell-analysis-loader');
-    expect(html).toContain('Building inference chain');
     expect(html).toContain('Security post');
     expect(html).toContain('Tell me why');
+    expect(html).not.toContain('Building inference chain');
   });
 
   it('renders expanded post analysis immediately when expanded', () => {
     const html = renderToStaticMarkup(<TellMeMorePill highlightedPost={post} expanded />);
 
-    expect(html).toContain('tell-morph__panel');
+    expect(html).toContain('tell-morph--info');
     expect(html).toContain('tell-panel-a');
     expect(html).toContain('tell-panel-a--alt-palette-2');
     expect(html).toContain('From data to post');
