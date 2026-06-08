@@ -103,10 +103,9 @@
   --dash-head-mb: 8px;
   --dash-head-pad: 6px 10px;
   --dash-head-fs: clamp(10px, 0.74vw, 11px);
-  --dash-label-fs: clamp(12px, 0.92vw, 14px);
-  --dash-chip-fs: clamp(11px, 0.86vw, 13px);
-  --dash-bar-fs: clamp(12px, 0.9vw, 14px);
-  --dash-detail-fs: clamp(11px, 0.84vw, 13px);
+  --dash-tag-fs: clamp(16px, 1.08vw, 20px);
+  --dash-tag-fw: 800;
+  --dash-tag-lh: 1.15;
   flex: 1 1 0;
   width: 100%;
   max-width: 100%;
@@ -146,10 +145,38 @@
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__post-text {
   margin: 0;
   font-family: var(--font-avant-book-oblique);
-  font-size: var(--dash-label-fs);
-  font-weight: 600;
+  font-size: var(--dash-tag-fs);
+  font-weight: var(--dash-tag-fw);
   font-style: italic;
-  line-height: 1.2;
+  line-height: var(--dash-tag-lh);
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__content .tape__label,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__pct {
+  font-size: var(--dash-tag-fs);
+  font-weight: var(--dash-tag-fw);
+  line-height: var(--dash-tag-lh);
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__label,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .focus-detail__body,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .focus-detail__body p,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .focus-detail__body li,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .focus-detail__body b,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .focus-detail__body .tape__value,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .focus-detail__body .tape__detail {
+  font-size: var(--dash-tag-fs);
+  font-weight: var(--dash-tag-fw);
+  line-height: var(--dash-tag-lh);
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape,
@@ -191,25 +218,10 @@
   border-radius: 12px;
 }
 
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__label,
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__label,
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__pct {
-  font-size: var(--dash-bar-fs);
-  font-weight: 800;
-  line-height: 1.15;
-}
-
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__value,
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__detail {
-  font-size: var(--dash-detail-fs);
-  font-weight: 800;
-  line-height: 1.22;
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__content.is-open .tape__label {
+  font-size: clamp(11px, 0.78vw, 13px);
+  font-weight: var(--dash-tag-fw);
+  line-height: 1;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chips {
@@ -217,9 +229,6 @@
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip {
-  font-size: var(--dash-chip-fs);
-  font-weight: 800;
-  line-height: 1.15;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2273,7 +2282,6 @@
   min-height: 34px;
   padding: 8px 10px;
   border-radius: 12px;
-  font-size: var(--dash-chip-fs);
 }
 
 .panel-a__detail {
