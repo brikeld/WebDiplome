@@ -35,6 +35,17 @@ describe('<TellMeMorePill> hidden redaction', () => {
     expect(html).not.toContain('Sensitive browser history');
   });
 
+  it('uses the new tell-panel design for expanded normal post analysis', () => {
+    const html = renderToStaticMarkup(
+      <TellMeMorePill highlightedPost={post} expanded skipExpansionLoading />,
+    );
+
+    expect(html).toContain('tell-panel-a');
+    expect(html).toContain('tell-panel-a--alt-palette-2');
+    expect(html).toContain('From data to post');
+    expect(html).not.toContain('class="np2"');
+  });
+
   it('marks expanded hidden post analysis as permanently redacted', () => {
     const html = renderToStaticMarkup(
       <TellMeMorePill

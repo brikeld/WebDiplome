@@ -22,7 +22,6 @@ import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 import { synthesiseChartMetadata } from '@/lib/chartPostMetadata.js';
 
-const CHAIN_LABELS = ['DATA', 'CLASSIFY', 'INFER'];
 const CHAIN_KEYS = ['data', 'classify', 'infer'];
 
 function looksLikeInternalKey(s) {
@@ -188,23 +187,48 @@ export default function InferenceChainPanel({
   const classifyStep = validChain ? findChain('classify') : null;
   const inferStep = validChain ? findChain('infer') : null;
   const chainBuckets = [dataStep, classifyStep, inferStep];
+  const simpleChain = validChain
+    ? [
+        {
+          label: 'What we checked',
+          value: readableValue(dataStep?.value, 'We checked the strongest activity signal available for this post.'),
+          detail: readableSource(dataStep?.source)
+            ? `Source: ${readableSource(dataStep.source)}.`
+            : 'The post starts from the clearest activity signal in the harvested data.',
+          tag: readableSource(dataStep?.source) ?? 'data',
+        },
+        {
+          label: 'What it means',
+          value: readableValue(classifyStep?.value, 'The signal was grouped into a persona direction.'),
+          detail: classifyStep?.confidence
+            ? `The classifier treated this as ${classifyStep.confidence === 'med' ? 'medium' : classifyStep.confidence} confidence.`
+            : 'The system turns raw traces into a simple behavioral reading.',
+          tag: 'classification',
+        },
+        {
+          label: 'Why this post',
+          value: readableValue(inferStep?.value, 'The generated post follows from that persona reading.'),
+          detail: inferStep?.biasNote
+            ? String(inferStep.biasNote)
+            : 'The wording is a generated interpretation, so it can compress or exaggerate the underlying signal.',
+          tag: inferStep?.confidence ? `confidence ${inferStep.confidence}` : 'inference',
+        },
+      ]
+    : [];
 
   return (
     <div
-      className={`inference-panel${ready ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}`}
+      className={`tell-panel-a tell-panel-a--alt-palette-2 inference-panel${ready ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}`}
       role="region"
       aria-label="Tell me more analysis"
     >
       <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
 
       <div className="inference-panel__redacted-content">
-      <div className="np2">
-        {/* ── Post quote (big) ───────────────────────────────────── */}
+      <div className="tell-panel-a__stack">
         {post?.content ? (
-          <div className="np2__quote">
-            {personaLabel ? (
-              <span className="np2__kicker">{personaLabel.toLowerCase()} persona</span>
-            ) : null}
+          <div className="post-quote-a">
+            <span className="panel-a__head">Why this CONTENT?</span>
             <PostTextHighlights
               content={post.content}
               highlights={highlights}
@@ -213,107 +237,110 @@ export default function InferenceChainPanel({
           </div>
         ) : null}
 
-        {/* ── Thinking process tile ──────────────────────────────── */}
+        {validChain ? (
+          <section className="tape-section" aria-label="From data to post">
+            <header className="panel-a__head">From data to post</header>
+            <div className="tape">
+              {simpleChain.map((item, i) => (
+                <div className="tape__row" key={`${item.label}-${i}`}>
+                  <div className="tape__step">
+                    <div className="tape__badge">{i + 1}</div>
+                    {i < simpleChain.length - 1 ? <div className="tape__line" /> : null}
+                  </div>
+                  <button
+                    type="button"
+                    className={`tape__content${activeChainStep === i ? ' is-open' : ''}`}
+                    onClick={() => {
+                      setActiveChainStep((p) => (p === i ? null : i));
+                      setActiveIngredient(null);
+                    }}
+                  >
+                    <span className="tape__label">{item.label}</span>
+                    {activeChainStep === i ? (
+                      <>
+                        <span className="tape__value">{item.value}</span>
+                        <span className="tape__detail">
+                          {item.detail}
+                          <span className="tape__meta">
+                            <span className="tape__tag">{item.tag}</span>
+                          </span>
+                        </span>
+                      </>
+                    ) : null}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {hasThinking ? (
-          <section className="np2__tile np2__tile--thinking">
-            <header className="np2__tile-head">
-              <span className="np2__label">THINKING PROCESS</span>
-              <span className="np2__label np2__label--hint">tap to read</span>
-            </header>
-            <div className="np2__chip-grid">
+          <section className="reason-section">
+            <header className="panel-a__head">How we framed it</header>
+            <div className="reason-chips">
               {thinking.map((th, i) => (
                 <button
                   key={i}
                   type="button"
-                  className={`np2__chip${activeThinking === i ? ' is-active' : ''}`}
+                  className={`reason-chip${activeThinking === i ? ' is-open' : ''}`}
                   onClick={() => setActiveThinking((p) => (p === i ? null : i))}
                 >
-                  <span className="np2__chip-text">{th.label}</span>
+                  {th.label}
                 </button>
               ))}
             </div>
             {activeThinking !== null && thinking[activeThinking] ? (
-              <div className="np2__detail">
-                <span className="np2__label">{thinking[activeThinking].label}</span>
-                <p className="np2__detail-value">{thinking[activeThinking].detail}</p>
+              <div className="panel-a__detail">
+                <span className="panel-a__detail-label">{thinking[activeThinking].label}</span>
+                <p>{thinking[activeThinking].detail}</p>
               </div>
             ) : null}
           </section>
         ) : null}
 
-        {/* ── Ingredients tile ───────────────────────────────────── */}
         {hasIngredients ? (
-          <section className="np2__tile np2__tile--ingredients">
-            <header className="np2__tile-head">
-              <span className="np2__label">INGREDIENTS</span>
-              <span className="np2__label np2__label--hint">what fed the post</span>
-            </header>
-            <div className="np2__chip-grid">
+          <section className="ing-section">
+            <header className="panel-a__head">Data used</header>
+            <div className="ing-bars">
               {ingredients.map((ing, i) => {
                 const weight = Math.max(5, Math.min(100, Math.round(Number(ing?.weight) || 50)));
                 return (
                   <button
                     key={`${ing.label}-${i}`}
                     type="button"
-                    className={`np2__chip np2__chip--weighted${activeIngredient === i ? ' is-active' : ''}`}
-                    onClick={() => setActiveIngredient((p) => (p === i ? null : i))}
+                    className={`ing-bar__row${activeIngredient === i ? ' is-open' : ''}`}
+                    onClick={() => {
+                      setActiveIngredient((p) => (p === i ? null : i));
+                      setActiveChainStep(null);
+                    }}
                   >
-                    <span className="np2__chip-mark">{weight}%</span>
-                    <span className="np2__chip-text">{ing.label}</span>
+                    <span className="ing-bar__label">{ing.label}</span>
+                    <span className="ing-bar__track">
+                      <span className="ing-bar__fill" style={{ width: `${weight}%` }} />
+                    </span>
+                    <span className="ing-bar__pct">{weight}%</span>
                   </button>
                 );
               })}
             </div>
             {activeIngredient !== null && ingredients[activeIngredient] ? (
-              <div className="np2__detail">
-                <span className="np2__label">{ingredients[activeIngredient].label?.toUpperCase?.() || 'INGREDIENT'}</span>
-                <ul className="np2__detail-list">
+              <div className="panel-a__detail">
+                <b>{ingredients[activeIngredient].label}</b>
+                <ul>
                   {(ingredients[activeIngredient].dataPoints || []).slice(0, 12).map((dp, di) => (
-                    <li key={di} className="np2__detail-item">{dp}</li>
+                    <li key={di}>{dp}</li>
                   ))}
                 </ul>
                 {(ingredients[activeIngredient].dataPoints || []).length > 12 ? (
-                  <p className="np2__detail-more">
-                    +{(ingredients[activeIngredient].dataPoints || []).length - 12} more
-                  </p>
+                  <p>+{(ingredients[activeIngredient].dataPoints || []).length - 12} more</p>
                 ) : null}
               </div>
             ) : null}
           </section>
         ) : null}
 
-        {/* ── From data to post tile ─────────────────────────────── */}
-        {validChain ? (
-          <section className="np2__tile np2__tile--chain">
-            <header className="np2__tile-head">
-              <span className="np2__label">FROM DATA TO POST</span>
-              <span className="np2__label np2__label--hint">step by step</span>
-            </header>
-            <div className="np2__chip-grid np2__chip-grid--chain">
-              {chainBuckets.map((entry, i) => (
-                <button
-                  key={CHAIN_KEYS[i]}
-                  type="button"
-                  className={`np2__chip np2__chip--chain${activeChainStep === i ? ' is-active' : ''}`}
-                  onClick={() => setActiveChainStep((p) => (p === i ? null : i))}
-                >
-                  <span className="np2__chip-mark np2__chip-mark--chain">{i + 1}</span>
-                  <span className="np2__chip-text">{CHAIN_LABELS[i]}</span>
-                </button>
-              ))}
-            </div>
-            {activeChainStep !== null && chainBuckets[activeChainStep] ? (
-              <ChainStepDetail
-                index={activeChainStep}
-                entry={chainBuckets[activeChainStep]}
-              />
-            ) : null}
-          </section>
-        ) : null}
-
-        {/* Posts with neither chain nor ingredients (e.g. some legacy/wifi posts). */}
         {!hasThinking && !hasIngredients && !validChain ? (
-          <div className="np2__empty">
+          <div className="panel-a__detail">
             <p>Analysis not available for this post.</p>
           </div>
         ) : null}
@@ -325,36 +352,6 @@ export default function InferenceChainPanel({
           personaLabel={personaLabel}
           onUnhideConfirm={onRedactedUnhideConfirm}
         />
-      ) : null}
-    </div>
-  );
-}
-
-function ChainStepDetail({ index, entry }) {
-  const value = readableValue(entry?.value, '—');
-  const source = index === 0 ? readableSource(entry?.source) : null;
-  const conf = entry?.confidence ?? (index === 2 ? 'low' : null);
-  const isBiased = index === 2 && entry?.isBiased === true;
-  const biasNote = isBiased && entry?.biasNote ? entry.biasNote : null;
-
-  return (
-    <div className="np2__detail">
-      <span className="np2__label">{CHAIN_LABELS[index]}</span>
-      <p className="np2__detail-value">{value}</p>
-      {source ? (
-        <p className="np2__detail-meta">
-          <span className="np2__detail-meta-tag">source</span>
-          <span>{source}</span>
-        </p>
-      ) : null}
-      {conf ? (
-        <p className="np2__detail-meta">
-          <span className="np2__detail-meta-tag">confidence</span>
-          <span>{conf === 'med' ? 'medium' : conf}</span>
-        </p>
-      ) : null}
-      {biasNote ? (
-        <p className="np2__detail-bias">{biasNote}</p>
       ) : null}
     </div>
   );
