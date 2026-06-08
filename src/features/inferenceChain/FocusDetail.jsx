@@ -17,6 +17,9 @@ function extractText(node) {
 
   if (node.type === 'li') return `\n• ${inner.trim()}`;
   if (node.type === 'p' || node.type === 'b') return `${inner.trim()}\n\n`;
+  if (node.type === 'span' && typeof node.props?.className === 'string' && node.props.className.includes('tape__detail')) {
+    return `\n\n${inner.trim()}`;
+  }
   if (node.type === 'ul') return inner.trim();
   return inner;
 }
@@ -81,23 +84,30 @@ function useTypewriter(text, detailKey) {
   };
 }
 
-export default function FocusDetail({ eyebrow, detailKey, children }) {
+export default function FocusDetail({ eyebrow, detailKey, onBack, children }) {
   const fullText = useMemo(() => extractText(children), [children]);
   const { visibleText, done } = useTypewriter(fullText, detailKey);
 
   return (
     <div className="focus-detail">
-      {eyebrow ? <span className="focus-detail__eyebrow">{eyebrow}</span> : null}
-      {done ? (
-        <div className="focus-detail__body">{children}</div>
-      ) : (
-        <div className="focus-detail__body focus-detail__body--typing" aria-live="polite">
-          <p className="focus-detail__typewriter">
+      <div className="focus-detail__head">
+        {!done && onBack ? (
+          <button type="button" className="focus-detail__back" onClick={onBack} aria-label="Back">
+            ←
+          </button>
+        ) : null}
+        {eyebrow ? <span className="focus-detail__eyebrow">{eyebrow}</span> : null}
+      </div>
+      <div className="focus-detail__prose">
+        {done ? (
+          children
+        ) : (
+          <p className="focus-detail__typed" aria-live="polite">
             {visibleText}
             <span className="focus-detail__caret" aria-hidden="true" />
           </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

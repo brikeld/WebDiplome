@@ -249,23 +249,22 @@ export default function InferenceChainPanel({
             <div className="tape">
               {simpleChain.map((item, i) => (
                 <div className="tape__item" key={`${item.label}-${i}`}>
-                  <div className="tape__row">
-                    <div className="tape__step">
-                      <div className="tape__badge">{i + 1}</div>
-                      {i < simpleChain.length - 1 ? <div className="tape__line" /> : null}
-                    </div>
-                    <button
-                      type="button"
-                      className={`tape__content${activeChainStep === i ? ' is-open' : ''}`}
-                      onClick={() => setActiveDetail('chain', i)}
-                    >
-                      <span className="tape__label">{item.label}</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    className={`tape__content${activeChainStep === i ? ' is-open' : ''}`}
+                    onClick={() => setActiveDetail('chain', i)}
+                  >
+                    <span className="tape__label">{item.label}</span>
+                  </button>
                   {activeChainStep === i ? (
-                    <FocusDetail detailKey={`chain-${i}`} eyebrow={item.tag}>
+                    <FocusDetail
+                      detailKey={`chain-${i}`}
+                      eyebrow={item.tag}
+                      onBack={() => setPanelUi(freshPanelUi())}
+                    >
                       <p>
                         <span className="tape__value">{item.value}</span>
+                        {'\n\n'}
                         <span className="tape__detail">{item.detail}</span>
                       </p>
                     </FocusDetail>
@@ -292,9 +291,15 @@ export default function InferenceChainPanel({
               ))}
             </div>
             {activeThinking !== null && thinking[activeThinking] ? (
-              <FocusDetail detailKey={`thinking-${activeThinking}`} eyebrow="framing">
-                <b>{thinking[activeThinking].label}</b>
-                <p>{thinking[activeThinking].detail}</p>
+              <FocusDetail
+                detailKey={`thinking-${activeThinking}`}
+                eyebrow="framing"
+                onBack={() => setPanelUi(freshPanelUi())}
+              >
+                <p>
+                  <b>{thinking[activeThinking].label}</b>
+                  {thinking[activeThinking].detail}
+                </p>
               </FocusDetail>
             ) : null}
           </section>
@@ -320,7 +325,11 @@ export default function InferenceChainPanel({
               })}
             </div>
             {activeIngredient !== null && ingredients[activeIngredient] ? (
-              <FocusDetail detailKey={`ingredient-${activeIngredient}`} eyebrow="evidence">
+              <FocusDetail
+                detailKey={`ingredient-${activeIngredient}`}
+                eyebrow="evidence"
+                onBack={() => setPanelUi(freshPanelUi())}
+              >
                 <b>{ingredients[activeIngredient].label}</b>
                 {(ingredients[activeIngredient].dataPoints || ingredients[activeIngredient].points || []).length ? (
                   <ul>

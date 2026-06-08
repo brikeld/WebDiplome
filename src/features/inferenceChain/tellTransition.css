@@ -391,38 +391,25 @@
 
 /* ── 3) Radar — centered, only mounted during loading step ── */
 .tell-analysis-loader {
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: stretch;
+  flex: 1 1 auto;
+  display: grid;
+  place-items: center;
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: clamp(14px, 1.35vw, 18px);
+  padding: clamp(24px, 5vw, 56px);
   box-sizing: border-box;
 }
 
 .tell-analysis-loader__card {
-  flex: 1 1 0;
-  width: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  border: 2px solid #000;
+  width: min(360px, 100%);
+  border: 1px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 32%, rgba(0, 0, 0, 0.12));
   border-radius: 24px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 40%, #fff)),
     #fff;
-  padding: clamp(14px, 2vh, 20px) clamp(18px, 3vh, 26px) clamp(18px, 3vh, 26px);
+  padding: clamp(18px, 3vh, 26px);
   color: #07101f;
-  box-sizing: border-box;
-}
-
-.tell-analysis-loader__top {
-  flex: 0 0 auto;
-  margin-bottom: clamp(10px, 1.6vh, 16px);
 }
 
 .tell-analysis-loader__top,
@@ -465,10 +452,7 @@
   position: relative;
   width: clamp(126px, 19vh, 172px);
   aspect-ratio: 1;
-  flex: 1 1 auto;
-  align-self: center;
-  min-height: 0;
-  margin: clamp(4px, 0.8vh, 10px) auto clamp(14px, 2vh, 22px);
+  margin: clamp(18px, 3vh, 28px) auto;
   border-radius: 999px;
   background:
     radial-gradient(circle, color-mix(in srgb, var(--tell-pill-accent, #759aef) 20%, transparent) 0 22%, transparent 23%),
@@ -693,19 +677,12 @@
   flex-direction: column;
 }
 
-.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .tape__row,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape__row,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape__row {
-  flex: 1 1 0;
-  min-height: 0;
-  align-items: stretch;
-}
-
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .tape__content,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape__content,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape__content {
   flex: 1 1 0;
   min-height: 0;
+  width: 100%;
   display: flex;
   align-items: center;
 }
@@ -853,15 +830,15 @@
   flex-direction: column;
 }
 
-.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail__body,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail__body {
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail__prose,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail__prose {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
 }
 
-.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail__body ul,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail__body ul {
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail__prose ul,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail__prose ul {
   columns: 1;
   padding-left: 14px;
 }
