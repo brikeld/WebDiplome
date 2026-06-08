@@ -20,7 +20,9 @@ describe('<TellMeMorePill> hidden redaction', () => {
       <TellMeMorePill fallbackPersona="security" expanded={false} />,
     );
 
+    expect(html).toContain('<button');
     expect(html).toContain('tell-idle-a');
+    expect(html).toContain('tell-idle-a__bars');
     expect(html).toContain('Security post');
     expect(html).toContain('Tell me why');
   });

@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: clamp(10px, 1.25vh, 15px) clamp(14px, 1.8vw, 20px);
+  padding: clamp(8px, 1vh, 12px) clamp(12px, 1.5vw, 17px);
   box-sizing: border-box;
   color: #000;
   font-family: var(--font-avant);
@@ -130,7 +130,7 @@
 /* ── Screen 4: generating ── */
 
 .update-flow--generating {
-  gap: clamp(9px, 1.05vh, 13px);
+  gap: clamp(7px, 0.75vh, 10px);
   justify-content: center;
   position: relative;
 }
@@ -201,7 +201,7 @@
 
 .update-flow__generating-title {
   margin: 0;
-  font-size: clamp(17px, 2.05vw, 24px);
+  font-size: clamp(15px, 1.65vw, 20px);
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -211,29 +211,29 @@
 .update-flow__gen-rows {
   display: flex;
   flex-direction: column;
-  gap: clamp(7px, 0.85vh, 10px);
+  gap: clamp(5px, 0.62vh, 8px);
   width: 100%;
 }
 
 .update-gen-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
 
 .update-gen-row__phrase {
   margin: 0;
-  font-size: clamp(11px, 1.15vw, 14px);
+  font-size: clamp(10px, 0.95vw, 12px);
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.05;
   letter-spacing: -0.01em;
   color: #000;
   animation: update-phrase-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .update-gen-row__track {
-  height: clamp(8px, 0.85vh, 10px);
+  height: clamp(6px, 0.68vh, 8px);
   border-radius: 999px;
   background: color-mix(in srgb, var(--gen-bar-color, #759aef) 22%, #fff);
   overflow: hidden;

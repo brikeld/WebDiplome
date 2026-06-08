@@ -93,8 +93,8 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 1.6vh, 18px);
-  padding: clamp(18px, 2.4vw, 30px);
+  gap: clamp(13px, 1.75vh, 20px);
+  padding: clamp(20px, 2.55vw, 32px);
   border-radius: inherit;
   overflow: hidden;
 }
@@ -135,8 +135,8 @@
 }
 
 .tell-idle-a__dots i {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 999px;
   background: var(--tell-pill-accent, #759aef);
   animation: tell-a-dot 1.8s ease-in-out infinite;
@@ -152,11 +152,11 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: clamp(12px, 1.65vh, 18px);
+  gap: clamp(14px, 1.85vh, 21px);
 }
 
 .tell-idle-a__bars span {
-  height: clamp(18px, 2.65vh, 28px);
+  height: clamp(24px, 3.25vh, 38px);
   border-radius: 999px;
   background:
     linear-gradient(

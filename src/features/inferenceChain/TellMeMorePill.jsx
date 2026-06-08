@@ -135,11 +135,13 @@ export default function TellMeMorePill({
   }
 
   return (
-    <div
+    <button
+      type="button"
       className="tell-more-pill tell-more-pill--idle"
       style={pillStyle}
-      role="status"
+      aria-disabled="true"
       aria-live="polite"
+      tabIndex={-1}
       aria-label={`Tell me more - loading analysis for ${mainLabel} post`}
     >
       <div className="tell-idle-a">
@@ -161,6 +163,6 @@ export default function TellMeMorePill({
           <b aria-hidden="true">→</b>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
