@@ -259,18 +259,18 @@
   display: flex;
   flex-direction: column;
   gap: clamp(13px, 1.75vh, 20px);
-  padding: clamp(20px, 2.55vw, 32px);
+  padding: clamp(16px, 2.1vw, 26px) clamp(14px, 1.75vw, 20px);
   border-radius: inherit;
   overflow: hidden;
 }
 
 .dashboard-capsule--figma[data-tell-step="expanding"] .tell-idle-a {
-  padding: clamp(20px, 2.55vw, 32px);
+  padding: clamp(16px, 2.1vw, 26px) clamp(14px, 1.75vw, 20px);
   gap: clamp(13px, 1.75vh, 20px);
 }
 
 .dashboard-capsule--figma:not([data-tell-step="expanding"]) .tell-idle-a {
-  padding: clamp(22px, 2.8vw, 38px);
+  padding: clamp(18px, 2.3vw, 30px) clamp(16px, 2vw, 24px);
   gap: clamp(16px, 2.2vh, 26px);
 }
 
@@ -331,22 +331,29 @@
 }
 
 .tell-idle-a__bars span {
+  position: relative;
   height: clamp(24px, 3.25vh, 38px);
   border-radius: 999px;
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--tell-pill-accent, #759aef) 18%, #fff),
-      color-mix(in srgb, var(--tell-pill-accent, #759aef) 44%, #fff),
-      color-mix(in srgb, var(--tell-pill-accent, #759aef) 18%, #fff)
-    );
-  background-size: 220% 100%;
-  animation: tell-a-bar 2.2s ease-in-out infinite;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.tell-idle-a__bars span::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 54%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #000, var(--tell-pill-accent, #759aef), #000);
+  animation: tell-loader-progress 1.55s cubic-bezier(0.32, 0.72, 0, 1) infinite;
 }
 
 .tell-idle-a__bars span:nth-child(1) { width: 88%; }
-.tell-idle-a__bars span:nth-child(2) { width: 64%; animation-delay: 0.35s; }
-.tell-idle-a__bars span:nth-child(3) { width: 76%; animation-delay: 0.7s; }
+.tell-idle-a__bars span:nth-child(2) { width: 64%; }
+.tell-idle-a__bars span:nth-child(2)::after { animation-delay: 0.35s; }
+.tell-idle-a__bars span:nth-child(3) { width: 76%; }
+.tell-idle-a__bars span:nth-child(3)::after { animation-delay: 0.7s; }
 
 .tell-idle-a__cta {
   display: flex;
@@ -560,7 +567,7 @@
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel {
-  --tell-content-pad: clamp(14px, 1.35vw, 18px);
+  --tell-content-pad: clamp(10px, 1.1vh, 14px) clamp(7px, 0.75vw, 10px);
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
@@ -573,8 +580,8 @@
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2 {
   --dash-panel-gap: 0;
-  --dash-section-pad: clamp(12px, 1.1vh, 14px);
-  --dash-quote-section-pad: clamp(10px, 0.95vh, 12px);
+  --dash-section-pad: clamp(10px, 1vh, 12px) clamp(7px, 0.75vw, 10px);
+  --dash-quote-section-pad: clamp(8px, 0.85vh, 10px) clamp(7px, 0.75vw, 10px);
   --dash-head-mb: 8px;
   --dash-head-pad: 6px 10px;
   --dash-head-fs: clamp(10px, 0.74vw, 11px);
@@ -802,6 +809,7 @@
 }
 
 .dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .reason-section--focus .reason-chips,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .ing-section--focus .ing-chips,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape,
@@ -810,9 +818,26 @@
   flex: 0 0 auto;
 }
 
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape:has(.focus-detail),
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape:has(.focus-detail) {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape__item:has(.tape__content.is-open),
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape__item:has(.tape__content.is-open) {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape__item:has(.focus-detail) .tape__content,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape__item:has(.focus-detail) .tape__content {
   flex: 0 0 auto;
+  min-height: 0;
 }
 
 .dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape__item:not(:has(.tape__content.is-open)),
@@ -838,7 +863,9 @@
 }
 
 .dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail__prose ul,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail__prose ul {
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail__prose ul,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail__text ul,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail__text ul {
   columns: 1;
   padding-left: 14px;
 }

@@ -91,22 +91,36 @@ export default function FocusDetail({ eyebrow, detailKey, onBack, children }) {
   return (
     <div className="focus-detail">
       <div className="focus-detail__head">
-        {!done && onBack ? (
-          <button type="button" className="focus-detail__back" onClick={onBack} aria-label="Back">
-            ←
-          </button>
+        {onBack ? (
+          <div className="focus-detail__back-slot">
+            <button
+              type="button"
+              className={`focus-detail__back${done ? ' focus-detail__back--concealed' : ''}`}
+              onClick={onBack}
+              aria-label="Back"
+              aria-hidden={done}
+              tabIndex={done ? -1 : 0}
+            >
+              ←
+            </button>
+          </div>
         ) : null}
         {eyebrow ? <span className="focus-detail__eyebrow">{eyebrow}</span> : null}
       </div>
       <div className="focus-detail__prose">
-        {done ? (
-          children
-        ) : (
-          <p className="focus-detail__typed" aria-live="polite">
-            {visibleText}
-            <span className="focus-detail__caret" aria-hidden="true" />
-          </p>
-        )}
+        <div
+          className={`focus-detail__text${done ? '' : ' focus-detail__text--typing'}`}
+          aria-live="polite"
+        >
+          {done ? (
+            children
+          ) : (
+            <>
+              {visibleText}
+              <span className="focus-detail__caret" aria-hidden="true" />
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

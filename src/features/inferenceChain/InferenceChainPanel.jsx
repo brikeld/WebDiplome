@@ -262,11 +262,9 @@ export default function InferenceChainPanel({
                       eyebrow={item.tag}
                       onBack={() => setPanelUi(freshPanelUi())}
                     >
-                      <p>
-                        <span className="tape__value">{item.value}</span>
-                        {'\n\n'}
-                        <span className="tape__detail">{item.detail}</span>
-                      </p>
+                      <span className="tape__value">{item.value}</span>
+                      {'\n\n'}
+                      <span className="tape__detail">{item.detail}</span>
                     </FocusDetail>
                   ) : null}
                 </div>
@@ -296,10 +294,8 @@ export default function InferenceChainPanel({
                 eyebrow="framing"
                 onBack={() => setPanelUi(freshPanelUi())}
               >
-                <p>
-                  <b>{thinking[activeThinking].label}</b>
-                  {thinking[activeThinking].detail}
-                </p>
+                <b>{thinking[activeThinking].label}</b>
+                {thinking[activeThinking].detail}
               </FocusDetail>
             ) : null}
           </section>
