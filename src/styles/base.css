@@ -361,13 +361,13 @@ body {
 
 /* 3 persona ring cards below the dashboard capsule */
 .dashboard-rings {
-  flex: 0 0 clamp(118px, 15.5vh, 144px);
+  flex: 0 0 clamp(100px, 12.6vh, 124px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 9px;
   width: 100%;
   align-items: stretch;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .dashboard-ring-card {
@@ -376,7 +376,7 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 6px;
+  gap: 4px;
   padding: 0;
   border: none;
   border-radius: 0;
@@ -398,7 +398,10 @@ body {
   content: '';
   grid-row: 2;
   grid-column: 1;
-  border-radius: 18px;
+  width: 82%;
+  min-height: 0;
+  justify-self: center;
+  border-radius: 15px;
   background: var(--ring-accent, #d8d8d8);
   z-index: 0;
 }
@@ -441,8 +444,8 @@ body {
   justify-self: center;
   align-self: center;
   display: block;
-  width: clamp(70px, 6.6vw, 88px);
-  height: clamp(70px, 6.6vw, 88px);
+  width: clamp(56px, 4.8vw, 72px);
+  height: clamp(56px, 4.8vw, 72px);
   z-index: 1;
 }
 
@@ -1920,7 +1923,8 @@ button.profile-name-link.leaderboard-row__name {
     min-height 520ms cubic-bezier(0.22, 1, 0.36, 1),
     height 520ms cubic-bezier(0.22, 1, 0.36, 1),
     margin-bottom 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dashboard-actions-row.is-leaving > * {
@@ -1936,6 +1940,11 @@ button.profile-name-link.leaderboard-row__name {
   min-height: 0;
   width: 100%;
   display: flex;
+  transform-origin: top center;
+  transition:
+    flex 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    min-height 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 560ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Idle tell-me-more — smaller than timer row; scales with --tell-idle-scale */
@@ -2655,7 +2664,7 @@ button.profile-name-link.leaderboard-row__name {
 /* Tell-Me-More expanded: dashboard shell is the frame; content tiles keep their own padding */
 .dashboard-capsule--figma.is-tell-expanded,
 .dashboard-capsule--figma.is-tell-closing {
-  --dashboard-tell-pad: clamp(12px, 1.25vw, 16px);
+  --dashboard-tell-pad: clamp(9px, 0.95vw, 13px);
   background: var(--tell-pill-pastel, #bccdf5);
   border-color: var(--persona-accent, #759aef);
   padding: var(--dashboard-tell-pad);

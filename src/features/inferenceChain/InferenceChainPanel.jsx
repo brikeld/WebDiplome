@@ -4,10 +4,9 @@
  * Two distinct layouts share this component:
  *
  *   • Leaderboard posts → `LeaderboardRationaleView` (lb2 capsule layout).
- *   • Normal posts      → np2 layout: bigger post quote + 3 capsule tiles
- *                         (Thinking process / Ingredients / Reasoning steps),
- *                         each with small interactable chips that reveal a
- *                         per-tile detail strip on click.
+ *   • Normal posts      → tell-panel-a layout: compact post quote + analysis
+ *                         sections for reasoning, framing, and data inputs.
+ *                         Small interactable chips reveal per-section details.
  *
  * Cross-linking from the post quote: clicking a highlighted phrase opens the
  * matching chip (ingredient or inference-chain step) and scrolls focus into
