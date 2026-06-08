@@ -104,10 +104,8 @@
   --dash-head-pad: 6px 10px;
   --dash-head-fs: clamp(10px, 0.74vw, 11px);
   --dash-tag-fs: clamp(16px, 1.08vw, 20px);
-  --dash-chip-fs: clamp(10px, 0.68vw, 12px);
-  --dash-chip-lh: 1.18;
   --dash-tag-fw: 800;
-  --dash-tag-lh: 1.15;
+  --dash-tag-lh: 1.12;
   flex: 1 1 0;
   width: 100%;
   max-width: 100%;
@@ -156,24 +154,19 @@
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__content .tape__label,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__pct {
   font-size: var(--dash-tag-fs);
   font-weight: var(--dash-tag-fw);
   line-height: var(--dash-tag-lh);
 }
 
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
-  font-size: var(--dash-chip-fs);
-  font-weight: var(--dash-tag-fw);
-  line-height: var(--dash-chip-lh);
-}
-
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__label,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .focus-detail__prose,
@@ -200,35 +193,32 @@
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__row {
   min-height: 34px;
-  padding: 8px 6px;
+  padding: 8px 10px;
   border-radius: 12px;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip {
   white-space: normal;
   overflow: visible;
-  overflow-wrap: anywhere;
-  word-break: break-word;
   text-overflow: clip;
-  hyphens: auto;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip {
   min-height: 34px;
-  padding: 8px 6px;
-  gap: 3px;
+  padding: 8px 10px;
+  gap: 0;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
+  display: block;
+  width: 100%;
   overflow: visible;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  hyphens: auto;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__pct {
-  font-size: clamp(9px, 0.62vw, 11px);
-  line-height: 1;
+  display: inline;
+  margin-left: 0.2em;
+  opacity: 0.72;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__track {

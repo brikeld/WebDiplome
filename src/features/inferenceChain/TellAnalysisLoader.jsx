@@ -13,7 +13,7 @@ export default function TellAnalysisLoader() {
           <span className="tell-analysis-loader__core" />
         </div>
         <div className="tell-analysis-loader__copy">
-          <strong>Building inference chain</strong>
+          <strong>COMPLIANT thinking process</strong>
           <span>Ranking evidence, confidence, and persona fit</span>
         </div>
         <div className="tell-analysis-loader__progress">

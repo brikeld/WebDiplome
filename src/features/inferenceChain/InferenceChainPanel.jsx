@@ -19,6 +19,8 @@ import RedactedAnalysisOverlay from './RedactedAnalysisOverlay.jsx';
 import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 import { freshPanelUi, nextPanelUi } from './panelState.js';
+import FocusDetail from './FocusDetail.jsx';
+import { chainChipLines, splitLabelTwoLines } from './chipLabelUtils.js';
 import { synthesiseChartMetadata } from '@/lib/chartPostMetadata.js';
 
 const CHAIN_KEYS = ['data', 'classify', 'infer'];
@@ -109,7 +111,22 @@ function resolvePostAnalysis(post) {
   return { chain, ingredients, highlights, rawThinking };
 }
 
-import FocusDetail from './FocusDetail.jsx';
+function ChipTwoLineLabel({ line1, line2, suffix = null }) {
+  return (
+    <>
+      {line1}
+      {line2 ? (
+        <>
+          <br />
+          {line2}
+        </>
+      ) : (
+        <br />
+      )}
+      {suffix}
+    </>
+  );
+}
 
 export default function InferenceChainPanel({
   post,
@@ -254,7 +271,7 @@ export default function InferenceChainPanel({
                   className={`reason-chip${activeChainStep === i ? ' is-open' : ''}`}
                   onClick={() => setActiveDetail('chain', i)}
                 >
-                  {item.label}
+                  <ChipTwoLineLabel {...chainChipLines(item.label)} />
                 </button>
               ))}
             </div>
@@ -282,7 +299,7 @@ export default function InferenceChainPanel({
                   className={`reason-chip${activeThinking === i ? ' is-open' : ''}`}
                   onClick={() => setActiveDetail('thinking', i)}
                 >
-                  {th.label}
+                  <ChipTwoLineLabel {...splitLabelTwoLines(th.label)} />
                 </button>
               ))}
             </div>
@@ -305,6 +322,7 @@ export default function InferenceChainPanel({
             <div className="reason-chips ing-chips">
               {ingredients.map((ing, i) => {
                 const weight = Math.max(5, Math.min(100, Math.round(Number(ing?.weight) || 50)));
+                const { line1, line2 } = splitLabelTwoLines(ing.label);
                 return (
                   <button
                     key={`${ing.label}-${i}`}
@@ -312,8 +330,13 @@ export default function InferenceChainPanel({
                     className={`reason-chip ing-chip${activeIngredient === i ? ' is-open' : ''}`}
                     onClick={() => setActiveDetail('ingredient', i)}
                   >
-                    <span className="ing-chip__label">{ing.label}</span>
-                    <span className="ing-chip__pct">{weight}%</span>
+                    <span className="ing-chip__label">
+                      <ChipTwoLineLabel
+                        line1={line1}
+                        line2={line2}
+                        suffix={<span className="ing-chip__pct">{weight}%</span>}
+                      />
+                    </span>
                   </button>
                 );
               })}

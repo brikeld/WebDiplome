@@ -280,7 +280,7 @@ function analysisLoaderMarkup() {
           <span class="tell-analysis-loader__core"></span>
         </div>
         <div class="tell-analysis-loader__copy">
-          <strong>Building inference chain</strong>
+          <strong>COMPLIANT thinking process</strong>
           <span>Ranking evidence, confidence, and persona fit</span>
         </div>
         <div class="tell-analysis-loader__progress"><span></span></div>

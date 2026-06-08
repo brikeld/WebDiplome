@@ -610,8 +610,6 @@
   --dash-head-pad: 6px 10px;
   --dash-head-fs: clamp(10px, 0.74vw, 11px);
   --dash-tag-fs: clamp(16px, 1.08vw, 20px);
-  --dash-chip-fs: clamp(10px, 0.68vw, 12px);
-  --dash-chip-lh: 1.18;
   --dash-tag-fw: 800;
   --dash-tag-lh: 1.15;
   flex: 1 1 0;
