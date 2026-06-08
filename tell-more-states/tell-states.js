@@ -94,8 +94,6 @@ const SECTIONS = [
 
 const STATES = SECTIONS.flatMap((section) => section.states);
 
-const EXPAND_LOADING_MS = 1200;
-const CLOSE_MS = 480;
 const PANEL_SWAP_MS = 460;
 
 // Showcase copy sourced from generated posts in posts_personas.json (Electron data dir).
@@ -113,6 +111,7 @@ const THINKING = [
   { label: "Focus set", detail: "I noticed the Creative category is tied with Dev & Work, which suggests a heavy creative-technical blend." },
   { label: "AI weight", detail: "The presence of 6 AI Tools alongside heavy Adobe use makes sense for this persona." },
   { label: "Post choice", detail: "I decided to focus the post on the dominance of the creative side rather than just the raw numbers." },
+  { label: "The leap", detail: "Dev & Work matches Creative in the data, but leading with the creative angle reads clearer as a persona story." },
 ];
 
 const INGREDIENTS = [
@@ -410,7 +409,7 @@ function buildNormalPanelMarkup({ palette = "default", animateFrom = null } = {}
     <div class="${rootClass}" role="region" aria-label="Tell me more analysis">
       <div class="post-quote-a">
         <span class="panel-a__head">Why this CONTENT?</span>
-        <p class="post-quote-a__text"><span class="post-quote-a__open" aria-hidden="true">“</span>${quoteBefore}<button type="button" class="post-quote-a__highlight" data-showcase-interactive data-chip-kind="ingredient" data-chip-index="${NORMAL_POST.highlightIngredientIndex}">${NORMAL_POST.highlightPhrase}</button>${quoteAfter}<span class="post-quote-a__close" aria-hidden="true">”</span></p>
+        <p class="post-quote-a__text"><span class="post-quote-a__open" aria-hidden="true">“</span>${quoteBefore}<button type="button" class="post-quote-a__highlight${activeIngredient === NORMAL_POST.highlightIngredientIndex ? " is-open" : ""}" data-showcase-interactive data-chip-kind="ingredient" data-chip-index="${NORMAL_POST.highlightIngredientIndex}">${NORMAL_POST.highlightPhrase}</button>${quoteAfter}<span class="post-quote-a__close" aria-hidden="true">”</span></p>
       </div>
 
       <section class="tape-section" aria-label="From data to post">
@@ -854,26 +853,6 @@ function commitStateVisual(state, { panelEnter = false, panelSwap = false, panel
   renderTellRow(state, { panelEnter, panelSwap, panelOverride });
 }
 
-function runExpandTransition(state, gen) {
-  commitStateVisual({ ...state, mode: "expanded" }, { panelEnter: true, panelOverride: "loading" });
-  nudgeHost();
-
-  transitionTimer = window.setTimeout(() => {
-    if (gen !== transitionGen) return;
-    commitStateVisual(state, { panelEnter: true });
-  }, EXPAND_LOADING_MS);
-}
-
-function runCloseTransition(state, prevState, gen) {
-  commitStateVisual({ ...prevState, mode: "closing" }, { panelOverride: null });
-  nudgeHost();
-
-  transitionTimer = window.setTimeout(() => {
-    if (gen !== transitionGen) return;
-    commitStateVisual(state);
-  }, CLOSE_MS);
-}
-
 function refreshPanel(animateFrom = null) {
   const state = STATES[currentIndex];
   if (state.mode === "idle") return;
@@ -884,7 +863,6 @@ function showState(index, { keepPlaying = false } = {}) {
   if (!keepPlaying) window.clearTimeout(playTimer);
   clearTransitionTimers();
   transitionGen += 1;
-  const gen = transitionGen;
 
   const prevState = STATES[currentIndex];
   currentIndex = (index + STATES.length) % STATES.length;
@@ -897,29 +875,15 @@ function showState(index, { keepPlaying = false } = {}) {
   applyTheme(stateThemeKey(state));
   updateChrome(state);
 
-  const goingExpanded = prevState?.mode === "idle" && state.mode === "expanded";
-  const goingIdle = prevState?.mode === "expanded" && state.mode === "idle";
   const swappingExpanded = prevState?.mode === "expanded" && state.mode === "expanded" && prevState !== state;
-
-  if (goingExpanded) {
-    runExpandTransition(state, gen);
-    return;
-  }
-
-  if (goingIdle) {
-    runCloseTransition(state, prevState, gen);
-    return;
-  }
 
   if (swappingExpanded) {
     panelUi = freshPanelUi();
     commitStateVisual(state, { panelSwap: true });
-    nudgeHost();
     return;
   }
 
-  commitStateVisual(state, { panelEnter: prevState !== state && !goingExpanded && !goingIdle });
-  if (prevState !== state) nudgeHost();
+  commitStateVisual(state, { panelSwap: prevState !== state && prevState?.mode === "expanded" && state.mode === "expanded" });
 }
 
 function toggleChip(kind, index) {
@@ -969,16 +933,9 @@ function playFlow() {
 
   const prevIndex = currentIndex;
   const nextIndex = (prevIndex + 1) % STATES.length;
-  const prev = STATES[prevIndex];
-  const next = STATES[nextIndex];
 
   showState(nextIndex, { keepPlaying: true });
-
-  let delay = 3200;
-  if (prev.mode === "idle" && next.mode === "expanded") delay = EXPAND_LOADING_MS + 2800;
-  else if (prev.mode === "expanded" && next.mode === "idle") delay = CLOSE_MS + 2800;
-
-  playTimer = window.setTimeout(playFlow, delay);
+  playTimer = window.setTimeout(playFlow, 3200);
 }
 
 buildRail();

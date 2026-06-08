@@ -67,7 +67,7 @@ function buildSegments(content, highlights) {
   return out;
 }
 
-export default function PostTextHighlights({ content, highlights, onSelect }) {
+export default function PostTextHighlights({ content, highlights, onSelect, activeIngredientIndex = null }) {
   const segments = buildSegments(content, highlights);
 
   return (
@@ -81,7 +81,7 @@ export default function PostTextHighlights({ content, highlights, onSelect }) {
             <button
               key={`h-${seg.key}`}
               type="button"
-              className="inference-panel__highlight"
+              className={`inference-panel__highlight${activeIngredientIndex === seg.ingredientIndex ? ' is-open' : ''}`}
               onClick={() =>
                 onSelect?.({
                   stepIndex: seg.stepIndex,

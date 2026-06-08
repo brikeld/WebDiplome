@@ -27,7 +27,9 @@ describe('tell-me-more expanded layout CSS contract', () => {
     const ingredientLabel = blockFor('.ing-bar__label');
 
     expect(stack).toContain('flex-direction: column');
+    expect(stack).toContain('overflow: hidden');
     expect(stack).not.toContain('grid-template-areas');
+    expect(stack).not.toContain('overflow-y: auto');
     expect(ingredientRow).toContain('grid-template-areas');
     expect(ingredientRow).toContain('"label pct"');
     expect(ingredientRow).toContain('"track track"');
@@ -35,13 +37,16 @@ describe('tell-me-more expanded layout CSS contract', () => {
     expect(ingredientLabel).not.toContain('overflow: hidden');
   });
 
-  it('animates expansion from the previous idle row position', () => {
-    expect(inferenceCss).toContain('@keyframes dashboard-tell-row-expand');
-    const expandedRow = blockFor(
-      '.dashboard-capsule--figma.is-tell-expanded:not(.is-tell-closing) .dashboard-tell-row',
-    );
+  it('uses the prototype focus-detail capsule and loading scanner in production CSS', () => {
+    const focusDetail = blockFor('.focus-detail');
+    const focusPanel = blockFor('.tell-panel-a--has-focus');
+    const loader = blockFor('.tell-analysis-loader');
+    const loaderVisible = blockFor('.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader');
 
-    expect(expandedRow).toContain('dashboard-tell-row-expand');
-    expect(inferenceCss).toContain('translateY(calc(var(--dashboard-actions-h');
+    expect(focusPanel).toContain('--panel-a-gap');
+    expect(focusDetail).toContain('width: 100%');
+    expect(focusDetail).toContain('animation: focus-detail-in');
+    expect(loader).toContain('place-items: center');
+    expect(loaderVisible).toContain('visibility: visible');
   });
 });

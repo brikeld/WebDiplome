@@ -23,26 +23,20 @@ describe('<TellMeMorePill> hidden redaction', () => {
     expect(html).toContain('<button');
     expect(html).toContain('tell-idle-a');
     expect(html).toContain('tell-idle-a__bars');
+    expect(html).toContain('tell-analysis-loader');
+    expect(html).toContain('Building inference chain');
     expect(html).toContain('Security post');
     expect(html).toContain('Tell me why');
   });
 
-  it('shows an expansion loading state before rendering post analysis', () => {
+  it('renders expanded post analysis immediately when expanded', () => {
     const html = renderToStaticMarkup(<TellMeMorePill highlightedPost={post} expanded />);
-
-    expect(html).toContain('tell-more-pill--expanding');
-    expect(html).toContain('tell-load');
-    expect(html).not.toContain('Sensitive browser history');
-  });
-
-  it('uses the new tell-panel design for expanded normal post analysis', () => {
-    const html = renderToStaticMarkup(
-      <TellMeMorePill highlightedPost={post} expanded skipExpansionLoading />,
-    );
 
     expect(html).toContain('tell-panel-a');
     expect(html).toContain('tell-panel-a--alt-palette-2');
     expect(html).toContain('From data to post');
+    expect(html).not.toContain('Why this CONTENT?');
+    expect(html).not.toContain('tell-more-pill--expanding');
     expect(html).not.toContain('class="np2"');
   });
 
@@ -51,7 +45,6 @@ describe('<TellMeMorePill> hidden redaction', () => {
       <TellMeMorePill
         highlightedPost={post}
         expanded
-        skipExpansionLoading
         isAnalysisRedacted
         onRedactedUnhideConfirm={() => {}}
       />,
@@ -77,7 +70,6 @@ describe('<TellMeMorePill> hidden redaction', () => {
           },
         }}
         expanded
-        skipExpansionLoading
       />,
     );
 
@@ -99,7 +91,6 @@ describe('<TellMeMorePill> hidden redaction', () => {
           },
         }}
         expanded
-        skipExpansionLoading
         isAnalysisRedacted
         onRedactedUnhideConfirm={() => {}}
       />,

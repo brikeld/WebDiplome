@@ -1918,15 +1918,6 @@ button.profile-name-link.leaderboard-row__name {
   min-height: var(--dashboard-actions-min-h, var(--dashboard-actions-h, clamp(128px, 15vh, 176px)));
   height: var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
   max-height: var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
-  /* Clipping happens only while tell-me-more is collapsing (see inferenceChain.css). */
-  transition:
-    flex 420ms cubic-bezier(0.2, 0.9, 0.18, 1),
-    flex-basis 420ms cubic-bezier(0.2, 0.9, 0.18, 1),
-    min-height 420ms cubic-bezier(0.2, 0.9, 0.18, 1),
-    height 420ms cubic-bezier(0.2, 0.9, 0.18, 1),
-    margin-bottom 420ms cubic-bezier(0.2, 0.9, 0.18, 1),
-    opacity 220ms cubic-bezier(0.4, 0, 0.2, 1),
-    transform 420ms cubic-bezier(0.2, 0.9, 0.18, 1);
 }
 
 .dashboard-actions-row.is-leaving > * {
@@ -1942,11 +1933,6 @@ button.profile-name-link.leaderboard-row__name {
   min-height: 0;
   width: 100%;
   display: flex;
-  transform-origin: top center;
-  transition:
-    flex 460ms cubic-bezier(0.2, 0.9, 0.18, 1),
-    min-height 460ms cubic-bezier(0.2, 0.9, 0.18, 1),
-    transform 460ms cubic-bezier(0.2, 0.9, 0.18, 1);
 }
 
 /* Idle tell-me-more — smaller than timer row; scales with --tell-idle-scale */
@@ -1960,6 +1946,9 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-capsule--figma.is-tell-expanded .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-expanding .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-loading .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-revealing .dashboard-tell-row,
 .dashboard-capsule--figma.is-tell-closing .dashboard-tell-row {
   flex: 1 1 0;
   min-height: 0;
@@ -2656,15 +2645,13 @@ button.profile-name-link.leaderboard-row__name {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition:
-    background-color 420ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 420ms cubic-bezier(0.4, 0, 0.2, 1),
-    padding 420ms cubic-bezier(0.4, 0, 0.2, 1),
-    gap 420ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Tell-Me-More expanded: dashboard shell is the frame; content tiles keep their own padding */
 .dashboard-capsule--figma.is-tell-expanded,
+.dashboard-capsule--figma.is-tell-expanding,
+.dashboard-capsule--figma.is-tell-loading,
+.dashboard-capsule--figma.is-tell-revealing,
 .dashboard-capsule--figma.is-tell-closing {
   --dashboard-tell-pad: clamp(12px, 1.15vw, 16px);
   background: var(--tell-pill-pastel, #bccdf5);
@@ -2675,14 +2662,23 @@ button.profile-name-link.leaderboard-row__name {
 
 /* Home/profile rail sets large capsule padding — swap to tell-pad when expanded */
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanded,
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanding,
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-loading,
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-revealing,
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing,
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanded,
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanding,
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-loading,
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-revealing,
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing {
   padding: var(--dashboard-tell-pad, clamp(12px, 1.25vw, 16px));
   gap: 0;
 }
 
 .dashboard-capsule--figma.is-tell-expanded .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-expanding .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-loading .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-revealing .dashboard-tell-row,
 .dashboard-capsule--figma.is-tell-closing .dashboard-tell-row {
   flex: 1 1 0;
   min-height: 0;

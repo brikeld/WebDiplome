@@ -1,3 +1,5 @@
+import { freshPanelUi, nextPanelUi } from "./panel-state.js";
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -6,9 +8,6 @@ const THEMES = {
   sec: { className: "theme-sec", accent: "#759aef", pastel: "#bccdf5", label: "Security" },
   soc: { className: "theme-soc", accent: "#ccf847", pastel: "#ebf8b7", label: "Social" },
 };
-
-const EXPAND_LOADING_MS = 1200;
-const CLOSE_MS = 480;
 
 const NORMAL_POST = {
   content:
@@ -21,6 +20,7 @@ const THINKING = [
   { label: "Focus set", detail: "I noticed the Creative category is tied with Dev & Work, which suggests a heavy creative-technical blend." },
   { label: "AI weight", detail: "The presence of 6 AI Tools alongside heavy Adobe use makes sense for this persona." },
   { label: "Post choice", detail: "I decided to focus the post on the dominance of the creative side rather than just the raw numbers." },
+  { label: "The leap", detail: "Dev & Work matches Creative in the data, but leading with the creative angle reads clearer as a persona story." },
 ];
 
 const INGREDIENTS = [
@@ -88,6 +88,12 @@ const GENERATING_KEYS = ["productivity", "security", "social"];
 const GENERATING_COLORS = { productivity: "#d8d8d8", security: "#759aef", social: "#ccf847" };
 const GENERATING_CYCLE_MS = 3000;
 const GENERATING_PHRASE_INTERVAL_MS = 2200;
+const TELL_LAYOUT_MS = 1500;
+const TELL_LOADING_MS = TELL_LAYOUT_MS + 2000;
+const TELL_REVEAL_MS = 640;
+const TELL_CLOSE_FADE_MS = 280;
+const TELL_CLOSE_MS = TELL_CLOSE_FADE_MS + TELL_LAYOUT_MS;
+const DEFAULT_MOTION_ONE_URL = "https://cdn.jsdelivr.net/npm/@motionone/dom@10.18.0/+esm";
 const GENERATING_PHRASES = {
   productivity: ["Counting your open tabs", "Tallying screen time", "Measuring focus blocks", "Cataloguing app switches"],
   security: ["Verifying all security leaks", "Scanning open WiFi networks", "Cross-checking app permissions", "Tracing your VPN exits"],
@@ -97,7 +103,7 @@ const GENERATING_PHRASES = {
 const NOTES = [
   ["ok", "Timer on top and Tell me more below — same stack as the production dashboard capsule."],
   ["info", "Click the timer to step through pulse → harvest → scores → generating."],
-  ["info", "Click Tell me more to expand Analysis panel dif color 2; click again to collapse."],
+  ["info", "Click Tell me more — capsule grows, loading bars scale up, analysis after 2s."],
   ["warn", "Timer row hides while tell is expanded, matching the live app."],
 ];
 
@@ -106,7 +112,6 @@ let timerIndex = 0;
 let tellMode = "idle";
 let panelUi = freshPanelUi();
 let playTimer = null;
-let tellTransitionTimer = null;
 let harvestPhraseTimer = null;
 let harvestProgressTimer = null;
 let generatingCycleTimer = null;
@@ -114,10 +119,12 @@ let generatingPhraseTimer = null;
 let generatingPhraseState = null;
 let timerSlotTimer = null;
 let timerSlotGen = 0;
-
-function freshPanelUi() {
-  return { activeThinking: null, activeIngredient: null, activeChainStep: null };
-}
+let tellTransitionTimer = null;
+let tellTransitionTimer2 = null;
+let tellTransitionTimer3 = null;
+let tellLayoutCollapsed = false;
+let motionOnePromise = null;
+let tellMotionControls = [];
 
 function snapshotPanelUi(ui = panelUi) {
   return { activeThinking: ui.activeThinking, activeIngredient: ui.activeIngredient, activeChainStep: ui.activeChainStep };
@@ -242,22 +249,11 @@ function generatingMarkup(highlightedKey = null) {
   `;
 }
 
-function tellLoadingMarkup() {
-  return `
-    <div class="inference-panel is-ready" role="region" aria-label="Tell me more analysis">
-      <div class="tell-load tell-load--loop tell-load--compact" aria-hidden="true">
-        <div class="tell-load__skel"></div>
-        <div class="tell-load__skel"></div>
-        <div class="tell-load__skel tell-load__skel--solid"></div>
-      </div>
-    </div>
-  `;
-}
-
-function idleTellMarkup(themeKey) {
+function idleTellMarkup(themeKey, { extraClass = "" } = {}) {
   const theme = THEMES[themeKey] ?? THEMES.prod;
+  const extra = extraClass ? ` ${extraClass}` : "";
   return `
-    <button type="button" class="tell-more-pill tell-more-pill--idle" style="${pillStyle(themeKey)}" data-showcase-tell-toggle aria-label="Tell me more">
+    <button type="button" class="tell-more-pill tell-more-pill--idle${extra}" style="${pillStyle(themeKey)}" data-showcase-tell-toggle aria-label="Tell me more">
       <div class="tell-idle-a">
         <div class="tell-idle-a__top">
           <span class="tell-idle-a__persona">${theme.label} post</span>
@@ -270,19 +266,99 @@ function idleTellMarkup(themeKey) {
   `;
 }
 
+function analysisLoaderMarkup() {
+  return `
+    <div class="tell-analysis-loader" aria-hidden="true">
+      <div class="tell-analysis-loader__card">
+        <div class="tell-analysis-loader__top">
+          <span>Signal analysis</span>
+          <b>Live trace</b>
+        </div>
+        <div class="tell-analysis-loader__scope">
+          <span class="tell-analysis-loader__ring"></span>
+          <span class="tell-analysis-loader__scan"></span>
+          <span class="tell-analysis-loader__core"></span>
+        </div>
+        <div class="tell-analysis-loader__copy">
+          <strong>Building inference chain</strong>
+          <span>Ranking evidence, confidence, and persona fit</span>
+        </div>
+        <div class="tell-analysis-loader__progress"><span></span></div>
+        <div class="tell-analysis-loader__metrics">
+          <span>App signals</span>
+          <span>Recent files</span>
+          <span>Post rationale</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function detailDataFor(kind, index) {
+  if (kind === "chain") {
+    const item = SIMPLE_CHAIN[index];
+    return {
+      kind: "chain",
+      label: item.label,
+      title: item.value,
+      detail: item.detail,
+      tag: item.tag,
+    };
+  }
+
+  if (kind === "thinking") {
+    const item = THINKING[index];
+    return {
+      kind: "thinking",
+      label: "How we framed it",
+      title: item.label,
+      detail: item.detail,
+    };
+  }
+
+  if (kind === "ingredient") {
+    const item = INGREDIENTS[index];
+    return {
+      kind: "ingredient",
+      label: "Data used",
+      title: item.label,
+      points: item.points,
+    };
+  }
+
+  return null;
+}
+
+function focusDetailMarkup(detail) {
+  if (!detail) return "";
+  return `
+    <section class="focus-detail focus-detail--${detail.kind}" aria-label="${detail.title}">
+      <header class="focus-detail__eyebrow">${detail.label}</header>
+      <div class="focus-detail__body">
+        <b>${detail.title}</b>
+        ${detail.detail ? `<p>${detail.detail}</p>` : ""}
+        ${detail.points ? `<ul>${detail.points.map((point) => `<li>${point}</li>`).join("")}</ul>` : ""}
+        ${detail.tag ? `<span class="focus-detail__tag">${detail.tag}</span>` : ""}
+      </div>
+    </section>
+  `;
+}
+
 function buildAlt2PanelMarkup({ animateFrom = null } = {}) {
   const { activeThinking, activeIngredient, activeChainStep } = panelUi;
   const quoteParts = NORMAL_POST.content.split(NORMAL_POST.highlightPhrase);
   const quoteBefore = quoteParts[0] ?? "";
   const quoteAfter = quoteParts.slice(1).join(NORMAL_POST.highlightPhrase);
+  const panelFocusClass =
+    activeThinking !== null || activeIngredient !== null || activeChainStep !== null ? " tell-panel-a--has-focus" : "";
+  const sectionFocusClass = (kind, isActive) => (isActive ? ` ${kind}-section--focus` : "");
 
   return `
-    <div class="tell-panel-a tell-panel-a--alt-palette-2 inference-panel is-ready" role="region" aria-label="Tell me more analysis">
+    <div class="tell-panel-a tell-panel-a--alt-palette-2${panelFocusClass} inference-panel is-ready" role="region" aria-label="Tell me more analysis">
       <div class="post-quote-a">
-        <span class="panel-a__head">Why this CONTENT?</span>
-        <p class="post-quote-a__text"><span class="post-quote-a__open" aria-hidden="true">“</span>${quoteBefore}<button type="button" class="post-quote-a__highlight" data-showcase-interactive data-chip-kind="ingredient" data-chip-index="${NORMAL_POST.highlightIngredientIndex}">${NORMAL_POST.highlightPhrase}</button>${quoteAfter}<span class="post-quote-a__close" aria-hidden="true">”</span></p>
+        <p class="post-quote-a__text"><span class="post-quote-a__open" aria-hidden="true">“</span>${quoteBefore}<button type="button" class="post-quote-a__highlight${activeIngredient === NORMAL_POST.highlightIngredientIndex ? " is-open" : ""}" data-showcase-interactive data-chip-kind="ingredient" data-chip-index="${NORMAL_POST.highlightIngredientIndex}">${NORMAL_POST.highlightPhrase}</button>${quoteAfter}<span class="post-quote-a__close" aria-hidden="true">”</span></p>
       </div>
-      <section class="tape-section" aria-label="From data to post">
+      <section class="tape-section${sectionFocusClass("tape", activeChainStep !== null)}" aria-label="From data to post">
         <header class="panel-a__head">From data to post</header>
         <div class="tape">
           ${SIMPLE_CHAIN.map(
@@ -294,14 +370,14 @@ function buildAlt2PanelMarkup({ animateFrom = null } = {}) {
                 </div>
                 <button type="button" class="tape__content${activeChainStep === i ? " is-open" : ""}" data-showcase-interactive data-chip-kind="chain" data-chip-index="${i}">
                   <span class="tape__label">${item.label}</span>
-                  ${activeChainStep === i ? `<span class="tape__value${revealClass(shouldRevealChainStep(i, animateFrom))}">${item.value}</span><span class="tape__detail${revealClass(shouldRevealChainStep(i, animateFrom), "late")}">${item.detail}<span class="tape__meta"><span class="tape__tag${revealClass(shouldRevealChainStep(i, animateFrom), "later")}">${item.tag}</span></span></span>` : ""}
                 </button>
               </div>
+              ${activeChainStep === i ? focusDetailMarkup(detailDataFor("chain", i)) : ""}
             `,
           ).join("")}
         </div>
       </section>
-      <section class="reason-section">
+      <section class="reason-section${sectionFocusClass("reason", activeThinking !== null)}">
         <header class="panel-a__head">How we framed it</header>
         <div class="reason-chips">
           ${THINKING.map(
@@ -310,16 +386,9 @@ function buildAlt2PanelMarkup({ animateFrom = null } = {}) {
             `,
           ).join("")}
         </div>
-        ${
-          activeThinking !== null
-            ? `<div class="panel-a__detail${detailEnterClass(shouldRevealDetail("activeThinking", animateFrom))}">
-                <span class="panel-a__detail-label">${THINKING[activeThinking].label}</span>
-                <p>${THINKING[activeThinking].detail}</p>
-              </div>`
-            : ""
-        }
+        ${activeThinking !== null ? focusDetailMarkup(detailDataFor("thinking", activeThinking)) : ""}
       </section>
-      <section class="ing-section">
+      <section class="ing-section${sectionFocusClass("ing", activeIngredient !== null)}">
         <header class="panel-a__head">Data used</header>
         <div class="ing-bars">
           ${INGREDIENTS.map(
@@ -329,28 +398,147 @@ function buildAlt2PanelMarkup({ animateFrom = null } = {}) {
                 <span class="ing-bar__track"><span class="ing-bar__fill" style="width:${item.weight}%"></span></span>
                 <span class="ing-bar__pct">${item.weight}%</span>
               </button>
+              ${activeIngredient === i ? focusDetailMarkup(detailDataFor("ingredient", i)) : ""}
             `,
           ).join("")}
         </div>
-        ${
-          activeIngredient !== null
-            ? `<div class="panel-a__detail${detailEnterClass(shouldRevealDetail("activeIngredient", animateFrom))}">
-                <b>${INGREDIENTS[activeIngredient].label}</b>
-                <ul>${INGREDIENTS[activeIngredient].points.map((p) => `<li>${p}</li>`).join("")}</ul>
-              </div>`
-            : ""
-        }
       </section>
     </div>
   `;
 }
 
-function expandedTellMarkup({ closing = false, panelHtml = tellLoadingMarkup() }) {
-  return `
-    <div class="tell-more-pill tell-more-pill--expanded tell-more-pill--alt-palette-2${closing ? " tell-more-pill--closing" : ""}" style="${pillStyle()}" data-showcase-tell-toggle role="region" aria-label="Inference chain analysis">
-      <div id="tellPanel" class="tell-panel-host">${panelHtml}</div>
-    </div>
-  `;
+function clearTellTransition() {
+  window.clearTimeout(tellTransitionTimer);
+  window.clearTimeout(tellTransitionTimer2);
+  window.clearTimeout(tellTransitionTimer3);
+  tellTransitionTimer = null;
+  tellTransitionTimer2 = null;
+  tellTransitionTimer3 = null;
+  cancelTellMotion();
+}
+
+function cancelTellMotion() {
+  tellMotionControls.forEach((control) => control?.cancel?.());
+  tellMotionControls = [];
+}
+
+function resetTellMotionStyles() {
+  const row = $("#tellRow");
+  if (!row) return;
+  const animatedParts = $$(
+    ".tell-morph, .tell-idle-a, .tell-idle-a__top, .tell-idle-a__bars, .tell-idle-a__cta, .tell-analysis-loader__card",
+    row,
+  );
+
+  animatedParts.forEach((element) => {
+    ["filter", "opacity", "transform"].forEach((property) => element.style.removeProperty(property));
+    [...element.style]
+      .filter((property) => property.startsWith("--motion-"))
+      .forEach((property) => element.style.removeProperty(property));
+  });
+}
+
+async function loadMotionOne() {
+  if (!motionOnePromise) {
+    const url = window.motionOneUrl || DEFAULT_MOTION_ONE_URL;
+    motionOnePromise = import(url).catch(() => null);
+  }
+  return motionOnePromise;
+}
+
+function playMotion(animation) {
+  if (animation?.cancel) tellMotionControls.push(animation);
+}
+
+async function startTellMotion(direction) {
+  cancelTellMotion();
+  const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  const motion = prefersReduced ? null : await loadMotionOne();
+  const animate = motion?.animate;
+  const stagger = motion?.stagger;
+  const morph = $(".tell-morph");
+  const idleChrome = $(".tell-idle-a");
+  const idleTop = $(".tell-idle-a__top");
+  const idleBars = $(".tell-idle-a__bars");
+  const idleCta = $(".tell-idle-a__cta");
+  const loader = $(".tell-analysis-loader__card");
+  const loaderBits = $$(".tell-analysis-loader__top, .tell-analysis-loader__scope, .tell-analysis-loader__copy, .tell-analysis-loader__progress, .tell-analysis-loader__metrics");
+  const panelSections = $$(".tell-panel-a > .post-quote-a, .tell-panel-a > .tape-section, .tell-panel-a > .reason-section, .tell-panel-a > .ing-section");
+
+  if (!animate || !morph) return;
+
+  if (direction === "open") {
+    playMotion(animate(morph, { scale: [0.992, 1.006, 1], y: [0, -8, 0] }, { duration: 1.2, easing: [0.22, 1, 0.36, 1] }));
+    if (idleChrome) playMotion(animate(idleChrome, { filter: ["blur(0px)", "blur(1.8px)"], opacity: [1, 0.18] }, { duration: 0.55, easing: "ease-out" }));
+    if (idleTop) playMotion(animate(idleTop, { y: [0, -18], opacity: [1, 0] }, { duration: 0.38, easing: "ease-out" }));
+    if (idleBars) playMotion(animate(idleBars, { scaleY: [1, 0.78], opacity: [1, 0] }, { duration: 0.48, easing: "ease-out" }));
+    if (idleCta) playMotion(animate(idleCta, { y: [0, 18], opacity: [1, 0] }, { duration: 0.34, easing: "ease-out" }));
+    if (loader) playMotion(animate(loader, { opacity: [0, 1], scale: [0.94, 1], y: [18, 0] }, { delay: 0.26, duration: 0.58, easing: [0.16, 1, 0.3, 1] }));
+    if (loaderBits.length && stagger) {
+      playMotion(animate(loaderBits, { opacity: [0, 1], y: [12, 0] }, { delay: stagger(0.07, { start: 0.42 }), duration: 0.5, easing: "ease-out" }));
+    }
+    return;
+  }
+
+  if (direction === "reveal") {
+    if (loader) playMotion(animate(loader, { opacity: [1, 0], scale: [1, 0.975], y: [0, -10] }, { duration: 0.32, easing: "ease-in" }));
+    if (panelSections.length && stagger) {
+      playMotion(animate(panelSections, { opacity: [0, 1], y: [18, 0] }, { delay: stagger(0.07, { start: 0.12 }), duration: 0.5, easing: [0.22, 1, 0.36, 1] }));
+    }
+    return;
+  }
+
+  if (direction === "close") {
+    if (idleChrome) playMotion(animate(idleChrome, { filter: ["blur(1.6px)", "blur(0px)"], opacity: [0.22, 1] }, { delay: 0.35, duration: 0.62, easing: "ease-out" }));
+    if (morph) playMotion(animate(morph, { scale: [1.004, 0.992, 1], y: [0, 6, 0] }, { duration: 0.95, easing: [0.22, 1, 0.36, 1] }));
+  }
+}
+
+function applyPersonaThemeVars() {
+  const style = pillStyle(currentTheme);
+  const capsule = $("#capsule");
+  if (capsule) {
+    capsule.style.cssText = style;
+    capsule.style.setProperty("--both-layout-dur", `${TELL_LAYOUT_MS}ms`);
+  }
+  const idle = $(".tell-more-pill--idle", $("#tellRow"));
+  if (idle) idle.style.cssText = style;
+  const panelShell = $(".tell-morph__panel", $("#tellRow"));
+  if (panelShell) panelShell.style.cssText = style;
+}
+
+function updateIdlePill() {
+  applyPersonaThemeVars();
+  const theme = THEMES[currentTheme];
+  const persona = $(".tell-idle-a__persona", $("#tellRow"));
+  if (persona) persona.textContent = `${theme.label} post`;
+}
+
+function syncExpandedPanel(animateFrom = null) {
+  const panel = $("#tellPanel");
+  if (!panel) return;
+  if (tellMode !== "expanded" && tellMode !== "revealing" && tellMode !== "closing") {
+    panel.innerHTML = "";
+    return;
+  }
+  if (tellMode === "closing" && panel.querySelector(".tell-panel-a")) return;
+  panel.innerHTML = buildAlt2PanelMarkup({ animateFrom });
+}
+
+function ensureTellRowStructure() {
+  const row = $("#tellRow");
+  if (!row.querySelector(".tell-morph")) {
+    row.innerHTML = `
+      <div class="tell-morph">
+        ${idleTellMarkup(currentTheme, { extraClass: "tell-morph__idle" })}
+        ${analysisLoaderMarkup()}
+        <div class="tell-morph__panel tell-more-pill tell-more-pill--expanded tell-more-pill--alt-palette-2" data-showcase-tell-toggle role="region" aria-label="Inference chain analysis">
+          <div id="tellPanel" class="tell-panel-host"></div>
+        </div>
+      </div>
+    `;
+  }
+  updateIdlePill();
 }
 
 function applyTheme(theme) {
@@ -359,24 +547,37 @@ function applyTheme(theme) {
   $$(".themeswitch button").forEach((button) => {
     button.classList.toggle("is-on", button.dataset.theme === theme);
   });
-  const capsule = $("#capsule");
-  if (capsule) capsule.style.cssText = pillStyle(theme);
-  renderTellRow();
+  updateIdlePill();
+  if (tellMode === "expanded" || tellMode === "revealing") syncExpandedPanel();
 }
 
 function applyCapsuleClasses() {
   const capsule = $("#capsule");
-  const expanded = tellMode === "expanded" || tellMode === "loading" || tellMode === "closing";
+  const layoutExpanded =
+    tellMode === "expanding" ||
+    tellMode === "loading" ||
+    tellMode === "revealing" ||
+    tellMode === "expanded" ||
+    (tellMode === "closing" && !tellLayoutCollapsed);
+  const loadingVisible =
+    tellMode === "expanding" || tellMode === "loading" || tellMode === "revealing" || tellMode === "closing";
+  const contentReady = tellMode === "revealing" || tellMode === "expanded" || tellMode === "closing";
   capsule.dataset.tellMode = tellMode;
-  capsule.classList.toggle("is-tell-expanded", expanded);
+  capsule.classList.toggle("is-tell-expanded", layoutExpanded);
+  capsule.classList.toggle("is-tell-expanding", tellMode === "expanding");
+  capsule.classList.toggle("is-tell-loading", loadingVisible);
+  capsule.classList.toggle("is-tell-revealing", tellMode === "revealing");
+  capsule.classList.toggle("is-tell-content-ready", contentReady);
   capsule.classList.toggle("is-tell-closing", tellMode === "closing");
-  capsule.classList.toggle("is-tell-alt-palette-2", expanded);
+  capsule.classList.toggle("is-tell-alt-palette-2", layoutExpanded);
+  if (capsule) {
+    capsule.style.setProperty("--both-reveal-dur", `${TELL_REVEAL_MS}ms`);
+  }
 }
 
 function updateFrameMeta() {
   const timer = TIMER_STATES[timerIndex];
-  const tellLabel = tellMode === "idle" ? "idle" : tellMode === "loading" ? "loading" : tellMode === "closing" ? "closing" : "expanded";
-  $("#frameMeta").textContent = `Timer · ${timer.id} · Tell · ${tellLabel}`;
+  $("#frameMeta").textContent = `Timer · ${timer.id} · Tell · ${tellMode}`;
 }
 
 function buildRail() {
@@ -536,23 +737,15 @@ function renderTimer({ animate = false } = {}) {
 }
 
 function renderTellRow() {
-  const row = $("#tellRow");
-  if (tellMode === "idle") {
-    row.innerHTML = idleTellMarkup(currentTheme);
-  } else {
-    const panelHtml =
-      tellMode === "loading" ? tellLoadingMarkup() : tellMode === "closing" ? buildAlt2PanelMarkup() : buildAlt2PanelMarkup();
-    row.innerHTML = expandedTellMarkup({ closing: tellMode === "closing", panelHtml });
-  }
+  ensureTellRowStructure();
+  syncExpandedPanel();
   applyCapsuleClasses();
   updateFrameMeta();
 }
 
 function refreshPanel(animateFrom = null) {
-  if (tellMode !== "expanded") return;
-  const panel = $("#tellPanel");
-  if (!panel) return;
-  panel.innerHTML = buildAlt2PanelMarkup({ animateFrom });
+  if (tellMode !== "expanded" && tellMode !== "revealing") return;
+  syncExpandedPanel(animateFrom);
 }
 
 function advanceTimer() {
@@ -561,55 +754,83 @@ function advanceTimer() {
   renderTimer({ animate: true });
 }
 
-function clearTellTransition() {
-  window.clearTimeout(tellTransitionTimer);
-  tellTransitionTimer = null;
-}
-
 function expandTell() {
   if (tellMode !== "idle") return;
   clearTellTransition();
+  tellLayoutCollapsed = false;
   panelUi = freshPanelUi();
-  tellMode = "loading";
-  renderTellRow();
+  ensureTellRowStructure();
+  resetTellMotionStyles();
+  tellMode = "expanding";
+  applyCapsuleClasses();
+  updateFrameMeta();
+  startTellMotion("open");
   tellTransitionTimer = window.setTimeout(() => {
-    tellMode = "expanded";
-    renderTellRow();
-  }, EXPAND_LOADING_MS);
+    if (tellMode !== "expanding") return;
+    tellMode = "loading";
+    applyCapsuleClasses();
+    updateFrameMeta();
+  }, TELL_LAYOUT_MS);
+  tellTransitionTimer2 = window.setTimeout(() => {
+    tellMode = "revealing";
+    syncExpandedPanel();
+    applyCapsuleClasses();
+    updateFrameMeta();
+    startTellMotion("reveal");
+    tellTransitionTimer3 = window.setTimeout(() => {
+      tellMode = "expanded";
+      applyCapsuleClasses();
+      updateFrameMeta();
+    }, TELL_REVEAL_MS);
+  }, TELL_LOADING_MS);
 }
 
 function collapseTell() {
   if (tellMode !== "expanded") return;
   clearTellTransition();
+  tellLayoutCollapsed = false;
   tellMode = "closing";
-  renderTellRow();
+  applyCapsuleClasses();
+  updateFrameMeta();
+  startTellMotion("close");
   tellTransitionTimer = window.setTimeout(() => {
-    tellMode = "idle";
-    panelUi = freshPanelUi();
-    renderTellRow();
-    renderTimer({ animate: false });
-  }, CLOSE_MS);
+    syncExpandedPanel();
+    tellLayoutCollapsed = true;
+    applyCapsuleClasses();
+    tellTransitionTimer2 = window.setTimeout(() => {
+      tellMode = "idle";
+      tellLayoutCollapsed = false;
+      panelUi = freshPanelUi();
+      applyCapsuleClasses();
+      cancelTellMotion();
+      resetTellMotionStyles();
+      updateIdlePill();
+      updateFrameMeta();
+      renderTimer({ animate: false });
+    }, TELL_LAYOUT_MS);
+  }, TELL_CLOSE_FADE_MS);
 }
 
 function toggleChip(kind, index) {
   const before = snapshotPanelUi();
-  if (kind === "thinking") panelUi.activeThinking = panelUi.activeThinking === index ? null : index;
-  else if (kind === "ingredient") panelUi.activeIngredient = panelUi.activeIngredient === index ? null : index;
-  else if (kind === "chain") panelUi.activeChainStep = panelUi.activeChainStep === index ? null : index;
+  panelUi = nextPanelUi(panelUi, kind, index);
   refreshPanel(before);
 }
 
 function resetView() {
   window.clearTimeout(playTimer);
   window.clearTimeout(timerSlotTimer);
-  timerSlotGen += 1;
   clearTellTransition();
+  tellLayoutCollapsed = false;
+  timerSlotGen += 1;
   stopSlotAnimations();
   timerIndex = 0;
   tellMode = "idle";
   panelUi = freshPanelUi();
   renderTimer({ animate: false });
   renderTellRow();
+  cancelTellMotion();
+  resetTellMotionStyles();
 }
 
 function playTimerFlow(index = 0) {
@@ -620,6 +841,8 @@ function playTimerFlow(index = 0) {
 }
 
 function handleTellRowClick(event) {
+  if (tellMode === "expanding" || tellMode === "loading" || tellMode === "revealing" || tellMode === "closing") return;
+
   if (event.target.closest("[data-showcase-interactive]")) {
     event.stopPropagation();
     const kind = event.target.closest("[data-showcase-interactive]").dataset.chipKind;

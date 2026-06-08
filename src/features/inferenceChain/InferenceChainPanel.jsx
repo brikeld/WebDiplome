@@ -19,6 +19,7 @@ import LeaderboardRationaleView from './LeaderboardRationaleView.jsx';
 import RedactedAnalysisOverlay from './RedactedAnalysisOverlay.jsx';
 import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
+import { freshPanelUi, nextPanelUi } from './panelState.js';
 import { synthesiseChartMetadata } from '@/lib/chartPostMetadata.js';
 
 const CHAIN_KEYS = ['data', 'classify', 'infer'];
@@ -109,6 +110,15 @@ function resolvePostAnalysis(post) {
   return { chain, ingredients, highlights, rawThinking };
 }
 
+function FocusDetail({ eyebrow, children }) {
+  return (
+    <div className="focus-detail">
+      {eyebrow ? <span className="focus-detail__eyebrow">{eyebrow}</span> : null}
+      <div className="focus-detail__body">{children}</div>
+    </div>
+  );
+}
+
 export default function InferenceChainPanel({
   post,
   personaLabel,
@@ -131,15 +141,18 @@ export default function InferenceChainPanel({
     { blocked: holdLoadingOverlay },
   );
 
-  const [activeThinking, setActiveThinking] = useState(null);
-  const [activeIngredient, setActiveIngredient] = useState(null);
-  const [activeChainStep, setActiveChainStep] = useState(null);
+  const [panelUi, setPanelUi] = useState(() => freshPanelUi());
+  const { activeThinking, activeIngredient, activeChainStep } = panelUi;
+  const hasFocusDetail =
+    activeThinking !== null || activeIngredient !== null || activeChainStep !== null;
+
+  const setActiveDetail = (kind, index) => {
+    setPanelUi((current) => nextPanelUi(current, kind, index));
+  };
 
   // Reset all chip state on post switch.
   useEffect(() => {
-    setActiveThinking(null);
-    setActiveIngredient(null);
-    setActiveChainStep(null);
+    setPanelUi(freshPanelUi());
   }, [post]);
 
   // Click on a phrase in the post text → open the linked capsule.
@@ -147,11 +160,9 @@ export default function InferenceChainPanel({
     const validStep = Number.isFinite(stepIndex) && stepIndex >= 0 && stepIndex < CHAIN_KEYS.length;
     const validIng = Number.isFinite(ingredientIndex) && hasIngredients && ingredientIndex >= 0 && ingredientIndex < ingredients.length;
     if (hasIngredients && validIng) {
-      setActiveIngredient(ingredientIndex);
-      setActiveChainStep(null);
+      setActiveDetail('ingredient', ingredientIndex);
     } else if (validStep && validChain) {
-      setActiveChainStep(stepIndex);
-      setActiveIngredient(null);
+      setActiveDetail('chain', stepIndex);
     }
   };
 
@@ -217,7 +228,7 @@ export default function InferenceChainPanel({
 
   return (
     <div
-      className={`tell-panel-a tell-panel-a--alt-palette-2 inference-panel${ready ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}`}
+      className={`tell-panel-a tell-panel-a--alt-palette-2 inference-panel${ready ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}${hasFocusDetail ? ' tell-panel-a--has-focus' : ''}`}
       role="region"
       aria-label="Tell me more analysis"
     >
@@ -227,46 +238,42 @@ export default function InferenceChainPanel({
       <div className="tell-panel-a__stack">
         {post?.content ? (
           <div className="post-quote-a">
-            <span className="panel-a__head">Why this CONTENT?</span>
             <PostTextHighlights
               content={post.content}
               highlights={highlights}
               onSelect={handleHighlightSelect}
+              activeIngredientIndex={activeIngredient}
             />
           </div>
         ) : null}
 
         {validChain ? (
-          <section className="tape-section" aria-label="From data to post">
+          <section className={`tape-section${activeChainStep !== null ? ' tape-section--focus' : ''}`} aria-label="From data to post">
             <header className="panel-a__head">From data to post</header>
             <div className="tape">
               {simpleChain.map((item, i) => (
-                <div className="tape__row" key={`${item.label}-${i}`}>
-                  <div className="tape__step">
-                    <div className="tape__badge">{i + 1}</div>
-                    {i < simpleChain.length - 1 ? <div className="tape__line" /> : null}
+                <div className="tape__item" key={`${item.label}-${i}`}>
+                  <div className="tape__row">
+                    <div className="tape__step">
+                      <div className="tape__badge">{i + 1}</div>
+                      {i < simpleChain.length - 1 ? <div className="tape__line" /> : null}
+                    </div>
+                    <button
+                      type="button"
+                      className={`tape__content${activeChainStep === i ? ' is-open' : ''}`}
+                      onClick={() => setActiveDetail('chain', i)}
+                    >
+                      <span className="tape__label">{item.label}</span>
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className={`tape__content${activeChainStep === i ? ' is-open' : ''}`}
-                    onClick={() => {
-                      setActiveChainStep((p) => (p === i ? null : i));
-                      setActiveIngredient(null);
-                    }}
-                  >
-                    <span className="tape__label">{item.label}</span>
-                    {activeChainStep === i ? (
-                      <>
+                  {activeChainStep === i ? (
+                    <FocusDetail eyebrow={item.tag}>
+                      <p>
                         <span className="tape__value">{item.value}</span>
-                        <span className="tape__detail">
-                          {item.detail}
-                          <span className="tape__meta">
-                            <span className="tape__tag">{item.tag}</span>
-                          </span>
-                        </span>
-                      </>
-                    ) : null}
-                  </button>
+                        <span className="tape__detail">{item.detail}</span>
+                      </p>
+                    </FocusDetail>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -274,7 +281,7 @@ export default function InferenceChainPanel({
         ) : null}
 
         {hasThinking ? (
-          <section className="reason-section">
+          <section className={`reason-section${activeThinking !== null ? ' reason-section--focus' : ''}`}>
             <header className="panel-a__head">How we framed it</header>
             <div className="reason-chips">
               {thinking.map((th, i) => (
@@ -282,59 +289,62 @@ export default function InferenceChainPanel({
                   key={i}
                   type="button"
                   className={`reason-chip${activeThinking === i ? ' is-open' : ''}`}
-                  onClick={() => setActiveThinking((p) => (p === i ? null : i))}
+                  onClick={() => setActiveDetail('thinking', i)}
                 >
                   {th.label}
                 </button>
               ))}
             </div>
             {activeThinking !== null && thinking[activeThinking] ? (
-              <div className="panel-a__detail">
-                <span className="panel-a__detail-label">{thinking[activeThinking].label}</span>
+              <FocusDetail eyebrow="framing">
+                <b>{thinking[activeThinking].label}</b>
                 <p>{thinking[activeThinking].detail}</p>
-              </div>
+              </FocusDetail>
             ) : null}
           </section>
         ) : null}
 
         {hasIngredients ? (
-          <section className="ing-section">
+          <section className={`ing-section${activeIngredient !== null ? ' ing-section--focus' : ''}`}>
             <header className="panel-a__head">Data used</header>
             <div className="ing-bars">
               {ingredients.map((ing, i) => {
                 const weight = Math.max(5, Math.min(100, Math.round(Number(ing?.weight) || 50)));
+                const dataPoints = ing?.dataPoints || ing?.points || [];
                 return (
-                  <button
-                    key={`${ing.label}-${i}`}
-                    type="button"
-                    className={`ing-bar__row${activeIngredient === i ? ' is-open' : ''}`}
-                    onClick={() => {
-                      setActiveIngredient((p) => (p === i ? null : i));
-                      setActiveChainStep(null);
-                    }}
-                  >
-                    <span className="ing-bar__label">{ing.label}</span>
-                    <span className="ing-bar__track">
-                      <span className="ing-bar__fill" style={{ width: `${weight}%` }} />
-                    </span>
-                    <span className="ing-bar__pct">{weight}%</span>
-                  </button>
+                  <div className="ing-bar__item" key={`${ing.label}-${i}`}>
+                    <button
+                      type="button"
+                      className={`ing-bar__row${activeIngredient === i ? ' is-open' : ''}`}
+                      onClick={() => setActiveDetail('ingredient', i)}
+                    >
+                      <span className="ing-bar__label">{ing.label}</span>
+                      <span className="ing-bar__track">
+                        <span className="ing-bar__fill" style={{ width: `${weight}%` }} />
+                      </span>
+                      <span className="ing-bar__pct">{weight}%</span>
+                    </button>
+                    {activeIngredient === i ? (
+                      <FocusDetail eyebrow="evidence">
+                        <b>{ing.label}</b>
+                        {dataPoints.length ? (
+                          <ul>
+                            {dataPoints.slice(0, 12).map((dp, di) => (
+                              <li key={di}>{dp}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>This signal contributed {weight}% to the post rationale.</p>
+                        )}
+                        {dataPoints.length > 12 ? (
+                          <p>+{dataPoints.length - 12} more</p>
+                        ) : null}
+                      </FocusDetail>
+                    ) : null}
+                  </div>
                 );
               })}
             </div>
-            {activeIngredient !== null && ingredients[activeIngredient] ? (
-              <div className="panel-a__detail">
-                <b>{ingredients[activeIngredient].label}</b>
-                <ul>
-                  {(ingredients[activeIngredient].dataPoints || []).slice(0, 12).map((dp, di) => (
-                    <li key={di}>{dp}</li>
-                  ))}
-                </ul>
-                {(ingredients[activeIngredient].dataPoints || []).length > 12 ? (
-                  <p>+{(ingredients[activeIngredient].dataPoints || []).length - 12} more</p>
-                ) : null}
-              </div>
-            ) : null}
           </section>
         ) : null}
 

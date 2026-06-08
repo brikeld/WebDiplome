@@ -10,12 +10,13 @@
         base.href = "/both-states/";
         document.head.appendChild(base);
       })();
+      window.motionOneUrl = "https://cdn.jsdelivr.net/npm/@motionone/dom@10.18.0/+esm";
     </script>
     <title>WebDiplome · Dashboard Both Showcase</title>
     <link rel="stylesheet" href="../timer-button-states/styles.css" />
     <link rel="stylesheet" href="../src/features/inferenceChain/inferenceChain.css" />
     <link rel="stylesheet" href="../tell-more-states/styles.css" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=tell-motion-loader-2" />
   </head>
   <body class="theme-prod">
     <div class="stage">
@@ -61,6 +62,6 @@
       <aside class="notes" id="notes"></aside>
     </div>
 
-    <script src="both-states.js"></script>
+    <script type="module" src="both-states.js"></script>
   </body>
 </html>
