@@ -71,7 +71,10 @@
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="revealing"],
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="content"],
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="closing"] {
-  padding: clamp(10px, 1.1vh, 14px);
+  --dashboard-tell-inset: clamp(16px, 1.75vh, 22px);
+  --tell-morph-radius: calc(var(--capsule-radius, 44px) - var(--dashboard-tell-inset));
+  --dash-section-radius: max(20px, calc(var(--tell-morph-radius) * 0.82));
+  padding: var(--dashboard-tell-inset);
   gap: 0;
 }
 
@@ -86,7 +89,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  border-radius: var(--capsule-radius, var(--tell-pill-radius));
+  border-radius: var(--tell-morph-radius, var(--capsule-radius, var(--tell-pill-radius)));
   border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
   background:
     linear-gradient(

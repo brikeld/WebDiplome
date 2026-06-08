@@ -125,12 +125,14 @@
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .post-quote-a {
   padding: var(--dash-quote-section-pad) var(--dash-section-pad);
+  border-radius: var(--dash-section-radius, 16px);
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape-section,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-section,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-section {
   padding: var(--dash-section-pad);
+  border-radius: var(--dash-section-radius, 16px);
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .panel-a__head {
