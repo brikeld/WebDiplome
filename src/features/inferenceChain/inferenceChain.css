@@ -51,6 +51,7 @@
 /* ── tell-morph shell (both-states prototype) ── */
 .dashboard-capsule--figma.is-tell-expanding .tell-morph {
   border-radius: 0;
+  height: 100%;
   transition:
     border-radius var(--tell-morph-dur) var(--tell-morph-ease),
     border-color var(--tell-morph-fade) ease,
@@ -86,6 +87,7 @@
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
+  height: 100%;
   position: relative;
   border-radius: var(--capsule-radius, var(--tell-pill-radius));
   border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
@@ -757,27 +759,7 @@
   }
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   STATE: expanded — Tell-Me-More takes the full inner space of the capsule.
-   ────────────────────────────────────────────────────────────────────────── */
-
-.dashboard-capsule--figma.is-tell-expanded .dashboard-actions-row,
-.dashboard-capsule--figma.is-tell-expanding .dashboard-actions-row,
-.dashboard-capsule--figma.is-tell-loading .dashboard-actions-row,
-.dashboard-capsule--figma.is-tell-revealing .dashboard-actions-row,
-.dashboard-capsule--figma.is-tell-closing .dashboard-actions-row {
-  flex: 0 0 0;
-  flex-basis: 0;
-  min-height: 0;
-  height: 0;
-  opacity: 0;
-  visibility: hidden;
-  overflow: hidden;
-  pointer-events: none;
-  margin-bottom: calc(-1 * var(--dashboard-btn-gap, 10px));
-}
-
-/* Fills the dashboard capsule edge-to-edge — no inner rounded “pill” shell */
+/* Timer row fades while grid track collapses during tell expand */
 .tell-more-pill--expanded {
   --tell-pill-border: 0;
   border: none;

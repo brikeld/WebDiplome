@@ -1940,20 +1940,6 @@ button.profile-name-link.leaderboard-row__name {
   --tell-idle-scale: 1;
 }
 
-.dashboard-capsule--figma:not(.is-tell-expanded):not(.is-tell-closing):not(.is-tell-expanding):not(.is-tell-loading):not(.is-tell-revealing) .dashboard-tell-row {
-  flex: var(--dashboard-tell-idle-flex, 3.15) 1 0;
-  min-height: var(--dashboard-tell-idle-min-h, clamp(220px, 30vh, 340px));
-}
-
-.dashboard-capsule--figma.is-tell-expanded .dashboard-tell-row,
-.dashboard-capsule--figma.is-tell-expanding .dashboard-tell-row,
-.dashboard-capsule--figma.is-tell-loading .dashboard-tell-row,
-.dashboard-capsule--figma.is-tell-revealing .dashboard-tell-row,
-.dashboard-capsule--figma.is-tell-closing .dashboard-tell-row {
-  flex: 1 1 0;
-  min-height: 0;
-}
-
 .dashboard-action-pill {
   appearance: none;
   border: 2px solid #000;
@@ -2637,6 +2623,8 @@ button.profile-name-link.leaderboard-row__name {
   --dashboard-shell-radius: var(--capsule-radius);
   --tell-layout-dur: 1500ms;
   --tell-layout-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --dash-timer-track: 1fr;
+  --dash-tell-track: 3fr;
   flex: 1 1 0;
   min-height: 0;
   border-radius: var(--dashboard-shell-radius);
@@ -2644,39 +2632,86 @@ button.profile-name-link.leaderboard-row__name {
   border: var(--capsule-shell-border-width, 3px) solid transparent;
   padding: var(--dashboard-pad);
   gap: var(--dashboard-btn-gap);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: var(--dash-timer-track) var(--dash-tell-track);
   overflow: hidden;
   transition:
+    grid-template-rows var(--tell-layout-dur) var(--tell-layout-ease),
     gap var(--tell-layout-dur) var(--tell-layout-ease),
     padding var(--tell-layout-dur) var(--tell-layout-ease),
-    background-color 240ms ease,
-    border-color 240ms ease,
-    box-shadow 240ms ease;
+    background-color 360ms ease,
+    border-color 360ms ease,
+    box-shadow 360ms ease;
 }
 
 .dashboard-capsule--figma .dashboard-actions-row,
 .dashboard-capsule--figma .dashboard-tell-row {
   transition:
-    flex var(--tell-layout-dur) var(--tell-layout-ease),
-    flex-basis var(--tell-layout-dur) var(--tell-layout-ease),
-    min-height var(--tell-layout-dur) var(--tell-layout-ease),
-    height var(--tell-layout-dur) var(--tell-layout-ease),
-    opacity 280ms ease,
+    opacity var(--tell-layout-dur) var(--tell-layout-ease),
     margin-bottom var(--tell-layout-dur) var(--tell-layout-ease);
 }
 
-/* Tell-Me-More expanded: dashboard shell is the frame; content tiles keep their own padding */
+.dashboard-capsule--figma .dashboard-actions-row {
+  grid-row: 1;
+  min-height: 0;
+  overflow: hidden;
+  flex: unset;
+  height: auto;
+  max-height: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dashboard-capsule--figma .dashboard-tell-row {
+  grid-row: 2;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex: unset;
+  width: 100%;
+}
+
+/* Layout expand: timer track collapses, tell row grows (both-states grid trick) */
 .dashboard-capsule--figma.is-tell-expanded,
 .dashboard-capsule--figma.is-tell-expanding,
 .dashboard-capsule--figma.is-tell-loading,
 .dashboard-capsule--figma.is-tell-revealing,
 .dashboard-capsule--figma.is-tell-closing {
+  --dash-timer-track: 0fr;
+  --dash-tell-track: 1fr;
   --dashboard-tell-pad: clamp(12px, 1.15vw, 16px);
-  background: var(--tell-pill-pastel, #bccdf5);
-  border-color: var(--persona-accent, #759aef);
   padding: var(--dashboard-tell-pad);
   gap: 0;
+}
+
+/* Expanding: keep persona shell — only the inner tell pill grows */
+.dashboard-capsule--figma.is-tell-expanding {
+  background: var(--persona-accent, #759aef);
+  border-color: transparent;
+}
+
+.dashboard-capsule--figma.is-tell-expanding .dashboard-actions-row {
+  opacity: 0;
+  pointer-events: none;
+  transition-delay: calc(var(--tell-layout-dur) * 0.12);
+}
+
+/* Loading onward: pastel frame, then alt-palette-2 flips to white */
+.dashboard-capsule--figma.is-tell-loading,
+.dashboard-capsule--figma.is-tell-revealing,
+.dashboard-capsule--figma.is-tell-expanded,
+.dashboard-capsule--figma.is-tell-closing {
+  background: var(--tell-pill-pastel, #bccdf5);
+  border-color: var(--persona-accent, #759aef);
+}
+
+.dashboard-capsule--figma.is-tell-loading .dashboard-actions-row,
+.dashboard-capsule--figma.is-tell-revealing .dashboard-actions-row,
+.dashboard-capsule--figma.is-tell-expanded .dashboard-actions-row,
+.dashboard-capsule--figma.is-tell-closing .dashboard-actions-row {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .dashboard-capsule--figma.is-tell-alt-palette-2 {
@@ -2685,6 +2720,7 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 .dashboard-capsule--figma.is-tell-closing:not(.is-tell-expanded) {
+  background: var(--persona-accent, #759aef);
   border-color: transparent;
 }
 
@@ -2701,23 +2737,6 @@ button.profile-name-link.leaderboard-row__name {
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing {
   padding: var(--dashboard-tell-pad, clamp(12px, 1.25vw, 16px));
   gap: 0;
-}
-
-.dashboard-capsule--figma.is-tell-expanded .dashboard-tell-row,
-.dashboard-capsule--figma.is-tell-expanding .dashboard-tell-row,
-.dashboard-capsule--figma.is-tell-loading .dashboard-tell-row,
-.dashboard-capsule--figma.is-tell-revealing .dashboard-tell-row,
-.dashboard-capsule--figma.is-tell-closing .dashboard-tell-row {
-  flex: 1 1 0;
-  min-height: 0;
-}
-
-.dashboard-capsule--figma .dashboard-actions-row {
-  grid-row: 1;
-}
-
-.dashboard-capsule--figma .dashboard-tell-row {
-  grid-row: 2;
 }
 
 .dashboard-capsule--figma .dashboard-timer-card,
