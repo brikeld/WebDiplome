@@ -35,6 +35,7 @@ describe('<TellMeMorePill> hidden redaction', () => {
     expect(html).toContain('tell-panel-a');
     expect(html).toContain('tell-panel-a--alt-palette-2');
     expect(html).toContain('From data to post');
+    expect(html).toContain('panel-a__head">Post</header>');
     expect(html).not.toContain('Why this CONTENT?');
     expect(html).not.toContain('tell-more-pill--expanding');
     expect(html).not.toContain('class="np2"');

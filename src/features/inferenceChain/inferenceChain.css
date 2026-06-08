@@ -145,8 +145,10 @@
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__post-text {
   margin: 0;
+  font-family: var(--font-avant-book-oblique);
   font-size: var(--dash-label-fs);
-  font-weight: 800;
+  font-weight: 600;
+  font-style: italic;
   line-height: 1.2;
 }
 

@@ -239,14 +239,15 @@ export default function InferenceChainPanel({
       <div className="inference-panel__redacted-content">
       <div className="tell-panel-a__stack">
         {post?.content ? (
-          <div className="post-quote-a">
+          <section className="post-quote-a" aria-label="Post">
+            <header className="panel-a__head">Post</header>
             <PostTextHighlights
               content={post.content}
               highlights={highlights}
               onSelect={handleHighlightSelect}
               activeIngredientIndex={activeIngredient}
             />
-          </div>
+          </section>
         ) : null}
 
         {validChain ? (
