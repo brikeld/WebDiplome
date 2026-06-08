@@ -40,7 +40,9 @@ describe('tell-me-more expanded layout CSS contract', () => {
     expect(transitionCss).toContain('--dash-timer-track: 0fr');
     expect(transitionCss).toContain('--tell-content-pad');
     expect(transitionCss).toContain('.tell-morph__layer--panel');
-    expect(transitionCss).toContain('.tell-analysis-loader');
+    expect(transitionCss).toContain('container-name: dash-tell');
+    expect(transitionCss).toContain('.tell-panel-a--has-focus .tape-section:not(.tape-section--focus)');
+    expect(transitionCss).toContain('display: none');
     expect(inferenceCss).toContain("@import './tellTransition.css'");
   });
 });

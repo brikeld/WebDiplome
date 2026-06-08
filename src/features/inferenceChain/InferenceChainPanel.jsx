@@ -237,7 +237,7 @@ export default function InferenceChainPanel({
       ) : null}
 
       <div className="inference-panel__redacted-content">
-      <div className="tell-panel-a__stack">
+      <div className={`tell-panel-a__stack${hasFocusDetail ? ' tell-panel-a__stack--has-focus' : ''}`}>
         {post?.content ? (
           <section className="post-quote-a" aria-label="Post">
             <header className="panel-a__head">Post</header>

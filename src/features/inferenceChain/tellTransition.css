@@ -602,3 +602,131 @@
   padding: 8px 10px;
   border-radius: 12px;
 }
+
+/* ── 5) Height-aware density (no internal scroll) ── */
+.dashboard-capsule--figma[data-tell-step="revealing"],
+.dashboard-capsule--figma[data-tell-step="content"],
+.dashboard-capsule--figma[data-tell-step="closing"] {
+  container-type: size;
+  container-name: dash-tell;
+}
+
+@container dash-tell (max-height: 560px) {
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2,
+  .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2 {
+    --dash-panel-gap: 6px;
+    --dash-section-pad: 9px 10px;
+    --dash-quote-section-pad: 8px 10px;
+    --dash-head-mb: 6px;
+  }
+
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tape__content,
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .reason-chip,
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .ing-chip {
+    min-height: 28px;
+    padding: 6px 8px;
+  }
+
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .post-quote-a {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape-section,
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .reason-section,
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .ing-section {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .post-quote-a .inference-panel__post-text {
+    -webkit-line-clamp: 3;
+  }
+}
+
+@container dash-tell (max-height: 460px) {
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
+  .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel {
+    --tell-content-pad: clamp(10px, 1.1vw, 14px);
+  }
+
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2 {
+    --dash-panel-gap: 5px;
+    --dash-section-pad: 7px 8px;
+    --dash-quote-section-pad: 6px 8px;
+    --dash-head-mb: 5px;
+    --dash-head-pad: 5px 8px;
+  }
+
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tape__content,
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .reason-chip,
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .ing-chip {
+    min-height: 26px;
+    padding: 5px 7px;
+    border-radius: 10px;
+  }
+
+  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .post-quote-a .inference-panel__post-text {
+    -webkit-line-clamp: 2;
+  }
+}
+
+/* ── 6) Focus mode — hide other sections so detail fits (no internal scroll) ── */
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section:not(.tape-section--focus),
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .reason-section:not(.reason-section--focus),
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .ing-section:not(.ing-section--focus),
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section:not(.tape-section--focus),
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .reason-section:not(.reason-section--focus),
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .ing-section:not(.ing-section--focus) {
+  display: none;
+}
+
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .post-quote-a .inference-panel__post-text,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .post-quote-a .inference-panel__post-text {
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .reason-section--focus,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .ing-section--focus,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .reason-section--focus,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .ing-section--focus {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape__item:not(:has(.tape__content.is-open)),
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape__item:not(:has(.tape__content.is-open)) {
+  display: none;
+}
+
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail__body,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail__body ul,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .focus-detail__body ul {
+  columns: 1;
+  padding-left: 14px;
+}
