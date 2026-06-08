@@ -1454,12 +1454,12 @@ body {
     transform: scale(1);
   }
   48% {
-    filter: blur(8px) saturate(0.68);
-    opacity: 0.72;
-    transform: scale(0.997);
+    filter: blur(8px) saturate(1);
+    opacity: 1;
+    transform: scale(0.998);
   }
   100% {
-    filter: blur(18px) saturate(0.34);
+    filter: blur(18px) saturate(1);
     opacity: 1;
     transform: scale(1);
   }
