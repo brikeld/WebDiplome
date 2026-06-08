@@ -1,9 +1,16 @@
 /* Tell me more — 4 steps: idle → expanding → loading (radar) → content
    Open = timer row collapses, tell button grows into that space. */
 
-/* ── Replace timer: collapse timer track, tell row fills the slot ── */
+.dashboard-capsule--figma {
+  --tell-crossfade: 520ms;
+  --tell-reveal: 640ms;
+  --tell-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ── Replace timer: collapse timer track, tell row grows ── */
 .dashboard-capsule--figma[data-tell-step="expanding"],
 .dashboard-capsule--figma[data-tell-step="loading"],
+.dashboard-capsule--figma[data-tell-step="revealing"],
 .dashboard-capsule--figma[data-tell-step="content"],
 .dashboard-capsule--figma[data-tell-step="closing"] {
   --dash-timer-track: 0fr;
@@ -13,6 +20,7 @@
 
 .dashboard-capsule--figma[data-tell-step="expanding"] .dashboard-actions-row,
 .dashboard-capsule--figma[data-tell-step="loading"] .dashboard-actions-row,
+.dashboard-capsule--figma[data-tell-step="revealing"] .dashboard-actions-row,
 .dashboard-capsule--figma[data-tell-step="content"] .dashboard-actions-row,
 .dashboard-capsule--figma[data-tell-step="closing"] .dashboard-actions-row {
   grid-row: 1;
@@ -31,6 +39,7 @@
 /* Tell row stays in row 2 and grows as timer track animates to 0fr — no grid overlay */
 .dashboard-capsule--figma[data-tell-step="expanding"] .dashboard-tell-row,
 .dashboard-capsule--figma[data-tell-step="loading"] .dashboard-tell-row,
+.dashboard-capsule--figma[data-tell-step="revealing"] .dashboard-tell-row,
 .dashboard-capsule--figma[data-tell-step="content"] .dashboard-tell-row,
 .dashboard-capsule--figma[data-tell-step="closing"] .dashboard-tell-row {
   grid-row: 2;
@@ -49,17 +58,21 @@
 
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="expanding"],
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="loading"],
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="revealing"],
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="content"],
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="closing"],
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="expanding"],
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="loading"],
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="revealing"],
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="content"],
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="closing"] {
   gap: 0;
 }
 
-/* ── Morph shell (the tell-me-more button capsule) ── */
+/* ── Morph shell ── */
 .tell-morph {
+  --tell-crossfade-dur: var(--tell-crossfade, 520ms);
+  --tell-reveal-dur: var(--tell-reveal, 640ms);
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
@@ -78,12 +91,122 @@
   overflow: hidden;
   transition:
     border-radius 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 240ms ease,
-    background 240ms ease;
+    border-color 360ms var(--tell-ease),
+    background 360ms var(--tell-ease);
+}
+
+/* ── Crossfade layers ── */
+.tell-morph__layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--tell-crossfade-dur) var(--tell-ease),
+    visibility 0s linear var(--tell-crossfade-dur);
+}
+
+.tell-morph__layer.is-active,
+.tell-morph__layer.is-entering {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity var(--tell-crossfade-dur) var(--tell-ease),
+    visibility 0s linear 0s;
+}
+
+.tell-morph__layer.is-exiting {
+  opacity: 0;
+  visibility: visible;
+  pointer-events: none;
+  transition:
+    opacity var(--tell-crossfade-dur) var(--tell-ease),
+    visibility 0s linear var(--tell-crossfade-dur);
+}
+
+.tell-morph__layer--idle {
+  z-index: 1;
+}
+
+.tell-morph__layer--idle.is-exiting {
+  pointer-events: none;
+}
+
+.tell-morph__layer--loader {
+  z-index: 2;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.tell-morph__layer--panel {
+  z-index: 3;
+  overflow: hidden;
+}
+
+.tell-morph__layer--panel.is-entering {
+  transition-duration: var(--tell-reveal-dur);
+}
+
+.tell-morph__layer--panel.is-exiting {
+  transition-duration: 480ms;
+}
+
+.tell-morph__layer--loader.is-active .tell-analysis-loader__card {
+  animation: tell-loader-enter 560ms var(--tell-ease) both;
+}
+
+.tell-morph__layer--panel.is-entering .tell-panel-a__stack > .post-quote-a {
+  animation: tell-panel-section-in 520ms var(--tell-ease) both;
+}
+
+.tell-morph__layer--panel.is-entering .tell-panel-a__stack > .tape-section {
+  animation: tell-panel-section-in 520ms var(--tell-ease) 80ms both;
+}
+
+.tell-morph__layer--panel.is-entering .tell-panel-a__stack > .reason-section {
+  animation: tell-panel-section-in 520ms var(--tell-ease) 140ms both;
+}
+
+.tell-morph__layer--panel.is-entering .tell-panel-a__stack > .ing-section {
+  animation: tell-panel-section-in 520ms var(--tell-ease) 200ms both;
+}
+
+@keyframes tell-loader-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tell-panel-section-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dashboard-capsule--figma[data-tell-step="expanding"] .tell-morph,
 .dashboard-capsule--figma[data-tell-step="loading"] .tell-morph,
+.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph {
   flex: 1 1 auto;
@@ -95,10 +218,15 @@
 }
 
 .dashboard-capsule--figma[data-tell-step="loading"] .tell-morph,
+.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph {
   border-color: color-mix(in srgb, var(--tell-pill-accent, #759aef) 22%, rgba(0, 0, 0, 0.1));
   background: #fff;
+  transition:
+    border-radius 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 360ms var(--tell-ease),
+    background 360ms var(--tell-ease);
 }
 
 .tell-morph .tell-more-pill--idle,
@@ -508,9 +636,4 @@
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .ing-chip {
   padding: 4px 6px;
   font-size: 8px;
-}
-
-.tell-morph--closing {
-  opacity: 0;
-  transition: opacity 280ms ease;
 }

@@ -1,6 +1,5 @@
 /**
- * Dashboard "Tell me more" — 4 steps rendered one at a time:
- * idle / expanding → loading (radar) → content (info)
+ * Dashboard "Tell me more" — layered crossfades between idle, radar, and content.
  */
 
 import InferenceChainPanel from './InferenceChainPanel.jsx';
@@ -90,49 +89,98 @@ export default function TellMeMorePill({
   const mainLabel = PERSONA_LABEL[mainPersonaKey] ?? 'Security';
   const displayLabel = useMainTheme ? mainLabel : label;
 
+  const idleActive = phase === 'idle' || phase === 'expanding';
+  const idleExit = phase === 'loading';
+  const showIdle = idleActive || idleExit;
+
+  const loaderActive = phase === 'loading';
+  const loaderExit = phase === 'revealing';
+  const showLoader = loaderActive || loaderExit;
+
+  const panelEnter = phase === 'revealing';
+  const panelActive = phase === 'content' || phase === 'closing';
+  const showPanel = Boolean(highlightedPost && (panelEnter || panelActive));
+
   const pillStyle = {
     '--tell-pill-accent': accent,
     '--tell-pill-pastel': pastel,
     '--lb-acc': accent,
   };
 
-  if (phase === 'loading') {
-    return (
-      <div className="tell-morph tell-morph--radar" style={pillStyle}>
-        <TellAnalysisLoader />
-      </div>
-    );
-  }
-
-  if ((phase === 'content' || phase === 'closing') && highlightedPost) {
-    return (
-      <div
-        className={`tell-morph tell-morph--info${phase === 'closing' ? ' tell-morph--closing' : ''}`}
-        style={pillStyle}
-      >
-        <div
-          className={`tell-more-pill tell-more-pill--expanded${isAnalysisRedacted ? ' tell-more-pill--redacted' : ''}`}
-          role="region"
-          aria-label="Inference chain analysis"
-        >
-          <InferenceChainPanel
-            post={highlightedPost}
-            personaLabel={label}
-            holdLoadingOverlay={holdLoadingOverlay}
-            skipLoadingOverlay={!highlightedPost.leaderboard}
-            redacted={isAnalysisRedacted}
-            onRedactedUnhideConfirm={onRedactedUnhideConfirm}
-          />
-        </div>
-      </div>
-    );
-  }
+  const morphClass = [
+    'tell-morph',
+    phase === 'loading' || phase === 'revealing' ? 'tell-morph--radar-phase' : '',
+    phase === 'content' || phase === 'revealing' || phase === 'closing' ? 'tell-morph--info-phase' : '',
+    phase === 'closing' ? 'tell-morph--closing' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <div className="tell-morph tell-morph--idle" style={pillStyle}>
-      <div className="tell-more-pill tell-more-pill--idle" aria-label={`Tell me more - ${displayLabel} post`}>
-        <IdleFace displayLabel={displayLabel} />
-      </div>
+    <div className={morphClass} style={pillStyle} data-tell-phase={phase}>
+      {showIdle ? (
+        <div
+          className={[
+            'tell-morph__layer',
+            'tell-morph__layer--idle',
+            idleActive ? 'is-active' : '',
+            idleExit ? 'is-exiting' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          aria-hidden={!idleActive}
+        >
+          <div className="tell-more-pill tell-more-pill--idle" aria-label={`Tell me more - ${displayLabel} post`}>
+            <IdleFace displayLabel={displayLabel} />
+          </div>
+        </div>
+      ) : null}
+
+      {showLoader ? (
+        <div
+          className={[
+            'tell-morph__layer',
+            'tell-morph__layer--loader',
+            loaderActive ? 'is-active' : '',
+            loaderExit ? 'is-exiting' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          aria-hidden={!loaderActive}
+        >
+          <TellAnalysisLoader />
+        </div>
+      ) : null}
+
+      {showPanel ? (
+        <div
+          className={[
+            'tell-morph__layer',
+            'tell-morph__layer--panel',
+            panelEnter ? 'is-entering' : '',
+            panelActive ? 'is-active' : '',
+            phase === 'closing' ? 'is-exiting' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          role="region"
+          aria-label="Inference chain analysis"
+          aria-hidden={!panelActive}
+        >
+          <div
+            className={`tell-more-pill tell-more-pill--expanded${isAnalysisRedacted ? ' tell-more-pill--redacted' : ''}`}
+          >
+            <InferenceChainPanel
+              post={highlightedPost}
+              personaLabel={label}
+              holdLoadingOverlay={holdLoadingOverlay}
+              skipLoadingOverlay={!highlightedPost.leaderboard}
+              redacted={isAnalysisRedacted}
+              onRedactedUnhideConfirm={onRedactedUnhideConfirm}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

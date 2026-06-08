@@ -114,8 +114,10 @@ const PUBLIC_DIRECTORY_POLL_MS = 30_000;
 const PUBLIC_FEED_POLL_MS = 30_000;
 const PUBLIC_FEED_LIMIT = 20;
 const TELL_LAYOUT_MS = 1500;
-const TELL_RADAR_MS = 2000;
-const TELL_CLOSE_FADE_MS = 280;
+const TELL_CROSSFADE_MS = 520;
+const TELL_RADAR_HOLD_MS = 3400;
+const TELL_REVEAL_MS = 640;
+const TELL_CLOSE_FADE_MS = 480;
 
 const PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 const PERSONA_ALIASES = {
@@ -673,8 +675,12 @@ function AppInner({
       }, TELL_LAYOUT_MS),
       setTimeout(() => {
         if (tellRunIdRef.current !== runId) return;
+        setTellPhase('revealing');
+      }, TELL_LAYOUT_MS + TELL_CROSSFADE_MS + TELL_RADAR_HOLD_MS),
+      setTimeout(() => {
+        if (tellRunIdRef.current !== runId) return;
         setTellPhase('content');
-      }, TELL_LAYOUT_MS + TELL_RADAR_MS),
+      }, TELL_LAYOUT_MS + TELL_CROSSFADE_MS + TELL_RADAR_HOLD_MS + TELL_REVEAL_MS),
     ];
   }, []);
 
@@ -734,7 +740,7 @@ function AppInner({
   const dashboardCapsuleStyle = useMemo(() => {
     const base = { '--persona-accent': personaColor };
     const applyPostTheme =
-      ['loading', 'content', 'closing'].includes(tellPhase) && tellDisplayPost;
+      ['loading', 'revealing', 'content', 'closing'].includes(tellPhase) && tellDisplayPost;
     if (!applyPostTheme) return base;
     const pk = String(tellDisplayPost.persona ?? personaKey).toLowerCase();
     const uiKey = PERSONA_ALIASES[pk] ?? pk;

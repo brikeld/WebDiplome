@@ -31,7 +31,7 @@ describe('<TellMeMorePill> hidden redaction', () => {
   it('renders expanded post analysis immediately when expanded', () => {
     const html = renderToStaticMarkup(<TellMeMorePill highlightedPost={post} expanded />);
 
-    expect(html).toContain('tell-morph--info');
+    expect(html).toContain('tell-morph__layer--panel');
     expect(html).toContain('tell-panel-a');
     expect(html).toContain('tell-panel-a--alt-palette-2');
     expect(html).toContain('From data to post');
