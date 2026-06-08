@@ -5,6 +5,10 @@ import GeneratingContentLabel from '@/features/harvest/GeneratingContentLabel.js
 import { personaToUiKey, resolveHideContentPersona } from '@/lib/personaScoreCompliance.js';
 import { personaUiColor } from '@/lib/personaColors.js';
 import {
+  resolveUpdateFlowSlotKey,
+  useTimerSlotTransition,
+} from '@/features/harvest/useTimerSlotTransition.js';
+import {
   formatRestorePointsLabel,
   unhideConfirmActionLabel,
   unhideConfirmCancelLabel,
@@ -58,6 +62,9 @@ export default function DashboardTimerRow({
   const hideBlockedVisible = hideBlockedActive || confirmClosing === 'blocked';
   const confirmHideVisible = confirmActive || confirmClosing === 'hide';
   const confirmUnhideVisible = confirmUnhideActive || confirmClosing === 'unhide';
+  const inConfirmOverlay = hideBlockedVisible || confirmHideVisible || confirmUnhideVisible;
+  const targetFlowSlot = resolveUpdateFlowSlotKey(dashboardLayout, inConfirmOverlay);
+  const { displaySlot: flowSlot, phase: flowSlotPhase } = useTimerSlotTransition(targetFlowSlot);
 
   const dismissConfirm = useCallback(
     (kind, onDone) => {
@@ -337,7 +344,7 @@ export default function DashboardTimerRow({
       );
     }
 
-    if (dashboardLayout.actionSlot === 'harvest') {
+    if (flowSlot === 'harvest') {
       return (
         <div
           className={`${timerBaseClass} dashboard-timer-card--action-status dashboard-timer-card--harvest`}
@@ -348,7 +355,7 @@ export default function DashboardTimerRow({
       );
     }
 
-    if (dashboardLayout.actionSlot === 'deltas') {
+    if (flowSlot === 'deltas') {
       return (
         <div
           className={`${timerBaseClass} dashboard-timer-card--action-status dashboard-timer-card--analysis`}
@@ -363,7 +370,7 @@ export default function DashboardTimerRow({
       );
     }
 
-    if (dashboardLayout.actionSlot === 'generating') {
+    if (flowSlot === 'generating') {
       return (
         <div
           className={`${timerBaseClass} dashboard-timer-card--action-status dashboard-timer-card--generating`}
@@ -425,11 +432,18 @@ export default function DashboardTimerRow({
   const actionsRowConfirm =
     hideBlockedVisible || confirmHideVisible || confirmUnhideVisible || timerReveal;
 
+  const flowSlotAnimClass =
+    !inConfirmOverlay && flowSlotPhase === 'leaving'
+      ? ' is-leaving'
+      : !inConfirmOverlay && flowSlotPhase === 'entering'
+        ? ' is-entering'
+        : '';
+
   return (
     <div
       className={`dashboard-actions-row${
         actionsRowConfirm ? ' dashboard-actions-row--confirm' : ''
-      }${confirmClosing ? ' dashboard-actions-row--confirm-leaving' : ''}`}
+      }${confirmClosing ? ' dashboard-actions-row--confirm-leaving' : ''}${flowSlotAnimClass}`}
     >
       {renderTimerSlot()}
     </div>

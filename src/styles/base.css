@@ -1902,10 +1902,12 @@ button.profile-name-link.leaderboard-row__name {
 
 /* ── Dashboard (Figma white shell) ── */
 .dashboard-actions-row {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--dashboard-btn-gap, 10px);
   width: 100%;
+  perspective: 900px;
   /* Timer row — bounded so tall screens don't make the button oversized. */
   flex: 0 0 var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
   min-height: var(--dashboard-actions-min-h, var(--dashboard-actions-h, clamp(128px, 15vh, 176px)));
@@ -1919,6 +1921,14 @@ button.profile-name-link.leaderboard-row__name {
     height 520ms cubic-bezier(0.22, 1, 0.36, 1),
     margin-bottom 520ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dashboard-actions-row.is-leaving > * {
+  animation: timer-state-leave 210ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.dashboard-actions-row.is-entering > * {
+  animation: timer-state-enter 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .dashboard-tell-row {
@@ -2022,6 +2032,37 @@ button.profile-name-link.leaderboard-row__name {
   }
 }
 
+@keyframes timer-state-leave {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985) rotateX(-5deg);
+    filter: blur(4px);
+  }
+}
+
+@keyframes timer-state-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.985) rotateX(5deg);
+    filter: blur(5px);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.006) rotateX(0deg);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+    filter: blur(0);
+  }
+}
+
 .dashboard-actions-row--confirm {
   grid-template-columns: 1fr;
   flex-basis: var(--dashboard-actions-h, clamp(128px, 15vh, 176px));
@@ -2071,6 +2112,11 @@ button.profile-name-link.leaderboard-row__name {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dashboard-actions-row.is-leaving > *,
+  .dashboard-actions-row.is-entering > * {
+    animation: none !important;
+  }
+
   .dashboard-timer-card--confirm,
   .dashboard-timer-card--confirm-closing,
   .dashboard-timer-card--action-update.dashboard-timer-card--reveal {
