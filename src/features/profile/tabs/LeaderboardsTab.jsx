@@ -54,6 +54,17 @@ export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug =
   const fullHidden = hiddenMode === 'full';
   const rowHidden = hiddenMode === 'row';
   const title = String(board.title ?? 'Leaderboard');
+  const hiddenNoticeCopy = fullHidden
+    ? {
+        title: 'Position hidden',
+        body: 'You chose to hide your place on this leaderboard.',
+      }
+    : rowHidden
+      ? {
+          title: 'Position hidden',
+          body: 'This user hid their position on this leaderboard.',
+        }
+      : null;
 
   return (
     <article
@@ -91,10 +102,27 @@ export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug =
             />
             <span className="profile-leaderboard-row__name">{entry.name}</span>
             <span className="profile-leaderboard-row__score">{formatScore(entry.score)}</span>
+            {hideOwnedRow ? (
+              <div className="profile-leaderboard-row__hidden-notice" role="status">
+                <span className="profile-leaderboard-row__hidden-notice-title">
+                  {hiddenNoticeCopy?.title}
+                </span>
+                <p>{hiddenNoticeCopy?.body}</p>
+              </div>
+            ) : null}
           </li>
           );
         })}
       </ol>
+
+      {fullHidden && hiddenNoticeCopy ? (
+        <div className="profile-leaderboard-card__hidden-notice" role="status">
+          <span className="profile-leaderboard-card__hidden-notice-title">
+            {hiddenNoticeCopy.title}
+          </span>
+          <p>{hiddenNoticeCopy.body}</p>
+        </div>
+      ) : null}
     </article>
   );
 }

@@ -40,6 +40,8 @@ describe('<LeaderboardCard> hidden ranking states', () => {
 
     expect(html).toContain('profile-leaderboard-card--hidden');
     expect(html).toContain('aria-label="Hidden ranking: Most Productive standings"');
+    expect(html).toContain('profile-leaderboard-card__hidden-notice');
+    expect(html).toContain('You chose to hide your place on this leaderboard.');
   });
 
   it('marks only the owned row hidden when viewing another profile board', () => {
@@ -63,5 +65,7 @@ describe('<LeaderboardCard> hidden ranking states', () => {
     const hiddenRows = html.match(/profile-leaderboard-row--hidden/g) || [];
     expect(hiddenRows).toHaveLength(1);
     expect(html).toContain('aria-label="Hidden row for Brikeld Hoxha"');
+    expect(html).toContain('profile-leaderboard-row__hidden-notice');
+    expect(html).toContain('This user hid their position on this leaderboard.');
   });
 });
