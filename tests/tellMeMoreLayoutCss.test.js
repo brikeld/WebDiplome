@@ -21,12 +21,13 @@ function blockFor(selector) {
 }
 
 describe('tell-me-more expanded layout CSS contract', () => {
-  it('keeps the data section full-width and ingredient labels readable', () => {
+  it('stacks normal-post sections vertically and keeps ingredient labels readable', () => {
     const stack = blockFor('.tell-panel-a__stack');
     const ingredientRow = blockFor('.ing-bar__row');
     const ingredientLabel = blockFor('.ing-bar__label');
 
-    expect(stack).toContain('"data data"');
+    expect(stack).toContain('flex-direction: column');
+    expect(stack).not.toContain('grid-template-areas');
     expect(ingredientRow).toContain('grid-template-areas');
     expect(ingredientRow).toContain('"label pct"');
     expect(ingredientRow).toContain('"track track"');

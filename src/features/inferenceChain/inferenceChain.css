@@ -2165,15 +2165,9 @@
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
-  display: grid;
-  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
-  grid-template-areas:
-    "quote quote"
-    "chain frame"
-    "data data";
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   gap: clamp(8px, 0.95vh, 12px);
-  align-content: stretch;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -2200,24 +2194,10 @@
   overflow: hidden;
 }
 
-.post-quote-a {
-  grid-area: quote;
-}
-
-.tape-section {
-  grid-area: chain;
-  display: flex;
-  flex-direction: column;
-}
-
-.reason-section {
-  grid-area: frame;
-  display: flex;
-  flex-direction: column;
-}
-
+.post-quote-a,
+.tape-section,
+.reason-section,
 .ing-section {
-  grid-area: data;
   display: flex;
   flex-direction: column;
 }
@@ -2260,8 +2240,7 @@
 }
 
 .tape {
-  flex: 1 1 0;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -2398,9 +2377,9 @@
 }
 
 .reason-chips {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(8px, 1vh, 12px);
   align-content: start;
 }
