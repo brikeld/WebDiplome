@@ -349,14 +349,15 @@
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #000, var(--tell-pill-accent, #759aef), #000);
-  animation: tell-loader-progress 1.55s cubic-bezier(0.32, 0.72, 0, 1) infinite;
+  will-change: transform;
+  animation: tell-idle-bar-progress 3.4s ease-in-out infinite;
 }
 
 .tell-idle-a__bars span:nth-child(1) { width: 88%; }
 .tell-idle-a__bars span:nth-child(2) { width: 64%; }
-.tell-idle-a__bars span:nth-child(2)::after { animation-delay: 0.35s; }
+.tell-idle-a__bars span:nth-child(2)::after { animation-delay: 0.65s; }
 .tell-idle-a__bars span:nth-child(3) { width: 76%; }
-.tell-idle-a__bars span:nth-child(3)::after { animation-delay: 0.7s; }
+.tell-idle-a__bars span:nth-child(3)::after { animation-delay: 1.3s; }
 
 .tell-idle-a__cta {
   display: flex;
@@ -566,6 +567,26 @@
   100% { transform: translateX(112%); }
 }
 
+@keyframes tell-idle-bar-progress {
+  0% {
+    transform: translateX(-105%);
+    opacity: 0.72;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  82% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(215%);
+    opacity: 0.72;
+  }
+}
+
 /* ── 4) Info panel — inset padding inside enlarged tell button ── */
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
@@ -589,6 +610,8 @@
   --dash-head-pad: 6px 10px;
   --dash-head-fs: clamp(10px, 0.74vw, 11px);
   --dash-tag-fs: clamp(16px, 1.08vw, 20px);
+  --dash-chip-fs: clamp(10px, 0.68vw, 12px);
+  --dash-chip-lh: 1.18;
   --dash-tag-fw: 800;
   --dash-tag-lh: 1.15;
   flex: 1 1 0;
@@ -682,7 +705,7 @@
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .reason-chips,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .ing-chips {
   align-content: stretch;
-  grid-auto-rows: 1fr;
+  grid-auto-rows: minmax(34px, auto);
   height: 100%;
 }
 
@@ -692,8 +715,9 @@
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .ing-chip,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .reason-chip,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .ing-chip {
-  min-height: 0;
-  height: 100%;
+  height: auto;
+  min-height: 34px;
+  align-self: stretch;
 }
 
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .reason-chip,

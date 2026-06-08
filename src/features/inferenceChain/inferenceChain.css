@@ -104,6 +104,8 @@
   --dash-head-pad: 6px 10px;
   --dash-head-fs: clamp(10px, 0.74vw, 11px);
   --dash-tag-fs: clamp(16px, 1.08vw, 20px);
+  --dash-chip-fs: clamp(10px, 0.68vw, 12px);
+  --dash-chip-lh: 1.18;
   --dash-tag-fw: 800;
   --dash-tag-lh: 1.15;
   flex: 1 1 0;
@@ -154,20 +156,24 @@
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__content .tape__label,
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip,
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__pct {
   font-size: var(--dash-tag-fs);
   font-weight: var(--dash-tag-fw);
   line-height: var(--dash-tag-lh);
 }
 
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
+  font-size: var(--dash-chip-fs);
+  font-weight: var(--dash-tag-fw);
+  line-height: var(--dash-chip-lh);
+}
+
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__label,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.03em;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .focus-detail__prose,
@@ -194,20 +200,35 @@
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__row {
   min-height: 34px;
-  padding: 8px 10px;
+  padding: 8px 6px;
   border-radius: 12px;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-overflow: clip;
+  hyphens: auto;
 }
 
-.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chips:has(.reason-chip:nth-child(4)) .reason-chip {
-  white-space: normal;
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip {
+  min-height: 34px;
+  padding: 8px 6px;
+  gap: 3px;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
+  overflow: visible;
   overflow-wrap: anywhere;
-  text-overflow: clip;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__pct {
+  font-size: clamp(9px, 0.62vw, 11px);
+  line-height: 1;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__track {
@@ -2249,8 +2270,6 @@
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip {
-  min-height: 34px;
-  padding: 8px 10px;
   border-radius: 12px;
 }
 
