@@ -649,7 +649,7 @@ function AppInner({
   };
 
   // Two-phase close: keep panel mounted while exit animation plays, then unmount.
-  // 420ms matches `tell-more-pill--closing` keyframe duration in inferenceChain.css.
+  // 320ms matches `tell-more-pill--closing` keyframe duration in inferenceChain.css.
   const closeTell = useCallback(() => {
     if (tellCloseTimerRef.current) clearTimeout(tellCloseTimerRef.current);
     setTellExpanded((wasExpanded) => {
@@ -658,7 +658,7 @@ function AppInner({
       tellCloseTimerRef.current = setTimeout(() => {
         setTellExpanded(false);
         setTellClosing(false);
-      }, 420);
+      }, 320);
       return true; // stay expanded for the duration of the exit animation
     });
   }, []);
