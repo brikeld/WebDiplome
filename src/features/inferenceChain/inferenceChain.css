@@ -67,8 +67,15 @@
 }
 
 .dashboard-capsule--figma[data-tell-step="content"] .tell-more-pill--expanded,
+.dashboard-capsule--figma[data-tell-step="revealing"] .tell-more-pill--expanded,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-more-pill--expanded {
   border-radius: 0;
+}
+
+.tell-morph__layer--panel .tell-more-pill--expanded .inference-panel,
+.tell-morph__layer--panel .tell-more-pill--expanded .tell-panel-a--alt-palette-2 {
+  /* Outer inset lives on .tell-morph__layer--panel (tellTransition.css) */
+  padding: 0;
 }
 
 .tell-more-pill--expanded .inference-panel,

@@ -150,6 +150,7 @@
 .tell-morph__layer--panel {
   z-index: 3;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .tell-morph__layer--panel.is-entering {
@@ -549,91 +550,55 @@
   100% { transform: translateX(112%); }
 }
 
-/* ── 4) Info panel — compact fit inside enlarged button ── */
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .tell-panel-a--alt-palette-2,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .tell-panel-a--alt-palette-2 {
-  --dash-panel-gap: 4px;
-  --dash-section-pad: 5px 7px;
-  --dash-quote-section-pad: 4px 6px;
-  --dash-head-mb: 4px;
-  --dash-head-pad: 3px 7px;
-  --dash-head-fs: 8px;
-  --dash-label-fs: 10px;
-  --dash-chip-fs: 9px;
-  --dash-bar-fs: 9px;
-  --dash-detail-fs: 8px;
+/* ── 4) Info panel — inset padding inside enlarged tell button ── */
+.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel {
+  --tell-content-pad: clamp(14px, 1.35vw, 18px);
+  padding: var(--tell-content-pad);
+  box-sizing: border-box;
 }
 
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .tell-panel-a__stack,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .tell-panel-a__stack {
+.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2 {
+  --dash-panel-gap: clamp(8px, 0.85vh, 10px);
+  --dash-section-pad: clamp(12px, 1.1vh, 14px);
+  --dash-quote-section-pad: clamp(10px, 0.95vh, 12px);
+  --dash-head-mb: 8px;
+  --dash-head-pad: 6px 10px;
+  --dash-head-fs: clamp(10px, 0.74vw, 11px);
+  --dash-label-fs: clamp(11px, 0.88vw, 13px);
+  --dash-chip-fs: clamp(10px, 0.82vw, 12px);
+  --dash-bar-fs: clamp(11px, 0.86vw, 13px);
+  --dash-detail-fs: clamp(10px, 0.8vw, 12px);
+}
+
+.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack {
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
+  gap: var(--dash-panel-gap);
 }
 
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .post-quote-a,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .tape-section,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .reason-section,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .ing-section,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .post-quote-a,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .tape-section,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .reason-section,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .ing-section {
-  flex: 0 0 auto;
-  min-height: 0;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .post-quote-a .inference-panel__post-text,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .post-quote-a .inference-panel__post-text {
+.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .post-quote-a .inference-panel__post-text,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .post-quote-a .inference-panel__post-text {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.15;
+  line-height: 1.22;
 }
 
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .tape__content,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .reason-chip,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .ing-bar__row,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .tape__content,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .reason-chip,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .ing-bar__row {
-  min-height: 26px;
-  padding: 5px 7px;
-  border-radius: 10px;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .tape__step,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .tape__step {
-  width: 20px;
-  flex: 0 0 20px;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .tape__badge,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .tape__badge {
-  width: 20px;
-  height: 20px;
-  font-size: 9px;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .tape__line,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .tape__line {
-  height: 6px;
-  margin: 2px 0;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .ing-bar__track,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .ing-bar__track {
-  height: 5px;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .ing-chips,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .ing-chips {
-  gap: 4px;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph--info .ing-chip,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph--info .ing-chip {
-  padding: 4px 6px;
-  font-size: 8px;
+.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tape__content,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tape__content,
+.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .reason-chip,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .reason-chip,
+.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .ing-bar__row,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .ing-bar__row {
+  min-height: 32px;
+  padding: 8px 10px;
+  border-radius: 12px;
 }
