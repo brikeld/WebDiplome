@@ -1,22 +1,35 @@
 /* Tell me more — 4 steps: idle → expanding → loading (radar) → content
-   Open = tell row grows (bigger button). Timer row stays. Content fits inside. */
+   Open = timer row collapses, tell button grows into that space. */
 
-/* ── Bigger tell button: grow tell row only, keep timer visible ── */
+/* ── Replace timer: collapse timer track, tell row fills the slot ── */
 .dashboard-capsule--figma[data-tell-step="expanding"],
 .dashboard-capsule--figma[data-tell-step="loading"],
 .dashboard-capsule--figma[data-tell-step="content"],
 .dashboard-capsule--figma[data-tell-step="closing"] {
-  --dash-timer-track: 1fr;
-  --dash-tell-track: 6.5fr;
+  --dash-timer-track: 0fr;
+  --dash-tell-track: 1fr;
+}
+
+.dashboard-capsule--figma[data-tell-step="expanding"] .dashboard-actions-row,
+.dashboard-capsule--figma[data-tell-step="loading"] .dashboard-actions-row,
+.dashboard-capsule--figma[data-tell-step="content"] .dashboard-actions-row,
+.dashboard-capsule--figma[data-tell-step="closing"] .dashboard-actions-row {
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .dashboard-capsule--figma[data-tell-step="expanding"] .dashboard-tell-row,
 .dashboard-capsule--figma[data-tell-step="loading"] .dashboard-tell-row,
 .dashboard-capsule--figma[data-tell-step="content"] .dashboard-tell-row,
 .dashboard-capsule--figma[data-tell-step="closing"] .dashboard-tell-row {
+  grid-row: 1 / -1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  min-height: clamp(340px, 40vh, 500px);
+  align-self: stretch;
+  min-height: 100%;
+  height: 100%;
 }
 
 /* ── Morph shell (the tell-me-more button capsule) ── */
@@ -51,7 +64,8 @@
   flex: 1 1 auto;
   align-self: stretch;
   width: 100%;
-  min-height: clamp(340px, 40vh, 500px);
+  height: 100%;
+  min-height: 100%;
   max-height: 100%;
 }
 
