@@ -1,4 +1,4 @@
-import { isValidElement, useEffect, useMemo, useState } from 'react';
+import { cloneElement, isValidElement, useEffect, useMemo, useState } from 'react';
 
 const CHAR_MS = 24;
 const MIN_MS = 700;
@@ -8,7 +8,7 @@ function extractText(node) {
   if (node == null || typeof node === 'boolean') return '';
   if (typeof node === 'string' || typeof node === 'number') return String(node);
   if (Array.isArray(node)) {
-    return node.map(extractText).filter(Boolean).join('');
+    return node.map(extractText).join('');
   }
   if (!isValidElement(node)) return '';
 
@@ -16,12 +16,45 @@ function extractText(node) {
   if (!inner) return '';
 
   if (node.type === 'li') return `\n• ${inner.trim()}`;
-  if (node.type === 'p' || node.type === 'b') return `${inner.trim()}\n\n`;
-  if (node.type === 'span' && typeof node.props?.className === 'string' && node.props.className.includes('tape__detail')) {
-    return `\n\n${inner.trim()}`;
-  }
-  if (node.type === 'ul') return inner.trim();
   return inner;
+}
+
+function revealChildren(node, maxChars) {
+  let remaining = maxChars;
+
+  function walk(current) {
+    if (remaining <= 0) return null;
+    if (current == null || typeof current === 'boolean') return null;
+
+    if (typeof current === 'string' || typeof current === 'number') {
+      const str = String(current);
+      if (!str) return null;
+      const take = str.slice(0, remaining);
+      remaining -= take.length;
+      return take || null;
+    }
+
+    if (Array.isArray(current)) {
+      const parts = [];
+      for (const item of current) {
+        const part = walk(item);
+        if (part == null) continue;
+        if (Array.isArray(part)) parts.push(...part);
+        else parts.push(part);
+        if (remaining <= 0) break;
+      }
+      return parts.length ? parts : null;
+    }
+
+    if (!isValidElement(current)) return null;
+
+    const inner = walk(current.props.children);
+    if (inner == null) return null;
+
+    return cloneElement(current, { key: current.key }, inner);
+  }
+
+  return walk(node);
 }
 
 function usePrefersReducedMotion() {
@@ -79,28 +112,25 @@ function useTypewriter(text, detailKey) {
   }, [detailKey, normalized, prefersReducedMotion]);
 
   return {
-    visibleText: normalized.slice(0, visibleCount),
+    visibleCount,
     done: visibleCount >= normalized.length,
   };
 }
 
 export default function FocusDetail({ eyebrow, detailKey, onBack, children }) {
   const fullText = useMemo(() => extractText(children), [children]);
-  const { visibleText, done } = useTypewriter(fullText, detailKey);
+  const { visibleCount, done } = useTypewriter(fullText, detailKey);
+  const revealed = useMemo(
+    () => revealChildren(children, visibleCount),
+    [children, visibleCount],
+  );
 
   return (
     <div className="focus-detail">
       <div className="focus-detail__head">
         {onBack ? (
           <div className="focus-detail__back-slot">
-            <button
-              type="button"
-              className={`focus-detail__back${done ? ' focus-detail__back--concealed' : ''}`}
-              onClick={onBack}
-              aria-label="Back"
-              aria-hidden={done}
-              tabIndex={done ? -1 : 0}
-            >
+            <button type="button" className="focus-detail__back" onClick={onBack} aria-label="Back">
               ←
             </button>
           </div>
@@ -108,18 +138,9 @@ export default function FocusDetail({ eyebrow, detailKey, onBack, children }) {
         {eyebrow ? <span className="focus-detail__eyebrow">{eyebrow}</span> : null}
       </div>
       <div className="focus-detail__prose">
-        <div
-          className={`focus-detail__text${done ? '' : ' focus-detail__text--typing'}`}
-          aria-live="polite"
-        >
-          {done ? (
-            children
-          ) : (
-            <>
-              {visibleText}
-              <span className="focus-detail__caret" aria-hidden="true" />
-            </>
-          )}
+        <div className="focus-detail__text" aria-live="polite">
+          {revealed}
+          {!done ? <span className="focus-detail__caret" aria-hidden="true" /> : null}
         </div>
       </div>
     </div>

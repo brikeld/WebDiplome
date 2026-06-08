@@ -2728,11 +2728,6 @@
   color: var(--tell-pill-accent, #759aef);
 }
 
-.focus-detail__back--concealed {
-  visibility: hidden;
-  pointer-events: none;
-}
-
 .focus-detail__back:focus-visible {
   outline: 2px solid #000;
   outline-offset: 2px;
@@ -2768,10 +2763,6 @@
   font-weight: var(--dash-tag-fw, 800);
   line-height: var(--dash-tag-lh, 1.15);
   overflow-wrap: anywhere;
-}
-
-.focus-detail__text--typing {
-  white-space: pre-wrap;
 }
 
 .focus-detail__text > p,

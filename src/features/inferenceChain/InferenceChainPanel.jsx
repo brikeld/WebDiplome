@@ -263,7 +263,6 @@ export default function InferenceChainPanel({
                       onBack={() => setPanelUi(freshPanelUi())}
                     >
                       <span className="tape__value">{item.value}</span>
-                      {'\n\n'}
                       <span className="tape__detail">{item.detail}</span>
                     </FocusDetail>
                   ) : null}
