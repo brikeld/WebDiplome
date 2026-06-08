@@ -246,29 +246,28 @@ export default function InferenceChainPanel({
         {validChain ? (
           <section className={`tape-section${activeChainStep !== null ? ' tape-section--focus' : ''}`} aria-label="From data to post">
             <header className="panel-a__head">From data to post</header>
-            <div className="tape">
+            <div className="reason-chips">
               {simpleChain.map((item, i) => (
-                <div className="tape__item" key={`${item.label}-${i}`}>
-                  <button
-                    type="button"
-                    className={`tape__content${activeChainStep === i ? ' is-open' : ''}`}
-                    onClick={() => setActiveDetail('chain', i)}
-                  >
-                    <span className="tape__label">{item.label}</span>
-                  </button>
-                  {activeChainStep === i ? (
-                    <FocusDetail
-                      detailKey={`chain-${i}`}
-                      eyebrow={item.tag}
-                      onBack={() => setPanelUi(freshPanelUi())}
-                    >
-                      <span className="tape__value">{item.value}</span>
-                      <span className="tape__detail">{item.detail}</span>
-                    </FocusDetail>
-                  ) : null}
-                </div>
+                <button
+                  key={`${item.label}-${i}`}
+                  type="button"
+                  className={`reason-chip${activeChainStep === i ? ' is-open' : ''}`}
+                  onClick={() => setActiveDetail('chain', i)}
+                >
+                  {item.label}
+                </button>
               ))}
             </div>
+            {activeChainStep !== null && simpleChain[activeChainStep] ? (
+              <FocusDetail
+                detailKey={`chain-${activeChainStep}`}
+                eyebrow={simpleChain[activeChainStep].tag}
+                onBack={() => setPanelUi(freshPanelUi())}
+              >
+                <span className="tape__value">{simpleChain[activeChainStep].value}</span>
+                <span className="tape__detail">{simpleChain[activeChainStep].detail}</span>
+              </FocusDetail>
+            ) : null}
           </section>
         ) : null}
 

@@ -661,37 +661,15 @@
   line-height: 1.22;
 }
 
-.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .tape,
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .reason-chips,
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .ing-chips,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .reason-chips,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .ing-chips,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .reason-chips,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .ing-chips {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-}
-
-.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .tape__item,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape__item,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape__item {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .tape__content,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape__content,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape__content {
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
 }
 
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .reason-chips,
@@ -715,8 +693,6 @@
   height: 100%;
 }
 
-.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tape__content,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tape__content,
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .reason-chip,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .reason-chip,
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .ing-bar__row,
@@ -742,7 +718,6 @@
     --dash-head-mb: 6px;
   }
 
-  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tape__content,
   .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .reason-chip,
   .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .ing-chip {
     min-height: 28px;
@@ -763,7 +738,6 @@
     --dash-head-pad: 5px 8px;
   }
 
-  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tape__content,
   .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .reason-chip,
   .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .ing-chip {
     min-height: 26px;
@@ -808,41 +782,13 @@
   overflow: hidden;
 }
 
-.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .reason-chips,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .reason-section--focus .reason-chips,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .ing-section--focus .ing-chips,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .reason-chips,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .reason-section--focus .reason-chips,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .ing-section--focus .ing-chips {
   flex: 0 0 auto;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape:has(.focus-detail),
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape:has(.focus-detail) {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape__item:has(.tape__content.is-open),
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape__item:has(.tape__content.is-open) {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape__item:has(.focus-detail) .tape__content,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape__item:has(.focus-detail) .tape__content {
-  flex: 0 0 auto;
-  min-height: 0;
-}
-
-.dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .tape-section--focus .tape__item:not(:has(.tape__content.is-open)),
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-panel-a--has-focus .tape-section--focus .tape__item:not(:has(.tape__content.is-open)) {
-  display: none;
 }
 
 .dashboard-capsule--figma[data-tell-step="content"] .tell-panel-a--has-focus .focus-detail,
