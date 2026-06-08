@@ -23,15 +23,27 @@ const SECTIONS = [
         ],
       },
       {
-        id: "normal",
-        title: "Analysis panel",
-        status: "np2 layout",
+        id: "normal-alt",
+        title: "Analysis panel dif color",
+        status: "white capsules · bw persona",
         mode: "expanded",
-        panel: "normal",
+        panel: "normalAlt",
         notes: [
-          ["ok", "Regular posts: quote + Thinking / Ingredients / From data to post."],
-          ["info", "Tap chips inside the preview to open detail strips — does not change the rail state."],
-          ["warn", "Some posts (e.g. WiFi-only slices) ship without ingredients — this example uses a chart post with full analysis."],
+          ["ok", "Same analysis layout with every inner capsule on white for all personas."],
+          ["info", "Palette is restricted to black, white, and the post persona color only."],
+          ["warn", "Compare with the persona-capsule variant beside this one."],
+        ],
+      },
+      {
+        id: "normal-alt2",
+        title: "Analysis panel dif color 2",
+        status: "persona capsules · white bg",
+        mode: "expanded",
+        panel: "normalAlt2",
+        notes: [
+          ["ok", "White shell with every section capsule filled in the post persona color."],
+          ["info", "Inner controls stay black, white, or persona only — chosen for contrast."],
+          ["warn", "Compare with the white-capsule variant beside this one."],
         ],
       },
       {
@@ -83,7 +95,8 @@ const SECTIONS = [
 const STATES = SECTIONS.flatMap((section) => section.states);
 
 const EXPAND_LOADING_MS = 1200;
-const CLOSE_MS = 220;
+const CLOSE_MS = 480;
+const PANEL_SWAP_MS = 460;
 
 // Showcase copy sourced from generated posts in posts_personas.json (Electron data dir).
 
@@ -97,9 +110,9 @@ const NORMAL_POST = {
 };
 
 const THINKING = [
-  { label: "FOCUS SET", detail: "I noticed the Creative category is tied with Dev & Work, which suggests a heavy creative-technical blend." },
-  { label: "AI WEIGHT", detail: "The presence of 6 AI Tools alongside heavy Adobe use makes sense for this persona." },
-  { label: "POST CHOICE", detail: "I decided to focus the post on the dominance of the creative side rather than just the raw numbers." },
+  { label: "Focus set", detail: "I noticed the Creative category is tied with Dev & Work, which suggests a heavy creative-technical blend." },
+  { label: "AI weight", detail: "The presence of 6 AI Tools alongside heavy Adobe use makes sense for this persona." },
+  { label: "Post choice", detail: "I decided to focus the post on the dominance of the creative side rather than just the raw numbers." },
 ];
 
 const INGREDIENTS = [
@@ -249,6 +262,38 @@ function freshPanelUi() {
   };
 }
 
+function snapshotPanelUi(ui = panelUi) {
+  return {
+    activeThinking: ui.activeThinking,
+    activeIngredient: ui.activeIngredient,
+    activeChainStep: ui.activeChainStep,
+    activeSignal: ui.activeSignal,
+    showOthers: ui.showOthers,
+  };
+}
+
+function shouldRevealChainStep(index, animateFrom) {
+  if (panelUi.activeChainStep !== index) return false;
+  if (!animateFrom) return false;
+  return animateFrom.activeChainStep !== index;
+}
+
+function shouldRevealDetail(field, animateFrom) {
+  const current = panelUi[field];
+  if (current === null) return false;
+  if (!animateFrom) return false;
+  return animateFrom[field] !== current;
+}
+
+function revealClass(should, variant = "") {
+  if (!should) return "";
+  return variant ? ` panel-a__reveal panel-a__reveal--${variant}` : " panel-a__reveal";
+}
+
+function detailEnterClass(should) {
+  return should ? " panel-a__detail--enter" : "";
+}
+
 function pillStyle(themeKey = currentTheme) {
   const theme = THEMES[themeKey] ?? THEMES.sec;
   return `--tell-pill-accent: ${theme.accent}; --tell-pill-pastel: ${theme.pastel}; --lb-acc: ${theme.accent}; --persona-accent: ${theme.accent}`;
@@ -273,7 +318,7 @@ function tellLoadingMarkup(compact = true) {
 function idlePulseMarkup(themeKey) {
   const theme = THEMES[themeKey] ?? THEMES.sec;
   return `
-    <div class="tell-idle-a" style="${pillStyle(themeKey)}">
+    <div class="tell-idle-a">
       <div class="tell-idle-a__top">
         <span class="tell-idle-a__persona">${theme.label} post</span>
         <span class="tell-idle-a__dots" aria-hidden="true">
@@ -324,10 +369,16 @@ function idleTellMarkup(themeKey) {
   `;
 }
 
-function expandedTellShell({ closing = false, themeKey }) {
+function expandedTellShell({ closing = false, themeKey, palette = "default" }) {
+  const pillPaletteClass =
+    palette === "alt"
+      ? " tell-more-pill--alt-palette"
+      : palette === "alt2"
+        ? " tell-more-pill--alt-palette-2"
+        : "";
   return `
     <div class="dashboard-tell-row" id="tellRow">
-      <div class="tell-more-pill tell-more-pill--expanded${closing ? " tell-more-pill--closing" : ""}" style="${pillStyle(themeKey)}" role="region" aria-label="Inference chain analysis">
+      <div class="tell-more-pill tell-more-pill--expanded${pillPaletteClass}${closing ? " tell-more-pill--closing" : ""}" style="${pillStyle(themeKey)}" role="region" aria-label="Inference chain analysis">
         <div id="tellPanel" class="tell-panel-host"></div>
       </div>
     </div>
@@ -342,17 +393,24 @@ function loadingPanelMarkup() {
   `;
 }
 
-function normalPanelMarkup() {
+function buildNormalPanelMarkup({ palette = "default", animateFrom = null } = {}) {
   const { activeThinking, activeIngredient, activeChainStep } = panelUi;
   const quoteParts = NORMAL_POST.content.split(NORMAL_POST.highlightPhrase);
   const quoteBefore = quoteParts[0] ?? "";
   const quoteAfter = quoteParts.slice(1).join(NORMAL_POST.highlightPhrase);
+  const paletteClass =
+    palette === "alt"
+      ? " tell-panel-a--alt-palette"
+      : palette === "alt2"
+        ? " tell-panel-a--alt-palette-2"
+        : "";
+  const rootClass = `tell-panel-a${paletteClass} inference-panel is-ready`;
 
   return `
-    <div class="tell-panel-a inference-panel is-ready" role="region" aria-label="Tell me more analysis">
+    <div class="${rootClass}" role="region" aria-label="Tell me more analysis">
       <div class="post-quote-a">
-        <span class="panel-a__head">Why this post?</span>
-        <p class="post-quote-a__text">${quoteBefore}<button type="button" class="post-quote-a__highlight" data-showcase-interactive data-chip-kind="ingredient" data-chip-index="${NORMAL_POST.highlightIngredientIndex}">${NORMAL_POST.highlightPhrase}</button>${quoteAfter}</p>
+        <span class="panel-a__head">Why this CONTENT?</span>
+        <p class="post-quote-a__text"><span class="post-quote-a__open" aria-hidden="true">“</span>${quoteBefore}<button type="button" class="post-quote-a__highlight" data-showcase-interactive data-chip-kind="ingredient" data-chip-index="${NORMAL_POST.highlightIngredientIndex}">${NORMAL_POST.highlightPhrase}</button>${quoteAfter}<span class="post-quote-a__close" aria-hidden="true">”</span></p>
       </div>
 
       <section class="tape-section" aria-label="From data to post">
@@ -366,7 +424,7 @@ function normalPanelMarkup() {
               </div>
               <button type="button" class="tape__content${activeChainStep === i ? " is-open" : ""}" data-showcase-interactive data-chip-kind="chain" data-chip-index="${i}">
                 <span class="tape__label">${item.label}</span>
-                ${activeChainStep === i ? `<span class="tape__value">${item.value}</span><span class="tape__detail">${item.detail}<span class="tape__meta"><span class="tape__tag">${item.tag}</span></span></span>` : ""}
+                ${activeChainStep === i ? `<span class="tape__value${revealClass(shouldRevealChainStep(i, animateFrom))}">${item.value}</span><span class="tape__detail${revealClass(shouldRevealChainStep(i, animateFrom), "late")}">${item.detail}<span class="tape__meta"><span class="tape__tag${revealClass(shouldRevealChainStep(i, animateFrom), "later")}">${item.tag}</span></span></span>` : ""}
               </button>
             </div>
           `).join("")}
@@ -374,7 +432,7 @@ function normalPanelMarkup() {
       </section>
 
       <section class="reason-section">
-        <header class="panel-a__head">Why this angle</header>
+        <header class="panel-a__head">How we framed it</header>
         <div class="reason-chips">
           ${THINKING.map(
             (item, i) => `
@@ -386,7 +444,7 @@ function normalPanelMarkup() {
         </div>
         ${
           activeThinking !== null
-            ? `<div class="panel-a__detail">
+            ? `<div class="panel-a__detail${detailEnterClass(shouldRevealDetail("activeThinking", animateFrom))}">
                 <span class="panel-a__detail-label">${THINKING[activeThinking].label}</span>
                 <p>${THINKING[activeThinking].detail}</p>
               </div>`
@@ -411,7 +469,7 @@ function normalPanelMarkup() {
           </div>
           ${
             activeIngredient !== null
-              ? `<div class="panel-a__detail">
+              ? `<div class="panel-a__detail${detailEnterClass(shouldRevealDetail("activeIngredient", animateFrom))}">
                   <b>${INGREDIENTS[activeIngredient].label}</b>
                   <ul>
                     ${INGREDIENTS[activeIngredient].points.map((p) => `<li>${p}</li>`).join("")}
@@ -424,6 +482,14 @@ function normalPanelMarkup() {
         }
     </div>
   `;
+}
+
+function normalPanelAltMarkup() {
+  return buildNormalPanelMarkup({ palette: "alt" });
+}
+
+function normalPanelAlt2Markup() {
+  return buildNormalPanelMarkup({ palette: "alt2" });
 }
 
 function previousNormalPanelMarkup() {
@@ -620,8 +686,15 @@ function clearTransitionTimers() {
   transitionTimer = null;
 }
 
-function panelHtmlForState(state) {
-  if (state.panel === "normal") return normalPanelMarkup();
+function paletteForPanel(panelKind) {
+  if (panelKind === "normalAlt") return "alt";
+  if (panelKind === "normalAlt2") return "alt2";
+  return "default";
+}
+
+function panelHtmlForState(state, { animateFrom = null } = {}) {
+  if (state.panel === "normalAlt") return buildNormalPanelMarkup({ palette: "alt", animateFrom });
+  if (state.panel === "normalAlt2") return buildNormalPanelMarkup({ palette: "alt2", animateFrom });
   if (state.panel === "normalPrevious") return previousNormalPanelMarkup();
   if (state.panel === "loading") return loadingPanelMarkup();
   if (state.panel === "leaderboard") return leaderboardPanelMarkup();
@@ -649,20 +722,35 @@ function applyCapsuleClasses(state) {
   capsule.classList.toggle("is-tell-expanded", expanded);
   capsule.classList.toggle("is-tell-closing", closing);
   capsule.classList.toggle("is-tell-idle", state.mode === "idle");
+  capsule.classList.toggle("is-tell-alt-palette", state.panel === "normalAlt");
+  capsule.classList.toggle("is-tell-alt-palette-2", state.panel === "normalAlt2");
   capsule.style.cssText = pillStyle(stateThemeKey(state));
 }
 
-function renderTellRow(state, { panelEnter = false, panelOverride = null } = {}) {
+function updatePanelContent(state, { panelEnter = false, panelSwap = false, panelOverride = null, animateFrom = null } = {}) {
+  const panelKind = panelOverride ?? state.panel;
+  const panel = $("#tellPanel");
+  if (!panel || panelKind === null) return;
+
+  panel.innerHTML = panelHtmlForState({ ...state, panel: panelKind }, { animateFrom });
+  panel.classList.remove("tell-panel-host--enter", "tell-panel-host--swap");
+  void panel.offsetWidth;
+
+  if (panelSwap) {
+    panel.classList.add("tell-panel-host--swap");
+    window.setTimeout(() => panel.classList.remove("tell-panel-host--swap"), PANEL_SWAP_MS);
+  } else if (panelEnter) {
+    panel.classList.add("tell-panel-host--enter");
+  }
+}
+
+function renderTellRow(state, { panelEnter = false, panelSwap = false, panelOverride = null } = {}) {
   const themeKey = stateThemeKey(state);
   const panelKind = panelOverride ?? state.panel;
   ensureCapsuleShell();
   let tellRow = $("#tellRow");
 
   if (state.mode === "idle") {
-    if (tellRow?.querySelector(".tell-more-pill--idle")) {
-      tellRow.querySelector(".tell-more-pill--idle").style.cssText = pillStyle(themeKey);
-      return;
-    }
     const temp = document.createElement("div");
     temp.innerHTML = idleTellMarkup(themeKey);
     tellRow?.replaceWith(temp.firstElementChild);
@@ -670,27 +758,23 @@ function renderTellRow(state, { panelEnter = false, panelOverride = null } = {})
   }
 
   const closing = state.mode === "closing";
+  const palette = paletteForPanel(panelKind);
 
   if (!tellRow?.querySelector(".tell-more-pill--expanded")) {
     const temp = document.createElement("div");
-    temp.innerHTML = expandedTellShell({ closing, themeKey });
+    temp.innerHTML = expandedTellShell({ closing, themeKey, palette });
     tellRow?.replaceWith(temp.firstElementChild);
   } else {
     const pill = tellRow.querySelector(".tell-more-pill--expanded");
     pill.classList.toggle("tell-more-pill--closing", closing);
+    pill.classList.toggle("tell-more-pill--alt-palette", palette === "alt");
+    pill.classList.toggle("tell-more-pill--alt-palette-2", palette === "alt2");
     pill.style.cssText = pillStyle(themeKey);
   }
 
   if (closing || panelKind === null) return;
 
-  const panel = $("#tellPanel");
-  if (!panel) return;
-  panel.innerHTML = panelHtmlForState({ ...state, panel: panelKind });
-  if (panelEnter) {
-    panel.classList.remove("tell-panel-host--enter");
-    void panel.offsetWidth;
-    panel.classList.add("tell-panel-host--enter");
-  }
+  updatePanelContent(state, { panelEnter, panelSwap, panelOverride: panelKind });
 }
 
 function applyTheme(theme) {
@@ -762,12 +846,12 @@ function nudgeHost() {
   host.classList.remove("is-advancing");
   void host.offsetWidth;
   host.classList.add("is-advancing");
-  window.setTimeout(() => host.classList.remove("is-advancing"), 380);
+  window.setTimeout(() => host.classList.remove("is-advancing"), 520);
 }
 
-function commitStateVisual(state, { panelEnter = false, panelOverride = null } = {}) {
+function commitStateVisual(state, { panelEnter = false, panelSwap = false, panelOverride = null } = {}) {
   applyCapsuleClasses(state);
-  renderTellRow(state, { panelEnter, panelOverride });
+  renderTellRow(state, { panelEnter, panelSwap, panelOverride });
 }
 
 function runExpandTransition(state, gen) {
@@ -790,10 +874,10 @@ function runCloseTransition(state, prevState, gen) {
   }, CLOSE_MS);
 }
 
-function refreshPanel({ animate = true } = {}) {
+function refreshPanel(animateFrom = null) {
   const state = STATES[currentIndex];
   if (state.mode === "idle") return;
-  renderTellRow(state, { panelEnter: animate });
+  updatePanelContent(state, { animateFrom });
 }
 
 function showState(index, { keepPlaying = false } = {}) {
@@ -829,16 +913,17 @@ function showState(index, { keepPlaying = false } = {}) {
 
   if (swappingExpanded) {
     panelUi = freshPanelUi();
-    commitStateVisual(state, { panelEnter: true });
+    commitStateVisual(state, { panelSwap: true });
     nudgeHost();
     return;
   }
 
-  commitStateVisual(state, { panelEnter: prevState !== state });
+  commitStateVisual(state, { panelEnter: prevState !== state && !goingExpanded && !goingIdle });
   if (prevState !== state) nudgeHost();
 }
 
 function toggleChip(kind, index) {
+  const before = snapshotPanelUi();
   if (kind === "thinking") {
     panelUi.activeThinking = panelUi.activeThinking === index ? null : index;
   } else if (kind === "ingredient") {
@@ -848,7 +933,7 @@ function toggleChip(kind, index) {
   } else if (kind === "signal") {
     panelUi.activeSignal = panelUi.activeSignal === index ? null : index;
   }
-  refreshPanel({ animate: true });
+  refreshPanel(before);
 }
 
 function handleCapsuleClick(event) {
@@ -859,14 +944,16 @@ function handleCapsuleClick(event) {
 
   const action = interactive.dataset.action;
   if (action === "others-open") {
+    const before = snapshotPanelUi();
     panelUi.showOthers = true;
-    refreshPanel({ animate: true });
+    refreshPanel(before);
     return;
   }
   if (action === "others-back") {
+    const before = snapshotPanelUi();
     panelUi.showOthers = false;
     panelUi.activeSignal = null;
-    refreshPanel({ animate: true });
+    refreshPanel(before);
     return;
   }
 
@@ -915,7 +1002,9 @@ document.addEventListener("keydown", (event) => {
 $$(".themeswitch button").forEach((button) => {
   button.addEventListener("click", () => {
     applyTheme(button.dataset.theme);
-    applyCapsuleClasses(STATES[currentIndex]);
-    renderTellRow(STATES[currentIndex]);
+    const state = STATES[currentIndex];
+    applyCapsuleClasses(state);
+    renderTellRow(state);
+    if (state.mode === "idle") nudgeHost();
   });
 });

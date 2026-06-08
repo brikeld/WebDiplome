@@ -87,6 +87,169 @@
   );
 }
 
+.tell-idle-a {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.6vh, 18px);
+  padding: clamp(18px, 2.4vw, 30px);
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.tell-idle-a__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.tell-idle-a__persona {
+  min-width: 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--tell-pill-accent, #759aef);
+  color: #000;
+  font-size: clamp(14px, 1.3vw, 18px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    background 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tell-idle-a__dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.tell-idle-a__dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--tell-pill-accent, #759aef);
+  animation: tell-a-dot 1.8s ease-in-out infinite;
+  transition: background 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tell-idle-a__dots i:nth-child(2) { animation-delay: 0.3s; }
+.tell-idle-a__dots i:nth-child(3) { animation-delay: 0.6s; }
+
+.tell-idle-a__bars {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(12px, 1.65vh, 18px);
+}
+
+.tell-idle-a__bars span {
+  height: clamp(18px, 2.65vh, 28px);
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--tell-pill-accent, #759aef) 18%, #fff),
+      color-mix(in srgb, var(--tell-pill-accent, #759aef) 44%, #fff),
+      color-mix(in srgb, var(--tell-pill-accent, #759aef) 18%, #fff)
+    );
+  background-size: 220% 100%;
+  animation: tell-a-bar 2.2s ease-in-out infinite;
+  transition: background 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tell-idle-a__bars span:nth-child(1) { width: 88%; }
+.tell-idle-a__bars span:nth-child(2) { width: 64%; animation-delay: 0.35s; }
+.tell-idle-a__bars span:nth-child(3) { width: 76%; animation-delay: 0.7s; }
+
+.tell-idle-a__cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: #07101f;
+  font-size: clamp(26px, 3.2vw, 44px);
+  font-weight: 800;
+  line-height: 0.96;
+}
+
+.tell-idle-a__cta span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tell-idle-a__cta b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: clamp(34px, 4vw, 48px);
+  height: clamp(34px, 4vw, 48px);
+  border-radius: 999px;
+  background: var(--tell-pill-accent, #759aef);
+  color: #000;
+  font-size: 0.78em;
+  font-style: normal;
+  line-height: 1;
+  transition: background 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes tell-a-dot {
+  0%, 100% { transform: translateY(0); opacity: 0.45; }
+  50% { transform: translateY(-3px); opacity: 1; }
+}
+
+@keyframes tell-a-bar {
+  0% { background-position: 110% center; }
+  100% { background-position: -110% center; }
+}
+
+@media (max-width: 520px) {
+  .tell-idle-a {
+    gap: clamp(9px, 1.4vh, 13px);
+    padding: clamp(14px, 5vw, 20px);
+  }
+
+  .tell-idle-a__top {
+    gap: 10px;
+  }
+
+  .tell-idle-a__persona {
+    font-size: clamp(11px, 3vw, 14px);
+    letter-spacing: 0.06em;
+  }
+
+  .tell-idle-a__bars {
+    gap: clamp(9px, 1.4vh, 13px);
+  }
+
+  .tell-idle-a__bars span {
+    height: clamp(14px, 4.4vw, 20px);
+  }
+
+  .tell-idle-a__cta {
+    gap: 10px;
+    font-size: clamp(21px, 7vw, 30px);
+  }
+
+  .tell-idle-a__cta b {
+    width: clamp(30px, 9vw, 38px);
+    height: clamp(30px, 9vw, 38px);
+  }
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
    STATE: expanded — Tell-Me-More takes the full inner space of the capsule.
    ----------------------------------------------------------------------------
@@ -112,13 +275,29 @@
 }
 
 @keyframes tell-pill-expand-enter {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.992);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 @keyframes tell-pill-expand-exit {
-  from { opacity: 1; }
-  to   { opacity: 0; }
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.992);
+    filter: blur(4px);
+  }
 }
 
 /* Fills the dashboard capsule edge-to-edge — no inner rounded “pill” shell */
@@ -156,8 +335,26 @@
 }
 
 .tell-more-pill--expanded.tell-more-pill--closing {
-  animation: tell-pill-expand-exit 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: tell-pill-expand-exit 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
   pointer-events: none;
+}
+
+.tell-more-pill--expanding {
+  background: transparent;
+}
+
+.tell-more-pill--expanding .inference-panel--expansion-loading {
+  flex: 1 1 0;
+  min-height: 0;
+  padding: clamp(14px, 1.55vw, 20px);
+  border-radius: 0;
+  background: transparent;
+}
+
+.tell-more-pill--expanding .tell-load {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────

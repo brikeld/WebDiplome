@@ -15,11 +15,30 @@ const post = {
 };
 
 describe('<TellMeMorePill> hidden redaction', () => {
+  it('renders the idle dashboard prompt face for the current persona', () => {
+    const html = renderToStaticMarkup(
+      <TellMeMorePill fallbackPersona="security" expanded={false} />,
+    );
+
+    expect(html).toContain('tell-idle-a');
+    expect(html).toContain('Security post');
+    expect(html).toContain('Tell me why');
+  });
+
+  it('shows an expansion loading state before rendering post analysis', () => {
+    const html = renderToStaticMarkup(<TellMeMorePill highlightedPost={post} expanded />);
+
+    expect(html).toContain('tell-more-pill--expanding');
+    expect(html).toContain('tell-load');
+    expect(html).not.toContain('Sensitive browser history');
+  });
+
   it('marks expanded hidden post analysis as permanently redacted', () => {
     const html = renderToStaticMarkup(
       <TellMeMorePill
         highlightedPost={post}
         expanded
+        skipExpansionLoading
         isAnalysisRedacted
         onRedactedUnhideConfirm={() => {}}
       />,
@@ -45,6 +64,7 @@ describe('<TellMeMorePill> hidden redaction', () => {
           },
         }}
         expanded
+        skipExpansionLoading
       />,
     );
 
@@ -66,6 +86,7 @@ describe('<TellMeMorePill> hidden redaction', () => {
           },
         }}
         expanded
+        skipExpansionLoading
         isAnalysisRedacted
         onRedactedUnhideConfirm={() => {}}
       />,

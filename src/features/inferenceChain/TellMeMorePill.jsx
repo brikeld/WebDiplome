@@ -5,8 +5,11 @@
  * Expanded: InferenceChainPanel for the highlighted post.
  */
 
+import { useEffect, useState } from 'react';
 import InferenceChainPanel from './InferenceChainPanel.jsx';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
+
+const EXPANSION_LOADING_MS = 720;
 
 const PERSONA_PASTEL = {
   productivity: '#EEEEEE',
@@ -48,6 +51,7 @@ export default function TellMeMorePill({
   holdLoadingOverlay = false,
   isAnalysisRedacted = false,
   onRedactedUnhideConfirm = null,
+  skipExpansionLoading = false,
 }) {
   const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
   const postPersonaKey = String(highlightedPost?.persona ?? mainPersonaKey).toLowerCase();
@@ -62,12 +66,54 @@ export default function TellMeMorePill({
   const accent = highlightedPost ? postAccent : mainAccent;
   const pastel = highlightedPost ? postPastel : mainPastel;
   const label = PERSONA_LABEL[postPersonaKey] ?? 'Social';
+  const mainLabel = PERSONA_LABEL[mainPersonaKey] ?? 'Security';
+  const activePostKey =
+    expanded && highlightedPost
+      ? String(highlightedPost.id ?? highlightedPost.createdAt ?? highlightedPost.content ?? postPersonaKey)
+      : null;
+  const [loadedPostKey, setLoadedPostKey] = useState(skipExpansionLoading ? activePostKey : null);
+
+  useEffect(() => {
+    if (!activePostKey) {
+      setLoadedPostKey(null);
+      return undefined;
+    }
+
+    if (skipExpansionLoading) {
+      setLoadedPostKey(activePostKey);
+      return undefined;
+    }
+
+    setLoadedPostKey(null);
+    const timer = setTimeout(() => {
+      setLoadedPostKey(activePostKey);
+    }, EXPANSION_LOADING_MS);
+    return () => clearTimeout(timer);
+  }, [activePostKey, skipExpansionLoading]);
 
   const pillStyle = {
     '--tell-pill-accent': accent,
     '--tell-pill-pastel': pastel,
     '--lb-acc': accent,
   };
+
+  const expansionLoading =
+    Boolean(activePostKey) && !skipExpansionLoading && !closing && loadedPostKey !== activePostKey;
+
+  if (expanded && highlightedPost && expansionLoading) {
+    return (
+      <div
+        className="tell-more-pill tell-more-pill--expanded tell-more-pill--expanding"
+        style={pillStyle}
+        role="region"
+        aria-label="Loading tell me more analysis"
+      >
+        <div className="inference-panel inference-panel--expansion-loading is-ready">
+          <TellMeMoreLoadingOverlay loadingKey={activePostKey} loop />
+        </div>
+      </div>
+    );
+  }
 
   if (expanded && highlightedPost) {
     return (
@@ -94,9 +140,27 @@ export default function TellMeMorePill({
       style={pillStyle}
       role="status"
       aria-live="polite"
-      aria-label="Tell me more — loading analysis"
+      aria-label={`Tell me more - loading analysis for ${mainLabel} post`}
     >
-      <TellMeMoreLoadingOverlay loop compact />
+      <div className="tell-idle-a">
+        <div className="tell-idle-a__top">
+          <span className="tell-idle-a__persona">{mainLabel} post</span>
+          <span className="tell-idle-a__dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        </div>
+        <div className="tell-idle-a__bars" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="tell-idle-a__cta">
+          <span>Tell me why</span>
+          <b aria-hidden="true">→</b>
+        </div>
+      </div>
     </div>
   );
 }

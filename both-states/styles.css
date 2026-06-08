@@ -1,0 +1,193 @@
+/* Combined dashboard — timer on top, tell me more below (production layout) */
+
+@font-face {
+  font-family: "AvantGarde WD Demi Oblique";
+  src: url("../src/fonts/AvantGarde/woff2/AvantGardeITCbyBT-DemiOblique.woff2") format("woff2");
+  font-weight: 600;
+  font-style: oblique;
+}
+
+:root {
+  --font-avant-demi-oblique: "AvantGarde WD Demi Oblique", "AvantGarde WD", "Helvetica Neue", sans-serif;
+  --panel-a-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --panel-a-dur: 380ms;
+}
+
+.frame-area .capsule-host {
+  width: min(620px, 100%);
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.dashboard-capsule.dashboard-capsule--figma.dashboard-capsule--both {
+  height: clamp(520px, 72vh, 860px) !important;
+  min-height: clamp(520px, 72vh, 860px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden;
+}
+
+.dashboard-capsule--both {
+  --dashboard-btn-gap: clamp(7px, 0.85vh, 9px);
+  --dashboard-pad: clamp(14px, 1.6vh, 18px);
+  --dashboard-actions-h: clamp(128px, 15vh, 176px);
+  --dashboard-actions-min-h: var(--dashboard-actions-h);
+  --dashboard-tell-idle-flex: 2.62;
+  --dashboard-tell-idle-min-h: clamp(168px, 22vh, 260px);
+  --tell-idle-scale: 0.86;
+  width: 100%;
+  padding: var(--dashboard-pad);
+  gap: var(--dashboard-btn-gap);
+  transition:
+    height 620ms var(--panel-a-ease),
+    background-color 520ms var(--panel-a-ease),
+    padding 520ms var(--panel-a-ease),
+    box-shadow 520ms var(--panel-a-ease);
+}
+
+.dashboard-capsule--both:not(.is-tell-expanded):not(.is-tell-closing) .dashboard-actions-row {
+  flex: 0 0 var(--dashboard-actions-h) !important;
+  min-height: var(--dashboard-actions-min-h) !important;
+  height: var(--dashboard-actions-h) !important;
+  max-height: var(--dashboard-actions-h) !important;
+  perspective: 900px;
+  position: relative;
+  z-index: 0;
+}
+
+.dashboard-capsule--both:not(.is-tell-expanded):not(.is-tell-closing) .dashboard-tell-row {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-capsule--both .dashboard-tell-row {
+  display: flex !important;
+  min-height: 0;
+  width: 100%;
+  cursor: pointer;
+}
+
+.dashboard-capsule--both:not(.is-tell-expanded):not(.is-tell-closing) .dashboard-tell-row {
+  flex: var(--dashboard-tell-idle-flex) 1 0 !important;
+  min-height: var(--dashboard-tell-idle-min-h) !important;
+}
+
+.dashboard-capsule--both #timerSlot {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+/* Route every click in the timer band to #timerSlot — status cards ship with pointer-events: none */
+.dashboard-capsule--both #timerSlot * {
+  pointer-events: none !important;
+}
+
+.dashboard-capsule--both .dashboard-timer-card--action-status {
+  cursor: pointer;
+}
+
+.dashboard-capsule--both .tell-more-pill--idle {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.dashboard-capsule--both .tell-more-pill--expanded {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.dashboard-capsule--both.is-tell-expanded,
+.dashboard-capsule--both.is-tell-closing {
+  height: clamp(720px, calc(100dvh - 120px), 1200px) !important;
+  min-height: clamp(720px, calc(100dvh - 120px), 1200px) !important;
+  --dashboard-tell-pad: clamp(12px, 1.25vw, 16px);
+  padding: var(--dashboard-tell-pad);
+  gap: 0;
+}
+
+.dashboard-capsule--both.is-tell-expanded .dashboard-tell-row,
+.dashboard-capsule--both.is-tell-closing .dashboard-tell-row {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  cursor: default;
+}
+
+.dashboard-capsule--both.is-tell-expanded.is-tell-alt-palette-2,
+.dashboard-capsule--both.is-tell-closing.is-tell-alt-palette-2 {
+  background: #fff;
+  box-shadow: 0 0 80px -30px color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, #000);
+}
+
+.dashboard-capsule--both .dashboard-actions-row {
+  cursor: pointer;
+}
+
+.dashboard-capsule--both.is-tell-expanded .dashboard-actions-row,
+.dashboard-capsule--both.is-tell-closing .dashboard-actions-row {
+  cursor: default;
+}
+
+.dashboard-capsule--both .tell-more-pill--idle,
+.dashboard-capsule--both .tell-more-pill--expanded {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+}
+
+.dashboard-capsule--both .tell-more-pill--idle {
+  appearance: none;
+  border: none;
+  padding: 0;
+  text-align: inherit;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98),
+      color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
+    );
+  border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
+  border-radius: var(--capsule-radius);
+  color: #07101f;
+}
+
+.dashboard-capsule--both .tell-more-pill--expanded .tell-panel-a,
+.dashboard-capsule--both .tell-more-pill--expanded .inference-panel.is-ready {
+  cursor: default;
+}
+
+.dashboard-capsule--both .tell-panel-host {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+}
+
+#resetView {
+  border: 0;
+  cursor: pointer;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+#resetView:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+@media (max-width: 900px) {
+  .dashboard-capsule--both {
+    height: clamp(480px, 68vh, 720px);
+  }
+
+  .dashboard-capsule--both.is-tell-expanded,
+  .dashboard-capsule--both.is-tell-closing {
+    height: clamp(640px, calc(100dvh - 100px), 920px);
+  }
+}
