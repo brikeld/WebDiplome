@@ -37,7 +37,7 @@ describe('tell-me-more expanded layout CSS contract', () => {
   it('uses a simple 4-step tell transition contract', () => {
     expect(transitionCss).toContain('@keyframes tell-loader-scan');
     expect(transitionCss).toContain('[data-tell-step="loading"]');
-    expect(transitionCss).toContain('[data-tell-step="expanding"]');
+    expect(transitionCss).toContain('--dash-tell-track: 6.5fr');
     expect(transitionCss).toContain('.tell-analysis-loader');
     expect(inferenceCss).toContain("@import './tellTransition.css'");
   });
