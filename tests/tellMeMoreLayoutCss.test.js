@@ -38,7 +38,8 @@ describe('tell-me-more expanded layout CSS contract', () => {
     expect(transitionCss).toContain('@keyframes tell-loader-scan');
     expect(transitionCss).toContain('[data-tell-step="loading"]');
     expect(transitionCss).toContain('--dash-timer-track: 0fr');
-    expect(transitionCss).toContain('min-height: 0 !important');
+    expect(transitionCss).toContain('grid-row: 2');
+    expect(transitionCss).not.toContain('grid-row: 1 / -1');
     expect(transitionCss).toContain('.tell-analysis-loader');
     expect(inferenceCss).toContain("@import './tellTransition.css'");
   });

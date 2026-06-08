@@ -15,7 +15,9 @@
 .dashboard-capsule--figma[data-tell-step="loading"] .dashboard-actions-row,
 .dashboard-capsule--figma[data-tell-step="content"] .dashboard-actions-row,
 .dashboard-capsule--figma[data-tell-step="closing"] .dashboard-actions-row {
+  grid-row: 1;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   overflow: hidden;
   /* Release fixed timer height so 0fr track can actually collapse */
@@ -24,23 +26,24 @@
   min-height: 0 !important;
   max-height: none !important;
   margin-bottom: 0 !important;
-  transition:
-    opacity var(--tell-layout-dur) var(--tell-layout-ease),
-    margin-bottom var(--tell-layout-dur) var(--tell-layout-ease);
 }
 
+/* Tell row stays in row 2 and grows as timer track animates to 0fr — no grid overlay */
 .dashboard-capsule--figma[data-tell-step="expanding"] .dashboard-tell-row,
 .dashboard-capsule--figma[data-tell-step="loading"] .dashboard-tell-row,
 .dashboard-capsule--figma[data-tell-step="content"] .dashboard-tell-row,
 .dashboard-capsule--figma[data-tell-step="closing"] .dashboard-tell-row {
-  grid-row: 1 / -1;
-  z-index: 2;
+  grid-row: 2;
+  grid-column: 1;
   display: flex;
   flex-direction: column;
   flex: unset;
+  align-items: stretch;
   align-self: stretch;
+  justify-self: stretch;
   min-height: 0;
   width: 100%;
+  max-width: 100%;
   overflow: hidden;
 }
 
@@ -60,7 +63,7 @@
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
-  height: 100%;
+  max-width: 100%;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -76,8 +79,7 @@
   transition:
     border-radius 420ms cubic-bezier(0.22, 1, 0.36, 1),
     border-color 240ms ease,
-    background 240ms ease,
-    min-height var(--tell-layout-dur, 1500ms) cubic-bezier(0.32, 0.72, 0, 1);
+    background 240ms ease;
 }
 
 .dashboard-capsule--figma[data-tell-step="expanding"] .tell-morph,
@@ -87,7 +89,9 @@
   flex: 1 1 auto;
   align-self: stretch;
   width: 100%;
+  max-width: 100%;
   min-height: 0;
+  height: auto;
 }
 
 .dashboard-capsule--figma[data-tell-step="loading"] .tell-morph,
@@ -103,11 +107,12 @@
   min-height: 0;
   height: 100%;
   width: 100%;
+  max-width: 100%;
   border: none;
   border-radius: 0;
   background: transparent;
-  align-items: stretch;
-  justify-content: stretch;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
   overflow: hidden;
 }
 
