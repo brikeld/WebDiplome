@@ -51,12 +51,7 @@
 /* ── tell-morph shell (both-states prototype) ── */
 .dashboard-capsule--figma.is-tell-expanding .tell-morph {
   border-radius: 0;
-  border-color: transparent;
-  background: transparent;
-  transition:
-    border-radius var(--tell-morph-dur) var(--tell-morph-ease),
-    border-color var(--tell-morph-fade) ease,
-    background var(--tell-morph-fade) ease;
+  transition: border-radius var(--tell-morph-dur) var(--tell-morph-ease);
 }
 
 .dashboard-capsule--figma.is-tell-expanding .tell-idle-a__bars span {
@@ -128,7 +123,7 @@
 }
 
 .dashboard-capsule--figma.is-tell-revealing .tell-morph__idle {
-  opacity: 1;
+  opacity: 0;
   pointer-events: none;
 }
 
@@ -738,6 +733,143 @@
   /* Dashboard capsule supplies outer pad — no double gutter here */
   padding: 0;
   gap: clamp(6px, 0.65vh, 9px);
+}
+
+.tell-more-pill--expanded .inference-panel:not(.inference-panel--leaderboard) {
+  padding: 0;
+  gap: clamp(6px, 0.65vh, 9px);
+}
+
+/* Dashboard expanded: compact single-screen panel (both-states layout) */
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 {
+  --dash-panel-gap: clamp(6px, 0.75vh, 9px);
+  --dash-section-pad: clamp(9px, 1vh, 12px);
+  --dash-quote-section-pad: clamp(5px, 0.65vh, 8px);
+  --dash-head-mb: 8px;
+  --dash-head-pad: 6px 10px;
+  --dash-head-fs: clamp(10px, 0.74vw, 11px);
+  --dash-label-fs: clamp(12px, 0.92vw, 14px);
+  --dash-chip-fs: clamp(11px, 0.86vw, 13px);
+  --dash-bar-fs: clamp(12px, 0.9vw, 14px);
+  --dash-detail-fs: clamp(11px, 0.84vw, 13px);
+  flex: 1 1 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  gap: var(--dash-panel-gap);
+  border-radius: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tell-panel-a__stack {
+  gap: var(--dash-panel-gap);
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .post-quote-a {
+  padding: var(--dash-quote-section-pad) var(--dash-section-pad);
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape-section,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-section,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-section {
+  padding: var(--dash-section-pad);
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .panel-a__head {
+  margin-bottom: var(--dash-head-mb);
+  padding: var(--dash-head-pad);
+  font-size: var(--dash-head-fs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__post-text {
+  margin: 0;
+  font-size: var(--dash-label-fs);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bars {
+  gap: 6px;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__row {
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__step {
+  width: 24px;
+  flex: 0 0 24px;
+  height: auto;
+  padding-top: 2px;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__badge {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__line {
+  flex: 0 0 auto;
+  width: 2px;
+  height: 10px;
+  margin: 4px 0;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__content,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__row {
+  min-height: 34px;
+  padding: 8px 10px;
+  border-radius: 12px;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__label,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__label,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__pct {
+  font-size: var(--dash-bar-fs);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__value,
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape__detail {
+  font-size: var(--dash-detail-fs);
+  font-weight: 800;
+  line-height: 1.22;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chips {
+  gap: 6px;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip {
+  font-size: var(--dash-chip-fs);
+  font-weight: 800;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chips:has(.reason-chip:nth-child(4)) .reason-chip {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__track {
+  height: 7px;
 }
 
 .tell-more-pill--expanded.tell-more-pill--closing {

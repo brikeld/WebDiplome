@@ -668,13 +668,14 @@ function AppInner({
 
   const scheduleTellPhaseTimers = useCallback(() => {
     tellPhaseTimersRef.current = [
-      setTimeout(() => setTellPhase('loading'), TELL_LAYOUT_MS),
       setTimeout(() => {
         setTellExpanded(true);
+        setTellPhase('loading');
+      }, TELL_LAYOUT_MS),
+      setTimeout(() => {
         setTellPhase('revealing');
       }, TELL_LAYOUT_MS + TELL_LOADING_EXTRA_MS),
       setTimeout(() => {
-        setTellExpanded(true);
         setTellPhase('expanded');
       }, TELL_LAYOUT_MS + TELL_LOADING_EXTRA_MS + TELL_REVEAL_MS),
     ];

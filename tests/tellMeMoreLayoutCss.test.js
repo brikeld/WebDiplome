@@ -43,6 +43,7 @@ describe('tell-me-more expanded layout CSS contract', () => {
     const morph = blockFor('.tell-morph');
     const loader = blockFor('.tell-analysis-loader');
     const loaderVisible = blockFor('.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader');
+    const dashCompact = blockFor('.tell-more-pill--expanded .tell-panel-a--alt-palette-2');
 
     expect(focusPanel).toContain('--panel-a-gap');
     expect(focusDetail).toContain('width: 100%');
@@ -50,5 +51,7 @@ describe('tell-me-more expanded layout CSS contract', () => {
     expect(morph).toContain('position: relative');
     expect(loader).toContain('place-items: center');
     expect(loaderVisible).toContain('visibility: visible');
+    expect(dashCompact).toContain('--dash-panel-gap');
+    expect(dashCompact).toContain('padding: 0');
   });
 });
