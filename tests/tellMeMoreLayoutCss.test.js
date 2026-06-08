@@ -2,20 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 const inferenceCss = readFileSync('src/features/inferenceChain/inferenceChain.css', 'utf8');
-const transitionCss = readFileSync('src/features/inferenceChain/tellTransition.css', 'utf8');
 
-function blockFor(css, selector) {
+function blockFor(selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = new RegExp(`(?:^|})\\s*${escaped}\\s*{`, 'm').exec(css);
+  const match = new RegExp(`(?:^|})\\s*${escaped}\\s*{`, 'm').exec(inferenceCss);
   const start = match?.index ?? -1;
   expect(start, `Missing CSS selector ${selector}`).toBeGreaterThanOrEqual(0);
-  const open = css.indexOf('{', start);
+  const open = inferenceCss.indexOf('{', start);
   let depth = 0;
-  for (let i = open; i < css.length; i += 1) {
-    if (css[i] === '{') depth += 1;
-    if (css[i] === '}') {
+  for (let i = open; i < inferenceCss.length; i += 1) {
+    if (inferenceCss[i] === '{') depth += 1;
+    if (inferenceCss[i] === '}') {
       depth -= 1;
-      if (depth === 0) return css.slice(open + 1, i);
+      if (depth === 0) return inferenceCss.slice(open + 1, i);
     }
   }
   throw new Error(`Unclosed CSS block for ${selector}`);
@@ -23,21 +22,54 @@ function blockFor(css, selector) {
 
 describe('tell-me-more expanded layout CSS contract', () => {
   it('stacks normal-post sections vertically and keeps ingredient labels readable', () => {
-    const stack = blockFor(inferenceCss, '.tell-panel-a__stack');
-    const ingredientRow = blockFor(inferenceCss, '.ing-bar__row');
-    const ingredientLabel = blockFor(inferenceCss, '.ing-bar__label');
+    const stack = blockFor('.tell-panel-a__stack');
+    const ingredientRow = blockFor('.ing-bar__row');
+    const ingredientLabel = blockFor('.ing-bar__label');
 
     expect(stack).toContain('flex-direction: column');
     expect(stack).toContain('overflow: hidden');
     expect(stack).not.toContain('grid-template-areas');
+    expect(stack).not.toContain('overflow-y: auto');
     expect(ingredientRow).toContain('grid-template-areas');
+    expect(ingredientRow).toContain('"label pct"');
+    expect(ingredientRow).toContain('"track track"');
     expect(ingredientLabel).toContain('grid-area: label');
+    expect(ingredientLabel).not.toContain('overflow: hidden');
   });
 
-  it('uses a simple phase + is-active layer contract', () => {
-    expect(transitionCss).toContain('@keyframes tell-loader-scan');
-    expect(transitionCss).toContain('.tell-morph__layer.is-active');
-    expect(transitionCss).toContain('[data-tell-phase="loading"]');
-    expect(inferenceCss).toContain("@import './tellTransition.css'");
+  it('uses the prototype focus-detail capsule, morph shell, and loading scanner in production CSS', () => {
+    const focusDetail = blockFor('.focus-detail');
+    const focusPanel = blockFor('.tell-panel-a--has-focus');
+    const morph = blockFor('.tell-morph');
+    const loader = blockFor('.tell-analysis-loader');
+    const loaderVisible = blockFor('.dashboard-capsule--figma.is-tell-loading:not(.is-tell-revealing):not(.is-tell-closing) .tell-analysis-loader');
+    const dashCompact = blockFor('.tell-more-pill--expanded .tell-panel-a--alt-palette-2');
+
+    expect(focusPanel).toContain('--panel-a-gap');
+    expect(focusDetail).toContain('width: 100%');
+    expect(focusDetail).toContain('animation: focus-detail-in');
+    expect(morph).toContain('position: relative');
+    expect(loader).toContain('place-items: center');
+    expect(loaderVisible).toContain('visibility: visible');
+    expect(dashCompact).toContain('--dash-panel-gap');
+    expect(dashCompact).toContain('padding: 0');
+  });
+
+  it('keeps the white morph face visible during expand (not overridden by is-tell-expanded)', () => {
+    const expandingMorph = blockFor('.dashboard-capsule--figma.is-tell-expanding .tell-morph');
+    const expandedMorph = inferenceCss.match(
+      /\.dashboard-capsule--figma\.is-tell-expanded \.tell-morph\s*{[^}]+}/,
+    )?.[0] ?? '';
+
+    expect(expandingMorph).toContain('rgba(255, 255, 255, 0.98)');
+    expect(expandedMorph).toContain('background: transparent');
+  });
+
+  it('uses a faster border-radius track than the layout expand duration', () => {
+    const morph = blockFor('.tell-morph');
+
+    expect(morph).toContain('--tell-morph-radius-dur:');
+    expect(morph).toContain('border-radius var(--tell-morph-radius-dur)');
+    expect(morph).not.toContain('border-radius var(--tell-morph-dur)');
   });
 });

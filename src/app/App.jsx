@@ -115,6 +115,7 @@ const PUBLIC_FEED_POLL_MS = 30_000;
 const PUBLIC_FEED_LIMIT = 20;
 const TELL_LAYOUT_MS = 1500;
 const TELL_LOADING_EXTRA_MS = 2000;
+const TELL_REVEAL_MS = 640;
 const TELL_CLOSE_FADE_MS = 280;
 const TELL_CLOSE_MS = TELL_CLOSE_FADE_MS + TELL_LAYOUT_MS;
 
@@ -349,7 +350,10 @@ function AppInner({
   const [confirmingHide, setConfirmingHide] = useState(false);
   const [confirmingUnhide, setConfirmingUnhide] = useState(false);
   const [highlightedPost, setHighlightedPost] = useState(null);
+  const [tellExpanded, setTellExpanded] = useState(false);
+  const [tellClosing, setTellClosing] = useState(false);
   const [tellPhase, setTellPhase] = useState('idle');
+  const [tellLayoutCollapsed, setTellLayoutCollapsed] = useState(false);
   const tellCloseTimerRef = useRef(null);
   const tellPhaseTimersRef = useRef([]);
   const tellRunIdRef = useRef(0);
@@ -674,8 +678,13 @@ function AppInner({
       }, TELL_LAYOUT_MS),
       setTimeout(() => {
         if (tellRunIdRef.current !== runId) return;
-        setTellPhase('content');
+        setTellExpanded(true);
+        setTellPhase('revealing');
       }, TELL_LAYOUT_MS + TELL_LOADING_EXTRA_MS),
+      setTimeout(() => {
+        if (tellRunIdRef.current !== runId) return;
+        setTellPhase('expanded');
+      }, TELL_LAYOUT_MS + TELL_LOADING_EXTRA_MS + TELL_REVEAL_MS),
     ];
   }, []);
 
@@ -687,13 +696,19 @@ function AppInner({
     if (post.leaderboard) {
       flushSync(() => {
         setHighlightedPost(post);
-        setTellPhase('content');
+        setTellClosing(false);
+        setTellLayoutCollapsed(false);
+        setTellPhase('expanded');
+        setTellExpanded(true);
       });
       return;
     }
 
     flushSync(() => {
       setHighlightedPost(post);
+      setTellClosing(false);
+      setTellLayoutCollapsed(false);
+      setTellExpanded(false);
       setTellPhase('expanding');
     });
     scheduleTellPhaseTimers();
@@ -703,18 +718,27 @@ function AppInner({
     clearTellTimers();
     tellRunIdRef.current += 1;
 
-    if (tellPhase === 'idle') return;
+    if (!tellExpanded && tellPhase === 'idle') {
+      setTellClosing(false);
+      setTellLayoutCollapsed(false);
+      return;
+    }
 
+    setTellLayoutCollapsed(false);
+    setTellClosing(true);
     setTellPhase('closing');
 
     tellCloseTimerRef.current = setTimeout(() => {
-      setTellPhase('collapsing');
+      setTellExpanded(false);
+      setTellLayoutCollapsed(true);
       tellCloseTimerRef.current = setTimeout(() => {
+        setTellClosing(false);
         setTellPhase('idle');
+        setTellLayoutCollapsed(false);
         tellCloseTimerRef.current = null;
       }, TELL_LAYOUT_MS);
     }, TELL_CLOSE_FADE_MS);
-  }, [clearTellTimers, tellPhase]);
+  }, [clearTellTimers, tellExpanded, tellPhase]);
 
   useEffect(() => () => {
     clearTellTimers();
@@ -726,25 +750,28 @@ function AppInner({
 
   // Safety net: any code path that sets highlightedPost without calling beginTellForPost.
   useEffect(() => {
-    if (!highlightedPost) return;
+    if (!highlightedPost || tellClosing) return;
     if (tellPhase !== 'idle') return;
     beginTellForPost(highlightedPost);
-  }, [highlightedPost?.id, tellPhase, beginTellForPost, highlightedPost]);
+  }, [highlightedPost?.id, tellClosing, tellPhase, beginTellForPost, highlightedPost]);
 
   const tellDisplayPost =
-    highlightedPost ??
-    (['closing', 'collapsing'].includes(tellPhase) ? tellThemePostRef.current : null);
+    highlightedPost ?? (tellClosing ? tellThemePostRef.current : null);
 
   const dashboardCapsuleStyle = useMemo(() => {
     const base = { '--persona-accent': personaColor };
     const applyPostTheme =
-      ['loading', 'content', 'closing'].includes(tellPhase) && tellDisplayPost;
-    if (!applyPostTheme) return base;
-    const pk = String(tellDisplayPost.persona ?? personaKey).toLowerCase();
+      tellPhase === 'loading' ||
+      tellPhase === 'revealing' ||
+      tellPhase === 'expanded' ||
+      (tellPhase === 'closing' && tellDisplayPost);
+    const themePost = applyPostTheme ? tellDisplayPost : null;
+    if (!themePost) return base;
+    const pk = String(themePost.persona ?? personaKey).toLowerCase();
     const uiKey = PERSONA_ALIASES[pk] ?? pk;
     return {
       ...base,
-      '--tell-pill-accent': tellDisplayPost.noteColor ?? PERSONA_COLORS[uiKey] ?? personaColor,
+      '--tell-pill-accent': themePost.noteColor ?? PERSONA_COLORS[uiKey] ?? personaColor,
       '--tell-pill-pastel':
         PERSONA_PASTEL_COLORS[pk] ?? PERSONA_PASTEL_COLORS[uiKey] ?? PERSONA_PASTEL_COLORS.security,
     };
@@ -1016,7 +1043,28 @@ function AppInner({
     harvestPhase,
     postPhase: postGen.phase,
   });
+  const tellLayoutExpanded =
+    ['expanding', 'loading', 'revealing', 'expanded'].includes(tellPhase) ||
+    (tellPhase === 'closing' && !tellLayoutCollapsed);
+  const tellLoadingVisible = tellPhase === 'loading';
+  const tellContentReady =
+    ['revealing', 'expanded'].includes(tellPhase) ||
+    (tellPhase === 'closing' && tellExpanded);
+  const tellAltPalette =
+    tellPhase === 'loading' ||
+    tellPhase === 'revealing' ||
+    tellPhase === 'expanded' ||
+    (tellPhase === 'closing' && !tellLayoutCollapsed);
   const dashboardBusy = dashboardLayout.actionSlot !== 'timer';
+  const tellCapsuleClass = [
+    tellLayoutExpanded && 'is-tell-expanded',
+    tellPhase === 'expanding' && 'is-tell-expanding',
+    tellLoadingVisible && 'is-tell-loading',
+    tellPhase === 'revealing' && 'is-tell-revealing',
+    tellContentReady && 'is-tell-content-ready',
+    tellPhase === 'closing' && 'is-tell-closing',
+    tellAltPalette && 'is-tell-alt-palette-2',
+  ].filter(Boolean).join(' ');
 
   return (
     <PersonaBlurbsProvider profile={displayProfile}>
@@ -1100,9 +1148,9 @@ function AppInner({
           <aside className="persona-side-panel" aria-label="Persona dashboard">
             <p className="dashboard-top-label">dashboard</p>
             <div
-              className="dashboard-capsule dashboard-capsule--figma"
+              className={`dashboard-capsule dashboard-capsule--figma${tellCapsuleClass ? ` ${tellCapsuleClass}` : ''}`}
               style={dashboardCapsuleStyle}
-              data-tell-phase={tellPhase}
+              data-tell-mode={tellPhase}
             >
               <DashboardTimerRow
                 highlightedPost={highlightedPost}
@@ -1136,6 +1184,8 @@ function AppInner({
                 <TellMeMorePill
                   tellPhase={tellPhase}
                   highlightedPost={tellDisplayPost}
+                  expanded={tellExpanded}
+                  closing={tellClosing}
                   fallbackPersona={personaKey}
                   personaAccent={personaColor}
                   personaPastel={PERSONA_PASTEL_COLORS[personaKey] ?? PERSONA_PASTEL_COLORS.security}
