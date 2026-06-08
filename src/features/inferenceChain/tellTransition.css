@@ -11,20 +11,9 @@
   --dashboard-tell-pad: clamp(12px, 1.15vw, 16px);
   padding: var(--dashboard-tell-pad);
   gap: 0;
-}
-
-.dashboard-capsule--figma[data-tell-step="expanding"] {
-  --dashboard-tell-pad: 0;
-  padding: 0;
-  background: #fff;
-  border-color: transparent;
-}
-
-.dashboard-capsule--figma[data-tell-step="loading"],
-.dashboard-capsule--figma[data-tell-step="content"],
-.dashboard-capsule--figma[data-tell-step="closing"] {
-  background: #fff;
-  border-color: transparent;
+  /* Keep the persona frame visible — never bleed white over the outer stroke */
+  background: var(--persona-accent, #759aef);
+  border-color: var(--persona-accent, #759aef);
 }
 
 .dashboard-capsule--figma[data-tell-step="expanding"] .dashboard-tell-row,
@@ -34,6 +23,8 @@
   grid-row: 1 / -1;
   z-index: 2;
   align-self: stretch;
+  display: flex;
+  flex-direction: column;
   min-height: 100%;
   height: 100%;
 }
@@ -56,6 +47,8 @@
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma[data-tell-step="closing"] {
   padding: var(--dashboard-tell-pad, clamp(12px, 1.25vw, 16px));
   gap: 0;
+  background: var(--persona-accent, #759aef);
+  border-color: var(--persona-accent, #759aef);
 }
 
 /* ── Morph shell ── */
@@ -86,21 +79,19 @@
 .dashboard-capsule--figma[data-tell-step="loading"] .tell-morph,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph {
-  border-radius: 0;
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
   height: 100%;
   min-height: 100%;
+  border-radius: calc(var(--capsule-radius, 22px) - var(--dashboard-tell-pad, 12px));
 }
 
 .dashboard-capsule--figma[data-tell-step="loading"] .tell-morph,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph {
   border-color: transparent;
-  background: transparent;
-}
-
-.tell-morph--closing {
-  opacity: 0;
-  transition: opacity 280ms ease;
+  background: #fff;
 }
 
 .tell-morph .tell-more-pill--idle,
@@ -112,6 +103,8 @@
   border: none;
   border-radius: 0;
   background: transparent;
+  align-items: stretch;
+  justify-content: stretch;
 }
 
 /* ── 1) Idle face ── */
@@ -125,6 +118,16 @@
   padding: clamp(20px, 2.55vw, 32px);
   border-radius: inherit;
   overflow: hidden;
+}
+
+.tell-morph--closing {
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+
+.dashboard-capsule--figma[data-tell-step="expanding"] .tell-idle-a {
+  padding: clamp(20px, 2.55vw, 32px);
+  gap: clamp(13px, 1.75vh, 20px);
 }
 
 .dashboard-capsule--figma:not([data-tell-step="expanding"]) .tell-idle-a {
