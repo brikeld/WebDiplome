@@ -64,4 +64,12 @@ describe('tell-me-more expanded layout CSS contract', () => {
     expect(expandingMorph).toContain('rgba(255, 255, 255, 0.98)');
     expect(expandedMorph).toContain('background: transparent');
   });
+
+  it('uses a faster border-radius track than the layout expand duration', () => {
+    const morph = blockFor('.tell-morph');
+
+    expect(morph).toContain('--tell-morph-radius-dur:');
+    expect(morph).toContain('border-radius var(--tell-morph-radius-dur)');
+    expect(morph).not.toContain('border-radius var(--tell-morph-dur)');
+  });
 });

@@ -49,17 +49,19 @@
 }
 
 /* ── tell-morph shell (both-states prototype) ── */
-/* Expanding: high-contrast white card grows inside the persona-colored dashboard frame */
+/* Expanding: white card grows to fill the whole dashboard capsule */
 .dashboard-capsule--figma.is-tell-expanding {
-  background: var(--persona-accent, #759aef);
+  --dashboard-tell-pad: 0px;
+  padding: 0;
+  gap: 0;
+  background: #fff;
   border-color: transparent;
-  padding: clamp(16px, 1.85vh, 22px);
-  gap: clamp(8px, 1vh, 12px);
 }
 
 .dashboard-capsule--figma.is-tell-expanding .tell-morph {
   border-radius: 0;
   height: 100%;
+  min-height: 100%;
   /* Same white face as idle — only size/layout changes during expand */
   border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
   background:
@@ -69,10 +71,18 @@
       color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
     );
   box-shadow: none;
+  transform-origin: center center;
+  animation: tell-morph-breathe-open var(--tell-layout-dur, 1500ms) var(--tell-morph-ease) both;
   transition:
-    border-radius var(--tell-morph-dur) var(--tell-morph-ease),
     border-color var(--tell-morph-fade) ease,
     background var(--tell-morph-fade) ease;
+}
+
+.dashboard-capsule--figma.is-tell-expanding .tell-idle-a {
+  height: 100%;
+  transition:
+    padding var(--tell-layout-dur, 1500ms) var(--tell-morph-ease),
+    gap var(--tell-layout-dur, 1500ms) var(--tell-morph-ease);
 }
 
 .dashboard-capsule--figma.is-tell-expanding .tell-idle-a__bars span {
@@ -91,13 +101,14 @@
   border-color: transparent;
   background: transparent;
   transition:
-    border-radius var(--tell-morph-dur) var(--tell-morph-ease),
     border-color var(--tell-morph-fade) ease,
     background var(--tell-morph-fade) ease;
 }
 
 .tell-morph {
   --tell-morph-dur: var(--tell-layout-dur, 1500ms);
+  --tell-morph-radius-dur: 480ms;
+  --tell-morph-radius-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --tell-morph-fade: 240ms;
   --tell-morph-reveal: 640ms;
   --tell-morph-ease: cubic-bezier(0.32, 0.72, 0, 1);
@@ -118,7 +129,7 @@
   isolation: isolate;
   contain: paint;
   transition:
-    border-radius var(--tell-morph-dur) var(--tell-morph-ease),
+    border-radius var(--tell-morph-radius-dur) var(--tell-morph-radius-ease),
     border-color var(--tell-morph-fade) ease,
     background var(--tell-morph-fade) ease;
 }
@@ -133,6 +144,40 @@
       color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
     );
   box-shadow: none;
+  transform-origin: center center;
+  animation: tell-morph-breathe-close var(--tell-layout-dur, 1500ms) var(--tell-morph-ease) both;
+  transition:
+    border-radius var(--tell-morph-radius-dur) var(--tell-morph-radius-ease),
+    border-color var(--tell-morph-fade) ease,
+    background var(--tell-morph-fade) ease;
+}
+
+@keyframes tell-morph-breathe-open {
+  0% {
+    transform: scale(0.978);
+  }
+
+  42% {
+    transform: scale(1.012);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tell-morph-breathe-close {
+  0% {
+    transform: scale(1);
+  }
+
+  38% {
+    transform: scale(0.982);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .tell-morph__idle {

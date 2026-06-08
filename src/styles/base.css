@@ -2627,6 +2627,7 @@ button.profile-name-link.leaderboard-row__name {
   --dash-tell-track: 3fr;
   flex: 1 1 0;
   min-height: 0;
+  position: relative;
   border-radius: var(--dashboard-shell-radius);
   background: var(--persona-accent, #759aef);
   border: var(--capsule-shell-border-width, 3px) solid transparent;
@@ -2677,12 +2678,34 @@ button.profile-name-link.leaderboard-row__name {
 .dashboard-capsule--figma.is-tell-expanding,
 .dashboard-capsule--figma.is-tell-loading,
 .dashboard-capsule--figma.is-tell-revealing,
-.dashboard-capsule--figma.is-tell-closing {
+.dashboard-capsule--figma.is-tell-closing.is-tell-expanded {
   --dash-timer-track: 0fr;
   --dash-tell-track: 1fr;
   --dashboard-tell-pad: clamp(12px, 1.15vw, 16px);
   padding: var(--dashboard-tell-pad);
   gap: 0;
+}
+
+/* Tell row overlays the full capsule while timer track collapses (both-states grid trick) */
+.dashboard-capsule--figma.is-tell-expanding .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-loading .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-revealing .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-expanded .dashboard-tell-row,
+.dashboard-capsule--figma.is-tell-closing.is-tell-expanded .dashboard-tell-row {
+  grid-row: 1 / -1;
+  z-index: 2;
+  align-self: stretch;
+  min-height: 100%;
+  height: 100%;
+}
+
+.dashboard-capsule--figma.is-tell-expanding .dashboard-actions-row,
+.dashboard-capsule--figma.is-tell-loading .dashboard-actions-row,
+.dashboard-capsule--figma.is-tell-revealing .dashboard-actions-row,
+.dashboard-capsule--figma.is-tell-expanded .dashboard-actions-row,
+.dashboard-capsule--figma.is-tell-closing.is-tell-expanded .dashboard-actions-row {
+  z-index: 1;
+  position: relative;
 }
 
 /* Expanding: persona frame stays visible while inner tell card grows (details in inferenceChain.css) */
@@ -2696,7 +2719,7 @@ button.profile-name-link.leaderboard-row__name {
 .dashboard-capsule--figma.is-tell-loading,
 .dashboard-capsule--figma.is-tell-revealing,
 .dashboard-capsule--figma.is-tell-expanded,
-.dashboard-capsule--figma.is-tell-closing {
+.dashboard-capsule--figma.is-tell-closing.is-tell-expanded {
   background: var(--tell-pill-pastel, #bccdf5);
   border-color: var(--persona-accent, #759aef);
 }
@@ -2704,9 +2727,22 @@ button.profile-name-link.leaderboard-row__name {
 .dashboard-capsule--figma.is-tell-loading .dashboard-actions-row,
 .dashboard-capsule--figma.is-tell-revealing .dashboard-actions-row,
 .dashboard-capsule--figma.is-tell-expanded .dashboard-actions-row,
-.dashboard-capsule--figma.is-tell-closing .dashboard-actions-row {
+.dashboard-capsule--figma.is-tell-closing.is-tell-expanded .dashboard-actions-row {
   opacity: 0;
   pointer-events: none;
+}
+
+.dashboard-capsule--figma.is-tell-closing:not(.is-tell-expanded) {
+  padding: var(--dashboard-pad);
+  gap: var(--dashboard-btn-gap);
+  background: var(--persona-accent, #759aef);
+  border-color: transparent;
+}
+
+.dashboard-capsule--figma.is-tell-closing:not(.is-tell-expanded) .dashboard-actions-row {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: calc(var(--tell-layout-dur) * 0.18);
 }
 
 .dashboard-capsule--figma.is-tell-alt-palette-2 {
@@ -2714,22 +2750,17 @@ button.profile-name-link.leaderboard-row__name {
   box-shadow: none;
 }
 
-.dashboard-capsule--figma.is-tell-closing:not(.is-tell-expanded) {
-  background: var(--persona-accent, #759aef);
-  border-color: transparent;
-}
-
 /* Home/profile rail sets large capsule padding — swap to tell-pad when expanded */
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanded,
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanding,
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-loading,
 .view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-revealing,
-.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing,
+.view-home .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing.is-tell-expanded,
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanded,
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-expanding,
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-loading,
 .view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-revealing,
-.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing {
+.view-profile .persona-side-panel .dashboard-capsule.dashboard-capsule--figma.is-tell-closing.is-tell-expanded {
   padding: var(--dashboard-tell-pad, clamp(12px, 1.25vw, 16px));
   gap: 0;
 }
