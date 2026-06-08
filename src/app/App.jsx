@@ -356,6 +356,7 @@ function AppInner({
   const [tellLayoutCollapsed, setTellLayoutCollapsed] = useState(false);
   const tellCloseTimerRef = useRef(null);
   const tellPhaseTimersRef = useRef([]);
+  const tellRunIdRef = useRef(0);
   const tellThemePostRef = useRef(null);
   const [hideBlocked, setHideBlocked] = useState(false);
   const [personaRingWiggle, setPersonaRingWiggle] = useState({ key: null, nonce: 0 });
@@ -667,15 +668,21 @@ function AppInner({
   }, []);
 
   const scheduleTellPhaseTimers = useCallback(() => {
+    const runId = tellRunIdRef.current + 1;
+    tellRunIdRef.current = runId;
+    tellPhaseTimersRef.current.forEach((id) => clearTimeout(id));
     tellPhaseTimersRef.current = [
       setTimeout(() => {
+        if (tellRunIdRef.current !== runId) return;
         setTellPhase('loading');
       }, TELL_LAYOUT_MS),
       setTimeout(() => {
+        if (tellRunIdRef.current !== runId) return;
         setTellExpanded(true);
         setTellPhase('revealing');
       }, TELL_LAYOUT_MS + TELL_LOADING_EXTRA_MS),
       setTimeout(() => {
+        if (tellRunIdRef.current !== runId) return;
         setTellPhase('expanded');
       }, TELL_LAYOUT_MS + TELL_LOADING_EXTRA_MS + TELL_REVEAL_MS),
     ];
@@ -684,6 +691,7 @@ function AppInner({
   const beginTellForPost = useCallback((post) => {
     if (!post) return;
     clearTellTimers();
+    tellRunIdRef.current += 1;
 
     if (post.leaderboard) {
       flushSync(() => {
@@ -708,6 +716,7 @@ function AppInner({
 
   const closeTell = useCallback(() => {
     clearTellTimers();
+    tellRunIdRef.current += 1;
 
     if (!tellExpanded && tellPhase === 'idle') {
       setTellClosing(false);

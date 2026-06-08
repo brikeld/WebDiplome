@@ -71,6 +71,12 @@ export default function TellMeMorePill({
   const mainLabel = PERSONA_LABEL[mainPersonaKey] ?? 'Security';
   const displayLabel = lockIdleTheme ? mainLabel : label;
   const skipPanelLoader = Boolean(highlightedPost && !highlightedPost.leaderboard);
+  const mountPanel = Boolean(
+    highlightedPost &&
+      (expanded ||
+        ['loading', 'revealing', 'expanded'].includes(tellPhase) ||
+        (tellPhase === 'closing' && expanded)),
+  );
 
   const pillStyle = {
     '--tell-pill-accent': accent,
@@ -117,7 +123,7 @@ export default function TellMeMorePill({
         aria-label="Inference chain analysis"
         data-tell-phase={tellPhase}
       >
-        {expanded && highlightedPost ? (
+        {mountPanel ? (
           <InferenceChainPanel
             post={highlightedPost}
             personaLabel={label}
