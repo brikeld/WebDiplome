@@ -2681,6 +2681,9 @@ button.profile-name-link.leaderboard-row__name {
 
 .dashboard-capsule--figma.is-tell-alt-palette-2 {
   background: #fff;
+}
+
+.dashboard-capsule--figma.is-tell-alt-palette-2:not(.is-tell-content-ready) {
   box-shadow: 0 0 80px -30px color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, #000);
 }
 

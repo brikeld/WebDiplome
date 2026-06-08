@@ -4,17 +4,12 @@
  * Two distinct layouts share this component:
  *
  *   • Leaderboard posts → `LeaderboardRationaleView` (lb2 capsule layout).
- *   • Normal posts      → tell-panel-a layout: compact post quote + analysis
- *                         sections for reasoning, framing, and data inputs.
- *                         Small interactable chips reveal per-section details.
- *
- * Cross-linking from the post quote: clicking a highlighted phrase opens the
- * matching chip (ingredient or inference-chain step) and scrolls focus into
- * the right tile via `activeIngredient` / `activeChainStep`.
+ *   • Normal posts      → tell-panel-a layout: analysis sections for reasoning,
+ *                         framing, and data inputs. Small interactable chips
+ *                         reveal per-section details.
  */
 
 import { useEffect, useState } from 'react';
-import PostTextHighlights from './PostTextHighlights.jsx';
 import LeaderboardRationaleView from './LeaderboardRationaleView.jsx';
 import RedactedAnalysisOverlay from './RedactedAnalysisOverlay.jsx';
 import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
@@ -127,7 +122,7 @@ export default function InferenceChainPanel({
   redacted = false,
   onRedactedUnhideConfirm = null,
 }) {
-  const { chain, ingredients, highlights, rawThinking } = resolvePostAnalysis(post);
+  const { chain, ingredients, rawThinking } = resolvePostAnalysis(post);
   const validChain = isValidChain(chain);
   const hasIngredients = !!(ingredients && ingredients.length);
   const thinking = rawThinking && rawThinking.length
@@ -156,17 +151,6 @@ export default function InferenceChainPanel({
   useEffect(() => {
     setPanelUi(freshPanelUi());
   }, [post]);
-
-  // Click on a phrase in the post text → open the linked capsule.
-  const handleHighlightSelect = ({ stepIndex, ingredientIndex }) => {
-    const validStep = Number.isFinite(stepIndex) && stepIndex >= 0 && stepIndex < CHAIN_KEYS.length;
-    const validIng = Number.isFinite(ingredientIndex) && hasIngredients && ingredientIndex >= 0 && ingredientIndex < ingredients.length;
-    if (hasIngredients && validIng) {
-      setActiveDetail('ingredient', ingredientIndex);
-    } else if (validStep && validChain) {
-      setActiveDetail('chain', stepIndex);
-    }
-  };
 
   if (isLeaderboardPost) {
     return (
@@ -240,17 +224,6 @@ export default function InferenceChainPanel({
 
       <div className="inference-panel__redacted-content">
       <div className="tell-panel-a__stack">
-        {post?.content ? (
-          <div className="post-quote-a">
-            <PostTextHighlights
-              content={post.content}
-              highlights={highlights}
-              onSelect={handleHighlightSelect}
-              activeIngredientIndex={activeIngredient}
-            />
-          </div>
-        ) : null}
-
         {validChain ? (
           <section className={`tape-section${activeChainStep !== null ? ' tape-section--focus' : ''}`} aria-label="From data to post">
             <header className="panel-a__head">From data to post</header>

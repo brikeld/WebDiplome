@@ -80,6 +80,8 @@
       color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
     );
   overflow: hidden;
+  isolation: isolate;
+  contain: paint;
   transition:
     border-radius var(--tell-morph-dur) var(--tell-morph-ease),
     border-color var(--tell-morph-fade) ease,
@@ -120,15 +122,23 @@
 
 .dashboard-capsule--figma.is-tell-content-ready:not(.is-tell-revealing) .tell-morph__idle {
   opacity: 0;
+  visibility: hidden;
 }
 
 .dashboard-capsule--figma.is-tell-revealing .tell-morph__idle {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
+}
+
+.dashboard-capsule--figma.is-tell-content-ready .tell-morph__idle,
+.dashboard-capsule--figma.is-tell-expanded .tell-morph__idle {
+  filter: none;
 }
 
 .dashboard-capsule--figma.is-tell-closing:not(.is-tell-expanded) .tell-morph__idle {
   opacity: 1;
+  visibility: visible;
   pointer-events: none;
 }
 
@@ -453,6 +463,7 @@
 .dashboard-capsule--figma.is-tell-closing .tell-analysis-loader__card {
   opacity: 0;
   transform: translateY(-10px) scale(0.975);
+  box-shadow: none;
 }
 
 .tell-analysis-loader__top,
@@ -637,15 +648,32 @@
   box-sizing: border-box;
 }
 
+.dashboard-capsule--figma.is-tell-loading:not(.is-tell-closing) .tell-idle-a__top,
+.dashboard-capsule--figma.is-tell-loading:not(.is-tell-closing) .tell-idle-a__bars {
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity 340ms ease,
+    transform 520ms var(--tell-morph-ease);
+}
+
 .dashboard-capsule--figma.is-tell-loading:not(.is-tell-closing) .tell-idle-a {
-  opacity: 0.14;
-  filter: blur(1.4px);
+  opacity: 0;
+  filter: none;
 }
 
 .dashboard-capsule--figma.is-tell-revealing .tell-idle-a,
-.dashboard-capsule--figma.is-tell-expanded .tell-idle-a {
+.dashboard-capsule--figma.is-tell-expanded .tell-idle-a,
+.dashboard-capsule--figma.is-tell-content-ready .tell-idle-a {
   opacity: 0;
-  filter: blur(2px);
+  filter: none;
+  visibility: hidden;
+}
+
+.dashboard-capsule--figma.is-tell-content-ready .tell-idle-a__bars span,
+.dashboard-capsule--figma.is-tell-expanded .tell-idle-a__bars span,
+.dashboard-capsule--figma.is-tell-revealing .tell-idle-a__bars span {
+  animation: none;
 }
 
 @media (max-width: 520px) {
@@ -696,6 +724,7 @@
   min-height: 0;
   height: 0;
   opacity: 0;
+  visibility: hidden;
   overflow: hidden;
   pointer-events: none;
   margin-bottom: calc(-1 * var(--dashboard-btn-gap, 10px));
