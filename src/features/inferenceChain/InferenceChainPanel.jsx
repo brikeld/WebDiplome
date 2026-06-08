@@ -109,14 +109,7 @@ function resolvePostAnalysis(post) {
   return { chain, ingredients, highlights, rawThinking };
 }
 
-function FocusDetail({ eyebrow, children }) {
-  return (
-    <div className="focus-detail">
-      {eyebrow ? <span className="focus-detail__eyebrow">{eyebrow}</span> : null}
-      <div className="focus-detail__body">{children}</div>
-    </div>
-  );
-}
+import FocusDetail from './FocusDetail.jsx';
 
 export default function InferenceChainPanel({
   post,
@@ -270,7 +263,7 @@ export default function InferenceChainPanel({
                     </button>
                   </div>
                   {activeChainStep === i ? (
-                    <FocusDetail eyebrow={item.tag}>
+                    <FocusDetail detailKey={`chain-${i}`} eyebrow={item.tag}>
                       <p>
                         <span className="tape__value">{item.value}</span>
                         <span className="tape__detail">{item.detail}</span>
@@ -299,7 +292,7 @@ export default function InferenceChainPanel({
               ))}
             </div>
             {activeThinking !== null && thinking[activeThinking] ? (
-              <FocusDetail eyebrow="framing">
+              <FocusDetail detailKey={`thinking-${activeThinking}`} eyebrow="framing">
                 <b>{thinking[activeThinking].label}</b>
                 <p>{thinking[activeThinking].detail}</p>
               </FocusDetail>
@@ -327,7 +320,7 @@ export default function InferenceChainPanel({
               })}
             </div>
             {activeIngredient !== null && ingredients[activeIngredient] ? (
-              <FocusDetail eyebrow="evidence">
+              <FocusDetail detailKey={`ingredient-${activeIngredient}`} eyebrow="evidence">
                 <b>{ingredients[activeIngredient].label}</b>
                 {(ingredients[activeIngredient].dataPoints || ingredients[activeIngredient].points || []).length ? (
                   <ul>
