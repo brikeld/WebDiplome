@@ -29,7 +29,6 @@ import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.j
 import { PersonaBlurbsProvider } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
-import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import {
   canHideContentForScores,
   PERSONA_SCORE_RESTRICT_THRESHOLD,
@@ -334,7 +333,7 @@ function AppInner({
     hideLeaderboardSelf,
     revealLeaderboardSelf,
     isLeaderboardSelfHidden,
-    isHidden,
+    isPostHiddenFor,
   } = useLiveScoring();
   const [confirmingHide, setConfirmingHide] = useState(false);
   const [confirmingUnhide, setConfirmingUnhide] = useState(false);
@@ -758,7 +757,7 @@ function AppInner({
   const hideTargetPostIsHidden = hideTargetPost
     ? (hideTargetPost.leaderboard
         ? isLeaderboardSelfHidden(hideTargetPost.leaderboard.boardId)
-        : isHidden(normalizePostHideKey(hideTargetPost.createdAt)))
+        : isPostHiddenFor(hideTargetPost))
     : false;
 
   const hideTargetPostPersonaLabel = hideTargetPost
@@ -768,7 +767,7 @@ function AppInner({
   const tellPostIsHidden = tellDisplayPost
     ? (tellDisplayPost.leaderboard
         ? isLeaderboardSelfHidden(tellDisplayPost.leaderboard.boardId)
-        : isHidden(normalizePostHideKey(tellDisplayPost.createdAt)))
+        : isPostHiddenFor(tellDisplayPost))
     : false;
 
   // Returns the bounding rect of the currently highlighted post card in the feed.
@@ -866,7 +865,7 @@ function AppInner({
 
       const postIsHidden = post.leaderboard
         ? isLeaderboardSelfHidden(post.leaderboard.boardId)
-        : isHidden(normalizePostHideKey(post.createdAt));
+        : isPostHiddenFor(post);
 
       closeTell();
       setHideTargetPost(post);
@@ -900,7 +899,7 @@ function AppInner({
       profile,
       adjustedScores,
       closeTell,
-      isHidden,
+      isPostHiddenFor,
       isLeaderboardSelfHidden,
     ],
   );

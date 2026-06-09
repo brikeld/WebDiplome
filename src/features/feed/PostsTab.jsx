@@ -228,7 +228,13 @@ export default function PostsTab({
 }) {
   const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
   const [homeVisibleCount, setHomeVisibleCount] = useState(HOME_FEED_PAGE_SIZE);
-  const { isHidden, isRevealing, isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
+  const {
+    viewerSlug,
+    isHidden,
+    isRevealing,
+    isLeaderboardSelfHidden,
+    isLeaderboardSelfRevealing,
+  } = useLiveScoring();
   const [commentsByPostId, setCommentsByPostId] = useState({});
   const [placeholderMounted, setPlaceholderMounted] = useState(isGeneratingPosts);
   const [placeholderLeaving, setPlaceholderLeaving] = useState(false);
@@ -426,11 +432,13 @@ export default function PostsTab({
             onCommentPosted={handleCommentPosted}
             isHidden={resolvePostHiddenState(p, {
               authorRecords: p._authorLiveScoringRecords,
+              viewerSlug,
               viewerIsHidden: isHidden,
               viewerIsLeaderboardSelfHidden: isLeaderboardSelfHidden,
             })}
             isRevealing={resolvePostRevealingState(p, {
               authorRecords: p._authorLiveScoringRecords,
+              viewerSlug,
               viewerIsRevealing: isRevealing,
               viewerIsLeaderboardSelfRevealing: isLeaderboardSelfRevealing,
               viewerIsLeaderboardSelfHidden: isLeaderboardSelfHidden,

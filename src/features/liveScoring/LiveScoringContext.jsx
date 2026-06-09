@@ -1,7 +1,7 @@
 // src/features/liveScoring/LiveScoringContext.jsx
 import { createContext, useReducer, useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { getPersonaScoresNormalized } from '@/lib/profileUtils.js';
-import { normalizePostHideKey } from '@/lib/postHideKey.js';
+import { normalizePostHideKey, isOwnAuthorPost, resolveViewerHideStorageKey } from '@/lib/postHideKey.js';
 import {
   computeLiveAdjustments,
   computeAdjustedScores,
@@ -222,7 +222,7 @@ export function LiveScoringProvider({ profile, children }) {
 
   const hidePost = useCallback(
     (post, sourcePillRect, options = {}) => {
-      const postKey = normalizePostHideKey(post.createdAt);
+      const postKey = resolveViewerHideStorageKey(post, viewerSlug);
       if (!postKey || isPostHidden(state.records, postKey)) return;
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
@@ -249,7 +249,7 @@ export function LiveScoringProvider({ profile, children }) {
         },
       });
     },
-    [state.records, pushAnimationEvent],
+    [state.records, pushAnimationEvent, viewerSlug],
   );
 
   const boostFromComment = useCallback(
@@ -285,7 +285,7 @@ export function LiveScoringProvider({ profile, children }) {
 
   const revealPost = useCallback(
     (post, sourcePillRect) => {
-      const postKey = normalizePostHideKey(post.createdAt);
+      const postKey = resolveViewerHideStorageKey(post, viewerSlug);
       if (!postKey || !isPostHidden(state.records, postKey)) return;
       const restored = state.records[postKey]?.restorable ?? 0;
       setRevealPendingHidden((prev) => new Set(prev).add(postKey));
@@ -313,7 +313,28 @@ export function LiveScoringProvider({ profile, children }) {
         },
       });
     },
-    [state.records, pushAnimationEvent],
+    [state.records, pushAnimationEvent, viewerSlug],
+  );
+
+  const isPostHiddenFor = useCallback(
+    (post) => {
+      const authorKey = normalizePostHideKey(post?.createdAt);
+      const viewerKey = resolveViewerHideStorageKey(post, viewerSlug);
+
+      const checkKey = (key) => {
+        if (!key) return false;
+        if (revealPendingHidden.has(key)) return true;
+        if (revealingKeys.has(key)) return false;
+        return isPostHidden(state.records, key) || optimisticHidden.has(key);
+      };
+
+      if (checkKey(viewerKey)) return true;
+      if (!isOwnAuthorPost(post, viewerSlug) && authorKey !== viewerKey && checkKey(authorKey)) {
+        return true;
+      }
+      return false;
+    },
+    [state.records, optimisticHidden, revealingKeys, revealPendingHidden, viewerSlug],
   );
 
   const hideLeaderboardSelf = useCallback(
@@ -484,6 +505,7 @@ export function LiveScoringProvider({ profile, children }) {
       isLeaderboardSelfRowRevealing: isLeaderboardSelfRowRevealingForBoard,
       boostFromComment,
       isHidden,
+      isPostHiddenFor,
       isRevealing,
       scoresLoaded: state.loaded,
       subscribeAnimations,
@@ -507,6 +529,7 @@ export function LiveScoringProvider({ profile, children }) {
       isLeaderboardSelfRowRevealingForBoard,
       boostFromComment,
       isHidden,
+      isPostHiddenFor,
       isRevealing,
       state.loaded,
       subscribeAnimations,
