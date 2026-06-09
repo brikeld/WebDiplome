@@ -306,6 +306,7 @@ function AppInner({
   personaOverride,
   setPersonaOverride,
   postGen,
+  setPostGen,
   harvestPhase,
   harvestProgress,
   harvestError,
@@ -2358,6 +2359,7 @@ export default function App() {
         personaOverride={personaOverride}
         setPersonaOverride={setPersonaOverride}
         postGen={postGen}
+        setPostGen={setPostGen}
         harvestPhase={harvestPhase}
         harvestProgress={harvestProgress}
         harvestError={harvestError}
