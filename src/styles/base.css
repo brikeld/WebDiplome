@@ -370,6 +370,77 @@ body {
   margin-top: 6px;
 }
 
+/* Replaces .dashboard-rings when the live dominant persona flips */
+.dashboard-persona-change {
+  flex: 0 0 clamp(100px, 12.6vh, 124px);
+  width: 100%;
+  margin-top: 6px;
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.dashboard-persona-change__capsule {
+  flex: 1;
+  box-sizing: border-box;
+  width: 100%;
+  border: var(--capsule-shell-border-width) solid var(--persona-accent, #759aef);
+  border-radius: 15px;
+  background: #fff;
+  padding: clamp(10px, 1.2vh, 14px) clamp(14px, 1.6vw, 20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  animation: dashboard-persona-change-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboard-persona-change--exit .dashboard-persona-change__capsule {
+  animation: dashboard-persona-change-out 380ms ease forwards;
+}
+
+@keyframes dashboard-persona-change-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes dashboard-persona-change-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+.dashboard-persona-change__text {
+  margin: 0;
+  color: #000;
+  font-family: var(--font-avant);
+  font-size: clamp(11px, 1.05vw, 14px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.dashboard-persona-change__name {
+  font-weight: 900;
+}
+
+.dashboard-persona-change__persona {
+  font-weight: 900;
+}
+
 .dashboard-ring-card {
   appearance: none;
   cursor: pointer;

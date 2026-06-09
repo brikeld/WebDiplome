@@ -22,6 +22,7 @@ import {
 } from '@/features/harvest/dashboardUpdateFlow.js';
 import '@/features/harvest/harvest.css';
 import DashboardPersonaRings from '@/features/home/DashboardPersonaRings.jsx';
+import PersonaChangeCapsule from '@/features/home/PersonaChangeCapsule.jsx';
 import TellMeMorePill from '@/features/inferenceChain/TellMeMorePill.jsx';
 import '@/features/inferenceChain/inferenceChain.css';
 import { applyAccountDeletionFromServer } from '@/lib/liveScoringStorage.js';
@@ -347,6 +348,9 @@ function AppInner({
   const tellThemePostRef = useRef(null);
   const [hideBlocked, setHideBlocked] = useState(false);
   const [personaRingWiggle, setPersonaRingWiggle] = useState({ key: null, nonce: 0 });
+  const [personaChangeBanner, setPersonaChangeBanner] = useState(null);
+  const [personaChangeBannerExiting, setPersonaChangeBannerExiting] = useState(false);
+  const personaChangeBannerTimerRef = useRef(null);
   const [viewedProfile, setViewedProfile] = useState(null);
   const previousLivePersonaRef = useRef(null);
   const previousPersonaScoresRef = useRef(null);
@@ -538,6 +542,15 @@ function AppInner({
 
     if (previous === liveDominantPersona) return;
 
+    const userDisplayName = displayNameFromProfileLite(profile);
+    setPersonaChangeBannerExiting(false);
+    setPersonaChangeBanner({
+      fromPersona: previous,
+      toPersona: liveDominantPersona,
+      userDisplayName,
+      key: Date.now(),
+    });
+
     previousLivePersonaRef.current = liveDominantPersona;
 
     const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
@@ -547,7 +560,7 @@ function AppInner({
       profile,
       fromPersona: previous,
       toPersona: liveDominantPersona,
-      userDisplayName: displayNameFromProfileLite(profile),
+      userDisplayName,
     });
     prependCompliantPost(post);
   }, [
@@ -562,7 +575,30 @@ function AppInner({
   useEffect(() => {
     previousLivePersonaRef.current = null;
     previousPersonaScoresRef.current = null;
+    setPersonaChangeBanner(null);
+    setPersonaChangeBannerExiting(false);
   }, [profileId]);
+
+  useEffect(() => {
+    if (!personaChangeBanner) return undefined;
+    if (personaChangeBannerTimerRef.current) {
+      clearTimeout(personaChangeBannerTimerRef.current);
+    }
+    personaChangeBannerTimerRef.current = setTimeout(() => {
+      setPersonaChangeBannerExiting(true);
+      personaChangeBannerTimerRef.current = setTimeout(() => {
+        setPersonaChangeBanner(null);
+        setPersonaChangeBannerExiting(false);
+        personaChangeBannerTimerRef.current = null;
+      }, 380);
+    }, 4200);
+    return () => {
+      if (personaChangeBannerTimerRef.current) {
+        clearTimeout(personaChangeBannerTimerRef.current);
+        personaChangeBannerTimerRef.current = null;
+      }
+    };
+  }, [personaChangeBanner?.key]);
 
   useEffect(() => {
     if (!profileId || !profile) return;
@@ -1183,14 +1219,24 @@ function AppInner({
               </div>
             </div>
 
-              <DashboardPersonaRings
-                scores={adjustedScores}
-                dominantPersona={personaKey}
-                deltas={personaDeltas}
-                onRingClick={cyclePersona}
-                wigglePersonaKey={personaRingWiggle.key}
-                wiggleNonce={personaRingWiggle.nonce}
-              />
+              {personaChangeBanner ? (
+                <PersonaChangeCapsule
+                  key={personaChangeBanner.key}
+                  userDisplayName={personaChangeBanner.userDisplayName}
+                  fromPersona={personaChangeBanner.fromPersona}
+                  toPersona={personaChangeBanner.toPersona}
+                  exiting={personaChangeBannerExiting}
+                />
+              ) : (
+                <DashboardPersonaRings
+                  scores={adjustedScores}
+                  dominantPersona={personaKey}
+                  deltas={personaDeltas}
+                  onRingClick={cyclePersona}
+                  wigglePersonaKey={personaRingWiggle.key}
+                  wiggleNonce={personaRingWiggle.nonce}
+                />
+              )}
           </aside>
         )}
       </div>
