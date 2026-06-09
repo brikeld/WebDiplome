@@ -35,7 +35,12 @@ export async function resolveSubjectProfileContext(profileStore, body, { jobStor
   const profileForWorker = slimProfilePayloadForStorage(apiProfile ?? {});
 
   const raw = row.raw_profile && typeof row.raw_profile === 'object' ? row.raw_profile : {};
-  let dataJson = body?.dataJson ?? raw?.dataJson ?? raw?.data_json ?? null;
+  let dataJson =
+    body?.dataJson
+    ?? raw?.lastHarvestDataJson
+    ?? raw?.dataJson
+    ?? raw?.data_json
+    ?? null;
   if (!dataJson && jobStore) {
     const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
     const prior = latest?.request_payload;
@@ -89,7 +94,12 @@ export async function resolveCommenterProfileContext(profileStore, body, { jobSt
   });
 
   const raw = row.raw_profile && typeof row.raw_profile === 'object' ? row.raw_profile : {};
-  let dataJson = body?.dataJson ?? raw?.dataJson ?? null;
+  let dataJson =
+    body?.dataJson
+    ?? raw?.lastHarvestDataJson
+    ?? raw?.dataJson
+    ?? raw?.data_json
+    ?? null;
   if (!dataJson && jobStore) {
     const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
     const prior = latest?.request_payload;

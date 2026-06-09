@@ -9,6 +9,7 @@ import {
   mapPersonaBlurbsForStorage,
   mapSyncPayloadToProfileRow,
 } from './publicProfileMapping.js';
+import { harvestPayloadHasContent } from './generationQueue.js';
 import { mergeAssetCandidatePool } from './pickGenerationAsset.js';
 import { resolveHostedPublicUrl } from './publicMediaUrls.js';
 import { repairProfileWallpaperIfNeeded } from './repairProfileWallpaper.js';
@@ -31,6 +32,21 @@ import { getHostedAccountState } from './hostedAccountDeletion.js';
 function throwIfError(result, label) {
   if (result?.error) throw new Error(`${label}: ${result.error.message}`);
   return result?.data;
+}
+
+/** Keep the latest harvest JSON on the profile row for update-generation fallbacks. */
+function mergeHarvestJsonIntoRawProfile(rawProfile, payload, existingRaw = {}) {
+  const incoming = payload?.dataJson ?? payload?.data_json ?? null;
+  const previous =
+    existingRaw?.lastHarvestDataJson
+    ?? existingRaw?.dataJson
+    ?? existingRaw?.data_json
+    ?? null;
+  const nextHarvest = harvestPayloadHasContent(incoming)
+    ? incoming
+    : (harvestPayloadHasContent(previous) ? previous : null);
+  if (!nextHarvest) return rawProfile;
+  return { ...rawProfile, lastHarvestDataJson: nextHarvest };
 }
 
 function parseWallpaperBase64(value) {
@@ -386,6 +402,11 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
         ? { ...payload, generationAssetCandidates: mergedPool }
         : payload;
       const row = mapSyncPayloadToProfileRow(syncPayload, userId, slug);
+      row.raw_profile = mergeHarvestJsonIntoRawProfile(
+        row.raw_profile,
+        syncPayload,
+        existing?.raw_profile,
+      );
       const incomingSummary = String(payload?.profileSummary ?? payload?.userDescription ?? '').trim();
       if (!incomingSummary && existing?.profile_summary) {
         row.profile_summary = existing.profile_summary;
