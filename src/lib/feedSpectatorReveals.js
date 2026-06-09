@@ -148,6 +148,12 @@ export function createFeedSpectatorRevealController({
       const queue = queuesBySlug.get(String(slug));
       return !queue || queue.isIdle();
     },
+    hasSlugRevealedKey(slug, postKey) {
+      const queue = queuesBySlug.get(String(slug));
+      const key = String(postKey || '').trim();
+      if (!queue || !key) return false;
+      return queue.hasRevealedKey(key);
+    },
     async waitForSlugIdle(slug, options) {
       const queue = queuesBySlug.get(String(slug));
       if (!queue) return;

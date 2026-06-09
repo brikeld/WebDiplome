@@ -140,19 +140,25 @@ async function waitForRevealStart(slug, {
   spectateController,
   allSlugs = [],
   postKey = null,
+  shouldContinue = () => true,
 }) {
   const preserveOthers = allSlugs
     .map((entry) => String(entry || '').trim())
     .filter((entry) => entry && entry !== String(slug));
   const start = Date.now();
   const timeoutMs = 90000;
-  while (Date.now() - start < timeoutMs) {
+  while (shouldContinue() && Date.now() - start < timeoutMs) {
+    // The regular directory poll may have revealed this post already (it
+    // landed before the expected key was set) — that counts as started.
+    if (postKey && spectateController?.hasSlugRevealedKey?.(slug, postKey)) return;
     spectateController?.setIngestAllowSlugs?.([slug]);
     if (postKey) spectateController?.setExpectedRevealKey?.(slug, postKey);
     await reloadProfileFromApi({ preservePersonaPostsForSlugs: preserveOthers });
+    if (postKey && spectateController?.hasSlugRevealedKey?.(slug, postKey)) return;
     if (spectateController && !spectateController.isSlugIdle(slug)) return;
     await sleep(DEMO_REVEAL_POLL_MS);
   }
+  if (!shouldContinue()) return;
   throw new Error(`Timed out waiting for feed reveal (${slug})`);
 }
 
@@ -160,6 +166,7 @@ async function revealCompletedPost(entry, {
   reloadProfileFromApi,
   spectateController,
   allSlugs,
+  shouldContinue = () => true,
 }) {
   const slug = entry.slug;
   try {
@@ -170,6 +177,7 @@ async function revealCompletedPost(entry, {
       spectateController,
       allSlugs,
       postKey: entry.postKey,
+      shouldContinue,
     });
     if (spectateController?.waitForSlugIdle) {
       await spectateController.waitForSlugIdle(slug, { waitForEnterAnimation: true });
@@ -264,6 +272,7 @@ export async function runDemoRotatePipeline({
             reloadProfileFromApi,
             spectateController,
             allSlugs,
+            shouldContinue,
           },
         );
       } catch (err) {

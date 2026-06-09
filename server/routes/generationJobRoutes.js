@@ -497,10 +497,28 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       const result = req.body?.result ?? null;
 
       const isPostsFamily = jobType === 'posts' || jobType === 'posts-single';
+
+      // Insert posts before completing the job so the job result holds the DB
+      // rows (with their Supabase ids). Clients match job posts against
+      // GET /api/profiles via postIdentityKey, which prefers the id — storing
+      // the raw worker posts here would never match the public API rows.
+      let storedPosts = posts;
+      if (isPostsFamily && Array.isArray(posts) && posts.length > 0 && !req.body?.finalizeOnly) {
+        const inserted = await profileStore.appendPosts({
+          profileId: jobRow.profile_id,
+          userId: jobRow.user_id,
+          posts,
+          source: 'generated',
+        });
+        if (Array.isArray(inserted) && inserted.length > 0) {
+          storedPosts = inserted;
+        }
+      }
+
       const job = await jobStore.completeJob({
         jobId: req.params.id,
-        posts: isPostsFamily ? posts : undefined,
-        result: isPostsFamily ? posts : result,
+        posts: isPostsFamily ? storedPosts : undefined,
+        result: isPostsFamily ? storedPosts : result,
       });
 
       if (isPostsFamily || jobType === 'bio') {
@@ -511,15 +529,6 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
             profileSummary,
           });
         }
-      }
-
-      if (isPostsFamily && Array.isArray(posts) && posts.length > 0 && !req.body?.finalizeOnly) {
-        await profileStore.appendPosts({
-          profileId: job.profile_id,
-          userId: job.user_id,
-          posts,
-          source: 'generated',
-        });
       }
 
       if (jobType === 'blurbs') {

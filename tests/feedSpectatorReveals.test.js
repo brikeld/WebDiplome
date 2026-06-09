@@ -195,6 +195,42 @@ describe('feedSpectatorReveals', () => {
     expect(controller.isSlugIdle('user-b')).toBe(true);
   });
 
+  it('reports already-revealed keys so demo rotate skips the wait', async () => {
+    let profiles = [
+      {
+        slug: 'user-a',
+        personaPosts: [{ id: 'old', persona: 'productivite', content: 'old', createdAt: '2026-01-01T00:00:00Z' }],
+      },
+    ];
+    const controller = createFeedSpectatorRevealController({
+      setAllProfiles: (updater) => {
+        profiles = typeof updater === 'function' ? updater(profiles) : updater;
+      },
+      gapMs: 1,
+    });
+
+    controller.ingestProfiles(profiles);
+    const newPost = { id: 'new', persona: 'securite', content: 'fresh', createdAt: '2026-01-02T00:00:00Z' };
+    const newKey = postIdentityKey(newPost);
+    expect(controller.hasSlugRevealedKey('user-a', newKey)).toBe(false);
+
+    // Regular directory poll reveals the post before the demo sets its key.
+    controller.ingestProfiles([
+      {
+        slug: 'user-a',
+        personaPosts: [
+          newPost,
+          { id: 'old', persona: 'productivite', content: 'old', createdAt: '2026-01-01T00:00:00Z' },
+        ],
+      },
+    ]);
+    await controller.waitForSlugIdle('user-a', { waitForEnterAnimation: false });
+
+    expect(controller.hasSlugRevealedKey('user-a', newKey)).toBe(true);
+    expect(controller.hasSlugRevealedKey('user-a', 'id:unknown')).toBe(false);
+    expect(controller.hasSlugRevealedKey('user-b', newKey)).toBe(false);
+  });
+
   it('keeps older API posts when revealing a new one', async () => {
     let profiles = [
       {
