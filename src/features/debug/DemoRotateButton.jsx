@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { listDemoRotateTargets } from '@/lib/demoRotate.js';
-import { runDemoRotateRound } from '@/lib/demoRotateFeed.js';
-import { sleep } from '@/lib/postFeedRevealQueue.js';
+import { runDemoRotatePipeline } from '@/lib/demoRotateFeed.js';
 import { profileSlugFromProfile } from '@/lib/aiJobClient.js';
 
 export default function DemoRotateButton({
@@ -15,7 +14,7 @@ export default function DemoRotateButton({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const runningRef = useRef(false);
-  const cycleRef = useRef(null);
+  const pipelineRef = useRef(null);
 
   const stop = useCallback(() => {
     runningRef.current = false;
@@ -23,12 +22,10 @@ export default function DemoRotateButton({
     setBusy(false);
     onActiveChange?.(false);
     onGeneratingPersona?.(null);
-    if (cycleRef.current) {
-      cycleRef.current = null;
-    }
+    pipelineRef.current = null;
   }, [onActiveChange, onGeneratingPersona]);
 
-  const runRound = useCallback(async () => {
+  const startPipeline = useCallback(async () => {
     if (!runningRef.current) return;
 
     const targets = listDemoRotateTargets(allProfiles);
@@ -40,31 +37,30 @@ export default function DemoRotateButton({
 
     setBusy(true);
     setError(null);
+
     try {
-      await runDemoRotateRound({
+      await runDemoRotatePipeline({
         targets: targets.map((profile) => ({
           slug: profileSlugFromProfile(profile),
         })),
         reloadProfileFromApi,
         spectateController,
         onGeneratingPersona,
+        shouldContinue: () => runningRef.current,
       });
     } catch (err) {
-      console.warn('[demo-rotate]', err?.message || err);
-      setError(err?.message || 'Demo rotate failed');
-      stop();
-      return;
+      console.warn('[demo-rotate] pipeline exited:', err?.message || err);
+      setError(err?.message || 'Demo rotate stopped');
     } finally {
       setBusy(false);
-    }
-
-    if (runningRef.current) {
-      await sleep(400);
       if (runningRef.current) {
-        cycleRef.current = runRound();
+        runningRef.current = false;
+        setRunning(false);
+        onActiveChange?.(false);
+        onGeneratingPersona?.(null);
       }
     }
-  }, [allProfiles, reloadProfileFromApi, spectateController, onGeneratingPersona, stop]);
+  }, [allProfiles, reloadProfileFromApi, spectateController, onGeneratingPersona, stop, onActiveChange]);
 
   const toggle = useCallback(() => {
     if (runningRef.current) {
@@ -75,8 +71,8 @@ export default function DemoRotateButton({
     setRunning(true);
     setError(null);
     onActiveChange?.(true);
-    cycleRef.current = runRound();
-  }, [onActiveChange, runRound, stop]);
+    pipelineRef.current = startPipeline();
+  }, [onActiveChange, startPipeline, stop]);
 
   useEffect(() => () => {
     runningRef.current = false;
@@ -85,8 +81,10 @@ export default function DemoRotateButton({
   }, [onActiveChange, onGeneratingPersona]);
 
   const title = running
-    ? (busy ? 'Demo rotate: generating posts for all demo profiles…' : 'Demo rotate: active')
-    : 'Start demo rotate (one post per profile, all queued together)';
+    ? (busy
+      ? 'Demo rotate: 4 LM slots + staggered feed reveals…'
+      : 'Demo rotate: active')
+    : 'Start demo rotate (4 parallel generations, ~2s between feed posts)';
 
   return (
     <button

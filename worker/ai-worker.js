@@ -37,6 +37,8 @@ const LM_STUDIO_MODEL = String(process.env.LM_STUDIO_MODEL || 'google/gemma-4-e4
 const TIMEOUT_MS = parseInt(process.env.LM_STUDIO_TIMEOUT_MS || '180000', 10);
 const RETRIES = parseInt(process.env.LM_STUDIO_RETRIES || '1', 10);
 const POLL_MS = parseInt(process.env.AI_WORKER_POLL_MS || '1500', 10);
+/** Parallel LM Studio slots — match demo pipeline size (default 4). */
+const CONCURRENCY = Math.max(1, parseInt(process.env.AI_WORKER_CONCURRENCY || '4', 10));
 const CHART_UPLOAD_DIR = path.join(os.tmpdir(), 'webdiplome-worker-charts');
 
 function headers() {
@@ -429,8 +431,31 @@ async function processJob(job) {
   }
 }
 
-async function loop() {
-  console.log(`[worker] started — API ${API} — LM ${LM_STUDIO_BASE_URL} — polling every ${POLL_MS / 1000}s`);
+async function runSlot(slotIndex) {
+  let idleTicks = 0;
+  for (;;) {
+    try {
+      const hadJob = await tick(slotIndex);
+      if (hadJob) idleTicks = 0;
+      else {
+        idleTicks += 1;
+        if (slotIndex === 0 && (idleTicks === 1 || idleTicks % 12 === 0)) {
+          console.log('[worker] waiting for generation jobs…');
+        }
+        await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+      }
+    } catch (err) {
+      console.error(`[worker:${slotIndex}] tick failed:`, err.message);
+      await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+    }
+  }
+}
+
+async function startWorker() {
+  console.log(
+    `[worker] started — API ${API} — LM ${LM_STUDIO_BASE_URL} — `
+    + `${CONCURRENCY} slot(s) — poll ${POLL_MS / 1000}s`,
+  );
   try {
     await ensureLmModelLoaded({
       baseUrl: LM_STUDIO_BASE_URL,
@@ -441,33 +466,21 @@ async function loop() {
     console.warn('[worker] initial LM Studio load failed (will retry per job):', err.message);
   }
 
-  let idleTicks = 0;
-  for (;;) {
-    try {
-      const hadJob = await tick();
-      if (hadJob) idleTicks = 0;
-      else {
-        idleTicks += 1;
-        if (idleTicks === 1 || idleTicks % 12 === 0) {
-          console.log('[worker] waiting for generation jobs…');
-        }
-      }
-    } catch (err) {
-      console.error('[worker] tick failed:', err.message);
-    }
-    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+  for (let slot = 0; slot < CONCURRENCY; slot += 1) {
+    runSlot(slot);
   }
 }
 
-async function tick() {
+async function tick(slotIndex = 0) {
   if (!TOKEN) throw new Error('AI_WORKER_TOKEN is required');
-  const { job } = await fetchJson(`${API}/api/worker/jobs/next?worker=${encodeURIComponent(WORKER_NAME)}`, {
+  const workerTag = CONCURRENCY > 1 ? `${WORKER_NAME}-${slotIndex}` : WORKER_NAME;
+  const { job } = await fetchJson(`${API}/api/worker/jobs/next?worker=${encodeURIComponent(workerTag)}`, {
     headers: headers(),
   });
   if (!job) return false;
 
   const jobType = job.request_payload?.jobType || 'posts';
-  console.log(`[worker] claimed ${job.id} (${jobType})`);
+  console.log(`[worker:${slotIndex}] claimed ${job.id} (${jobType})`);
 
   try {
     const outcome = await processJob(job);
@@ -477,9 +490,9 @@ async function tick() {
       body: JSON.stringify(outcome),
     });
     if (jobType === 'posts' || jobType === 'posts-single') {
-      console.log(`[worker] completed ${job.id} with ${outcome.posts?.length ?? 0} posts`);
+      console.log(`[worker:${slotIndex}] completed ${job.id} with ${outcome.posts?.length ?? 0} posts`);
     } else {
-      console.log(`[worker] completed ${job.id} (${jobType})`);
+      console.log(`[worker:${slotIndex}] completed ${job.id} (${jobType})`);
     }
   } catch (err) {
     await fetchJson(`${API}/api/worker/jobs/${job.id}/fail`, {
@@ -487,9 +500,9 @@ async function tick() {
       headers: headers(),
       body: JSON.stringify({ error: err.message }),
     }).catch(() => {});
-    console.error(`[worker] failed ${job.id}:`, err.message);
+    console.error(`[worker:${slotIndex}] failed ${job.id}:`, err.message);
   }
   return true;
 }
 
-loop();
+startWorker();

@@ -2,13 +2,14 @@ import { resolveApiOrigin } from '@/lib/apiOrigin.js';
 import { queueDemoSinglePost } from '@/lib/demoRotateApi.js';
 import {
   POST_FEED_ENTER_ANIM_MS,
-  POST_REVEAL_GAP_MS,
   sleep,
 } from '@/lib/postFeedRevealQueue.js';
 
 const API_ORIGIN = resolveApiOrigin();
 
-const DEMO_JOB_POLL_MS = 400;
+export const DEMO_PIPELINE_SIZE = 4;
+export const DEMO_PIPELINE_POLL_MS = 350;
+export const DEMO_REVEAL_GAP_MS = 2000;
 const DEMO_REVEAL_POLL_MS = 200;
 
 /** Persona key for the post at `index` in the demo reveal order. */
@@ -25,6 +26,21 @@ export function personaFromGenerationJob(job) {
   return persona ? String(persona) : null;
 }
 
+/** Round-robin pick while skipping slugs that already have an in-flight job. */
+export function pickSlugForPipeline(slugs, cursor, inFlightBySlug) {
+  const list = Array.isArray(slugs) ? slugs.filter(Boolean) : [];
+  if (list.length === 0) return { slug: null, nextCursor: 0 };
+  const busy = inFlightBySlug instanceof Set ? inFlightBySlug : new Set();
+  for (let step = 0; step < list.length; step += 1) {
+    const idx = (cursor + step) % list.length;
+    const slug = list[idx];
+    if (!busy.has(slug)) {
+      return { slug, nextCursor: (idx + 1) % list.length };
+    }
+  }
+  return { slug: null, nextCursor: cursor % list.length };
+}
+
 async function fetchGenerationJob(jobId) {
   const res = await fetch(`${API_ORIGIN}/api/generation-jobs/${encodeURIComponent(jobId)}`, {
     cache: 'no-store',
@@ -38,65 +54,57 @@ async function fetchGenerationJob(jobId) {
   return job;
 }
 
-async function waitForJobComplete(jobId, { pollMs = DEMO_JOB_POLL_MS, timeoutMs = 300000 } = {}) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    const job = await fetchGenerationJob(jobId);
-    if (job.status === 'complete') return job;
-    if (job.status === 'failed') {
-      throw new Error(job.error || 'Demo generation failed');
-    }
-    await sleep(pollMs);
-  }
-  throw new Error('Demo generation timed out — is your AI PC worker running?');
-}
+/**
+ * One queue attempt — returns immediately (no long wait loops).
+ * `blocked` = profile already has a posts-single job; try another slug.
+ */
+export async function tryQueueDemoPost(slug) {
+  const key = String(slug || '').trim();
+  if (!key) return { kind: 'skip' };
 
-async function queueDemoJobForSlug(slug, { pollMs, timeoutMs }) {
-  const start = Date.now();
-  let generatingPersona = null;
-  while (Date.now() - start < timeoutMs) {
-    const created = await queueDemoSinglePost(slug);
-    if (created?.generatingPersona) generatingPersona = created.generatingPersona;
-    if (created?.jobId) {
-      return { slug, jobId: created.jobId, generatingPersona };
-    }
-    if (created?.reason === 'no_harvest_data' || created?.reason === 'excluded_profile') {
-      console.warn(`[demo-rotate] skip ${slug}: ${created.reason}`);
-      return null;
-    }
-    const waiting =
-      created?.reason === 'generation_in_progress' || created?.alreadyQueued;
-    if (!waiting) {
-      console.warn(`[demo-rotate] queue ${slug} failed:`, created?.reason || 'unknown');
-      return null;
-    }
-    await sleep(pollMs);
+  const created = await queueDemoSinglePost(key);
+  if (created?.jobId) {
+    return {
+      kind: 'queued',
+      slug: key,
+      jobId: created.jobId,
+      generatingPersona: created.generatingPersona ?? null,
+    };
   }
-  console.warn(`[demo-rotate] timed out queueing ${slug}`);
-  return null;
+  if (created?.reason === 'no_harvest_data' || created?.reason === 'excluded_profile') {
+    return { kind: 'skip', slug: key, reason: created.reason };
+  }
+  if (created?.reason === 'generation_in_progress' || created?.alreadyQueued) {
+    return {
+      kind: 'blocked',
+      slug: key,
+      jobId: created?.jobId ?? null,
+      generatingPersona: created?.generatingPersona ?? null,
+    };
+  }
+  return { kind: 'skip', slug: key, reason: created?.reason ?? 'queue_failed' };
 }
 
 async function waitForRevealStart(slug, {
   reloadProfileFromApi,
   spectateController,
-  pollMs = DEMO_REVEAL_POLL_MS,
-  timeoutMs = 60000,
   allSlugs = [],
 }) {
   const preserveOthers = allSlugs
     .map((entry) => String(entry || '').trim())
     .filter((entry) => entry && entry !== String(slug));
   const start = Date.now();
+  const timeoutMs = 90000;
   while (Date.now() - start < timeoutMs) {
     spectateController?.setIngestAllowSlugs?.([slug]);
     await reloadProfileFromApi({ preservePersonaPostsForSlugs: preserveOthers });
     if (spectateController && !spectateController.isSlugIdle(slug)) return;
-    await sleep(pollMs);
+    await sleep(DEMO_REVEAL_POLL_MS);
   }
   throw new Error(`Timed out waiting for feed reveal (${slug})`);
 }
 
-async function revealSlugInOrder(entry, {
+async function revealCompletedPost(entry, {
   reloadProfileFromApi,
   spectateController,
   allSlugs,
@@ -114,90 +122,164 @@ async function revealSlugInOrder(entry, {
     } else {
       await sleep(POST_FEED_ENTER_ANIM_MS);
     }
-    await sleep(POST_REVEAL_GAP_MS);
   } finally {
     spectateController?.setIngestAllowSlugs?.([]);
   }
 }
 
 /**
- * Queue one post per demo profile, then reveal each in round order as soon as its
- * job finishes — one animated post at a time, worker may pipeline queued jobs.
+ * Keep `pipelineSize` LM jobs in flight (worker concurrency must match).
+ * Reveal finished posts one at a time with `revealGapMs` between feed entries.
+ * Runs until `shouldContinue()` returns false — errors never stop the loop.
  */
-export async function runDemoRotateRound({
+export async function runDemoRotatePipeline({
   targets,
   reloadProfileFromApi,
   spectateController,
   onGeneratingPersona,
-  pollMs = DEMO_JOB_POLL_MS,
-  timeoutMs = 300000,
+  shouldContinue = () => true,
+  pipelineSize = DEMO_PIPELINE_SIZE,
+  revealGapMs = DEMO_REVEAL_GAP_MS,
+  pollMs = DEMO_PIPELINE_POLL_MS,
 }) {
-  const list = (Array.isArray(targets) ? targets : [])
-    .map((entry) => ({
-      slug: String(entry?.slug ?? '').trim(),
-      generatingPersona: entry?.generatingPersona ?? null,
-    }))
-    .filter((entry) => entry.slug);
+  const slugs = (Array.isArray(targets) ? targets : [])
+    .map((entry) => String(entry?.slug ?? entry ?? '').trim())
+    .filter(Boolean);
 
-  if (list.length === 0) throw new Error('No demo profiles available');
+  if (slugs.length === 0) throw new Error('No demo profiles available');
+
+  const allSlugs = [...slugs];
+  const inFlight = new Map();
+  const revealQueue = [];
+  let slugCursor = 0;
+  let revealing = false;
+  let refillLock = false;
+  let skippedSlugs = new Set();
+
+  const busySlugs = () => new Set([...inFlight.values()].map((e) => e.slug));
+
+  const updateSpinner = () => {
+    const nextReveal = revealQueue[0];
+    const nextFlight = [...inFlight.values()][0];
+    onGeneratingPersona?.(
+      nextReveal?.generatingPersona ?? nextFlight?.generatingPersona ?? null,
+    );
+  };
+
+  const ensurePipelineFull = async () => {
+    if (refillLock || !shouldContinue()) return;
+    refillLock = true;
+    try {
+      let attempts = 0;
+      const maxAttempts = Math.max(slugs.length * 4, pipelineSize * 3);
+      while (inFlight.size < pipelineSize && shouldContinue() && attempts < maxAttempts) {
+        attempts += 1;
+        const pick = pickSlugForPipeline(slugs, slugCursor, busySlugs());
+        slugCursor = pick.nextCursor;
+        if (!pick.slug) {
+          await sleep(pollMs);
+          continue;
+        }
+        if (skippedSlugs.has(pick.slug)) continue;
+
+        const outcome = await tryQueueDemoPost(pick.slug);
+        if (outcome.kind === 'queued') {
+          inFlight.set(outcome.jobId, {
+            slug: outcome.slug,
+            jobId: outcome.jobId,
+            generatingPersona: outcome.generatingPersona,
+          });
+          attempts = 0;
+          updateSpinner();
+          continue;
+        }
+        if (outcome.kind === 'blocked') {
+          if (outcome.jobId && !inFlight.has(outcome.jobId)) {
+            inFlight.set(outcome.jobId, {
+              slug: outcome.slug,
+              jobId: outcome.jobId,
+              generatingPersona: outcome.generatingPersona,
+            });
+            attempts = 0;
+            updateSpinner();
+          }
+          continue;
+        }
+        if (outcome.reason === 'no_harvest_data' || outcome.reason === 'excluded_profile') {
+          skippedSlugs.add(pick.slug);
+          console.warn(`[demo-rotate] skip ${pick.slug}: ${outcome.reason}`);
+        }
+      }
+    } finally {
+      refillLock = false;
+    }
+  };
 
   spectateController?.setIngestAllowSlugs?.([]);
 
-  const queued = (
-    await Promise.all(
-      list.map((entry) => queueDemoJobForSlug(entry.slug, { pollMs, timeoutMs })),
-    )
-  ).filter(Boolean);
-
-  if (queued.length === 0) throw new Error('No demo posts queued (missing harvest data?)');
-
-  const jobsBySlug = new Map(queued.map((job) => [job.slug, job]));
-  const ordered = list
-    .filter((entry) => jobsBySlug.has(entry.slug))
-    .map((entry) => ({
-      slug: entry.slug,
-      jobId: jobsBySlug.get(entry.slug).jobId,
-      generatingPersona:
-        jobsBySlug.get(entry.slug).generatingPersona ?? entry.generatingPersona,
-    }));
-
-  const allSlugs = ordered.map((entry) => entry.slug);
-
-  const showSpinner = (index) => {
-    onGeneratingPersona?.(demoSpinnerPersonaForIndex(ordered, index));
-  };
-
-  let revealedCount = 0;
-
   try {
-    for (let i = 0; i < ordered.length; i += 1) {
-      showSpinner(i);
+    await ensurePipelineFull();
+    updateSpinner();
 
+    while (shouldContinue()) {
       try {
-        const job = await waitForJobComplete(ordered[i].jobId, { pollMs, timeoutMs });
-        const resolvedPersona = personaFromGenerationJob(job) ?? ordered[i].generatingPersona;
-        if (resolvedPersona) ordered[i].generatingPersona = resolvedPersona;
-        showSpinner(i);
+        for (const [jobId, entry] of [...inFlight.entries()]) {
+          const job = await fetchGenerationJob(jobId);
+          if (job.status === 'complete') {
+            inFlight.delete(jobId);
+            const persona = personaFromGenerationJob(job) ?? entry.generatingPersona;
+            revealQueue.push({
+              slug: entry.slug,
+              jobId,
+              generatingPersona: persona,
+            });
+            ensurePipelineFull();
+          } else if (job.status === 'failed') {
+            inFlight.delete(jobId);
+            console.warn(`[demo-rotate] job failed for ${entry.slug}:`, job.error || 'unknown');
+            ensurePipelineFull();
+          }
+        }
 
-        await revealSlugInOrder(ordered[i], {
-          reloadProfileFromApi,
-          spectateController,
-          allSlugs,
-        });
-        revealedCount += 1;
+        if (!revealing && revealQueue.length > 0) {
+          revealing = true;
+          const item = revealQueue.shift();
+          updateSpinner();
+          try {
+            await revealCompletedPost(item, {
+              reloadProfileFromApi,
+              spectateController,
+              allSlugs,
+            });
+          } catch (err) {
+            console.warn(`[demo-rotate] reveal ${item.slug}:`, err?.message || err);
+          } finally {
+            revealing = false;
+          }
+          updateSpinner();
+          await sleep(revealGapMs);
+        }
+
+        if (inFlight.size < pipelineSize) {
+          await ensurePipelineFull();
+        }
       } catch (err) {
-        console.warn(`[demo-rotate] ${ordered[i].slug}:`, err?.message || err);
-        spectateController?.setIngestAllowSlugs?.([]);
+        console.warn('[demo-rotate] pipeline tick:', err?.message || err);
       }
-    }
 
-    if (revealedCount === 0) {
-      throw new Error('No demo posts revealed this round');
+      await sleep(pollMs);
     }
-
-    onGeneratingPersona?.(null);
-    await reloadProfileFromApi({ preservePersonaPostsForSlugs: allSlugs });
   } finally {
     spectateController?.setIngestAllowSlugs?.(null);
+    onGeneratingPersona?.(null);
   }
+}
+
+/** @deprecated Use runDemoRotatePipeline */
+export async function runDemoRotateRound(args) {
+  return runDemoRotatePipeline({
+    ...args,
+    shouldContinue: () => true,
+    pipelineSize: Math.min(DEMO_PIPELINE_SIZE, (args.targets?.length ?? 1)),
+  });
 }

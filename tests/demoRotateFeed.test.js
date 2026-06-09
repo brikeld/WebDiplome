@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   demoSpinnerPersonaForIndex,
   personaFromGenerationJob,
+  pickSlugForPipeline,
 } from '../src/lib/demoRotateFeed.js';
 
 describe('demoRotateFeed helpers', () => {
@@ -23,5 +24,16 @@ describe('demoRotateFeed helpers', () => {
     })).toBe('securite');
     expect(personaFromGenerationJob({ result: [{ persona: 'popularite' }] })).toBe('popularite');
     expect(personaFromGenerationJob({ posts: [] })).toBeNull();
+  });
+
+  it('round-robins slugs and skips busy profiles', () => {
+    const slugs = ['a', 'b', 'c'];
+    const busy = new Set(['b']);
+    const first = pickSlugForPipeline(slugs, 0, busy);
+    expect(first.slug).toBe('a');
+    const second = pickSlugForPipeline(slugs, first.nextCursor, busy);
+    expect(second.slug).toBe('c');
+    const third = pickSlugForPipeline(slugs, second.nextCursor, new Set(['a', 'b', 'c']));
+    expect(third.slug).toBeNull();
   });
 });
