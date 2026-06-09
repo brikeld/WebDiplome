@@ -124,6 +124,58 @@ describe('generationQueue helpers', () => {
     expect(createdPayload.jobType).toBe('posts-single');
   });
 
+  it('waits instead of piggybacking on an active full posts batch for demo single', async () => {
+    const profileRow = { id: 'p4', user_id: 'u4', firstname: 'Alex', lastname: 'Johnson' };
+    const apiProfile = {
+      displayName: 'Alex Johnson',
+      personaPosts: [{ content: 'one', persona: 'productivite' }],
+    };
+    const outcome = await queueSinglePostJob({
+      profileStore: {
+        getProfileRowBySlug: async () => profileRow,
+        getProfileBySlug: async () => apiProfile,
+      },
+      jobStore: {
+        findAnyActiveJobByTypes: async () => null,
+        findActiveJob: async ({ jobType }) => (
+          jobType === 'posts' ? { id: 'job-full-batch', status: 'claimed' } : null
+        ),
+      },
+      profileSlug: 'alex-johnson',
+      syncDataJson: { hostname: 'stored-harvest' },
+    });
+    expect(outcome.queued).toBe(false);
+    expect(outcome.reason).toBe('generation_in_progress');
+    expect(outcome.jobId).toBeUndefined();
+    expect(outcome.alreadyQueued).toBeUndefined();
+  });
+
+  it('reuses an active posts-single job for demo rotate', async () => {
+    const profileRow = { id: 'p5', user_id: 'u5', firstname: 'Alex', lastname: 'Johnson' };
+    const apiProfile = {
+      displayName: 'Alex Johnson',
+      personaPosts: [{ content: 'one', persona: 'productivite' }],
+    };
+    const outcome = await queueSinglePostJob({
+      profileStore: {
+        getProfileRowBySlug: async () => profileRow,
+        getProfileBySlug: async () => apiProfile,
+      },
+      jobStore: {
+        findAnyActiveJobByTypes: async () => null,
+        findActiveJob: async ({ jobType }) => (
+          jobType === 'posts-single'
+            ? { id: 'job-single-active', status: 'claimed', request_payload: { jobType: 'posts-single' } }
+            : null
+        ),
+      },
+      profileSlug: 'alex-johnson',
+      syncDataJson: { hostname: 'stored-harvest' },
+    });
+    expect(outcome.alreadyQueued).toBe(true);
+    expect(outcome.jobId).toBe('job-single-active');
+  });
+
   it('rejects single-post jobs for excluded operator profile', async () => {
     const outcome = await queueSinglePostJob({
       profileStore: {

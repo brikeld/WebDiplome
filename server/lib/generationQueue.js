@@ -191,13 +191,7 @@ async function queuePostsJobFromHarvestSync({
   if (mode === 'single') {
     const globalActive = await jobStore.findAnyActiveJobByTypes?.(['posts', 'posts-single']);
     if (globalActive && globalActive.profile_id !== row.id) {
-      return {
-        queued: false,
-        alreadyQueued: true,
-        jobId: globalActive.id,
-        status: globalActive.status,
-        reason: 'generation_in_progress',
-      };
+      return { queued: false, reason: 'generation_in_progress' };
     }
   }
 
@@ -206,7 +200,17 @@ async function queuePostsJobFromHarvestSync({
     return { queued: false, reason: 'no_harvest_data' };
   }
 
-  const active = await findActivePostsFamilyJob(jobStore, row.id);
+  let active = null;
+  if (mode === 'single') {
+    const activeFullBatch = await jobStore.findActiveJob({ profileId: row.id, jobType: 'posts' });
+    if (activeFullBatch) {
+      return { queued: false, reason: 'generation_in_progress' };
+    }
+    active = await jobStore.findActiveJob({ profileId: row.id, jobType: 'posts-single' });
+  } else {
+    active = await findActivePostsFamilyJob(jobStore, row.id);
+  }
+
   if (active) {
     const existingPayload =
       active.request_payload && typeof active.request_payload === 'object'
@@ -222,6 +226,7 @@ async function queuePostsJobFromHarvestSync({
     };
     if (active.status === 'queued' && shouldPatchQueuedGenerationPayload(existingPayload, patchPayload)) {
       const merged = mergeGenerationRequestPayload(existingPayload, patchPayload);
+      merged.jobType = jobType;
       await jobStore.updateQueuedJobPayload(active.id, merged);
       return {
         queued: false,
@@ -238,7 +243,12 @@ async function queuePostsJobFromHarvestSync({
     };
   }
 
-  const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
+  const latest = mode === 'single'
+    ? (
+        (await jobStore.findLatestJobPayload(row.id, 'posts-single'))
+        ?? (await jobStore.findLatestJobPayload(row.id, 'posts'))
+      )
+    : (await jobStore.findLatestJobPayload(row.id, 'posts'));
   const priorPayload = latest?.request_payload;
   const requestPayload = priorPayload && typeof priorPayload === 'object'
     ? mergeGenerationRequestPayload(priorPayload, {
@@ -257,6 +267,7 @@ async function queuePostsJobFromHarvestSync({
         existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
         ...(hasAssetCandidates({ assetCandidates }) ? { assetCandidates, assetPersona } : {}),
       };
+  requestPayload.jobType = jobType;
 
   const job = await jobStore.createJob({
     userId: row.user_id,
