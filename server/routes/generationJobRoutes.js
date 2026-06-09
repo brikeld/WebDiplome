@@ -8,7 +8,6 @@ import { resolveCommenterProfileContext, resolveSubjectProfileContext } from '..
 import {
   harvestPayloadHasContent,
   mergeGenerationRequestPayload,
-  harvestPayloadHasContent,
   queueInitialPostsJobIfNeeded,
   queueUpdatePostsJobAfterHarvestSync,
   shouldPatchQueuedGenerationPayload,
