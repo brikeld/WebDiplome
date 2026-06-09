@@ -360,6 +360,30 @@ describe('pickBoardToPost', () => {
     expect(result.prevRank).toBeNull();
   });
 
+  it('rotates the first leaderboard board per profile instead of always most_productive', () => {
+    const daniel = pickBoardToPost(data, { ...profile, slug: 'daniel-rocha' }, [], NOW);
+    const nyria = pickBoardToPost(data, { ...profile, slug: 'nyria-demo' }, [], NOW);
+    expect(daniel?.board?.id).toBeTruthy();
+    expect(nyria?.board?.id).toBeTruthy();
+    expect(daniel.board.id).not.toBe(nyria.board.id);
+  });
+
+  it('cycles through boards on repeated first appearances via leaderboard post count', () => {
+    const first = pickBoardToPost(data, profile, [], NOW);
+    const second = pickBoardToPost(data, profile, [
+      {
+        createdAt: '2026-05-24T10:00:00Z',
+        leaderboard: {
+          boardId: first.board.id,
+          userRank: first.standing.userRank,
+          entries: first.standing.entries,
+        },
+      },
+    ], NOW);
+    expect(second).not.toBeNull();
+    expect(second.board.id).not.toBe(first.board.id);
+  });
+
   it('skips boards whose userRank matches the most recent post for that board', () => {
     // Build a "prior post" capturing the current rank for EVERY board, so no delta.
     const priorPosts = BOARDS.map((b) => {

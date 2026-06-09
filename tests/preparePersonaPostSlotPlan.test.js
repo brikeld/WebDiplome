@@ -32,11 +32,16 @@ describe('preparePersonaPostSlotPlan', () => {
   });
 
   it('plans leaderboard for slot 2 after a chart post', async () => {
+    const priorTextPosts = Array.from({ length: 5 }, (_, i) => ({
+      content: `warmup ${i}`,
+      persona: 'productivite',
+      createdAt: `2026-05-20T${String(i).padStart(2, '0')}:00:00Z`,
+    }));
     const plan = await preparePersonaPostSlotPlan({
       userPayload: '{}',
       profile: fakeProfile,
       dataJson: fakeData,
-      existingPosts: [{ chartType: 'browser_domains' }],
+      existingPosts: [{ chartType: 'browser_domains' }, ...priorTextPosts],
     });
 
     expect(plan[2]).toMatchObject({ slotIndex: 2, id: 'leaderboard' });

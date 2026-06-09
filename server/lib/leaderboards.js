@@ -717,15 +717,42 @@ function priorRankByBoard(existingPosts) {
   return out;
 }
 
+/** How many leaderboard posts already exist (any board). */
+export function countLeaderboardPosts(existingPosts) {
+  if (!Array.isArray(existingPosts)) return 0;
+  return existingPosts.filter((p) => p?.leaderboard?.boardId).length;
+}
+
+/** Stable per-profile offset so demo users don't all open on most_productive. */
+export function boardRotationOffset(profile) {
+  const slug = String(
+    profile?.slug
+    ?? profile?.id
+    ?? profile?.machineName
+    ?? profile?.machine_name
+    ?? profile?.firstname
+    ?? '',
+  ).trim();
+  let hash = 0;
+  for (let i = 0; i < slug.length; i += 1) {
+    hash = (hash * 31 + slug.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % BOARDS.length;
+}
+
 /**
  * @returns {{ board, standing, prevRank: number|null } | null}
  *   null when nothing has changed since the last leaderboard post.
  */
 export function pickBoardToPost(dataJson, profile, existingPosts, nowMs) {
   const priorByBoard = priorRankByBoard(existingPosts);
+  const lbCount = countLeaderboardPosts(existingPosts);
+  const rotation = boardRotationOffset(profile);
 
-  let best = null; // { board, standing, prevRank, delta, priority }
-  for (let i = 0; i < BOARDS.length; i++) {
+  let maxDelta = -1;
+  const candidates = [];
+
+  for (let i = 0; i < BOARDS.length; i += 1) {
     const board = BOARDS[i];
     const standing = computeBoardStanding(board, dataJson, profile, nowMs);
     const prev = Object.prototype.hasOwnProperty.call(priorByBoard, board.id)
@@ -736,15 +763,22 @@ export function pickBoardToPost(dataJson, profile, existingPosts, nowMs) {
       : Math.abs((standing.userRank ?? 0) - prev);
     if (delta === 0) continue;
 
-    if (
-      best === null
-      || delta > best.delta
-      || (delta === best.delta && i < best.priority)
-    ) {
-      best = { board, standing, prevRank: prev, delta, priority: i };
+    if (delta > maxDelta) {
+      maxDelta = delta;
+      candidates.length = 0;
+      candidates.push({ board, standing, prevRank: prev, delta, priority: i });
+    } else if (delta === maxDelta) {
+      candidates.push({ board, standing, prevRank: prev, delta, priority: i });
     }
   }
 
-  if (!best) return null;
-  return { board: best.board, standing: best.standing, prevRank: best.prevRank };
+  if (candidates.length === 0) return null;
+
+  const neverPosted = candidates.filter(
+    (c) => !Object.prototype.hasOwnProperty.call(priorByBoard, c.board.id),
+  );
+  const pool = neverPosted.length > 0 ? neverPosted : candidates;
+  const pick = pool[(lbCount + rotation) % pool.length];
+
+  return { board: pick.board, standing: pick.standing, prevRank: pick.prevRank };
 }

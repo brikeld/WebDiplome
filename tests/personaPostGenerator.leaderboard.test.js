@@ -44,18 +44,37 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+function aiTextPosts(count) {
+  return Array.from({ length: count }, (_, i) => ({
+    content: `post ${i}`,
+    persona: 'productivite',
+    createdAt: `2026-05-20T${String(i).padStart(2, '0')}:00:00Z`,
+  }));
+}
+
 describe('pickThirdSlotKind', () => {
   it('defaults to chart when no prior chart or leaderboard posts exist', () => {
     expect(pickThirdSlotKind([])).toBe('chart');
   });
 
-  it('alternates to leaderboard after a chart post', () => {
-    expect(pickThirdSlotKind([{ chartType: 'browser_domains', createdAt: '2026-05-25T10:00:00Z' }])).toBe('leaderboard');
+  it('holds chart until enough AI posts have landed since the last leaderboard', () => {
+    const chartOnly = [
+      { chartType: 'browser_domains', createdAt: '2026-05-25T10:00:00Z' },
+      ...aiTextPosts(3),
+    ];
+    expect(pickThirdSlotKind(chartOnly)).toBe('chart');
+
+    const ready = [
+      { chartType: 'browser_domains', createdAt: '2026-05-25T10:00:00Z' },
+      ...aiTextPosts(5),
+    ];
+    expect(pickThirdSlotKind(ready)).toBe('leaderboard');
   });
 
   it('alternates back to chart after a leaderboard post', () => {
     expect(pickThirdSlotKind([
       { leaderboard: { boardId: 'most_productive' }, createdAt: '2026-05-25T10:00:00Z' },
+      ...aiTextPosts(6),
     ])).toBe('chart');
   });
 });
@@ -91,14 +110,17 @@ describe('generatePersonaPosts — third slot alternation', () => {
       prompts: null,
       dataJson: fakeData,
       profile: fakeProfile,
-      existingPosts: [{ chartType: 'browser_domains', createdAt: '2026-05-25T09:00:00Z' }],
+      existingPosts: [
+        { chartType: 'browser_domains', createdAt: '2026-05-25T09:00:00Z' },
+        ...aiTextPosts(5),
+      ],
     });
 
     expect(results).toHaveLength(3);
     const third = results[2];
     expect(third).not.toBeNull();
     expect(third.leaderboard).toBeTruthy();
-    expect(third.leaderboard.boardId).toMatch(/^most_|^closest_|^ignoring_/);
+    expect(third.leaderboard.boardId).toBeTruthy();
     expect(Array.isArray(third.leaderboard.entries)).toBe(true);
     expect(third.leaderboard.entries).toHaveLength(5);
   });
@@ -145,7 +167,10 @@ describe('generatePersonaPosts — third slot alternation', () => {
       prompts: null,
       dataJson: fakeData,
       profile: fakeProfile,
-      existingPosts: [{ chartType: 'browser_domains', createdAt: '2026-05-25T09:00:00Z' }],
+      existingPosts: [
+        { chartType: 'browser_domains', createdAt: '2026-05-25T09:00:00Z' },
+        ...aiTextPosts(5),
+      ],
     });
     expect(results[2].leaderboard.previousUserRank).toBeNull();
   });

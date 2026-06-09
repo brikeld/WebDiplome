@@ -50,6 +50,7 @@ import {
 import { pickAndBuildChart, formatChartContextBlock } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
 import { pickBoardToPost, cloneHiddenForBoard } from './leaderboards.js';
+import { isCompliantSystemPost } from './postsMerge.js';
 import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
 import {
   parseRationalesResponse,
@@ -75,13 +76,30 @@ export const ASSET_SLOT_INDEX = 1;
 /** Slot index for the alternating chart / leaderboard slot. */
 export const THIRD_SLOT_INDEX = 2;
 
+/** Min AI posts since the last leaderboard before slot 2 may be a leaderboard (~every 6th AI post). */
+export const MIN_AI_POSTS_BEFORE_LEADERBOARD = 5;
+
+function countAiPostsSinceLastLeaderboard(existingPosts) {
+  let count = 0;
+  for (const post of existingPosts ?? []) {
+    if (post?.leaderboard?.boardId) return count;
+    if (post && String(post.content || '').trim() && !isCompliantSystemPost(post)) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
 /**
- * Pick chart vs leaderboard for slot 2. Walks newest posts first; alternates after the
- * most recent chart or leaderboard post. Defaults to chart when none exist yet.
+ * Pick chart vs leaderboard for slot 2. Requires MIN_AI_POSTS_BEFORE_LEADERBOARD text/asset
+ * posts since the last leaderboard, then alternates chart/leaderboard on that slot.
  * @param {object[]} existingPosts
  * @returns {'chart'|'leaderboard'}
  */
 export function pickThirdSlotKind(existingPosts) {
+  if (countAiPostsSinceLastLeaderboard(existingPosts) < MIN_AI_POSTS_BEFORE_LEADERBOARD) {
+    return 'chart';
+  }
   for (const post of existingPosts ?? []) {
     if (post?.leaderboard?.boardId) return 'chart';
     if (post?.chartType) return 'leaderboard';
