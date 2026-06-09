@@ -182,6 +182,7 @@ const POST_METADATA_KEYS = [
   'highlights',
   'thinking',
   'chartType',
+  'chartContext',
   'textSliceType',
   'textSliceAngle',
   'textSliceContext',

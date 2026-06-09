@@ -3,10 +3,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import {
   appendPostsForceGrow,
-  collectLeaderboardBoardIds,
   dedupeCompliantSystemPosts,
   mergePostsPrepend,
-  stripLeaderboardPostsByBoardIds,
 } from './postsMerge.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -59,45 +57,11 @@ export async function writePostsForId(id, personaPosts, normalizePost = (p) => p
   return posts.length;
 }
 
-/** Remove leaderboard posts for the given boards across all local profile feeds. */
-export async function purgeLeaderboardPostsGlobally(boardIds, { exceptProfileId = null } = {}) {
-  if (!boardIds?.size) return;
-  await fs.mkdir(POSTS_DIR, { recursive: true });
-  let files;
-  try {
-    files = await fs.readdir(POSTS_DIR);
-  } catch (err) {
-    if (err.code === 'ENOENT') return;
-    throw err;
-  }
-  const profileIds = files
-    .filter((file) => file.endsWith('.json'))
-    .map((file) => file.replace(/\.json$/i, ''))
-    .filter((profileId) => profileId && profileId !== exceptProfileId);
-
-  await Promise.all(
-    profileIds.map((profileId) =>
-      withPostFileLock(profileId, async () => {
-        const posts = await readPostsForId(profileId);
-        const cleaned = stripLeaderboardPostsByBoardIds(posts, boardIds);
-        if (cleaned.length !== posts.length) {
-          await writePostsForId(profileId, cleaned);
-        }
-      }),
-    ),
-  );
-}
-
 /** Prepend freshly generated posts — always reads current file from disk first. */
 export async function appendPersonaPosts(id, newPosts, normalizePost = (p) => p) {
-  const incoming = Array.isArray(newPosts) ? newPosts.filter(Boolean) : [];
-  const boardIds = collectLeaderboardBoardIds(incoming);
-  if (boardIds.size > 0) {
-    await purgeLeaderboardPostsGlobally(boardIds, { exceptProfileId: id });
-  }
-
   return withPostFileLock(id, async () => {
     const current = await readPostsForId(id);
+    const incoming = Array.isArray(newPosts) ? newPosts.filter(Boolean) : [];
     const replaceUiKeys = new Set(
       incoming.map((p) => p?.compliantLowScore?.uiPersonaKey).filter(Boolean),
     );

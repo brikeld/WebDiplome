@@ -8,7 +8,7 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 900,
   },
   chart: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. A data chart about your digital life is attached. React to what it reveals — pick ONE specific number, bar, or pattern, be honest and a little self-aware (max 200 chars). Include at least 2 emojis. No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. Chart data is listed above and a matching chart image is attached. Your caption MUST reference at least ONE specific label and number from the chart data list (e.g. a domain name, app name, file extension count, storage percentage). Do not invent stats that are not in that list. Do not pivot to unrelated profile JSON topics. React honestly and a little self-aware (max 200 chars). Include at least 2 emojis. No hashtags.\nReturn valid JSON with content, sentiment, and the analysis fields described below. /no_think",
     temperature: 0.85,
     maxTokens: 900,
   },

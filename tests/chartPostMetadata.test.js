@@ -22,6 +22,20 @@ describe('synthesiseChartMetadata', () => {
     expect(synthesiseChartMetadata({ content: 'hi', chartType: '' })).toBeNull();
     expect(synthesiseChartMetadata({ content: '', chartType: 'battery_hardware' })).toBeNull();
   });
+
+  it('uses chartContext lines when provided', () => {
+    const result = synthesiseChartMetadata({
+      content: '64% of my disk is full already 😅📦',
+      chartType: 'storage_usage',
+      persona: 'productivite',
+      chartContext: {
+        title: 'Storage Usage',
+        lines: ['Used: 324 GB (64%)', 'Free: 176 GB', 'Total: 500 GB'],
+      },
+    });
+    expect(result?.inferenceChain?.[0]?.value).toContain('324 GB');
+    expect(result?.ingredients?.[0]?.dataPoints).toContain('Used: 324 GB (64%)');
+  });
 });
 
 describe('synthesiseWifiTextMetadata', () => {

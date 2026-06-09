@@ -38,30 +38,40 @@ function longestContentSubstring(content, maxLen = 180) {
 }
 
 /**
- * @param {{ content: string, chartType: string, persona?: string }} input
+ * @param {{ content: string, chartType: string, persona?: string, chartContext?: { title?: string, lines?: string[] } }} input
  * @returns {{ inferenceChain: object[], ingredients: object[], highlights: object[], thinking: object[] } | null}
  */
-export function synthesiseChartMetadata({ content, chartType, persona }) {
+export function synthesiseChartMetadata({ content, chartType, persona, chartContext }) {
   const body = String(content || '').trim();
   const typeKey = String(chartType || '').trim();
   if (!body || !typeKey) return null;
 
   const chartLabel = CHART_LABELS[typeKey] || typeKey.replace(/_/g, ' ');
+  const contextLines = Array.isArray(chartContext?.lines) ? chartContext.lines : [];
+  const dataSummary = contextLines.length
+    ? contextLines.slice(0, 4).join('; ')
+    : null;
   const generateValue = longestContentSubstring(body, 180);
 
   const inferenceChain = [
     {
       step: 'data',
-      value: `The feed attached a ${chartLabel} chart built from this device’s activity signals.`,
+      value: dataSummary
+        ? `Chart “${chartContext?.title || chartLabel}” shows: ${dataSummary}.`
+        : `The feed attached a ${chartLabel} chart built from this device’s activity signals.`,
       source: 'Chart annex',
     },
     { step: 'classify', value: chartLabel, confidence: 'high' },
     {
       step: 'infer',
-      value: 'One dominant bar or spike in the chart was treated as the whole story.',
-      confidence: 'low',
-      isBiased: true,
-      biasNote: 'A single visual high point does not capture the full mix of habits behind the chart.',
+      value: dataSummary
+        ? 'The caption was tied to a specific label or number from the chart data list.'
+        : 'One dominant bar or spike in the chart was treated as the whole story.',
+      confidence: dataSummary ? 'medium' : 'low',
+      isBiased: !dataSummary,
+      biasNote: dataSummary
+        ? null
+        : 'A single visual high point does not capture the full mix of habits behind the chart.',
     },
     { step: 'generate', value: generateValue },
   ];
@@ -70,7 +80,9 @@ export function synthesiseChartMetadata({ content, chartType, persona }) {
     {
       label: 'Chart signal',
       weight: 88,
-      dataPoints: [chartLabel, typeKey],
+      dataPoints: dataSummary
+        ? [chartLabel, ...contextLines.slice(0, 3)]
+        : [chartLabel, typeKey],
     },
     {
       label: 'Post caption',
@@ -96,7 +108,12 @@ export function synthesiseChartMetadata({ content, chartType, persona }) {
   const thinking = [
     {
       label: 'CHART READ',
-      detail: clip(`I reacted to the ${chartLabel} visual rather than re-listing every raw signal.`, 180),
+      detail: clip(
+        dataSummary
+          ? `I read the ${chartLabel} data (${contextLines[0] || 'see chart list'}) before writing the caption.`
+          : `I reacted to the ${chartLabel} visual rather than re-listing every raw signal.`,
+        180,
+      ),
     },
     {
       label: 'ONE NUMBER',

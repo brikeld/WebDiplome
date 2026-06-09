@@ -47,7 +47,7 @@ import {
   buildSecurityPostContext,
   buildAiToolsPostContext,
 } from './dataSlices.js';
-import { pickAndBuildChart } from './chartGenerator.js';
+import { pickAndBuildChart, formatChartContextBlock } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
 import { pickBoardToPost, cloneHiddenForBoard } from './leaderboards.js';
 import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
@@ -294,10 +294,20 @@ function imageTextFallbackNote(filename) {
 const IMAGE_CAPTION_USER_LEAD =
   'Task: write a caption for the attached image/screenshot. Ground the post in what you SEE (≥2 visible details). Do not pivot to unrelated profile topics.\n\n';
 
+const CHART_CAPTION_USER_LEAD =
+  'Task: write a caption for the attached data chart. Ground the post in the chart data listed above — name at least ONE specific label and number from that list. Do not write about unrelated profile topics.\n\n';
+
+function chartTextFallbackNote() {
+  return '\n\n[Vision unavailable — you cannot see the chart image. Use ONLY the chart data listed above; name specific labels and numbers from that list.]';
+}
+
 function userPayloadForVisionSlot(slot) {
   const base = slot.userPayload ?? '';
   if (slot.promptKey === 'image' && slot.imageData) {
     return truncateUserPayloadString(`${IMAGE_CAPTION_USER_LEAD}${base}`);
+  }
+  if (slot.promptKey === 'chart' && slot.imageData) {
+    return truncateUserPayloadString(`${CHART_CAPTION_USER_LEAD}${base}`);
   }
   return truncateUserPayloadString(base);
 }
@@ -734,7 +744,7 @@ async function fetchPostMetadataOnly({
     + 'Return ONLY JSON with inferenceChain, ingredients, highlights, and thinking for that exact content.',
   );
   const chartNote = slot.chartType
-    ? `\nChart annex type: ${slot.chartType} (user saw a chart image with this post).`
+    ? `\nChart annex type: ${slot.chartType}${slot.chartContext?.lines?.length ? `\nChart data:\n${slot.chartContext.lines.map((l) => `- ${l}`).join('\n')}` : ' (user saw a chart image with this post).'}`
     : '';
   const sliceNote = slot.textSliceType
     ? `\nText slice: ${slot.textSliceType}${slot.textSliceAngle ? ` (angle: ${slot.textSliceAngle})` : ''}.`
@@ -788,6 +798,7 @@ function applyChartMetadataFallback(parsed, slot) {
     content: parsed.content,
     chartType: slot.chartType,
     persona: slot.persona,
+    chartContext: slot.chartContext,
   });
   if (!synth) return parsed;
   return {
@@ -833,12 +844,18 @@ async function buildChartSlot(dataJson, profile, baseUserPayload, existingPosts,
     };
   }
 
+  const chartBlock = formatChartContextBlock(chartSpec.chartContext);
+  const chartUserPayload = chartBlock
+    ? `${chartBlock}\n\n---\n${baseUserPayload}`
+    : baseUserPayload;
+
   const pngBase64 = await renderSvgToPng(chartSpec.svg, chartSpec.w, chartSpec.h);
   if (!pngBase64) {
     return {
       id: 'chart', persona: chartSpec.persona, promptKey: 'chart',
-      userPayload: baseUserPayload, imageData: null, docText: null,
+      userPayload: chartUserPayload, imageData: null, docText: null,
       docFilename: null, attachedAsset: null, chartType: chartSpec.chartType,
+      chartContext: chartSpec.chartContext ?? null,
     };
   }
 
@@ -859,12 +876,13 @@ async function buildChartSlot(dataJson, profile, baseUserPayload, existingPosts,
     id: 'chart',
     persona: chartSpec.persona,
     promptKey: 'chart',
-    userPayload: baseUserPayload,
+    userPayload: chartUserPayload,
     imageData: { base64: pngBase64, mime: 'image/png' },
     docText: null,
     docFilename: null,
     attachedAsset: { kind: 'image', filename, relativePath, url, mime: 'image/png', visionAnalysed: true },
     chartType: chartSpec.chartType,
+    chartContext: chartSpec.chartContext ?? null,
   };
 }
 
@@ -1003,7 +1021,9 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
 
   if (!parsed.content) {
     const fallbackPayload = slot.imageData && slot.attachedAsset
-      ? slot.userPayload + imageTextFallbackNote(slot.attachedAsset.filename || '')
+      ? slot.userPayload + (slot.promptKey === 'chart'
+        ? chartTextFallbackNote()
+        : imageTextFallbackNote(slot.attachedAsset.filename || ''))
       : slot.userPayload;
     const body = buildChatBody({
       model: slot._model,
@@ -1073,6 +1093,7 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
   if (slot.textSliceContext) post.textSliceContext = slot.textSliceContext;
   if (slot.wifiPostAngle) post.wifiPostAngle = slot.wifiPostAngle;
   if (slot.chartType) post.chartType = slot.chartType;
+  if (slot.chartContext) post.chartContext = slot.chartContext;
   if (slot.leaderboard && slot.leaderboardContext) {
     const { board, standing, cloneHidden } = slot.leaderboardContext;
     const ratPromptCfg = SP.leaderboard_rationales ?? null;

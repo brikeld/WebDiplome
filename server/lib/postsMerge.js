@@ -93,31 +93,6 @@ export function dedupeCompliantSystemPosts(posts) {
   );
 }
 
-export function leaderboardBoardIdFromPost(post) {
-  const id = post?.leaderboard?.boardId ?? post?.leaderboard?.board_id;
-  const text = String(id ?? '').trim();
-  return text || null;
-}
-
-/** Board ids for leaderboard posts in a batch (incoming generation / sync). */
-export function collectLeaderboardBoardIds(posts) {
-  const ids = new Set();
-  for (const p of posts ?? []) {
-    const boardId = leaderboardBoardIdFromPost(p);
-    if (boardId) ids.add(boardId);
-  }
-  return ids;
-}
-
-/** Drop leaderboard posts whose boardId is in `boardIds`. */
-export function stripLeaderboardPostsByBoardIds(posts, boardIds) {
-  if (!boardIds?.size) return Array.isArray(posts) ? posts : [];
-  return (posts ?? []).filter((p) => {
-    const boardId = leaderboardBoardIdFromPost(p);
-    return !boardId || !boardIds.has(boardId);
-  });
-}
-
 export function postIdentityKey(post) {
   if (!post || typeof post !== 'object') return '';
   const id = post.id ?? post._id;
@@ -153,7 +128,5 @@ export function appendPostsForceGrow(newPosts, baselinePosts) {
   const incoming = Array.isArray(newPosts) ? newPosts.filter(Boolean) : [];
   const baseline = Array.isArray(baselinePosts) ? baselinePosts.filter(Boolean) : [];
   if (incoming.length === 0) return baseline;
-  const boardIds = collectLeaderboardBoardIds(incoming);
-  const cleanedBaseline = stripLeaderboardPostsByBoardIds(baseline, boardIds);
-  return mergePostsPrepend(incoming, cleanedBaseline);
+  return mergePostsPrepend(incoming, baseline);
 }

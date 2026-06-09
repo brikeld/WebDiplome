@@ -99,6 +99,7 @@ function resolvePostAnalysis(post) {
       content: post.content,
       chartType,
       persona: post.persona,
+      chartContext: post.chartContext,
     });
     if (synth) {
       if (!isValidChain(chain)) chain = synth.inferenceChain;

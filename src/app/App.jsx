@@ -29,6 +29,7 @@ import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.j
 import { PersonaBlurbsProvider } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
+import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import {
   canHideContentForScores,
   PERSONA_SCORE_RESTRICT_THRESHOLD,
@@ -333,7 +334,7 @@ function AppInner({
     hideLeaderboardSelf,
     revealLeaderboardSelf,
     isLeaderboardSelfHidden,
-    isPostHiddenFor,
+    isHidden,
   } = useLiveScoring();
   const [confirmingHide, setConfirmingHide] = useState(false);
   const [confirmingUnhide, setConfirmingUnhide] = useState(false);
@@ -757,7 +758,7 @@ function AppInner({
   const hideTargetPostIsHidden = hideTargetPost
     ? (hideTargetPost.leaderboard
         ? isLeaderboardSelfHidden(hideTargetPost.leaderboard.boardId)
-        : isPostHiddenFor(hideTargetPost))
+        : isHidden(normalizePostHideKey(hideTargetPost.createdAt)))
     : false;
 
   const hideTargetPostPersonaLabel = hideTargetPost
@@ -767,7 +768,7 @@ function AppInner({
   const tellPostIsHidden = tellDisplayPost
     ? (tellDisplayPost.leaderboard
         ? isLeaderboardSelfHidden(tellDisplayPost.leaderboard.boardId)
-        : isPostHiddenFor(tellDisplayPost))
+        : isHidden(normalizePostHideKey(tellDisplayPost.createdAt)))
     : false;
 
   // Returns the bounding rect of the currently highlighted post card in the feed.
@@ -789,9 +790,6 @@ function AppInner({
   }, []);
 
   const getHighlightedLeaderboardSelfRect = () =>
-    document
-      .querySelector('.post-card--highlighted .leaderboard-row--viewer-position')
-      ?.getBoundingClientRect() ??
     document
       .querySelector('.post-card--highlighted .leaderboard-row--self')
       ?.getBoundingClientRect() ??
@@ -865,7 +863,7 @@ function AppInner({
 
       const postIsHidden = post.leaderboard
         ? isLeaderboardSelfHidden(post.leaderboard.boardId)
-        : isPostHiddenFor(post);
+        : isHidden(normalizePostHideKey(post.createdAt));
 
       closeTell();
       setHideTargetPost(post);
@@ -899,7 +897,7 @@ function AppInner({
       profile,
       adjustedScores,
       closeTell,
-      isPostHiddenFor,
+      isHidden,
       isLeaderboardSelfHidden,
     ],
   );

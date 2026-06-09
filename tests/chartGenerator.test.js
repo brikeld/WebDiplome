@@ -18,6 +18,9 @@ import {
   buildSecurityAppsChart,
   buildFileHeatmapChart,
   buildAppRecencyChart,
+  describeChartContext,
+  formatChartContextBlock,
+  pickAndBuildChart,
 } from '../server/lib/chartGenerator.js';
 
 // Shared helpers for tests
@@ -200,5 +203,35 @@ describe('Chart builders — smoke tests', () => {
   });
   it('buildAppRecencyChart returns valid svg', () => {
     expectChart(buildAppRecencyChart(mockData, 'productivite'));
+  });
+});
+
+describe('describeChartContext', () => {
+  it('summarises browser domain chart data', () => {
+    const ctx = describeChartContext('browser_domains', mockData, mockProfile);
+    expect(ctx?.title).toBe('Browser Top Domains');
+    expect(ctx?.lines.some((l) => /github\.com|claude\.ai/i.test(l))).toBe(true);
+  });
+
+  it('summarises storage chart with percentages', () => {
+    const ctx = describeChartContext('storage_usage', mockData, mockProfile);
+    expect(ctx?.lines.some((l) => /64|324|500/i.test(l))).toBe(true);
+  });
+
+  it('formatChartContextBlock prepends grounding instructions', () => {
+    const block = formatChartContextBlock({
+      title: 'Browser Top Domains',
+      lines: ['github.com: 2 visits (67%)'],
+    });
+    expect(block).toContain('[Chart slot');
+    expect(block).toContain('github.com');
+  });
+});
+
+describe('pickAndBuildChart includes chartContext', () => {
+  it('returns chartContext alongside svg', () => {
+    const result = pickAndBuildChart(mockData, mockProfile, [], mockProfile.personaScores);
+    expect(result?.svg).toBeTruthy();
+    expect(result?.chartContext?.lines?.length).toBeGreaterThan(0);
   });
 });

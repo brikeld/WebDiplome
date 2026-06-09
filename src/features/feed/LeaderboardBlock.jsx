@@ -1,9 +1,6 @@
 import { useId } from 'react';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
-import {
-  isLeaderboardViewerRow,
-  mapLeaderboardEntryHiddenFlags,
-} from '@/lib/leaderboardEntryVisibility.js';
+import { mapLeaderboardEntryHiddenFlags } from '@/lib/leaderboardEntryVisibility.js';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import ProfileNameLink from '@/features/profile/ProfileNameLink.jsx';
 import { leaderboardEntryProfileSlug } from '@/lib/leaderboardProfileSlug.js';
@@ -31,11 +28,10 @@ function formatLeaderboardTitle(title) {
   return text.toUpperCase();
 }
 
-function Row({ entry, hidden, revealing, isViewerRow, authorSlug, onOpenProfile, directorySlugs }) {
+function Row({ entry, hidden, revealing, authorSlug, onOpenProfile, directorySlugs }) {
   const cls = [
     'leaderboard-row',
     entry.isUser ? 'leaderboard-row--self' : '',
-    isViewerRow ? 'leaderboard-row--viewer-position' : '',
     hidden ? 'leaderboard-row--hidden' : '',
     revealing ? 'leaderboard-row--revealing' : '',
   ].filter(Boolean).join(' ');
@@ -84,7 +80,7 @@ export default function LeaderboardBlock({
   leaderboardDirectorySlugs = [],
 }) {
   const {
-    viewerSlug,
+    isLeaderboardSelfHidden,
     isLeaderboardSelfRowHidden,
     isLeaderboardSelfRowRevealing,
   } = useLiveScoring();
@@ -98,13 +94,13 @@ export default function LeaderboardBlock({
     boardId,
     cloneHidden = [false, false, false, false],
   } = leaderboard;
-  const viewerRowHidden = isLeaderboardSelfRowHidden?.(boardId) ?? false;
-  const viewerRowRevealing = isLeaderboardSelfRowRevealing?.(boardId) ?? false;
+  const selfHidden = isLeaderboardSelfHidden(boardId);
+  const selfRowHidden = isLeaderboardSelfRowHidden?.(boardId) ?? selfHidden;
+  const selfRevealing = isLeaderboardSelfRowRevealing?.(boardId) ?? false;
   const titleId = `leaderboard-title-${boardId}-${reactId}`;
 
   const hiddenForEntry = mapLeaderboardEntryHiddenFlags(entries, {
-    viewerSlug,
-    viewerRowHidden,
+    selfHidden: selfRowHidden,
     cloneHidden,
   });
   const directorySlugs = new Set(
@@ -131,8 +127,7 @@ export default function LeaderboardBlock({
             key={e.rank}
             entry={e}
             hidden={hiddenForEntry[i]}
-            revealing={isLeaderboardViewerRow(e, viewerSlug) && viewerRowRevealing}
-            isViewerRow={isLeaderboardViewerRow(e, viewerSlug)}
+            revealing={e.isUser && selfRevealing}
             onOpenProfile={onOpenProfile}
             authorSlug={authorSlug}
             directorySlugs={directorySlugs}

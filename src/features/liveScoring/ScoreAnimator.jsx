@@ -187,21 +187,14 @@ function findPostCardByRect(sourceRect) {
   return null;
 }
 
-function findLeaderboardViewerRowByRect(sourceRect) {
+function findLeaderboardSelfRowByRect(sourceRect) {
   const cx = sourceRect.x + sourceRect.width / 2;
   const cy = sourceRect.y + sourceRect.height / 2;
-  for (const row of document.querySelectorAll('.leaderboard-row--viewer-position')) {
-    const rect = row.getBoundingClientRect();
-    if (rectContainsPoint(rect, cx, cy)) return row;
-  }
   for (const row of document.querySelectorAll('.leaderboard-row--self')) {
     const rect = row.getBoundingClientRect();
     if (rectContainsPoint(rect, cx, cy)) return row;
   }
-  return (
-    document.querySelector('.leaderboard-row--viewer-position') ??
-    document.querySelector('.leaderboard-row--self')
-  );
+  return document.querySelector('.leaderboard-row--self');
 }
 
 function pulseTargetEl(el, className = 'lsc-target-pulse') {
@@ -218,7 +211,7 @@ function pulseRevealTarget(sourceRect, variant, event, className = 'lsc-target-p
   const accent = PERSONA_COLORS[persona] ?? '#759AEF';
 
   if (variant === 'leaderboard-self') {
-    const row = findLeaderboardViewerRowByRect(sourceRect);
+    const row = findLeaderboardSelfRowByRect(sourceRect);
     if (!row) return;
     row.style.setProperty('--hit-accent', accent);
     pulseTargetEl(row, className);

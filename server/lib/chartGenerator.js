@@ -548,6 +548,271 @@ export function buildAppRecencyChart(data, persona = 'productivite') {
   return { svg: svgWrap(W, H, 'App Activity This Week', dayLabels + rows + sub, palette), w: W, h: H };
 }
 
+// ─── Chart context for LLM captions ──────────────────────────────────────────
+
+export const CHART_TITLES = {
+  app_categories: 'App Categories',
+  most_used_apps: 'Recently Used Apps (7 days)',
+  file_extensions: 'Recent File Types (7 days)',
+  storage_usage: 'Storage Usage',
+  battery_hardware: 'Hardware Spec',
+  browser_domains: 'Browser Top Domains',
+  language_fingerprint: 'Language Fingerprint',
+  ai_tool_exposure: 'AI Tool Exposure',
+  wifi_history: 'WiFi Network History',
+  recent_downloads: 'Recent Downloads',
+  security_apps: 'Security Status',
+  app_recency: 'App Activity This Week',
+};
+
+function formatDaysAgoFromIso(iso, nowMs = Date.now()) {
+  const days = Math.round((nowMs - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return '1 day ago';
+  return `${days} days ago`;
+}
+
+function formatDownloadSize(sizeKb) {
+  if (sizeKb >= 1024) return `${(sizeKb / 1024).toFixed(1)} MB`;
+  return `${Math.round(sizeKb)} KB`;
+}
+
+function formatHourLabel(h) {
+  if (h === 0) return '12am';
+  if (h === 12) return '12pm';
+  return h > 12 ? `${h - 12}pm` : `${h}am`;
+}
+
+/**
+ * Text summary of the exact data rendered in a chart — injected into the LLM
+ * user payload so captions stay aligned even when vision fails or is ignored.
+ * @returns {{ title: string, lines: string[] } | null}
+ */
+export function describeChartContext(chartType, data, profile) {
+  const title = CHART_TITLES[chartType] || chartType.replace(/_/g, ' ');
+  const nowMs = Date.now();
+
+  switch (chartType) {
+    case 'app_categories': {
+      const slice = extractAppCategorySlice(data || {});
+      const items = (slice.byCategory || []).slice(0, 7);
+      if (!items.length) return null;
+      return {
+        title,
+        lines: [
+          'Visualization: vertical bar chart — app count per category',
+          `Total installed apps: ${slice.totalInstalled ?? items.reduce((s, [, v]) => s + v, 0)}`,
+          ...items.map(([cat, count]) => `${cat}: ${count}`),
+        ],
+      };
+    }
+    case 'most_used_apps': {
+      const slice = extractMostUsedAppsSlice(data);
+      const apps = slice.apps
+        .slice(0, 10)
+        .filter((a) => a.last_used)
+        .sort((a, b) => new Date(b.last_used) - new Date(a.last_used));
+      if (!apps.length) return null;
+      return {
+        title,
+        lines: [
+          'Visualization: timeline — when each app was last used (last 7 days)',
+          `${slice.count} apps tracked`,
+          ...apps.map((a) => `${a.app}: last used ${formatDaysAgoFromIso(a.last_used, nowMs)}`),
+        ],
+      };
+    }
+    case 'file_extensions': {
+      const items = buildFileExtSlice(data || {}).slice(0, 8);
+      if (!items.length) return null;
+      return {
+        title,
+        lines: [
+          'Visualization: treemap — file counts by extension (last 7 days)',
+          ...items.map(([ext, count]) => `${ext}: ${count} file${count === 1 ? '' : 's'}`),
+        ],
+      };
+    }
+    case 'storage_usage': {
+      const slice = extractStorageSlice(data);
+      const used = slice.used || profile?.storageUsed || '—';
+      const total = slice.total || profile?.storageTotal || '—';
+      const free = slice.free || '—';
+      const pct = slice.usePct != null
+        ? slice.usePct
+        : (() => {
+          const u = parseFloat(used);
+          const t = parseFloat(total);
+          return t > 0 ? Math.round((u / t) * 100) : 0;
+        })();
+      return {
+        title,
+        lines: [
+          'Visualization: donut chart — disk usage percentage',
+          `Used: ${used} (${pct}%)`,
+          `Free: ${free}`,
+          `Total: ${total}`,
+        ],
+      };
+    }
+    case 'battery_hardware': {
+      const bat = extractBatterySlice(data);
+      const ram = firstValue(
+        data?.MACHINE_IDENTITY?.hardware_snapshot?.ram,
+        data?.MACHINE_IDENTITY?.ram,
+        profile?.ram,
+        '—',
+      );
+      const chip = firstValue(
+        data?.MACHINE_IDENTITY?.hardware_snapshot?.chip,
+        data?.MACHINE_IDENTITY?.chip,
+        profile?.hardwareChip,
+        profile?.hardware_chip,
+        '—',
+      );
+      const model = firstValue(
+        data?.MACHINE_IDENTITY?.model_name,
+        data?.MACHINE_IDENTITY?.machine_model,
+        profile?.machineModel,
+        profile?.machine_model,
+        profile?.machineName,
+        profile?.machine_name,
+        '—',
+      );
+      const cycles = bat.cycleCount ?? profile?.batteryCycles ?? '—';
+      const condition = bat.condition || '—';
+      return {
+        title,
+        lines: [
+          'Visualization: hardware spec grid — machine, chip, RAM, battery',
+          `Machine: ${model}`,
+          `Chip: ${chip}`,
+          `Memory: ${ram}`,
+          `Battery: ${condition}, ${cycles} cycles`,
+        ],
+      };
+    }
+    case 'browser_domains': {
+      const slice = extractBrowserSlice(data);
+      const items = slice.topDomains.slice(0, 8);
+      if (!items.length) return null;
+      const total = items.reduce((s, { count }) => s + count, 0);
+      return {
+        title,
+        lines: [
+          'Visualization: horizontal stacked bar — share of visits by domain',
+          `${slice.totalVisits} total visits`,
+          ...items.map(({ domain, count }) => {
+            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+            return `${domain}: ${count} visits (${pct}%)`;
+          }),
+        ],
+      };
+    }
+    case 'language_fingerprint': {
+      const langs = Array.isArray(data?.MACHINE_IDENTITY?.languages)
+        ? data.MACHINE_IDENTITY.languages
+        : (profile?.systemLanguages ?? []);
+      if (!langs.length) return null;
+      return {
+        title,
+        lines: [
+          'Visualization: language tiles — system languages by prominence',
+          `Languages (${langs.length}): ${langs.slice(0, 4).join(', ')}`,
+        ],
+      };
+    }
+    case 'ai_tool_exposure': {
+      const slice = extractAIToolsSlice(data);
+      const tools = slice.tools.slice(0, 8);
+      if (!tools.length) return null;
+      return {
+        title,
+        lines: [
+          'Visualization: ranked list — AI tools installed and/or used this week',
+          ...tools.map(({ name, installed, recentlyUsed }) => {
+            if (installed && recentlyUsed) return `${name}: installed, used this week`;
+            if (installed) return `${name}: installed`;
+            return `${name}: detected signal only`;
+          }),
+        ],
+      };
+    }
+    case 'wifi_history': {
+      const slice = extractWifiSlice(data || {});
+      const networks = (slice.networks || []).slice(0, 10);
+      if (networks.length < 2) return null;
+      return {
+        title,
+        lines: [
+          'Visualization: timeline strips — Wi‑Fi networks, most recent first',
+          `${networks.length} networks`,
+          ...networks.map((name, i) => `${i + 1}. ${name}`),
+        ],
+      };
+    }
+    case 'recent_downloads': {
+      const items = (data?.PAST_HISTORY?.recent_downloads ?? [])
+        .filter((d) => {
+          const n = String(d.name || '').toLowerCase();
+          return !n.startsWith('.') && n !== 'ds_store' && d.size_kb > 0;
+        })
+        .slice(0, 8);
+      if (!items.length) return null;
+      return {
+        title,
+        lines: [
+          'Visualization: lollipop chart — download file sizes',
+          ...items.map((d) => `${d.name}: ${formatDownloadSize(d.size_kb)}`),
+        ],
+      };
+    }
+    case 'security_apps': {
+      const slice = extractSecuritySlice(data);
+      const apps = slice.securityApps.length ? slice.securityApps : ['No security tools detected'];
+      return {
+        title,
+        lines: [
+          'Visualization: security toggles + installed security apps',
+          `SIP: ${slice.sip}`,
+          `FileVault: ${slice.filevault}`,
+          `Gatekeeper: ${slice.gatekeeper}`,
+          `Security apps: ${apps.join(', ')}`,
+        ],
+      };
+    }
+    case 'app_recency': {
+      const apps = extractAppRecencySlice(data);
+      const active = apps.filter((a) => a.daysAgo !== null);
+      if (active.length < 3) return null;
+      return {
+        title,
+        lines: [
+          'Visualization: grid — which day each app was last used (today = 0d)',
+          ...apps.map(({ app, daysAgo }) => {
+            if (daysAgo === null) return `${app}: no recent use`;
+            if (daysAgo === 0) return `${app}: used today`;
+            return `${app}: last used ${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
+          }),
+        ],
+      };
+    }
+    default:
+      return null;
+  }
+}
+
+/** Block prepended to the LLM user payload for chart-slot posts. */
+export function formatChartContextBlock(chartContext) {
+  if (!chartContext?.lines?.length) return '';
+  return [
+    '[Chart slot — your caption MUST reference specific labels and numbers from this list AND match the attached chart image]',
+    `Chart title: ${chartContext.title}`,
+    'Exact data shown in the chart:',
+    ...chartContext.lines.map((line) => `- ${line}`),
+  ].join('\n');
+}
+
 // ─── Chart pool + picker ───────────────────────────────────────────────────
 
 function resolveChartPersona(entry, profile) {
@@ -649,7 +914,7 @@ function weightedPick(items, getWeight) {
 
 /**
  * Pick a chart from the pool, excluding recently used types, weighted by persona scores.
- * Returns { svg, w, h, chartType, persona } or null if nothing builds.
+ * Returns { svg, w, h, chartType, persona, chartContext } or null if nothing builds.
  */
 export function pickAndBuildChart(dataJson, profile, excludeTypes = [], personaScores = null) {
   const scores = personaScores
@@ -678,7 +943,8 @@ export function pickAndBuildChart(dataJson, profile, excludeTypes = [], personaS
       const persona = resolveChartPersona(entry, profile);
       const result = entry.build(dataJson, profile, persona);
       if (!result?.svg) continue;
-      return { ...result, chartType: entry.id, persona };
+      const chartContext = describeChartContext(entry.id, dataJson, profile);
+      return { ...result, chartType: entry.id, persona, chartContext };
     } catch {
       continue;
     }
