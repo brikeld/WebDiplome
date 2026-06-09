@@ -740,6 +740,17 @@ export function boardRotationOffset(profile) {
   return Math.abs(hash) % BOARDS.length;
 }
 
+/** True when every defined board already has at least one leaderboard post. */
+export function allLeaderboardsPosted(existingPosts) {
+  const priorByBoard = priorRankByBoard(existingPosts);
+  return BOARDS.every((b) => Object.prototype.hasOwnProperty.call(priorByBoard, b.id));
+}
+
+/** Whether a new leaderboard post is warranted (rank moved or board never posted). */
+export function hasLeaderboardToPost(dataJson, profile, existingPosts, nowMs = Date.now()) {
+  return pickBoardToPost(dataJson, profile, existingPosts, nowMs) !== null;
+}
+
 /**
  * @returns {{ board, standing, prevRank: number|null } | null}
  *   null when nothing has changed since the last leaderboard post.
@@ -772,6 +783,7 @@ export function pickBoardToPost(dataJson, profile, existingPosts, nowMs) {
     }
   }
 
+  // Every board was posted and no rank moved on any of them → skip leaderboard entirely.
   if (candidates.length === 0) return null;
 
   const neverPosted = candidates.filter(

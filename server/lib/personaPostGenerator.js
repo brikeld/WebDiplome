@@ -49,7 +49,11 @@ import {
 } from './dataSlices.js';
 import { pickAndBuildChart, formatChartContextBlock } from './chartGenerator.js';
 import { renderSvgToPng } from './chartRenderer.js';
-import { pickBoardToPost, cloneHiddenForBoard } from './leaderboards.js';
+import {
+  pickBoardToPost,
+  cloneHiddenForBoard,
+  hasLeaderboardToPost,
+} from './leaderboards.js';
 import { isCompliantSystemPost } from './postsMerge.js';
 import { DEFAULT_SLOT_PROMPTS } from './prompts.js';
 import {
@@ -96,15 +100,27 @@ function countAiPostsSinceLastLeaderboard(existingPosts) {
  * @param {object[]} existingPosts
  * @returns {'chart'|'leaderboard'}
  */
-export function pickThirdSlotKind(existingPosts) {
+export function pickThirdSlotKind(existingPosts, { dataJson, profile, nowMs } = {}) {
   if (countAiPostsSinceLastLeaderboard(existingPosts) < MIN_AI_POSTS_BEFORE_LEADERBOARD) {
     return 'chart';
   }
+  let alternation = 'chart';
   for (const post of existingPosts ?? []) {
-    if (post?.leaderboard?.boardId) return 'chart';
-    if (post?.chartType) return 'leaderboard';
+    if (post?.leaderboard?.boardId) {
+      alternation = 'chart';
+      break;
+    }
+    if (post?.chartType) {
+      alternation = 'leaderboard';
+      break;
+    }
   }
-  return 'chart';
+  if (alternation !== 'leaderboard') return 'chart';
+  if (dataJson && profile) {
+    const at = Number.isFinite(nowMs) ? nowMs : Date.now();
+    if (!hasLeaderboardToPost(dataJson, profile, existingPosts, at)) return 'chart';
+  }
+  return 'leaderboard';
 }
 
 // ─── Text slice pool ───────────────────────────────────────────────────────
@@ -1176,7 +1192,9 @@ async function buildThirdSlot({
   personaScores,
   skipLeaderboard = false,
 }) {
-  const kind = skipLeaderboard ? 'chart' : pickThirdSlotKind(existingPosts);
+  const kind = skipLeaderboard
+    ? 'chart'
+    : pickThirdSlotKind(existingPosts, { dataJson, profile });
 
   if (kind === 'leaderboard') {
     const leaderboardSlot = buildLeaderboardSlot(dataJson, profile, userPayload, existingPosts, Date.now());

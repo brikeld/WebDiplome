@@ -77,6 +77,25 @@ describe('pickThirdSlotKind', () => {
       ...aiTextPosts(6),
     ])).toBe('chart');
   });
+
+  it('uses chart when alternation wants leaderboard but every board is already posted with no rank change', () => {
+    const lockingPosts = BOARDS.map((b) => {
+      const s = computeBoardStanding(b, fakeData, fakeProfile, NOW);
+      return {
+        createdAt: '2026-05-25T10:00:00Z',
+        leaderboard: { boardId: b.id, userRank: s.userRank, entries: s.entries },
+      };
+    });
+    const kind = pickThirdSlotKind(
+      [
+        { chartType: 'browser_domains', createdAt: '2026-05-25T11:00:00Z' },
+        ...aiTextPosts(5),
+        ...lockingPosts,
+      ],
+      { dataJson: fakeData, profile: fakeProfile, nowMs: NOW },
+    );
+    expect(kind).toBe('chart');
+  });
 });
 
 describe('generatePersonaPosts — third slot alternation', () => {

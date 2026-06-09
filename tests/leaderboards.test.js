@@ -7,6 +7,8 @@ import {
   decay,
   FAKE_CLONE_COUNT,
   FAKE_CLONE_IDENTITY,
+  allLeaderboardsPosted,
+  hasLeaderboardToPost,
   pickBoardToPost,
   scoreCloneFor,
 } from '../server/lib/leaderboards.js';
@@ -396,6 +398,18 @@ describe('pickBoardToPost', () => {
 
     const result = pickBoardToPost(data, profile, priorPosts, NOW);
     expect(result).toBeNull();
+  });
+
+  it('reports no leaderboard to post when every board is covered and ranks are stable', () => {
+    const priorPosts = BOARDS.map((b) => {
+      const s = computeBoardStanding(b, data, profile, NOW);
+      return {
+        createdAt: '2026-05-25T10:00:00Z',
+        leaderboard: { boardId: b.id, userRank: s.userRank, entries: s.entries },
+      };
+    });
+    expect(allLeaderboardsPosted(priorPosts)).toBe(true);
+    expect(hasLeaderboardToPost(data, profile, priorPosts, NOW)).toBe(false);
   });
 
   it('first-appearance counts as max delta (priority order breaks ties)', () => {
