@@ -96,6 +96,65 @@ describe('feedSpectatorReveals', () => {
     expect(revealed?._feedEnterDone || revealed?._feedEnter).toBeTruthy();
   });
 
+  it('treats setIngestAllowSlugs([]) as allow-all, not block-all', () => {
+    let profiles = [
+      {
+        slug: 'user-a',
+        personaPosts: [{ id: 'old', persona: 'productivite', content: 'old', createdAt: '2026-01-01T00:00:00Z' }],
+      },
+    ];
+    const controller = createFeedSpectatorRevealController({
+      setAllProfiles: (updater) => {
+        profiles = typeof updater === 'function' ? updater(profiles) : updater;
+      },
+    });
+
+    controller.ingestProfiles(profiles);
+    controller.setIngestAllowSlugs([]);
+    controller.ingestProfiles([
+      {
+        slug: 'user-a',
+        personaPosts: [
+          { id: 'new', persona: 'securite', content: 'fresh', createdAt: '2026-01-02T00:00:00Z' },
+          { id: 'old', persona: 'productivite', content: 'old', createdAt: '2026-01-01T00:00:00Z' },
+        ],
+      },
+    ]);
+
+    expect(controller.isSlugIdle('user-a')).toBe(false);
+  });
+
+  it('reveals expected post even when baseline is first established during demo', async () => {
+    let profiles = [];
+    const controller = createFeedSpectatorRevealController({
+      setAllProfiles: (updater) => {
+        profiles = typeof updater === 'function' ? updater(profiles) : updater;
+      },
+      gapMs: 1,
+    });
+
+    const newPost = {
+      id: 'new',
+      persona: 'securite',
+      content: 'fresh',
+      createdAt: '2026-01-02T00:00:00Z',
+    };
+    controller.setIngestAllowSlugs(['user-a']);
+    controller.setExpectedRevealKey('user-a', postIdentityKey(newPost));
+    controller.ingestProfiles([
+      {
+        slug: 'user-a',
+        personaPosts: [
+          newPost,
+          { id: 'old', persona: 'productivite', content: 'old', createdAt: '2026-01-01T00:00:00Z' },
+        ],
+      },
+    ]);
+
+    expect(controller.isSlugIdle('user-a')).toBe(false);
+    await controller.waitForSlugIdle('user-a', { waitForEnterAnimation: false });
+  });
+
   it('ignores ingest for slugs outside setIngestAllowSlugs', () => {
     let profiles = [
       {

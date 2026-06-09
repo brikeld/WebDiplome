@@ -240,11 +240,20 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         dataJson,
       });
 
+      const storedPool = row.raw_profile?.generationAssetCandidates ?? [];
+      const latestSingle = await jobStore.findLatestJobPayload(row.id, 'posts-single');
+      const latestPosts = await jobStore.findLatestJobPayload(row.id, 'posts');
+      const priorPool = latestSingle?.request_payload?.assetCandidates
+        ?? latestPosts?.request_payload?.assetCandidates
+        ?? [];
+      const assetCandidates = mergeAssetCandidatePool(storedPool, priorPool);
+
       const outcome = await queueSinglePostJob({
         profileStore,
         jobStore,
         profileSlug: slug,
         syncDataJson: dataJson,
+        assetCandidates: assetCandidates.length > 0 ? assetCandidates : null,
       });
 
       const personaPayload = generatingPersona ? { generatingPersona } : {};

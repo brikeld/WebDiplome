@@ -18,6 +18,13 @@ export default function DemoRotateButton({
   const [error, setError] = useState(null);
   const runningRef = useRef(false);
   const pipelineRef = useRef(null);
+  const onActiveChangeRef = useRef(onActiveChange);
+  const onGeneratingPersonaRef = useRef(onGeneratingPersona);
+
+  useEffect(() => {
+    onActiveChangeRef.current = onActiveChange;
+    onGeneratingPersonaRef.current = onGeneratingPersona;
+  }, [onActiveChange, onGeneratingPersona]);
 
   const accent = useMemo(
     () => (running && generatingPersona ? personaUiColor(generatingPersona) : null),
@@ -79,9 +86,9 @@ export default function DemoRotateButton({
 
   useEffect(() => () => {
     runningRef.current = false;
-    onActiveChange?.(false);
-    onGeneratingPersona?.(null);
-  }, [onActiveChange, onGeneratingPersona]);
+    onActiveChangeRef.current?.(false);
+    onGeneratingPersonaRef.current?.(null);
+  }, []);
 
   const title = running
     ? (busy

@@ -92,6 +92,7 @@ import {
   ingestHostedSessionFromHash,
   readHostedSession,
   readLinkedProfileSlug,
+  refreshHostedSession,
   resolveOwnedProfileForFeatures,
   shouldResetHostedSessionForProfileMeStatus,
 } from '@/lib/hostedAccount.js';
@@ -1569,7 +1570,9 @@ export default function App() {
           const meRes = await fetchWithHostedAuth(`${API_ORIGIN}/api/profile/me`).catch(() => null);
           if (!meRes?.ok) {
             if (shouldResetHostedSessionForProfileMeStatus(meRes?.status)) {
-              if (!demoRotateActiveRef.current) {
+              if (demoRotateActiveRef.current) {
+                await refreshHostedSession().catch(() => null);
+              } else {
                 clearHostedAccountStorage();
                 setLinkedProfileSlug(null);
                 setProfile(null);

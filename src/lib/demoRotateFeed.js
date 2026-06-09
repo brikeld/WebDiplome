@@ -1,6 +1,7 @@
 import { resolveApiOrigin } from '@/lib/apiOrigin.js';
+import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
 import { queueDemoSinglePost } from '@/lib/demoRotateApi.js';
-import { refreshHostedSession } from '@/lib/hostedAccount.js';
+import { readHostedSession, refreshHostedSession } from '@/lib/hostedAccount.js';
 import { postIdentityKey } from '@/lib/mergePersonaPosts.js';
 import {
   POST_FEED_ENTER_ANIM_MS,
@@ -119,7 +120,7 @@ async function queueDemoPostWithRetry(slug, { shouldContinue, timeoutMs = 120000
       continue;
     }
     if (outcome.reason === 'no_harvest_data' || outcome.reason === 'excluded_profile') {
-      return null;
+      return { kind: 'skip', slug, reason: outcome.reason };
     }
     if (outcome.kind === 'blocked' && outcome.jobId) {
       return {
@@ -177,7 +178,7 @@ async function revealCompletedPost(entry, {
     }
   } finally {
     spectateController?.setExpectedRevealKey?.(slug, null);
-    spectateController?.setIngestAllowSlugs?.([]);
+    spectateController?.setIngestAllowSlugs?.(null);
   }
 }
 
@@ -199,7 +200,7 @@ export async function runDemoRotatePipeline({
   const allSlugs = ordered.map((entry) => entry.slug);
   let cycleIndex = 0;
 
-  spectateController?.setIngestAllowSlugs?.([]);
+  spectateController?.setIngestAllowSlugs?.(null);
 
   try {
     try {
@@ -212,6 +213,10 @@ export async function runDemoRotatePipeline({
       const target = ordered[cycleIndex % ordered.length];
       cycleIndex += 1;
 
+      if (isHostedApiOrigin() && readHostedSession()?.refresh_token) {
+        await refreshHostedSession().catch(() => null);
+      }
+
       let queued = null;
       try {
         queued = await queueDemoPostWithRetry(target.slug, { shouldContinue });
@@ -220,8 +225,13 @@ export async function runDemoRotatePipeline({
       }
 
       if (!queued?.jobId) {
+        const label = target.displayName || target.slug;
         if (queued === null) {
-          console.warn(`[demo-rotate] skip ${target.displayName || target.slug} (no harvest)`);
+          console.warn(`[demo-rotate] skip ${label} (no harvest)`);
+        } else if (queued?.reason) {
+          console.warn(`[demo-rotate] skip ${label} (${queued.reason})`);
+        } else {
+          console.warn(`[demo-rotate] skip ${label} (queue failed)`);
         }
         await sleep(300);
         continue;

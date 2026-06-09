@@ -79,9 +79,9 @@ export function createFeedSpectatorRevealController({
         ingestAllowSlugs = null;
         return;
       }
-      ingestAllowSlugs = new Set(
-        slugs.map((slug) => String(slug || '').trim()).filter(Boolean),
-      );
+      const keys = slugs.map((slug) => String(slug || '').trim()).filter(Boolean);
+      // Empty array means "allow all" — not "block every profile".
+      ingestAllowSlugs = keys.length > 0 ? new Set(keys) : null;
     },
     setExpectedRevealKey(slug, postKey) {
       const slugKey = String(slug || '').trim();
@@ -103,13 +103,19 @@ export function createFeedSpectatorRevealController({
 
         const queue = getOrCreateQueue(slugKey);
 
+        const expectedKey = expectedRevealKeyBySlug.get(slugKey);
+
         if (!baselineEstablished.has(slugKey)) {
           if (posts.length === 0) continue;
-          queue.establishBaseline(posts);
-          continue;
+          if (expectedKey) {
+            const baselinePosts = posts.filter((p) => postIdentityKey(p) !== expectedKey);
+            queue.establishBaseline(baselinePosts);
+          } else {
+            queue.establishBaseline(posts);
+            continue;
+          }
         }
 
-        const expectedKey = expectedRevealKeyBySlug.get(slugKey);
         if (expectedKey) {
           const waiting = posts.filter((p) => postIdentityKey(p) === expectedKey);
           if (waiting.length === 0) continue;
