@@ -150,6 +150,34 @@ describe('generationQueue helpers', () => {
     expect(outcome.alreadyQueued).toBeUndefined();
   });
 
+  it('queues a posts-single job while another profile generation is active', async () => {
+    const profileRow = { id: 'p6', user_id: 'u6', firstname: 'Alex', lastname: 'Johnson' };
+    const apiProfile = {
+      displayName: 'Alex Johnson',
+      personaPosts: [{ content: 'one', persona: 'productivite' }],
+    };
+    let createdPayload = null;
+    const outcome = await queueSinglePostJob({
+      profileStore: {
+        getProfileRowBySlug: async () => profileRow,
+        getProfileBySlug: async () => apiProfile,
+      },
+      jobStore: {
+        findActiveJob: async () => null,
+        findLatestJobPayload: async () => null,
+        createJob: async ({ requestPayload }) => {
+          createdPayload = requestPayload;
+          return { id: 'job-single-queued', status: 'queued' };
+        },
+      },
+      profileSlug: 'alex-johnson',
+      syncDataJson: { hostname: 'stored-harvest' },
+    });
+    expect(outcome.queued).toBe(true);
+    expect(outcome.jobId).toBe('job-single-queued');
+    expect(createdPayload.jobType).toBe('posts-single');
+  });
+
   it('reuses an active posts-single job for demo rotate', async () => {
     const profileRow = { id: 'p5', user_id: 'u5', firstname: 'Alex', lastname: 'Johnson' };
     const apiProfile = {

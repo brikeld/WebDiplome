@@ -29,6 +29,7 @@ export async function queueDemoSinglePost(profileSlug) {
       alreadyQueued: body?.alreadyQueued ?? false,
       jobId: body?.jobId ?? null,
       status: body?.status ?? null,
+      generatingPersona: body?.generatingPersona ?? null,
     };
   }
 

@@ -1173,7 +1173,7 @@ body {
 }
 
 .post-card-shell--entering {
-  animation: post-card-feed-enter 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: post-card-feed-enter 1000ms cubic-bezier(0.22, 1, 0.36, 1) both;
   will-change: opacity, transform, filter;
 }
 
@@ -1186,12 +1186,12 @@ body {
 @keyframes post-card-feed-enter {
   0% {
     opacity: 0;
-    transform: translateY(-28px) scale(0.985);
-    filter: blur(6px);
+    transform: translateY(-18px) scale(0.992);
+    filter: blur(4px);
   }
-  60% {
-    opacity: 1;
-    filter: blur(0);
+  45% {
+    opacity: 0.92;
+    filter: blur(1px);
   }
   100% {
     opacity: 1;

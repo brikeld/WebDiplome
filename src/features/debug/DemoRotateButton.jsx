@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { listDemoRotateTargets } from '@/lib/demoRotate.js';
-import { runDemoRotateSinglePost } from '@/lib/demoRotateFeed.js';
+import { runDemoRotateRound } from '@/lib/demoRotateFeed.js';
 import { profileSlugFromProfile } from '@/lib/aiJobClient.js';
 
 export default function DemoRotateButton({
@@ -8,12 +8,12 @@ export default function DemoRotateButton({
   reloadProfileFromApi,
   spectateController,
   onActiveChange,
+  onGeneratingPersona,
 }) {
   const [running, setRunning] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const runningRef = useRef(false);
-  const indexRef = useRef(0);
   const cycleRef = useRef(null);
 
   const stop = useCallback(() => {
@@ -21,12 +21,13 @@ export default function DemoRotateButton({
     setRunning(false);
     setBusy(false);
     onActiveChange?.(false);
+    onGeneratingPersona?.(null);
     if (cycleRef.current) {
       cycleRef.current = null;
     }
-  }, [onActiveChange]);
+  }, [onActiveChange, onGeneratingPersona]);
 
-  const runNext = useCallback(async () => {
+  const runRound = useCallback(async () => {
     if (!runningRef.current) return;
 
     const targets = listDemoRotateTargets(allProfiles);
@@ -36,32 +37,30 @@ export default function DemoRotateButton({
       return;
     }
 
-    const target = targets[indexRef.current % targets.length];
-    indexRef.current += 1;
-    const slug = profileSlugFromProfile(target);
-    if (!slug) {
-      cycleRef.current = runNext();
-      return;
-    }
-
     setBusy(true);
     setError(null);
     try {
-      await runDemoRotateSinglePost({
-        profileSlug: slug,
+      await runDemoRotateRound({
+        targets: targets.map((profile) => ({
+          slug: profileSlugFromProfile(profile),
+        })),
         reloadProfileFromApi,
         spectateController,
+        onGeneratingPersona,
       });
     } catch (err) {
       console.warn('[demo-rotate]', err?.message || err);
       setError(err?.message || 'Demo rotate failed');
+      stop();
+      return;
     } finally {
       setBusy(false);
-      if (runningRef.current) {
-        cycleRef.current = runNext();
-      }
     }
-  }, [allProfiles, reloadProfileFromApi, spectateController, stop]);
+
+    if (runningRef.current) {
+      cycleRef.current = runRound();
+    }
+  }, [allProfiles, reloadProfileFromApi, spectateController, onGeneratingPersona, stop]);
 
   const toggle = useCallback(() => {
     if (runningRef.current) {
@@ -72,17 +71,18 @@ export default function DemoRotateButton({
     setRunning(true);
     setError(null);
     onActiveChange?.(true);
-    cycleRef.current = runNext();
-  }, [onActiveChange, runNext, stop]);
+    cycleRef.current = runRound();
+  }, [onActiveChange, runRound, stop]);
 
   useEffect(() => () => {
     runningRef.current = false;
     onActiveChange?.(false);
-  }, [onActiveChange]);
+    onGeneratingPersona?.(null);
+  }, [onActiveChange, onGeneratingPersona]);
 
   const title = running
-    ? (busy ? 'Demo rotate: generating one post…' : 'Demo rotate: active')
-    : 'Start demo rotate (1 post per profile, round-robin)';
+    ? (busy ? 'Demo rotate: generating posts for all demo profiles…' : 'Demo rotate: active')
+    : 'Start demo rotate (one post per profile, all queued together)';
 
   return (
     <button

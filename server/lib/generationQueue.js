@@ -188,13 +188,6 @@ async function queuePostsJobFromHarvestSync({
     return { queued: false, reason: 'excluded_profile' };
   }
 
-  if (mode === 'single') {
-    const globalActive = await jobStore.findAnyActiveJobByTypes?.(['posts', 'posts-single']);
-    if (globalActive && globalActive.profile_id !== row.id) {
-      return { queued: false, reason: 'generation_in_progress' };
-    }
-  }
-
   const incomingData = syncDataJson ?? null;
   if (!harvestPayloadHasContent(incomingData)) {
     return { queued: false, reason: 'no_harvest_data' };

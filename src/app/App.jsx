@@ -322,6 +322,7 @@ function AppInner({
   onGoLanding,
   reloadProfileFromApi,
   spectateRevealRef,
+  demoRotateActive = false,
   setDemoRotateActive,
   setAllProfiles,
 }) {
@@ -1124,6 +1125,19 @@ function AppInner({
             reloadProfileFromApi={reloadProfileFromApi}
             spectateController={spectateRevealRef.current}
             onActiveChange={setDemoRotateActive}
+            onGeneratingPersona={(persona) => {
+              if (!persona) {
+                setPostGen(POST_GEN_IDLE);
+                return;
+              }
+              setPostGen({
+                loading: true,
+                phase: 'generating',
+                generatingPersona: persona,
+                error: null,
+                generationPlan: null,
+              });
+            }}
           />
         )}
       </div>
@@ -1137,7 +1151,9 @@ function AppInner({
                 feedProfiles={feedProfiles}
                 viewerProfile={viewerProfile}
                 aiFeaturesEnabled={accountFeaturesEnabled}
-                isGeneratingPosts={postGen.phase === 'generating' && postGen.loading}
+                isGeneratingPosts={
+                  (postGen.phase === 'generating' && postGen.loading) || demoRotateActive
+                }
                 generatingPersona={postGen.generatingPersona}
                 postRevealFlash={postRevealFlash}
                 highlightedPostId={feedHighlightedPostId}
@@ -2358,6 +2374,7 @@ export default function App() {
         onGoLanding={handleGoLanding}
         reloadProfileFromApi={reloadProfileFromApi}
         spectateRevealRef={spectateRevealRef}
+        demoRotateActive={demoRotateActive}
         setDemoRotateActive={setDemoRotateActive}
         setAllProfiles={setAllProfiles}
       />

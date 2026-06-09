@@ -14,6 +14,7 @@ import {
   shouldPatchQueuedGenerationPayload,
 } from '../lib/generationQueue.js';
 import { isDemoRotateOperator, isDemoRotateTargetProfile } from '../lib/demoRotate.js';
+import { resolveDemoSinglePostPersona } from '../lib/demoRotatePersona.js';
 
 const workerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -221,6 +222,11 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         return res.status(400).json({ error: 'No stored harvest data for profile', reason: 'no_harvest_data' });
       }
 
+      const generatingPersona = await resolveDemoSinglePostPersona({
+        profile: target,
+        dataJson: ctx.dataJson,
+      });
+
       const outcome = await queueSinglePostJob({
         profileStore,
         jobStore,
@@ -228,12 +234,15 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         syncDataJson: ctx.dataJson,
       });
 
+      const personaPayload = generatingPersona ? { generatingPersona } : {};
+
       if (outcome.alreadyQueued) {
         return res.json({
           success: true,
           alreadyQueued: true,
           jobId: outcome.jobId,
           status: outcome.status,
+          ...personaPayload,
         });
       }
       if (!outcome.queued) {
@@ -244,9 +253,10 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
           alreadyQueued: outcome.alreadyQueued ?? false,
           jobId: outcome.jobId ?? null,
           status: outcome.status ?? null,
+          ...personaPayload,
         });
       }
-      res.json({ success: true, jobId: outcome.jobId, status: outcome.status });
+      res.json({ success: true, jobId: outcome.jobId, status: outcome.status, ...personaPayload });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

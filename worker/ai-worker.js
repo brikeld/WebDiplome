@@ -36,7 +36,7 @@ const LM_STUDIO_BASE_URL = String(process.env.LM_STUDIO_BASE_URL || 'http://127.
 const LM_STUDIO_MODEL = String(process.env.LM_STUDIO_MODEL || 'google/gemma-4-e4b');
 const TIMEOUT_MS = parseInt(process.env.LM_STUDIO_TIMEOUT_MS || '180000', 10);
 const RETRIES = parseInt(process.env.LM_STUDIO_RETRIES || '1', 10);
-const POLL_MS = parseInt(process.env.AI_WORKER_POLL_MS || '5000', 10);
+const POLL_MS = parseInt(process.env.AI_WORKER_POLL_MS || '1500', 10);
 const CHART_UPLOAD_DIR = path.join(os.tmpdir(), 'webdiplome-worker-charts');
 
 function headers() {
