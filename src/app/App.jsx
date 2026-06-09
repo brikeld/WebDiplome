@@ -1128,6 +1128,7 @@ function AppInner({
             spectateController={spectateRevealRef.current}
             onActiveChange={onDemoRotateActiveChange}
             onGeneratingPersona={onDemoGeneratingPersona}
+            generatingPersona={demoGeneratingPersona}
           />
         )}
       </div>

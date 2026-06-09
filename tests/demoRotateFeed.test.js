@@ -2,10 +2,20 @@ import { describe, expect, it } from 'vitest';
 import {
   demoSpinnerPersonaForIndex,
   personaFromGenerationJob,
-  pickSlugForPipeline,
+  postKeyFromGenerationJob,
+  sortDemoTargets,
 } from '../src/lib/demoRotateFeed.js';
 
 describe('demoRotateFeed helpers', () => {
+  it('sorts demo targets alphabetically by display name', () => {
+    const ordered = sortDemoTargets([
+      { slug: 'lea-jonathan', displayName: 'Léa & Jonathan' },
+      { slug: 'nyria', displayName: 'Nyria' },
+      { slug: 'daniel-rocha', displayName: 'Daniel Rocha' },
+    ]);
+    expect(ordered.map((e) => e.slug)).toEqual(['daniel-rocha', 'lea-jonathan', 'nyria']);
+  });
+
   it('picks the persona for the post currently being revealed', () => {
     const ordered = [
       { slug: 'a', generatingPersona: 'productivite' },
@@ -18,22 +28,12 @@ describe('demoRotateFeed helpers', () => {
     expect(demoSpinnerPersonaForIndex(ordered, 3)).toBeNull();
   });
 
-  it('reads persona from completed job posts', () => {
-    expect(personaFromGenerationJob({
-      posts: [{ persona: 'securite', content: 'hello' }],
-    })).toBe('securite');
-    expect(personaFromGenerationJob({ result: [{ persona: 'popularite' }] })).toBe('popularite');
+  it('reads persona and post key from completed job posts', () => {
+    const job = {
+      posts: [{ id: 'post-1', persona: 'securite', content: 'hello', createdAt: '2026-01-02T00:00:00Z' }],
+    };
+    expect(personaFromGenerationJob(job)).toBe('securite');
+    expect(postKeyFromGenerationJob(job)).toBeTruthy();
     expect(personaFromGenerationJob({ posts: [] })).toBeNull();
-  });
-
-  it('round-robins slugs and skips busy profiles', () => {
-    const slugs = ['a', 'b', 'c'];
-    const busy = new Set(['b']);
-    const first = pickSlugForPipeline(slugs, 0, busy);
-    expect(first.slug).toBe('a');
-    const second = pickSlugForPipeline(slugs, first.nextCursor, busy);
-    expect(second.slug).toBe('c');
-    const third = pickSlugForPipeline(slugs, second.nextCursor, new Set(['a', 'b', 'c']));
-    expect(third.slug).toBeNull();
   });
 });

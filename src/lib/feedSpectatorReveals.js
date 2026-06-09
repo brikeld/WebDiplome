@@ -21,6 +21,8 @@ export function createFeedSpectatorRevealController({
   let skipSlug = null;
   /** When set, only these profile slugs may enqueue new spectator reveals. */
   let ingestAllowSlugs = null;
+  /** Demo rotate: only reveal this post identity for a slug (prevents duplicate/batch reveals). */
+  const expectedRevealKeyBySlug = new Map();
 
   const mergeAnimatedWithApiPosts = (slugKey, queuePosts) => {
     const apiPosts = latestApiPostsBySlug.get(slugKey) ?? [];
@@ -81,6 +83,13 @@ export function createFeedSpectatorRevealController({
         slugs.map((slug) => String(slug || '').trim()).filter(Boolean),
       );
     },
+    setExpectedRevealKey(slug, postKey) {
+      const slugKey = String(slug || '').trim();
+      if (!slugKey) return;
+      const key = String(postKey || '').trim();
+      if (!key) expectedRevealKeyBySlug.delete(slugKey);
+      else expectedRevealKeyBySlug.set(slugKey, key);
+    },
     ingestProfiles(profiles) {
       for (const profile of Array.isArray(profiles) ? profiles : []) {
         if (!profile) continue;
@@ -97,6 +106,20 @@ export function createFeedSpectatorRevealController({
         if (!baselineEstablished.has(slugKey)) {
           if (posts.length === 0) continue;
           queue.establishBaseline(posts);
+          continue;
+        }
+
+        const expectedKey = expectedRevealKeyBySlug.get(slugKey);
+        if (expectedKey) {
+          const waiting = posts.filter((p) => postIdentityKey(p) === expectedKey);
+          if (waiting.length === 0) continue;
+          const key = postIdentityKey(waiting[0]);
+          if (!key || queue.hasRevealedKey(key) || queue.hasPendingKey(key)) {
+            expectedRevealKeyBySlug.delete(slugKey);
+            continue;
+          }
+          expectedRevealKeyBySlug.delete(slugKey);
+          queue.enqueue(sortPostsForReveal(waiting));
           continue;
         }
 
@@ -127,6 +150,7 @@ export function createFeedSpectatorRevealController({
     reset() {
       skipSlug = null;
       ingestAllowSlugs = null;
+      expectedRevealKeyBySlug.clear();
       baselineEstablished.clear();
       latestApiPostsBySlug.clear();
       queuesBySlug.clear();

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createFeedSpectatorRevealController } from '../src/lib/feedSpectatorReveals.js';
+import { postIdentityKey } from '../src/lib/mergePersonaPosts.js';
 
 describe('feedSpectatorReveals', () => {
   it('does not wipe the directory when reveal fires before React commits profiles', () => {
@@ -52,6 +53,47 @@ describe('feedSpectatorReveals', () => {
     ]);
 
     expect(controller.isSlugIdle('user-a')).toBe(false);
+  });
+
+  it('reveals only the expected post key during demo rotate', async () => {
+    let profiles = [
+      {
+        slug: 'user-a',
+        personaPosts: [{ id: 'old', persona: 'productivite', content: 'old', createdAt: '2026-01-01T00:00:00Z' }],
+      },
+    ];
+    const controller = createFeedSpectatorRevealController({
+      setAllProfiles: (updater) => {
+        profiles = typeof updater === 'function' ? updater(profiles) : updater;
+      },
+      gapMs: 1,
+    });
+
+    profiles = [...profiles];
+    controller.ingestProfiles(profiles);
+    controller.setIngestAllowSlugs(['user-a']);
+    const newPost = {
+      id: 'new',
+      persona: 'securite',
+      content: 'fresh',
+      createdAt: '2026-01-02T00:00:00Z',
+    };
+    controller.setExpectedRevealKey('user-a', postIdentityKey(newPost));
+
+    controller.ingestProfiles([
+      {
+        slug: 'user-a',
+        personaPosts: [
+          newPost,
+          { id: 'old', persona: 'productivite', content: 'old', createdAt: '2026-01-01T00:00:00Z' },
+        ],
+      },
+    ]);
+
+    expect(controller.isSlugIdle('user-a')).toBe(false);
+    await controller.waitForSlugIdle('user-a', { waitForEnterAnimation: false });
+    const revealed = profiles[0]?.personaPosts?.find((p) => p.id === 'new');
+    expect(revealed?._feedEnterDone || revealed?._feedEnter).toBeTruthy();
   });
 
   it('ignores ingest for slugs outside setIngestAllowSlugs', () => {

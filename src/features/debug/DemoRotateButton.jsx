@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { listDemoRotateTargets } from '@/lib/demoRotate.js';
 import { runDemoRotatePipeline } from '@/lib/demoRotateFeed.js';
+import { personaUiColor } from '@/lib/personaColors.js';
+import { displayNameFromProfile } from '@/lib/profileUtils.js';
 import { profileSlugFromProfile } from '@/lib/aiJobClient.js';
 
 export default function DemoRotateButton({
@@ -9,12 +11,18 @@ export default function DemoRotateButton({
   spectateController,
   onActiveChange,
   onGeneratingPersona,
+  generatingPersona = null,
 }) {
   const [running, setRunning] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const runningRef = useRef(false);
   const pipelineRef = useRef(null);
+
+  const accent = useMemo(
+    () => (running && generatingPersona ? personaUiColor(generatingPersona) : null),
+    [running, generatingPersona],
+  );
 
   const stop = useCallback(() => {
     runningRef.current = false;
@@ -42,6 +50,7 @@ export default function DemoRotateButton({
       await runDemoRotatePipeline({
         targets: targets.map((profile) => ({
           slug: profileSlugFromProfile(profile),
+          displayName: displayNameFromProfile(profile),
         })),
         reloadProfileFromApi,
         spectateController,
@@ -82,9 +91,19 @@ export default function DemoRotateButton({
 
   const title = running
     ? (busy
-      ? 'Demo rotate: 4 LM slots + staggered feed reveals…'
+      ? 'Demo rotate: one post per user, round-robin…'
       : 'Demo rotate: active')
-    : 'Start demo rotate (4 parallel generations, ~2s between feed posts)';
+    : 'Start demo rotate (each demo user, one post at a time)';
+
+  const buttonStyle = accent
+    ? {
+        borderColor: accent,
+        background: `color-mix(in srgb, ${accent} 12%, #fff)`,
+        '--persona-accent': accent,
+      }
+    : undefined;
+
+  const dotStyle = accent ? { background: accent } : undefined;
 
   return (
     <button
@@ -94,8 +113,9 @@ export default function DemoRotateButton({
       aria-pressed={running}
       aria-label={title}
       title={error ? `${title} — ${error}` : title}
+      style={buttonStyle}
     >
-      <span className="demo-rotate-btn__dot" aria-hidden="true" />
+      <span className="demo-rotate-btn__dot" style={dotStyle} aria-hidden="true" />
     </button>
   );
 }

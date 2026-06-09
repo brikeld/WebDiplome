@@ -78,6 +78,8 @@ export function initialsFromProfile(p) {
 }
 
 export function displayNameFromProfile(p) {
+  const explicit = String(p?.displayName ?? p?.display_name ?? '').trim();
+  if (explicit) return explicit;
   if (p?.firstname && p?.lastname) return `${p.firstname} ${p.lastname}`.trim();
   if (p?.firstname) return String(p.firstname).trim();
   if (p?.lastname) return String(p.lastname).trim();

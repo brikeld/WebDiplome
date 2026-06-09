@@ -14,5 +14,14 @@ export function isDemoRotateTargetProfile(profile) {
 }
 
 export function listDemoRotateTargets(allProfiles) {
-  return (Array.isArray(allProfiles) ? allProfiles : []).filter(isDemoRotateTargetProfile);
+  const targets = (Array.isArray(allProfiles) ? allProfiles : []).filter(isDemoRotateTargetProfile);
+  return targets.sort((a, b) => {
+    const nameA = displayNameFromProfile(a);
+    const nameB = displayNameFromProfile(b);
+    const byName = nameA.localeCompare(nameB, 'fr', { sensitivity: 'base' });
+    if (byName !== 0) return byName;
+    const slugA = String(a?.slug ?? a?.id ?? '');
+    const slugB = String(b?.slug ?? b?.id ?? '');
+    return slugA.localeCompare(slugB);
+  });
 }

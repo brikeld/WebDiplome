@@ -1,5 +1,6 @@
 import { resolveApiOrigin } from '@/lib/apiOrigin.js';
 import { queueDemoSinglePost } from '@/lib/demoRotateApi.js';
+import { postIdentityKey } from '@/lib/mergePersonaPosts.js';
 import {
   POST_FEED_ENTER_ANIM_MS,
   sleep,
@@ -7,10 +8,25 @@ import {
 
 const API_ORIGIN = resolveApiOrigin();
 
-export const DEMO_PIPELINE_SIZE = 4;
-export const DEMO_PIPELINE_POLL_MS = 350;
 export const DEMO_REVEAL_GAP_MS = 2000;
+const DEMO_JOB_POLL_MS = 400;
 const DEMO_REVEAL_POLL_MS = 200;
+const DEMO_QUEUE_RETRY_MS = 500;
+
+/** Stable demo order: alphabetical by display name, then slug. */
+export function sortDemoTargets(targets) {
+  return [...(Array.isArray(targets) ? targets : [])]
+    .map((entry) => ({
+      slug: String(entry?.slug ?? '').trim(),
+      displayName: String(entry?.displayName ?? entry?.slug ?? '').trim(),
+    }))
+    .filter((entry) => entry.slug)
+    .sort((a, b) => {
+      const byName = a.displayName.localeCompare(b.displayName, 'fr', { sensitivity: 'base' });
+      if (byName !== 0) return byName;
+      return a.slug.localeCompare(b.slug);
+    });
+}
 
 /** Persona key for the post at `index` in the demo reveal order. */
 export function demoSpinnerPersonaForIndex(ordered, index) {
@@ -26,19 +42,10 @@ export function personaFromGenerationJob(job) {
   return persona ? String(persona) : null;
 }
 
-/** Round-robin pick while skipping slugs that already have an in-flight job. */
-export function pickSlugForPipeline(slugs, cursor, inFlightBySlug) {
-  const list = Array.isArray(slugs) ? slugs.filter(Boolean) : [];
-  if (list.length === 0) return { slug: null, nextCursor: 0 };
-  const busy = inFlightBySlug instanceof Set ? inFlightBySlug : new Set();
-  for (let step = 0; step < list.length; step += 1) {
-    const idx = (cursor + step) % list.length;
-    const slug = list[idx];
-    if (!busy.has(slug)) {
-      return { slug, nextCursor: (idx + 1) % list.length };
-    }
-  }
-  return { slug: null, nextCursor: cursor % list.length };
+export function postKeyFromGenerationJob(job) {
+  const posts = Array.isArray(job?.posts) ? job.posts : job?.result;
+  if (!Array.isArray(posts) || posts.length === 0) return null;
+  return postIdentityKey(posts[0]) || null;
 }
 
 async function fetchGenerationJob(jobId) {
@@ -54,9 +61,21 @@ async function fetchGenerationJob(jobId) {
   return job;
 }
 
+async function waitForJobComplete(jobId, { shouldContinue, pollMs = DEMO_JOB_POLL_MS, timeoutMs = 300000 } = {}) {
+  const start = Date.now();
+  while (shouldContinue() && Date.now() - start < timeoutMs) {
+    const job = await fetchGenerationJob(jobId);
+    if (job.status === 'complete') return job;
+    if (job.status === 'failed') {
+      throw new Error(job.error || 'Demo generation failed');
+    }
+    await sleep(pollMs);
+  }
+  throw new Error('Demo generation timed out — is your AI PC worker running?');
+}
+
 /**
  * One queue attempt — returns immediately (no long wait loops).
- * `blocked` = profile already has a posts-single job; try another slug.
  */
 export async function tryQueueDemoPost(slug) {
   const key = String(slug || '').trim();
@@ -85,10 +104,32 @@ export async function tryQueueDemoPost(slug) {
   return { kind: 'skip', slug: key, reason: created?.reason ?? 'queue_failed' };
 }
 
+async function queueDemoPostWithRetry(slug, { shouldContinue, timeoutMs = 120000 }) {
+  const start = Date.now();
+  while (shouldContinue() && Date.now() - start < timeoutMs) {
+    const outcome = await tryQueueDemoPost(slug);
+    if (outcome.kind === 'queued') return outcome;
+    if (outcome.reason === 'no_harvest_data' || outcome.reason === 'excluded_profile') {
+      return null;
+    }
+    if (outcome.kind === 'blocked' && outcome.jobId) {
+      return {
+        kind: 'queued',
+        slug: outcome.slug,
+        jobId: outcome.jobId,
+        generatingPersona: outcome.generatingPersona,
+      };
+    }
+    await sleep(DEMO_QUEUE_RETRY_MS);
+  }
+  return null;
+}
+
 async function waitForRevealStart(slug, {
   reloadProfileFromApi,
   spectateController,
   allSlugs = [],
+  postKey = null,
 }) {
   const preserveOthers = allSlugs
     .map((entry) => String(entry || '').trim())
@@ -97,6 +138,7 @@ async function waitForRevealStart(slug, {
   const timeoutMs = 90000;
   while (Date.now() - start < timeoutMs) {
     spectateController?.setIngestAllowSlugs?.([slug]);
+    if (postKey) spectateController?.setExpectedRevealKey?.(slug, postKey);
     await reloadProfileFromApi({ preservePersonaPostsForSlugs: preserveOthers });
     if (spectateController && !spectateController.isSlugIdle(slug)) return;
     await sleep(DEMO_REVEAL_POLL_MS);
@@ -112,10 +154,12 @@ async function revealCompletedPost(entry, {
   const slug = entry.slug;
   try {
     spectateController?.setIngestAllowSlugs?.([slug]);
+    if (entry.postKey) spectateController?.setExpectedRevealKey?.(slug, entry.postKey);
     await waitForRevealStart(slug, {
       reloadProfileFromApi,
       spectateController,
       allSlugs,
+      postKey: entry.postKey,
     });
     if (spectateController?.waitForSlugIdle) {
       await spectateController.waitForSlugIdle(slug, { waitForEnterAnimation: true });
@@ -123,14 +167,14 @@ async function revealCompletedPost(entry, {
       await sleep(POST_FEED_ENTER_ANIM_MS);
     }
   } finally {
+    spectateController?.setExpectedRevealKey?.(slug, null);
     spectateController?.setIngestAllowSlugs?.([]);
   }
 }
 
 /**
- * Keep `pipelineSize` LM jobs in flight (worker concurrency must match).
- * Reveal finished posts one at a time with `revealGapMs` between feed entries.
- * Runs until `shouldContinue()` returns false — errors never stop the loop.
+ * Strict round-robin: one profile at a time — queue → generate → reveal → next profile.
+ * Cycles through every demo user before repeating anyone.
  */
 export async function runDemoRotatePipeline({
   targets,
@@ -138,148 +182,83 @@ export async function runDemoRotatePipeline({
   spectateController,
   onGeneratingPersona,
   shouldContinue = () => true,
-  pipelineSize = DEMO_PIPELINE_SIZE,
   revealGapMs = DEMO_REVEAL_GAP_MS,
-  pollMs = DEMO_PIPELINE_POLL_MS,
 }) {
-  const slugs = (Array.isArray(targets) ? targets : [])
-    .map((entry) => String(entry?.slug ?? entry ?? '').trim())
-    .filter(Boolean);
+  const ordered = sortDemoTargets(targets);
+  if (ordered.length === 0) throw new Error('No demo profiles available');
 
-  if (slugs.length === 0) throw new Error('No demo profiles available');
-
-  const allSlugs = [...slugs];
-  const inFlight = new Map();
-  const revealQueue = [];
-  let slugCursor = 0;
-  let revealing = false;
-  let refillLock = false;
-  let skippedSlugs = new Set();
-
-  const busySlugs = () => new Set([...inFlight.values()].map((e) => e.slug));
-
-  const updateSpinner = () => {
-    const nextReveal = revealQueue[0];
-    const nextFlight = [...inFlight.values()][0];
-    onGeneratingPersona?.(
-      nextReveal?.generatingPersona ?? nextFlight?.generatingPersona ?? null,
-    );
-  };
-
-  const ensurePipelineFull = async () => {
-    if (refillLock || !shouldContinue()) return;
-    refillLock = true;
-    try {
-      let attempts = 0;
-      const maxAttempts = Math.max(slugs.length * 4, pipelineSize * 3);
-      while (inFlight.size < pipelineSize && shouldContinue() && attempts < maxAttempts) {
-        attempts += 1;
-        const pick = pickSlugForPipeline(slugs, slugCursor, busySlugs());
-        slugCursor = pick.nextCursor;
-        if (!pick.slug) {
-          await sleep(pollMs);
-          continue;
-        }
-        if (skippedSlugs.has(pick.slug)) continue;
-
-        const outcome = await tryQueueDemoPost(pick.slug);
-        if (outcome.kind === 'queued') {
-          inFlight.set(outcome.jobId, {
-            slug: outcome.slug,
-            jobId: outcome.jobId,
-            generatingPersona: outcome.generatingPersona,
-          });
-          attempts = 0;
-          updateSpinner();
-          continue;
-        }
-        if (outcome.kind === 'blocked') {
-          if (outcome.jobId && !inFlight.has(outcome.jobId)) {
-            inFlight.set(outcome.jobId, {
-              slug: outcome.slug,
-              jobId: outcome.jobId,
-              generatingPersona: outcome.generatingPersona,
-            });
-            attempts = 0;
-            updateSpinner();
-          }
-          continue;
-        }
-        if (outcome.reason === 'no_harvest_data' || outcome.reason === 'excluded_profile') {
-          skippedSlugs.add(pick.slug);
-          console.warn(`[demo-rotate] skip ${pick.slug}: ${outcome.reason}`);
-        }
-      }
-    } finally {
-      refillLock = false;
-    }
-  };
+  const allSlugs = ordered.map((entry) => entry.slug);
+  let cycleIndex = 0;
 
   spectateController?.setIngestAllowSlugs?.([]);
 
   try {
-    await ensurePipelineFull();
-    updateSpinner();
+    try {
+      await reloadProfileFromApi({ preservePersonaPostsForSlugs: allSlugs });
+    } catch {
+      /* baseline reload is best-effort */
+    }
 
     while (shouldContinue()) {
+      const target = ordered[cycleIndex % ordered.length];
+      cycleIndex += 1;
+
+      let queued = null;
       try {
-        for (const [jobId, entry] of [...inFlight.entries()]) {
-          const job = await fetchGenerationJob(jobId);
-          if (job.status === 'complete') {
-            inFlight.delete(jobId);
-            const persona = personaFromGenerationJob(job) ?? entry.generatingPersona;
-            revealQueue.push({
-              slug: entry.slug,
-              jobId,
-              generatingPersona: persona,
-            });
-            ensurePipelineFull();
-          } else if (job.status === 'failed') {
-            inFlight.delete(jobId);
-            console.warn(`[demo-rotate] job failed for ${entry.slug}:`, job.error || 'unknown');
-            ensurePipelineFull();
-          }
-        }
-
-        if (!revealing && revealQueue.length > 0) {
-          revealing = true;
-          const item = revealQueue.shift();
-          updateSpinner();
-          try {
-            await revealCompletedPost(item, {
-              reloadProfileFromApi,
-              spectateController,
-              allSlugs,
-            });
-          } catch (err) {
-            console.warn(`[demo-rotate] reveal ${item.slug}:`, err?.message || err);
-          } finally {
-            revealing = false;
-          }
-          updateSpinner();
-          await sleep(revealGapMs);
-        }
-
-        if (inFlight.size < pipelineSize) {
-          await ensurePipelineFull();
-        }
+        queued = await queueDemoPostWithRetry(target.slug, { shouldContinue });
       } catch (err) {
-        console.warn('[demo-rotate] pipeline tick:', err?.message || err);
+        console.warn(`[demo-rotate] queue ${target.slug}:`, err?.message || err);
       }
 
-      await sleep(pollMs);
+      if (!queued?.jobId) {
+        if (queued === null) {
+          console.warn(`[demo-rotate] skip ${target.displayName || target.slug} (no harvest)`);
+        }
+        await sleep(300);
+        continue;
+      }
+
+      const expectedPersona = queued.generatingPersona ?? null;
+      onGeneratingPersona?.(expectedPersona);
+
+      let job = null;
+      try {
+        job = await waitForJobComplete(queued.jobId, { shouldContinue });
+      } catch (err) {
+        console.warn(`[demo-rotate] job ${target.slug}:`, err?.message || err);
+        await sleep(300);
+        continue;
+      }
+
+      const persona = personaFromGenerationJob(job) ?? expectedPersona;
+      const postKey = postKeyFromGenerationJob(job);
+      onGeneratingPersona?.(persona);
+
+      try {
+        await revealCompletedPost(
+          {
+            slug: target.slug,
+            generatingPersona: persona,
+            postKey,
+          },
+          {
+            reloadProfileFromApi,
+            spectateController,
+            allSlugs,
+          },
+        );
+      } catch (err) {
+        console.warn(`[demo-rotate] reveal ${target.slug}:`, err?.message || err);
+      }
+
+      onGeneratingPersona?.(null);
+      await sleep(revealGapMs);
     }
   } finally {
+    for (const slug of allSlugs) {
+      spectateController?.setExpectedRevealKey?.(slug, null);
+    }
     spectateController?.setIngestAllowSlugs?.(null);
     onGeneratingPersona?.(null);
   }
-}
-
-/** @deprecated Use runDemoRotatePipeline */
-export async function runDemoRotateRound(args) {
-  return runDemoRotatePipeline({
-    ...args,
-    shouldContinue: () => true,
-    pipelineSize: Math.min(DEMO_PIPELINE_SIZE, (args.targets?.length ?? 1)),
-  });
 }
