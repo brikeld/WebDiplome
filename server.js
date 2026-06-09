@@ -74,6 +74,15 @@ app.use(cors());
 // Allow larger payloads for personaPosts and uploaded images.
 app.use(express.json({ limit: '10mb' }));
 
+/** Verify Railway picked up the latest deploy (curl /api/build-info). */
+const API_BUILD_ID = '2026-06-09-trigger-update-v2';
+app.get('/api/build-info', (_req, res) => {
+  res.json({
+    buildId: API_BUILD_ID,
+    commit: process.env.RAILWAY_GIT_COMMIT_SHA ?? process.env.RAILWAY_GIT_COMMIT ?? null,
+  });
+});
+
 // Ensure profiles/ directory exists on startup
 await fs.mkdir(PROFILES_DIR, { recursive: true });
 await fs.mkdir(POSTS_DIR, { recursive: true });
