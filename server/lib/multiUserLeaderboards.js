@@ -6,7 +6,6 @@
 import {
   BOARDS,
   CLONE_IDENTITIES,
-  CLONE_DRIFT_BUCKET_MS,
   scoreCloneFor,
 } from './leaderboards.js';
 import {
@@ -16,7 +15,12 @@ import {
   machineHandleFromProfile,
 } from '../../src/lib/profileUtils.js';
 import { resolveHostedPublicUrl } from './publicMediaUrls.js';
-import { seededFloat } from '../../src/lib/seededRandom.js';
+import {
+  compareLeaderboardScores,
+  harvestHasLeaderboardSignals,
+  resolveProfileHarvestForScoring,
+  scoreProfileFromPublicFields,
+} from './boardProfileScoring.js';
 
 export const MIN_LEADERBOARD_ROWS = 5;
 
@@ -70,45 +74,22 @@ export function dedupeProfilesForLeaderboards(profiles) {
   return out;
 }
 
-const PERSONA_UI_KEYS = {
-  productivite: 'productivity',
-  securite: 'security',
-  popularite: 'popularity',
-};
-
 function scoreFromHarvest(board, harvest, profile, nowMs) {
-  if (harvest && typeof harvest === 'object' && Object.keys(harvest).length > 0) {
-    try {
-      return board.scoreFn(harvest, profile, nowMs);
-    } catch {
-      /* fall through */
-    }
+  if (!harvestHasLeaderboardSignals(harvest)) return null;
+  try {
+    return board.scoreFn(harvest, profile, nowMs);
+  } catch {
+    return null;
   }
-  return null;
 }
 
 /** Persona-aligned score when full harvest JSON is unavailable (hosted multi-user). */
 export function fallbackBoardScore(board, profile, nowMs = Date.now()) {
-  const scores = profile?.personaScores ?? profile?.persona_scores ?? {};
-  const uiKey = PERSONA_UI_KEYS[board.persona] ?? 'productivity';
-  const base = Number(
-    scores[uiKey]
-    ?? scores[board.persona]
-    ?? profile?.globalScore
-    ?? profile?.global_score
-    ?? 50,
-  );
-  const bucket = Math.floor(nowMs / CLONE_DRIFT_BUCKET_MS);
-  const jitter = (seededFloat(`${profile?.slug ?? profile?.id}|${board.id}|${bucket}`) - 0.5) * 10;
-  const score = Math.max(1, Math.round((base + jitter) * 100) / 100);
-  return {
-    score,
-    hint: 'Score derived from public profile metrics.',
-  };
+  return scoreProfileFromPublicFields(board, profile, nowMs);
 }
 
 export function scoreProfileForBoard(board, profile, nowMs = Date.now()) {
-  const harvest = profile?._harvest ?? profile?.raw_profile ?? profile?.rawProfile ?? null;
+  const harvest = resolveProfileHarvestForScoring(profile);
   return scoreFromHarvest(board, harvest, profile, nowMs) ?? fallbackBoardScore(board, profile, nowMs);
 }
 
@@ -167,7 +148,9 @@ function assembleBoard(board, profiles, { highlightSlug, minimumRows, nowMs }) {
   const botsNeeded = Math.max(0, minimumRows - real.length);
   const bots = Array.from({ length: botsNeeded }, (_, i) => botEntry(board, i, nowMs));
 
-  const merged = [...real, ...bots].sort((a, b) => b.score - a.score).slice(0, minimumRows);
+  const merged = [...real, ...bots]
+    .sort((a, b) => compareLeaderboardScores(board, a, b))
+    .slice(0, minimumRows);
   const entries = merged.map((row, i) => ({
     rank: i + 1,
     name: row.name,
