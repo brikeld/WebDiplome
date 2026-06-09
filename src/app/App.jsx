@@ -306,7 +306,6 @@ function AppInner({
   personaOverride,
   setPersonaOverride,
   postGen,
-  setPostGen,
   harvestPhase,
   harvestProgress,
   harvestError,
@@ -324,7 +323,9 @@ function AppInner({
   reloadProfileFromApi,
   spectateRevealRef,
   demoRotateActive = false,
-  setDemoRotateActive,
+  onDemoRotateActiveChange,
+  demoGeneratingPersona = null,
+  onDemoGeneratingPersona,
   setAllProfiles,
 }) {
   const {
@@ -1125,20 +1126,8 @@ function AppInner({
             allProfiles={allProfiles}
             reloadProfileFromApi={reloadProfileFromApi}
             spectateController={spectateRevealRef.current}
-            onActiveChange={setDemoRotateActive}
-            onGeneratingPersona={(persona) => {
-              if (!persona) {
-                setPostGen(POST_GEN_IDLE);
-                return;
-              }
-              setPostGen({
-                loading: true,
-                phase: 'generating',
-                generatingPersona: persona,
-                error: null,
-                generationPlan: null,
-              });
-            }}
+            onActiveChange={onDemoRotateActiveChange}
+            onGeneratingPersona={onDemoGeneratingPersona}
           />
         )}
       </div>
@@ -1155,7 +1144,7 @@ function AppInner({
                 isGeneratingPosts={
                   (postGen.phase === 'generating' && postGen.loading) || demoRotateActive
                 }
-                generatingPersona={postGen.generatingPersona}
+                generatingPersona={demoGeneratingPersona ?? postGen.generatingPersona}
                 postRevealFlash={postRevealFlash}
                 highlightedPostId={feedHighlightedPostId}
                 onHighlightPost={handleHighlightPost}
@@ -1296,6 +1285,8 @@ export default function App() {
     });
   }
   const [demoRotateActive, setDemoRotateActive] = useState(false);
+  const [demoGeneratingPersona, setDemoGeneratingPersona] = useState(null);
+  const demoRotateActiveRef = useRef(false);
   const personaDeltasClearRef = useRef(null);
   /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
@@ -1462,11 +1453,26 @@ export default function App() {
   }, []);
 
   const scheduleSpectatorIngest = useCallback((profiles, cancelledRef) => {
+    if (demoRotateActiveRef.current) return;
     const snapshot = Array.isArray(profiles) ? profiles : [];
     queueMicrotask(() => {
       if (cancelledRef?.cancelled) return;
+      if (demoRotateActiveRef.current) return;
       spectateRevealRef.current?.ingestProfiles(snapshot);
     });
+  }, []);
+
+  useEffect(() => {
+    demoRotateActiveRef.current = demoRotateActive;
+  }, [demoRotateActive]);
+
+  const handleDemoRotateActiveChange = useCallback((active) => {
+    setDemoRotateActive(active);
+    if (!active) setDemoGeneratingPersona(null);
+  }, []);
+
+  const handleDemoGeneratingPersona = useCallback((persona) => {
+    setDemoGeneratingPersona(persona ?? null);
   }, []);
 
   const syncAccountDeletionState = useCallback(async () => {
@@ -1722,10 +1728,10 @@ export default function App() {
 
   useEffect(() => {
     const operatorSlug = profile?.slug ?? profile?.id ?? null;
-    const skip = postGen.loading
-      ? linkedProfileSlug ?? operatorSlug
-      : demoRotateActive
-        ? operatorSlug
+    const skip = demoRotateActive
+      ? operatorSlug
+      : postGen.loading
+        ? linkedProfileSlug ?? operatorSlug
         : null;
     spectateRevealRef.current?.setSkipSlug(skip);
   }, [postGen.loading, demoRotateActive, linkedProfileSlug, profile?.slug, profile?.id]);
@@ -2359,7 +2365,6 @@ export default function App() {
         personaOverride={personaOverride}
         setPersonaOverride={setPersonaOverride}
         postGen={postGen}
-        setPostGen={setPostGen}
         harvestPhase={harvestPhase}
         harvestProgress={harvestProgress}
         harvestError={harvestError}
@@ -2377,7 +2382,9 @@ export default function App() {
         reloadProfileFromApi={reloadProfileFromApi}
         spectateRevealRef={spectateRevealRef}
         demoRotateActive={demoRotateActive}
-        setDemoRotateActive={setDemoRotateActive}
+        onDemoRotateActiveChange={handleDemoRotateActiveChange}
+        demoGeneratingPersona={demoGeneratingPersona}
+        onDemoGeneratingPersona={handleDemoGeneratingPersona}
         setAllProfiles={setAllProfiles}
       />
     </LiveScoringProvider>

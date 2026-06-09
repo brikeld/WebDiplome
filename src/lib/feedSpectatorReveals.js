@@ -19,6 +19,8 @@ export function createFeedSpectatorRevealController({
   const baselineEstablished = new Set();
   const latestApiPostsBySlug = new Map();
   let skipSlug = null;
+  /** When set, only these profile slugs may enqueue new spectator reveals. */
+  let ingestAllowSlugs = null;
 
   const mergeAnimatedWithApiPosts = (slugKey, queuePosts) => {
     const apiPosts = latestApiPostsBySlug.get(slugKey) ?? [];
@@ -70,14 +72,23 @@ export function createFeedSpectatorRevealController({
     setSkipSlug(slug) {
       skipSlug = slug ? String(slug) : null;
     },
+    setIngestAllowSlugs(slugs) {
+      if (!Array.isArray(slugs)) {
+        ingestAllowSlugs = null;
+        return;
+      }
+      ingestAllowSlugs = new Set(
+        slugs.map((slug) => String(slug || '').trim()).filter(Boolean),
+      );
+    },
     ingestProfiles(profiles) {
       for (const profile of Array.isArray(profiles) ? profiles : []) {
         if (!profile) continue;
         const slug = profile.slug ?? profile.id;
         if (!slug) continue;
-        if (skipSlug && String(slug) === skipSlug) continue;
-
         const slugKey = String(slug);
+        if (skipSlug && slugKey === skipSlug) continue;
+        if (ingestAllowSlugs && !ingestAllowSlugs.has(slugKey)) continue;
         const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
         latestApiPostsBySlug.set(slugKey, [...posts]);
 
@@ -115,6 +126,7 @@ export function createFeedSpectatorRevealController({
     },
     reset() {
       skipSlug = null;
+      ingestAllowSlugs = null;
       baselineEstablished.clear();
       latestApiPostsBySlug.clear();
       queuesBySlug.clear();

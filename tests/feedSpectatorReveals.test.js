@@ -54,6 +54,46 @@ describe('feedSpectatorReveals', () => {
     expect(controller.isSlugIdle('user-a')).toBe(false);
   });
 
+  it('ignores ingest for slugs outside setIngestAllowSlugs', () => {
+    let profiles = [
+      {
+        slug: 'user-a',
+        personaPosts: [{ id: 'old-a', persona: 'productivite', content: 'old', createdAt: '2026-01-01T00:00:00Z' }],
+      },
+      {
+        slug: 'user-b',
+        personaPosts: [{ id: 'old-b', persona: 'securite', content: 'old', createdAt: '2026-01-01T00:00:00Z' }],
+      },
+    ];
+    const controller = createFeedSpectatorRevealController({
+      setAllProfiles: (updater) => {
+        profiles = typeof updater === 'function' ? updater(profiles) : updater;
+      },
+    });
+
+    controller.ingestProfiles(profiles);
+    controller.setIngestAllowSlugs(['user-a']);
+    controller.ingestProfiles([
+      {
+        slug: 'user-a',
+        personaPosts: [
+          { id: 'new-a', persona: 'productivite', content: 'fresh', createdAt: '2026-01-02T00:00:00Z' },
+          { id: 'old-a', persona: 'productivite', content: 'old', createdAt: '2026-01-01T00:00:00Z' },
+        ],
+      },
+      {
+        slug: 'user-b',
+        personaPosts: [
+          { id: 'new-b', persona: 'popularite', content: 'early', createdAt: '2026-01-02T00:00:00Z' },
+          { id: 'old-b', persona: 'securite', content: 'old', createdAt: '2026-01-01T00:00:00Z' },
+        ],
+      },
+    ]);
+
+    expect(controller.isSlugIdle('user-a')).toBe(false);
+    expect(controller.isSlugIdle('user-b')).toBe(true);
+  });
+
   it('keeps older API posts when revealing a new one', async () => {
     let profiles = [
       {

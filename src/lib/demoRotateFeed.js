@@ -43,10 +43,20 @@ async function queueDemoJobForSlug(slug, { pollMs, timeoutMs }) {
   throw new Error(`Timed out waiting to queue demo post for ${slug}`);
 }
 
-async function waitForRevealStart(slug, { reloadProfileFromApi, spectateController, pollMs, timeoutMs }) {
+async function waitForRevealStart(slug, {
+  reloadProfileFromApi,
+  spectateController,
+  pollMs,
+  timeoutMs,
+  allSlugs = [],
+}) {
+  const preserveOthers = allSlugs
+    .map((entry) => String(entry || '').trim())
+    .filter((entry) => entry && entry !== String(slug));
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    await reloadProfileFromApi({ preservePersonaPostsForSlugs: [slug] });
+    spectateController?.setIngestAllowSlugs?.([slug]);
+    await reloadProfileFromApi({ preservePersonaPostsForSlugs: preserveOthers });
     if (spectateController && !spectateController.isSlugIdle(slug)) return;
     await sleep(pollMs);
   }
@@ -57,14 +67,25 @@ async function revealSlugInOrder(slug, {
   spectateController,
   pollMs,
   timeoutMs,
+  allSlugs,
 }) {
-  await waitForRevealStart(slug, { reloadProfileFromApi, spectateController, pollMs, timeoutMs });
-  if (spectateController?.waitForSlugIdle) {
-    await spectateController.waitForSlugIdle(slug, { waitForEnterAnimation: true });
-  } else {
-    await sleep(POST_FEED_ENTER_ANIM_MS);
+  try {
+    await waitForRevealStart(slug, {
+      reloadProfileFromApi,
+      spectateController,
+      pollMs,
+      timeoutMs,
+      allSlugs,
+    });
+    if (spectateController?.waitForSlugIdle) {
+      await spectateController.waitForSlugIdle(slug, { waitForEnterAnimation: true });
+    } else {
+      await sleep(POST_FEED_ENTER_ANIM_MS);
+    }
+    await sleep(POST_REVEAL_GAP_MS);
+  } finally {
+    spectateController?.setIngestAllowSlugs?.([]);
   }
-  await sleep(POST_REVEAL_GAP_MS);
 }
 
 /**
@@ -88,6 +109,8 @@ export async function runDemoRotateRound({
 
   if (list.length === 0) throw new Error('No demo profiles available');
 
+  spectateController?.setIngestAllowSlugs?.([]);
+
   const queued = (
     await Promise.all(
       list.map((entry) => queueDemoJobForSlug(entry.slug, { pollMs, timeoutMs })),
@@ -108,6 +131,7 @@ export async function runDemoRotateRound({
 
   const completed = new Set();
   let revealed = 0;
+  const allSlugs = ordered.map((entry) => entry.slug);
 
   const syncSpinner = () => {
     const nextIdx = Math.min(revealed, ordered.length - 1);
@@ -121,6 +145,7 @@ export async function runDemoRotateRound({
 
   syncSpinner();
 
+  try {
   const pollStart = Date.now();
   while (completed.size < ordered.length && Date.now() - pollStart < timeoutMs) {
     await Promise.all(
@@ -141,6 +166,7 @@ export async function runDemoRotateRound({
         spectateController,
         pollMs,
         timeoutMs,
+        allSlugs,
       });
       revealed += 1;
       syncSpinner();
@@ -157,4 +183,7 @@ export async function runDemoRotateRound({
   }
 
   return reloadProfileFromApi({ forcePostsMerge: true });
+  } finally {
+    spectateController?.setIngestAllowSlugs?.(null);
+  }
 }
