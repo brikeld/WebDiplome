@@ -15,7 +15,8 @@ import {
   leaderboardSelfKey,
   dominantPersonaFromAdjustedScores,
 } from './scoringLogic.js';
-import { syncScoreAdjustment } from './scoreSync.js';
+import { isHostedApiOrigin, profileSlugFromProfile } from '@/lib/aiJobClient.js';
+import { syncLiveScoringRecords, syncScoreAdjustment } from './scoreSync.js';
 
 export const LiveScoringContext = createContext(null);
 
@@ -128,9 +129,12 @@ export function LiveScoringProvider({ profile, children }) {
     leaderboardFullHideTimersRef.current.clear();
     for (const timer of leaderboardFullRevealTimersRef.current.values()) clearTimeout(timer);
     leaderboardFullRevealTimersRef.current.clear();
-    const records = loadFromStorage(profileId);
+    let records = loadFromStorage(profileId);
+    if (isHostedApiOrigin() && profile?.liveScoringRecords && typeof profile.liveScoringRecords === 'object') {
+      records = { ...records, ...profile.liveScoringRecords };
+    }
     dispatch({ type: 'LOAD', records });
-  }, [profileId]);
+  }, [profileId, profile?.liveScoringRecords]);
 
   useEffect(
     () => () => {
@@ -142,11 +146,22 @@ export function LiveScoringProvider({ profile, children }) {
     [],
   );
 
+  const hostedProfileSlug = useMemo(
+    () => (isHostedApiOrigin() ? profileSlugFromProfile(profile) : null),
+    [profile],
+  );
+
   // Persist to localStorage after first load
   useEffect(() => {
     if (!profileId || !state.loaded) return;
     saveToStorage(profileId, state.records);
   }, [profileId, state.records, state.loaded]);
+
+  // Sync hide/comment records to hosted API so other users see the same state
+  useEffect(() => {
+    if (!state.loaded || !hostedProfileSlug) return;
+    syncLiveScoringRecords(hostedProfileSlug, state.records);
+  }, [hostedProfileSlug, state.loaded, state.records]);
 
   const baseScores = useMemo(
     () => getPersonaScoresNormalized(profile ?? {}),

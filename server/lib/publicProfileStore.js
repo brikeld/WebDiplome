@@ -4,6 +4,7 @@ import {
   mapPostRowForApi,
   mapProfileRowForApi,
   mapProfileRowForSummary,
+  mapCommentRowForApi,
   mapPersonaBlurbsForApi,
   mapPersonaBlurbsForStorage,
   mapSyncPayloadToProfileRow,
@@ -58,6 +59,7 @@ const PUBLIC_PROFILE_SELECT = [
   'wallpaper_url',
   'collected_at',
   'persona_blurbs',
+  'live_scoring_records',
   'created_at',
   'updated_at',
 ].join(',');
@@ -549,6 +551,32 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
       );
     },
 
+    async listCommentsForPostIds(postIds) {
+      const ids = [...new Set((Array.isArray(postIds) ? postIds : []).map((id) => String(id).trim()))]
+        .filter(Boolean);
+      if (ids.length === 0) return {};
+
+      const rows = throwIfError(
+        await supabase
+          .from('comments')
+          .select(
+            'id, post_id, author_profile_id, persona, content, created_at, author:profiles!author_profile_id(slug, display_name, firstname, lastname, machine_name, wallpaper_url, dominant_persona)',
+          )
+          .in('post_id', ids)
+          .order('created_at', { ascending: true }),
+        'list comments',
+      );
+
+      const byPostId = {};
+      for (const row of rows ?? []) {
+        const mapped = mapCommentRowForApi(row);
+        if (!mapped?.postId) continue;
+        if (!byPostId[mapped.postId]) byPostId[mapped.postId] = [];
+        byPostId[mapped.postId].push(mapped);
+      }
+      return byPostId;
+    },
+
     async addComment({ postId, authorProfileId, persona, content }) {
       const inserted = throwIfError(
         await supabase
@@ -559,18 +587,32 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
             persona,
             content,
           })
-          .select('*')
+          .select(
+            'id, post_id, author_profile_id, persona, content, created_at, author:profiles!author_profile_id(slug, display_name, firstname, lastname, machine_name, wallpaper_url, dominant_persona)',
+          )
           .single(),
         'add comment',
       );
-      return {
-        id: inserted.id,
-        postId: inserted.post_id,
-        authorProfileId: inserted.author_profile_id,
-        persona: inserted.persona,
-        content: inserted.content,
-        createdAt: inserted.created_at,
-      };
+      return mapCommentRowForApi(inserted);
+    },
+
+    async updateLiveScoringRecords({ profileId, userId, records }) {
+      const payload =
+        records && typeof records === 'object' && !Array.isArray(records) ? records : {};
+      const updated = throwIfError(
+        await supabase
+          .from('profiles')
+          .update({
+            live_scoring_records: payload,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', profileId)
+          .eq('user_id', userId)
+          .select('live_scoring_records')
+          .maybeSingle(),
+        'update live scoring records',
+      );
+      return updated?.live_scoring_records ?? payload;
     },
 
     deleteAllProfilesWithIdentityKey,

@@ -150,22 +150,55 @@ export function createPublicDemoRoutes({
     }
   });
 
+  router.get('/comments', async (req, res) => {
+    try {
+      const raw = String(req.query.postIds ?? req.query.post_ids ?? '').trim();
+      const postIds = raw ? raw.split(',').map((id) => id.trim()).filter(Boolean) : [];
+      const commentsByPostId = await profileStore.listCommentsForPostIds(postIds);
+      res.json({ success: true, commentsByPostId });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   router.post('/comments', requireUser, async (req, res) => {
     try {
       const authorProfile = await profileStore.getProfileRowBySlug(String(req.body?.authorProfileSlug || ''));
       if (!authorProfile || authorProfile.user_id !== req.authUser.id) {
         return res.status(403).json({ error: 'Author profile owner required' });
       }
+      const postId = String(req.body?.postId || '').trim();
+      if (!postId) return res.status(400).json({ error: 'postId required' });
       const content = String(req.body?.content || '').trim();
       if (!content) return res.status(400).json({ error: 'content required' });
       const comment = await profileStore.addComment({
-        postId: req.body?.postId,
+        postId,
         authorProfileId: authorProfile.id,
         persona: req.body?.persona ?? null,
         content,
       });
       clearPublicReadCache();
       res.json({ success: true, comment });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.post('/profile/:slug/live-scoring', requireUser, async (req, res) => {
+    try {
+      const slug = String(req.params.slug || '').trim();
+      const row = await profileStore.getProfileRowBySlug(slug);
+      if (!row) return res.status(404).json({ error: 'Profile not found' });
+      if (row.user_id !== req.authUser.id) {
+        return res.status(403).json({ error: 'Profile owner required' });
+      }
+      const records = await profileStore.updateLiveScoringRecords({
+        profileId: row.id,
+        userId: req.authUser.id,
+        records: req.body?.records ?? {},
+      });
+      clearPublicReadCache();
+      res.json({ success: true, liveScoringRecords: records });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

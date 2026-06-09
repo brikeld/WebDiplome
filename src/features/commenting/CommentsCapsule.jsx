@@ -15,7 +15,8 @@ import {
   migrateLegacyCommentPick,
   saveCommentPick,
 } from '@/lib/commentPickStorage.js';
-import { profileSlugFromProfile } from '@/lib/aiJobClient.js';
+import { isHostedApiOrigin, profileSlugFromProfile } from '@/lib/aiJobClient.js';
+import { postComment } from '@/lib/commentsApi.js';
 
 export default function CommentsCapsule({
   post,
@@ -38,6 +39,7 @@ export default function CommentsCapsule({
   systemNoteLabel,
   onOpenProfile,
   realComments,
+  onCommentPosted,
 }) {
   const [picked, setPicked] = useState(() => {
     const slug = profileSlugFromProfile(commenterProfile);
@@ -172,6 +174,14 @@ export default function CommentsCapsule({
     return () => node.removeEventListener('transitionend', cleanup);
   }, [originRect]);
 
+  const pickedAlreadyPersisted = picked
+    ? (Array.isArray(realComments) ? realComments : []).some(
+        (c) =>
+          String(c?.content ?? '').trim() === String(picked.content ?? '').trim()
+          && String(c?.persona ?? '').toLowerCase() === String(picked.persona ?? '').toLowerCase(),
+      )
+    : false;
+
   const handlePick = (s) => {
     if (commentBoostAppliedRef.current) return;
 
@@ -202,11 +212,26 @@ export default function CommentsCapsule({
 
     setPicked(s);
     saveCommentPick(viewerSlug, post.id, s);
+
+    if (isHostedApiOrigin() && viewerSlug) {
+      postComment({
+        postId: post.id,
+        authorProfileSlug: viewerSlug,
+        persona: s.persona,
+        content: s.content,
+      })
+        .then((saved) => {
+          if (saved) onCommentPosted?.(saved);
+        })
+        .catch((err) => {
+          console.warn('[comments] persist failed:', err?.message || err);
+        });
+    }
   };
 
-  // Prefer real public comments from the hosted API; fall back to demo comments.
-  const comments = Array.isArray(realComments) && realComments.length > 0
-    ? realComments
+  const persistedComments = Array.isArray(realComments) ? realComments : [];
+  const comments = persistedComments.length > 0
+    ? persistedComments
     : getMockCommentsFor(post.id).comments;
 
   return (
@@ -249,7 +274,7 @@ export default function CommentsCapsule({
                   staggerIndex={i}
                 />
               ))}
-              {picked ? (
+              {picked && !pickedAlreadyPersisted ? (
                 <div
                   ref={userCommentRef}
                   data-flip-root
@@ -258,10 +283,10 @@ export default function CommentsCapsule({
                   <Comment
                     persona={picked.persona}
                     content={picked.content}
-                    displayName={displayName}
-                    avatarSrc={avatarSrc}
-                    avatarInitials={avatarInitials}
-                    personaBadgePersona={personaBadgePersona}
+                    displayName={commenterDisplayName ?? displayName}
+                    avatarSrc={commenterAvatarSrc ?? avatarSrc}
+                    avatarInitials={commenterAvatarInitials ?? avatarInitials}
+                    personaBadgePersona={commenterPersonaBadgePersona ?? personaBadgePersona}
                     onOpenProfile={onOpenProfile}
                     metaLeft={mockCommentTimeAgo(post.id, picked.persona, comments.length)}
                     metaCenter={commentMetaCenterLine(post.id, picked.persona)}

@@ -1,7 +1,9 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import PostCard from './PostCard.jsx';
 import { sanitizePostContent } from '@/lib/postContent.js';
-import { normalizePostHideKey } from '@/lib/postHideKey.js';
+import { fetchCommentsByPostIds, isPersistablePostId } from '@/lib/commentsApi.js';
+import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
+import { resolvePostHiddenState, resolvePostRevealingState } from '@/lib/postVisibility.js';
 import {
   avatarSrcFromProfile,
   displayNameFromProfile,
@@ -115,6 +117,10 @@ function buildEnrichedPosts(
   const resolvedPersonaBadgePersona = personaBadgePersona ?? resolveDominantPersonaKey(profile);
   const avatarSrc = avatarSrcFromProfile(profile);
   const authorSlug = profile.slug ?? profile.id ?? null;
+  const authorLiveScoringRecords =
+    profile?.liveScoringRecords && typeof profile.liveScoringRecords === 'object'
+      ? profile.liveScoringRecords
+      : {};
 
   const enrichLeaderboardEntries = (entries) => {
     if (!Array.isArray(entries)) return entries;
@@ -137,6 +143,7 @@ function buildEnrichedPosts(
     return {
       id: postStableKey(p, i),
       authorSlug,
+      _authorLiveScoringRecords: authorLiveScoringRecords,
       persona: p.persona,
       content: sanitizePostContent(p.content),
       noteColor: isCompliantSystem ? '#000' : (PERSONA_COLORS[p.persona] ?? '#2323FF'),
@@ -218,6 +225,7 @@ export default function PostsTab({
 }) {
   const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
   const { isHidden, isRevealing, isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
+  const [commentsByPostId, setCommentsByPostId] = useState({});
   const [placeholderMounted, setPlaceholderMounted] = useState(isGeneratingPosts);
   const [placeholderLeaving, setPlaceholderLeaving] = useState(false);
   const placeholderTimerRef = useRef(null);
@@ -293,6 +301,43 @@ export default function PostsTab({
     return all.sort(sortNewestFirst);
   }, [feedContext, feedProfiles, personaBadgePersona, profile, deletedProfileIds]);
 
+  const persistablePostIds = useMemo(
+    () => posts.map((p) => p.id).filter((id) => isPersistablePostId(id)),
+    [posts],
+  );
+
+  useEffect(() => {
+    if (!isHostedApiOrigin() || persistablePostIds.length === 0) return undefined;
+    let cancelled = false;
+
+    const load = () => {
+      fetchCommentsByPostIds(persistablePostIds)
+        .then((next) => {
+          if (!cancelled) setCommentsByPostId(next);
+        })
+        .catch((err) => {
+          console.warn('[comments] fetch failed:', err?.message || err);
+        });
+    };
+
+    load();
+    const id = setInterval(load, 15_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [persistablePostIds.join('|')]);
+
+  const handleCommentPosted = useCallback((saved) => {
+    const postId = String(saved?.postId ?? '').trim();
+    if (!postId) return;
+    setCommentsByPostId((prev) => {
+      const existing = Array.isArray(prev[postId]) ? prev[postId] : [];
+      if (existing.some((row) => row?.id && row.id === saved.id)) return prev;
+      return { ...prev, [postId]: [...existing, saved] };
+    });
+  }, []);
+
   const generatingAccent = personaUiColor(generatingPersona);
 
   const leaderboardDirectorySlugs = useMemo(() => {
@@ -360,21 +405,19 @@ export default function PostsTab({
                       return next;
                     })
             }
-            isHidden={
-              p.compliantPersonaChange || p.compliantLowScore || p.compliantJoin
-                ? false
-                : p.leaderboard
-                  ? isLeaderboardSelfHidden(p.leaderboard.boardId)
-                  : isHidden(normalizePostHideKey(p.createdAt))
-            }
-            isRevealing={
-              p.compliantPersonaChange || p.compliantLowScore || p.compliantJoin
-                ? false
-                : p.leaderboard
-                  ? isLeaderboardSelfRevealing(p.leaderboard.boardId)
-                    && !isLeaderboardSelfHidden(p.leaderboard.boardId)
-                  : isRevealing(normalizePostHideKey(p.createdAt))
-            }
+            realComments={commentsByPostId[p.id] ?? null}
+            onCommentPosted={handleCommentPosted}
+            isHidden={resolvePostHiddenState(p, {
+              authorRecords: p._authorLiveScoringRecords,
+              viewerIsHidden: isHidden,
+              viewerIsLeaderboardSelfHidden: isLeaderboardSelfHidden,
+            })}
+            isRevealing={resolvePostRevealingState(p, {
+              authorRecords: p._authorLiveScoringRecords,
+              viewerIsRevealing: isRevealing,
+              viewerIsLeaderboardSelfRevealing: isLeaderboardSelfRevealing,
+              viewerIsLeaderboardSelfHidden: isLeaderboardSelfHidden,
+            })}
             isHighlightable={
               !hideInteractions
               && !p.compliantPersonaChange

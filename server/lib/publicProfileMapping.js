@@ -86,6 +86,48 @@ export function mapPersonaBlurbsForStorage(uiBlurbs) {
   };
 }
 
+export function mapCommentAuthorForApi(authorRow) {
+  if (!authorRow || typeof authorRow !== 'object') return null;
+  const wallpaperCandidate =
+    authorRow.wallpaper_url ??
+    authorRow.wallpaperUrl ??
+    null;
+  const resolvedWallpaper = resolveHostedPublicUrl(wallpaperCandidate) ?? null;
+  return {
+    slug: authorRow.slug ?? null,
+    displayName: authorRow.display_name ?? authorRow.displayName ?? 'User',
+    firstname: authorRow.firstname ?? '',
+    lastname: authorRow.lastname ?? '',
+    machineName: authorRow.machine_name ?? authorRow.machineName ?? '',
+    dominantPersona: authorRow.dominant_persona ?? authorRow.dominantPersona ?? null,
+    avatarUrl: resolvedWallpaper,
+    wallpaperUrl: resolvedWallpaper,
+  };
+}
+
+export function mapCommentRowForApi(row) {
+  if (!row) return null;
+  const author = mapCommentAuthorForApi(row.author ?? row.author_profile ?? null);
+  return {
+    id: row.id,
+    postId: row.post_id ?? row.postId,
+    authorProfileId: row.author_profile_id ?? row.authorProfileId ?? null,
+    persona: row.persona,
+    content: row.content,
+    createdAt: row.created_at ?? row.createdAt,
+    author,
+    displayName: author?.displayName ?? null,
+    avatarSrc: author?.avatarUrl ?? null,
+    avatarInitials: author
+      ? [author.firstname, author.lastname]
+          .map((part) => String(part || '').trim().charAt(0))
+          .join('')
+          .toUpperCase() || 'U'
+      : null,
+    personaBadgePersona: author?.dominantPersona ?? row.persona,
+  };
+}
+
 export function mapProfileRowForApi(row, posts = []) {
   if (!row) return null;
   const raw = row.raw_profile && typeof row.raw_profile === 'object' ? row.raw_profile : {};
@@ -115,6 +157,10 @@ export function mapProfileRowForApi(row, posts = []) {
     avatarUrl: resolvedWallpaper,
     collectedAt: row.collected_at,
     personaBlurbs: mapPersonaBlurbsForApi(row.persona_blurbs),
+    liveScoringRecords:
+      row.live_scoring_records && typeof row.live_scoring_records === 'object'
+        ? row.live_scoring_records
+        : {},
     personaPosts: posts,
   };
 }

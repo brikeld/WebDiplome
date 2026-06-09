@@ -9,6 +9,13 @@ import PostHideToggle from '@/features/feed/PostHideToggle.jsx';
 import PostTellMeMoreToggle from '@/features/feed/PostTellMeMoreToggle.jsx';
 import CommentsCapsule from '@/features/commenting/CommentsCapsule.jsx';
 import { DEMO_OTHER_COMMENTER } from '@/lib/demoCommentIdentity.js';
+import {
+  avatarSrcFromProfile,
+  displayNameFromProfile,
+  initialsFromProfile,
+  machineHandleFromProfile,
+  resolveDominantPersonaKey,
+} from '@/lib/profileUtils.js';
 import PersonaBadge from '@/features/identity/PersonaBadge.jsx';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import ProfileNameLink from '@/features/profile/ProfileNameLink.jsx';
@@ -134,6 +141,8 @@ function PostCard({
   /** Logged-in viewer profile for hosted AI comment suggestions */
   commenterProfile = null,
   aiSuggestionsEnabled = true,
+  realComments = null,
+  onCommentPosted,
 }) {
   const {
     content,
@@ -209,6 +218,16 @@ function PostCard({
   const openAuthorProfile = onOpenProfile
     ? () => onOpenProfile('profile', authorSlug)
     : undefined;
+
+  const resolvedCommenter = commenterProfile
+    ? {
+        displayName: displayNameFromProfile(commenterProfile),
+        handle: machineHandleFromProfile(commenterProfile),
+        avatarSrc: avatarSrcFromProfile(commenterProfile),
+        avatarInitials: initialsFromProfile(commenterProfile),
+        personaBadgePersona: resolveDominantPersonaKey(commenterProfile),
+      }
+    : DEMO_OTHER_COMMENTER;
 
   return (
     <article
@@ -327,13 +346,15 @@ function PostCard({
             avatarSrc={avatarSrc}
             avatarInitials={avatarInitials}
             personaBadgePersona={personaBadgePersona ?? persona}
-            commenterDisplayName={DEMO_OTHER_COMMENTER.displayName}
-            commenterHandle={DEMO_OTHER_COMMENTER.handle}
-            commenterAvatarSrc={DEMO_OTHER_COMMENTER.avatarSrc}
-            commenterAvatarInitials={DEMO_OTHER_COMMENTER.avatarInitials}
-            commenterPersonaBadgePersona={DEMO_OTHER_COMMENTER.personaBadgePersona}
+            commenterDisplayName={resolvedCommenter.displayName}
+            commenterHandle={resolvedCommenter.handle}
+            commenterAvatarSrc={resolvedCommenter.avatarSrc}
+            commenterAvatarInitials={resolvedCommenter.avatarInitials}
+            commenterPersonaBadgePersona={resolvedCommenter.personaBadgePersona}
             commenterProfile={commenterProfile}
             aiSuggestionsEnabled={aiSuggestionsEnabled}
+            realComments={realComments}
+            onCommentPosted={onCommentPosted}
             onOpenProfile={openAuthorProfile}
           />
         ) : null}
