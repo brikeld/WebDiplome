@@ -15,18 +15,34 @@ export function isLeaderboardBotEntry(entry) {
 
 /**
  * @param {object} entry
- * @param {{ selfHidden: boolean, cloneHidden: boolean[], botIdx: { n: number } }} ctx
+ * @param {{ cloneHidden: boolean[], botIdx: { n: number } }} ctx
  */
-export function isLeaderboardEntryPositionHidden(entry, { selfHidden, cloneHidden, botIdx }) {
-  if (entry.isUser) return selfHidden;
+export function isLeaderboardEntryPositionHidden(entry, { cloneHidden, botIdx }) {
   if (!isLeaderboardBotEntry(entry)) return false;
   botIdx.n += 1;
   return Boolean(cloneHidden[botIdx.n]);
 }
 
-export function mapLeaderboardEntryHiddenFlags(entries, { selfHidden, cloneHidden = [] }) {
+function entryMatchesViewerSlug(entry, viewerSlug) {
+  const slug = String(entry?.slug ?? '').trim();
+  const viewer = String(viewerSlug ?? '').trim();
+  return Boolean(slug && viewer && slug === viewer && entry?.source === 'real');
+}
+
+/**
+ * Viewer-local hide: blur only the logged-in user's row (by slug), never the post author via isUser.
+ */
+export function mapLeaderboardEntryHiddenFlags(
+  entries,
+  { viewerSlug = null, viewerRowHidden = false, cloneHidden = [] },
+) {
   const botIdx = { n: -1 };
-  return (Array.isArray(entries) ? entries : []).map((e) =>
-    isLeaderboardEntryPositionHidden(e, { selfHidden, cloneHidden, botIdx }),
-  );
+  return (Array.isArray(entries) ? entries : []).map((entry) => {
+    if (viewerRowHidden && entryMatchesViewerSlug(entry, viewerSlug)) return true;
+    return isLeaderboardEntryPositionHidden(entry, { cloneHidden, botIdx });
+  });
+}
+
+export function isLeaderboardViewerRow(entry, viewerSlug) {
+  return entryMatchesViewerSlug(entry, viewerSlug);
 }

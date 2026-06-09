@@ -30,6 +30,7 @@ const PERSONA_COLORS = {
 };
 
 import { resolveLeaderboardForFeed } from '@/lib/resolveLeaderboardForFeed.js';
+import { dedupeLeaderboardPostsNewestOnly } from '@/lib/leaderboardFeedDedupe.js';
 import { API_ORIGIN } from '@/lib/apiClient.js';
 import { getPublicMediaConfig } from '@/lib/publicMediaConfig.js';
 import { resolveAttachedAssetPublicUrl } from '@/lib/uploadPublicUrl.js';
@@ -227,7 +228,13 @@ export default function PostsTab({
 }) {
   const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
   const [homeVisibleCount, setHomeVisibleCount] = useState(HOME_FEED_PAGE_SIZE);
-  const { isHidden, isRevealing, isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
+  const {
+    viewerSlug,
+    isHidden,
+    isRevealing,
+    isLeaderboardSelfHidden,
+    isLeaderboardSelfRevealing,
+  } = useLiveScoring();
   const [commentsByPostId, setCommentsByPostId] = useState({});
   const [placeholderMounted, setPlaceholderMounted] = useState(isGeneratingPosts);
   const [placeholderLeaving, setPlaceholderLeaving] = useState(false);
@@ -301,7 +308,9 @@ export default function PostsTab({
     );
 
     // Newest first; tie-break so staggered client posts keep order even if timestamps collide.
-    return all.sort(sortNewestFirst);
+    const sorted = all.sort(sortNewestFirst);
+    // One feed post per leaderboard board (newest wins); reposts replace older ones server-side.
+    return dedupeLeaderboardPostsNewestOnly(sorted);
   }, [feedContext, feedProfiles, personaBadgePersona, profile, deletedProfileIds]);
 
   useEffect(() => {
@@ -423,11 +432,13 @@ export default function PostsTab({
             onCommentPosted={handleCommentPosted}
             isHidden={resolvePostHiddenState(p, {
               authorRecords: p._authorLiveScoringRecords,
+              viewerSlug,
               viewerIsHidden: isHidden,
               viewerIsLeaderboardSelfHidden: isLeaderboardSelfHidden,
             })}
             isRevealing={resolvePostRevealingState(p, {
               authorRecords: p._authorLiveScoringRecords,
+              viewerSlug,
               viewerIsRevealing: isRevealing,
               viewerIsLeaderboardSelfRevealing: isLeaderboardSelfRevealing,
               viewerIsLeaderboardSelfHidden: isLeaderboardSelfHidden,

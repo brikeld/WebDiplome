@@ -1,24 +1,18 @@
-import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import {
-  isLeaderboardSelfHidden,
-  isPostHidden,
-  leaderboardSelfKey,
-} from '@/features/liveScoring/scoringLogic.js';
-
-function isLeaderboardRevealingFromRecords(records, boardId) {
-  const key = leaderboardSelfKey(boardId);
-  const rec = records?.[key];
-  if (!rec) return false;
-  return !isLeaderboardSelfHidden(records, boardId) && (rec.restorable ?? 0) > 0;
-}
+  isOwnAuthorPost,
+  normalizePostHideKey,
+  resolveViewerHideStorageKey,
+} from '@/lib/postHideKey.js';
+import { isPostHidden } from '@/features/liveScoring/scoringLogic.js';
 
 /**
- * Author-synced hide (profile owner, visible to everyone) plus viewer-only hide in the home feed.
+ * Author self-hide (author liveScoringRecords) is global; viewer curation of others' posts is local.
  */
 export function resolvePostHiddenState(
   post,
   {
     authorRecords = {},
+    viewerSlug = null,
     viewerIsHidden,
     viewerIsLeaderboardSelfHidden,
   },
@@ -30,20 +24,22 @@ export function resolvePostHiddenState(
   const authorRecs = authorRecords && typeof authorRecords === 'object' ? authorRecords : {};
 
   if (post?.leaderboard?.boardId) {
-    const boardId = post.leaderboard.boardId;
-    if (isLeaderboardSelfHidden(authorRecs, boardId)) return true;
-    if (typeof viewerIsLeaderboardSelfHidden === 'function') {
-      return viewerIsLeaderboardSelfHidden(boardId);
-    }
     return false;
   }
 
-  const hideKey = normalizePostHideKey(post?.createdAt);
-  if (!hideKey) return false;
-  if (isPostHidden(authorRecs, hideKey)) return true;
-  if (typeof viewerIsHidden === 'function') {
-    return viewerIsHidden(hideKey);
-  }
+  const authorKey = normalizePostHideKey(post?.createdAt);
+  if (!authorKey) return false;
+
+  if (isPostHidden(authorRecs, authorKey)) return true;
+
+  if (typeof viewerIsHidden !== 'function') return false;
+
+  const viewerKey = resolveViewerHideStorageKey(post, viewerSlug);
+  if (viewerKey && viewerIsHidden(viewerKey)) return true;
+
+  // Legacy: viewer curated another user's post using the author-global key.
+  if (!isOwnAuthorPost(post, viewerSlug) && viewerIsHidden(authorKey)) return true;
+
   return false;
 }
 
@@ -51,6 +47,7 @@ export function resolvePostRevealingState(
   post,
   {
     authorRecords = {},
+    viewerSlug = null,
     viewerIsRevealing,
     viewerIsLeaderboardSelfRevealing,
     viewerIsLeaderboardSelfHidden,
@@ -63,22 +60,21 @@ export function resolvePostRevealingState(
   const authorRecs = authorRecords && typeof authorRecords === 'object' ? authorRecords : {};
 
   if (post?.leaderboard?.boardId) {
-    const boardId = post.leaderboard.boardId;
-    if (isLeaderboardSelfHidden(authorRecs, boardId)) return false;
-    if (isLeaderboardRevealingFromRecords(authorRecs, boardId)) return true;
-    if (typeof viewerIsLeaderboardSelfRevealing === 'function') {
-      return viewerIsLeaderboardSelfRevealing(boardId)
-        && !(viewerIsLeaderboardSelfHidden?.(boardId));
-    }
     return false;
   }
 
-  const hideKey = normalizePostHideKey(post?.createdAt);
-  if (!hideKey) return false;
-  if (isPostHidden(authorRecs, hideKey)) return false;
-  if ((authorRecs[hideKey]?.restorable ?? 0) > 0) return true;
-  if (typeof viewerIsRevealing === 'function') {
-    return viewerIsRevealing(hideKey);
-  }
+  const authorKey = normalizePostHideKey(post?.createdAt);
+  if (!authorKey) return false;
+
+  if (isPostHidden(authorRecs, authorKey)) return false;
+  if ((authorRecs[authorKey]?.restorable ?? 0) > 0) return true;
+
+  if (typeof viewerIsRevealing !== 'function') return false;
+
+  const viewerKey = resolveViewerHideStorageKey(post, viewerSlug);
+  if (viewerKey && viewerIsRevealing(viewerKey)) return true;
+
+  if (!isOwnAuthorPost(post, viewerSlug) && viewerIsRevealing(authorKey)) return true;
+
   return false;
 }

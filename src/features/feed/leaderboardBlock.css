@@ -196,14 +196,16 @@ button.profile-avatar-link.leaderboard-row__avatar {
   font-weight: 700;
 }
 
-.leaderboard-row--hidden.leaderboard-row--self {
+.leaderboard-row--hidden.leaderboard-row--self,
+.leaderboard-row--hidden.leaderboard-row--viewer-position {
   opacity: 1;
 }
 
 /* Hidden-row variant — applies to self-hidden user OR seeded-hidden clones. */
 .leaderboard-row--hidden { position: relative; }
 
-.leaderboard-row--hidden.leaderboard-row--self::after {
+.leaderboard-row--hidden.leaderboard-row--self::after,
+.leaderboard-row--hidden.leaderboard-row--viewer-position::after {
   content: "";
   position: absolute;
   inset: -3px;

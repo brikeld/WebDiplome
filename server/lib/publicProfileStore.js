@@ -28,6 +28,10 @@ import {
   isProfileSlugDeleted,
 } from './deletedProfileSlugs.js';
 import { getHostedAccountState } from './hostedAccountDeletion.js';
+import {
+  collectLeaderboardBoardIds,
+  leaderboardBoardIdFromPost,
+} from './postsMerge.js';
 
 function throwIfError(result, label) {
   if (result?.error) throw new Error(`${label}: ${result.error.message}`);
@@ -370,10 +374,33 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     return row;
   }
 
+  async function deleteLeaderboardPostsByBoardIds(boardIds) {
+    if (!boardIds?.size) return;
+    const rows = throwIfError(
+      await supabase.from('posts').select('id, leaderboard').not('leaderboard', 'is', null),
+      'list leaderboard posts for purge',
+    );
+    const idsToDelete = (rows ?? [])
+      .filter((row) => {
+        const boardId = leaderboardBoardIdFromPost(row);
+        return boardId && boardIds.has(boardId);
+      })
+      .map((row) => row.id)
+      .filter(Boolean);
+    if (idsToDelete.length === 0) return;
+    throwIfError(
+      await supabase.from('posts').delete().in('id', idsToDelete),
+      'purge leaderboard posts',
+    );
+  }
+
   async function appendPostsToProfile({ profileId, userId, posts, source = 'generated' }) {
-    const rows = (Array.isArray(posts) ? posts : [])
-      .filter((p) => p && p.content)
-      .map((p) => mapPostForInsert(p, profileId, userId, source));
+    const incoming = (Array.isArray(posts) ? posts : []).filter((p) => p && p.content);
+    const boardIds = collectLeaderboardBoardIds(incoming);
+    if (boardIds.size > 0) {
+      await deleteLeaderboardPostsByBoardIds(boardIds);
+    }
+    const rows = incoming.map((p) => mapPostForInsert(p, profileId, userId, source));
     if (rows.length === 0) return [];
     const inserted = throwIfError(
       await supabase.from('posts').insert(rows).select('*'),

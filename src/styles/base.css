@@ -3019,7 +3019,7 @@ button.profile-name-link.leaderboard-row__name {
 .profile-leaderboard-row {
   position: relative;
   display: grid;
-  grid-template-columns: 34px 28px minmax(0, 1fr) auto;
+  grid-template-columns: 34px 28px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   padding: 9px 11px;
@@ -3074,8 +3074,7 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
   color: var(--persona-accent, #759aef);
 }
 
-.profile-leaderboard-row__rank,
-.profile-leaderboard-row__score {
+.profile-leaderboard-row__rank {
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
@@ -3094,8 +3093,7 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
 
 .profile-leaderboard-row--hidden .profile-leaderboard-row__rank,
 .profile-leaderboard-row--hidden .profile-leaderboard-row__avatar,
-.profile-leaderboard-row--hidden .profile-leaderboard-row__name,
-.profile-leaderboard-row--hidden .profile-leaderboard-row__score {
+.profile-leaderboard-row--hidden .profile-leaderboard-row__name {
   filter: blur(8px) saturate(0.35);
   opacity: 0.52;
   user-select: none;

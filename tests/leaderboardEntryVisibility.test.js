@@ -15,10 +15,23 @@ describe('leaderboardEntryVisibility', () => {
 
   it('never hides other real users via cloneHidden', () => {
     const hidden = mapLeaderboardEntryHiddenFlags(entries, {
-      selfHidden: false,
+      viewerRowHidden: false,
       cloneHidden: [true, false, false],
     });
     expect(hidden).toEqual([false, false, true, false, false]);
+  });
+
+  it('hides the viewer row by slug, not the post author isUser flag', () => {
+    const mixed = [
+      { rank: 1, isUser: true, source: 'real', slug: 'alice', name: 'Alice' },
+      { rank: 2, isUser: false, source: 'real', slug: 'bob', name: 'Bob' },
+    ];
+    const hidden = mapLeaderboardEntryHiddenFlags(mixed, {
+      viewerSlug: 'bob',
+      viewerRowHidden: true,
+      cloneHidden: [],
+    });
+    expect(hidden).toEqual([false, true]);
   });
 
   it('classifies bots and legacy demo slugs', () => {

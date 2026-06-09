@@ -18,12 +18,6 @@ const PERSONA_SECTION_LABEL = {
   popularite: 'POPULARITY LEADERBOARDS',
 };
 
-function formatScore(score) {
-  const n = Number(score);
-  if (!Number.isFinite(n)) return '0';
-  return Math.round(n).toString();
-}
-
 function ordinalSuffix(rank) {
   const n = Number(rank);
   if (!Number.isFinite(n)) return '';
@@ -51,26 +45,17 @@ function slugsMatch(a, b) {
 export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug = null }) {
   const rank = Number(board.userRank);
   const hasRank = Number.isFinite(rank);
-  const fullHidden = hiddenMode === 'full';
   const rowHidden = hiddenMode === 'row';
   const title = String(board.title ?? 'Leaderboard');
-  const hiddenNoticeCopy = fullHidden
+  const hiddenNoticeCopy = rowHidden
     ? {
         title: 'Position hidden',
         body: 'You chose to hide your place on this leaderboard.',
       }
-    : rowHidden
-      ? {
-          title: 'Position hidden',
-          body: 'This user hid their position on this leaderboard.',
-        }
-      : null;
+    : null;
 
   return (
-    <article
-      className={`profile-leaderboard-card${fullHidden ? ' profile-leaderboard-card--hidden' : ''}`}
-      aria-label={fullHidden ? `Hidden ranking: ${title} standings` : undefined}
-    >
+    <article className="profile-leaderboard-card">
       <header className="profile-leaderboard-card__head">
         <div>
           <p className="profile-leaderboard-card__eyebrow">leaderboards</p>
@@ -101,7 +86,6 @@ export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug =
               avatarInitials={isBot ? entry.avatarInitials : null}
             />
             <span className="profile-leaderboard-row__name">{entry.name}</span>
-            <span className="profile-leaderboard-row__score">{formatScore(entry.score)}</span>
             {hideOwnedRow ? (
               <div className="profile-leaderboard-row__hidden-notice" role="status">
                 <span className="profile-leaderboard-row__hidden-notice-title">
@@ -115,14 +99,6 @@ export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug =
         })}
       </ol>
 
-      {fullHidden && hiddenNoticeCopy ? (
-        <div className="profile-leaderboard-card__hidden-notice" role="status">
-          <span className="profile-leaderboard-card__hidden-notice-title">
-            {hiddenNoticeCopy.title}
-          </span>
-          <p>{hiddenNoticeCopy.body}</p>
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -162,9 +138,7 @@ export default function LeaderboardsTab({ profile, isOwnProfile = true, ownedPro
                   key={board.boardId}
                   board={board}
                   hiddenMode={
-                    isLeaderboardSelfHidden(board.boardId)
-                      ? (isOwnProfile ? 'full' : 'row')
-                      : 'none'
+                    isLeaderboardSelfHidden(board.boardId) ? 'row' : 'none'
                   }
                   ownedProfileSlug={resolvedOwnedProfileSlug}
                 />
