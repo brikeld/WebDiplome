@@ -372,22 +372,22 @@ body {
 
 /* Replaces .dashboard-rings when the live dominant persona flips */
 .dashboard-persona-change {
-  flex: 0 0 clamp(100px, 12.6vh, 124px);
+  flex: 0 0 auto;
   width: 100%;
   margin-top: 6px;
   display: flex;
   align-items: stretch;
-  min-height: 0;
+  min-height: clamp(100px, 12.6vh, 124px);
 }
 
 .dashboard-persona-change__capsule {
   flex: 1;
   box-sizing: border-box;
   width: 100%;
-  border: var(--capsule-shell-border-width) solid var(--persona-accent, #759aef);
+  border: var(--capsule-shell-border-width) solid var(--ink, #000);
   border-radius: 15px;
-  background: #fff;
-  padding: clamp(10px, 1.2vh, 14px) clamp(14px, 1.6vw, 20px);
+  background: var(--ink, #000);
+  padding: clamp(14px, 1.8vh, 22px) clamp(16px, 2.2vw, 28px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -423,11 +423,11 @@ body {
 
 .dashboard-persona-change__text {
   margin: 0;
-  color: #000;
+  color: #fff;
   font-family: var(--font-avant);
-  font-size: clamp(11px, 1.05vw, 14px);
+  font-size: clamp(1rem, 0.72rem + 1.35vw, 1.75rem);
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
   letter-spacing: -0.01em;
   text-align: center;
   text-wrap: balance;

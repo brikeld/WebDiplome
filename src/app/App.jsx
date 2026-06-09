@@ -590,7 +590,7 @@ function AppInner({
         setPersonaChangeBannerExiting(false);
         personaChangeBannerTimerRef.current = null;
       }, 380);
-    }, 4200);
+    }, 8200);
     return () => {
       if (personaChangeBannerTimerRef.current) {
         clearTimeout(personaChangeBannerTimerRef.current);
