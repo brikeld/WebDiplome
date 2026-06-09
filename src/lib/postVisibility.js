@@ -1,16 +1,5 @@
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
-import {
-  isLeaderboardSelfHidden,
-  isPostHidden,
-  leaderboardSelfKey,
-} from '@/features/liveScoring/scoringLogic.js';
-
-function isLeaderboardRevealingFromRecords(records, boardId) {
-  const key = leaderboardSelfKey(boardId);
-  const rec = records?.[key];
-  if (!rec) return false;
-  return !isLeaderboardSelfHidden(records, boardId) && (rec.restorable ?? 0) > 0;
-}
+import { isPostHidden } from '@/features/liveScoring/scoringLogic.js';
 
 /**
  * Author-synced hide (profile owner, visible to everyone) plus viewer-only hide in the home feed.
@@ -30,11 +19,7 @@ export function resolvePostHiddenState(
   const authorRecs = authorRecords && typeof authorRecords === 'object' ? authorRecords : {};
 
   if (post?.leaderboard?.boardId) {
-    const boardId = post.leaderboard.boardId;
-    if (isLeaderboardSelfHidden(authorRecs, boardId)) return true;
-    if (typeof viewerIsLeaderboardSelfHidden === 'function') {
-      return viewerIsLeaderboardSelfHidden(boardId);
-    }
+    // Leaderboard hide is viewer-local and row-only (LeaderboardBlock / profile tab).
     return false;
   }
 
@@ -63,13 +48,6 @@ export function resolvePostRevealingState(
   const authorRecs = authorRecords && typeof authorRecords === 'object' ? authorRecords : {};
 
   if (post?.leaderboard?.boardId) {
-    const boardId = post.leaderboard.boardId;
-    if (isLeaderboardSelfHidden(authorRecs, boardId)) return false;
-    if (isLeaderboardRevealingFromRecords(authorRecs, boardId)) return true;
-    if (typeof viewerIsLeaderboardSelfRevealing === 'function') {
-      return viewerIsLeaderboardSelfRevealing(boardId)
-        && !(viewerIsLeaderboardSelfHidden?.(boardId));
-    }
     return false;
   }
 

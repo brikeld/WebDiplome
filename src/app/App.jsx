@@ -791,6 +791,9 @@ function AppInner({
 
   const getHighlightedLeaderboardSelfRect = () =>
     document
+      .querySelector('.post-card--highlighted .leaderboard-row--viewer-position')
+      ?.getBoundingClientRect() ??
+    document
       .querySelector('.post-card--highlighted .leaderboard-row--self')
       ?.getBoundingClientRect() ??
     getHighlightedPostRect();

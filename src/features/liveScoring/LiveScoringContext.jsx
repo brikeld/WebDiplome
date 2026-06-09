@@ -102,7 +102,6 @@ export function LiveScoringProvider({ profile, children }) {
   const [animatingRing, setAnimatingRing] = useState(/** @type {string | null} */ (null));
   const [optimisticHidden, setOptimisticHidden] = useState(() => new Set());
   const [optimisticLeaderboardRowHidden, setOptimisticLeaderboardRowHidden] = useState(() => new Set());
-  const [optimisticLeaderboardHidden, setOptimisticLeaderboardHidden] = useState(() => new Set());
   const [optimisticLeaderboardRevealing, setOptimisticLeaderboardRevealing] = useState(() => new Set());
   const [optimisticLeaderboardRowRevealing, setOptimisticLeaderboardRowRevealing] = useState(() => new Set());
   const [revealPendingLeaderboardPostHidden, setRevealPendingLeaderboardPostHidden] = useState(() => new Set());
@@ -111,24 +110,20 @@ export function LiveScoringProvider({ profile, children }) {
   const animationQueueRef = useRef([]);
   const animationListenersRef = useRef(new Set());
   const adjustedScoresRef = useRef(ringScores);
-  const leaderboardFullHideTimersRef = useRef(new Map());
-  const leaderboardFullRevealTimersRef = useRef(new Map());
+  const leaderboardRowRevealTimersRef = useRef(new Map());
 
   // Load from localStorage when profileId changes
   useEffect(() => {
     if (!profileId) return;
     setOptimisticHidden(new Set());
     setOptimisticLeaderboardRowHidden(new Set());
-    setOptimisticLeaderboardHidden(new Set());
     setOptimisticLeaderboardRevealing(new Set());
     setOptimisticLeaderboardRowRevealing(new Set());
     setRevealPendingLeaderboardPostHidden(new Set());
     setRevealPendingHidden(new Set());
     setRevealingKeys(new Set());
-    for (const timer of leaderboardFullHideTimersRef.current.values()) clearTimeout(timer);
-    leaderboardFullHideTimersRef.current.clear();
-    for (const timer of leaderboardFullRevealTimersRef.current.values()) clearTimeout(timer);
-    leaderboardFullRevealTimersRef.current.clear();
+    for (const timer of leaderboardRowRevealTimersRef.current.values()) clearTimeout(timer);
+    leaderboardRowRevealTimersRef.current.clear();
     let records = loadFromStorage(profileId);
     if (isHostedApiOrigin() && profile?.liveScoringRecords && typeof profile.liveScoringRecords === 'object') {
       records = { ...records, ...profile.liveScoringRecords };
@@ -138,10 +133,8 @@ export function LiveScoringProvider({ profile, children }) {
 
   useEffect(
     () => () => {
-      for (const timer of leaderboardFullHideTimersRef.current.values()) clearTimeout(timer);
-      leaderboardFullHideTimersRef.current.clear();
-      for (const timer of leaderboardFullRevealTimersRef.current.values()) clearTimeout(timer);
-      leaderboardFullRevealTimersRef.current.clear();
+      for (const timer of leaderboardRowRevealTimersRef.current.values()) clearTimeout(timer);
+      leaderboardRowRevealTimersRef.current.clear();
     },
     [],
   );
@@ -150,6 +143,8 @@ export function LiveScoringProvider({ profile, children }) {
     () => (isHostedApiOrigin() ? profileSlugFromProfile(profile) : null),
     [profile],
   );
+
+  const viewerSlug = useMemo(() => profileSlugFromProfile(profile), [profile]);
 
   // Persist to localStorage after first load
   useEffect(() => {
@@ -325,7 +320,6 @@ export function LiveScoringProvider({ profile, children }) {
     (post, sourcePillRect, options = {}) => {
       const boardId = post?.leaderboard?.boardId;
       if (!boardId || isLeaderboardSelfHidden(state.records, boardId)) return;
-      const fullHideDelayMs = Math.max(0, Number(options.fullHideDelayMs ?? 360) || 0);
       pushAnimationEvent({
         id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `anim-${Date.now()}`,
         type: 'hide',
@@ -336,30 +330,13 @@ export function LiveScoringProvider({ profile, children }) {
         waypointRect: options.waypointRect ?? null,
         onWaypoint: () => {
           setOptimisticLeaderboardRowHidden((prev) => new Set(prev).add(boardId));
-          const existingTimer = leaderboardFullHideTimersRef.current.get(boardId);
-          if (existingTimer) clearTimeout(existingTimer);
-          const timer = setTimeout(() => {
-            leaderboardFullHideTimersRef.current.delete(boardId);
-            setOptimisticLeaderboardHidden((prev) => new Set(prev).add(boardId));
-          }, fullHideDelayMs);
-          leaderboardFullHideTimersRef.current.set(boardId, timer);
         },
         onCommit: () => {
-          const pendingTimer = leaderboardFullHideTimersRef.current.get(boardId);
-          if (pendingTimer) {
-            clearTimeout(pendingTimer);
-            leaderboardFullHideTimersRef.current.delete(boardId);
-          }
           dispatch({
             type: 'HIDE_LEADERBOARD_SELF',
             boardId,
             persona: post.leaderboard.persona ?? post.persona,
             systemDeltaPct: post.systemDeltaPct ?? 1,
-          });
-          setOptimisticLeaderboardHidden((prev) => {
-            const next = new Set(prev);
-            next.delete(boardId);
-            return next;
           });
           setOptimisticLeaderboardRowHidden((prev) => {
             const next = new Set(prev);
@@ -398,10 +375,10 @@ export function LiveScoringProvider({ profile, children }) {
           });
           dispatch({ type: 'REVEAL_LEADERBOARD_SELF', boardId });
 
-          const existingTimer = leaderboardFullRevealTimersRef.current.get(boardId);
+          const existingTimer = leaderboardRowRevealTimersRef.current.get(boardId);
           if (existingTimer) clearTimeout(existingTimer);
           const timer = setTimeout(() => {
-            leaderboardFullRevealTimersRef.current.delete(boardId);
+            leaderboardRowRevealTimersRef.current.delete(boardId);
             setOptimisticLeaderboardRowHidden((prev) => {
               const next = new Set(prev);
               next.delete(boardId);
@@ -409,13 +386,13 @@ export function LiveScoringProvider({ profile, children }) {
             });
             setOptimisticLeaderboardRowRevealing((prev) => new Set(prev).add(boardId));
           }, rowRevealDelayMs);
-          leaderboardFullRevealTimersRef.current.set(boardId, timer);
+          leaderboardRowRevealTimersRef.current.set(boardId, timer);
         },
         onAnimationComplete: () => {
-          const pendingTimer = leaderboardFullRevealTimersRef.current.get(boardId);
+          const pendingTimer = leaderboardRowRevealTimersRef.current.get(boardId);
           if (pendingTimer) {
             clearTimeout(pendingTimer);
-            leaderboardFullRevealTimersRef.current.delete(boardId);
+            leaderboardRowRevealTimersRef.current.delete(boardId);
             setOptimisticLeaderboardRowHidden((prev) => {
               const next = new Set(prev);
               next.delete(boardId);
@@ -446,22 +423,7 @@ export function LiveScoringProvider({ profile, children }) {
   const isLeaderboardSelfHiddenForBoard = useCallback(
     (boardId) =>
       revealPendingLeaderboardPostHidden.has(boardId) ||
-      (
-        !optimisticLeaderboardRevealing.has(boardId) &&
-        (optimisticLeaderboardHidden.has(boardId) || isLeaderboardSelfHidden(state.records, boardId))
-      ),
-    [
-      state.records,
-      optimisticLeaderboardHidden,
-      optimisticLeaderboardRevealing,
-      revealPendingLeaderboardPostHidden,
-    ],
-  );
-
-  const isLeaderboardSelfRowHiddenForBoard = useCallback(
-    (boardId) =>
       optimisticLeaderboardRowHidden.has(boardId) ||
-      optimisticLeaderboardHidden.has(boardId) ||
       (
         !optimisticLeaderboardRevealing.has(boardId) &&
         isLeaderboardSelfHidden(state.records, boardId)
@@ -469,9 +431,14 @@ export function LiveScoringProvider({ profile, children }) {
     [
       state.records,
       optimisticLeaderboardRowHidden,
-      optimisticLeaderboardHidden,
       optimisticLeaderboardRevealing,
+      revealPendingLeaderboardPostHidden,
     ],
+  );
+
+  const isLeaderboardSelfRowHiddenForBoard = useCallback(
+    (boardId) => isLeaderboardSelfHiddenForBoard(boardId),
+    [isLeaderboardSelfHiddenForBoard],
   );
 
   const isLeaderboardSelfRevealingForBoard = useCallback(
@@ -506,6 +473,7 @@ export function LiveScoringProvider({ profile, children }) {
       ringScores,
       animatingRing,
       dominantPersona,
+      viewerSlug,
       hidePost,
       revealPost,
       hideLeaderboardSelf,
@@ -528,6 +496,7 @@ export function LiveScoringProvider({ profile, children }) {
       ringScores,
       animatingRing,
       dominantPersona,
+      viewerSlug,
       hidePost,
       revealPost,
       hideLeaderboardSelf,

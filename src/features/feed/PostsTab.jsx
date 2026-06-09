@@ -30,6 +30,7 @@ const PERSONA_COLORS = {
 };
 
 import { resolveLeaderboardForFeed } from '@/lib/resolveLeaderboardForFeed.js';
+import { dedupeLeaderboardPostsNewestOnly } from '@/lib/leaderboardFeedDedupe.js';
 import { API_ORIGIN } from '@/lib/apiClient.js';
 import { getPublicMediaConfig } from '@/lib/publicMediaConfig.js';
 import { resolveAttachedAssetPublicUrl } from '@/lib/uploadPublicUrl.js';
@@ -301,7 +302,9 @@ export default function PostsTab({
     );
 
     // Newest first; tie-break so staggered client posts keep order even if timestamps collide.
-    return all.sort(sortNewestFirst);
+    const sorted = all.sort(sortNewestFirst);
+    // One feed post per leaderboard board (newest wins); reposts replace older ones server-side.
+    return dedupeLeaderboardPostsNewestOnly(sorted);
   }, [feedContext, feedProfiles, personaBadgePersona, profile, deletedProfileIds]);
 
   useEffect(() => {

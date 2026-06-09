@@ -25,4 +25,18 @@ describe('resolvePostHiddenState', () => {
     });
     expect(hidden).toBe(true);
   });
+
+  it('never hides leaderboard posts at the card level', () => {
+    const leaderboardPost = {
+      createdAt,
+      authorSlug: 'alice-abc',
+      leaderboard: { boardId: 'most_secure' },
+    };
+    const hidden = resolvePostHiddenState(leaderboardPost, {
+      authorRecords: { 'leaderboard-self|most_secure': { persona: 'security', delta: -1 } },
+      viewerIsHidden: () => false,
+      viewerIsLeaderboardSelfHidden: () => true,
+    });
+    expect(hidden).toBe(false);
+  });
 });

@@ -935,20 +935,9 @@ button.profile-last-analysis-pill:disabled {
   flex-direction: column;
   align-items: stretch;
   gap: var(--profile-rail-scores-row-inner-gap-fit, clamp(5px, 1.1cqw, 8px));
-  padding: var(--profile-rail-scores-row-pad-top-fit, clamp(9px, 1.7cqw, 13px)) 0 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0;
   box-sizing: border-box;
   min-height: 0;
-}
-
-.profile-rail-capsule .profile-rail-persona-row:first-child {
-  border-top: none;
-  padding-top: 0;
-}
-
-.profile-rail-capsule .profile-rail-persona-row--dominant {
-  padding-left: clamp(6px, 1.4cqw, 10px);
-  border-left: 3px solid var(--persona-accent, #759aef);
 }
 
 .profile-rail-capsule .profile-rail-persona-row__head {
