@@ -1,4 +1,6 @@
 import { slimProfilePayloadForStorage } from './publicProfileMapping.js';
+import { harvestPayloadHasContent } from './generationQueue.js';
+import { resolveProfileHarvestDataJson } from './resolveProfileHarvestData.js';
 
 export function profileSlugFromBody(body) {
   return String(
@@ -35,19 +37,9 @@ export async function resolveSubjectProfileContext(profileStore, body, { jobStor
   const profileForWorker = slimProfilePayloadForStorage(apiProfile ?? {});
 
   const raw = row.raw_profile && typeof row.raw_profile === 'object' ? row.raw_profile : {};
-  let dataJson =
-    body?.dataJson
-    ?? raw?.lastHarvestDataJson
-    ?? raw?.dataJson
-    ?? raw?.data_json
-    ?? null;
-  if (!dataJson && jobStore) {
-    const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
-    const prior = latest?.request_payload;
-    if (prior && typeof prior === 'object') {
-      dataJson = prior.dataJson ?? prior.data_json ?? null;
-    }
-  }
+  const dataJson = harvestPayloadHasContent(body?.dataJson)
+    ? body.dataJson
+    : await resolveProfileHarvestDataJson(raw, row.id, jobStore);
 
   return {
     slug,
@@ -94,19 +86,9 @@ export async function resolveCommenterProfileContext(profileStore, body, { jobSt
   });
 
   const raw = row.raw_profile && typeof row.raw_profile === 'object' ? row.raw_profile : {};
-  let dataJson =
-    body?.dataJson
-    ?? raw?.lastHarvestDataJson
-    ?? raw?.dataJson
-    ?? raw?.data_json
-    ?? null;
-  if (!dataJson && jobStore) {
-    const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
-    const prior = latest?.request_payload;
-    if (prior && typeof prior === 'object') {
-      dataJson = prior.dataJson ?? prior.data_json ?? null;
-    }
-  }
+  const dataJson = harvestPayloadHasContent(body?.dataJson)
+    ? body.dataJson
+    : await resolveProfileHarvestDataJson(raw, row.id, jobStore);
 
   return {
     slug,

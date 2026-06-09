@@ -1,5 +1,6 @@
 import { resolveApiOrigin } from '@/lib/apiOrigin.js';
 import { queueDemoSinglePost } from '@/lib/demoRotateApi.js';
+import { refreshHostedSession } from '@/lib/hostedAccount.js';
 import { postIdentityKey } from '@/lib/mergePersonaPosts.js';
 import {
   POST_FEED_ENTER_ANIM_MS,
@@ -90,6 +91,9 @@ export async function tryQueueDemoPost(slug) {
       generatingPersona: created.generatingPersona ?? null,
     };
   }
+  if (created?.reason === 'auth_failed') {
+    return { kind: 'auth', slug: key, reason: 'auth_failed' };
+  }
   if (created?.reason === 'no_harvest_data' || created?.reason === 'excluded_profile') {
     return { kind: 'skip', slug: key, reason: created.reason };
   }
@@ -109,6 +113,11 @@ async function queueDemoPostWithRetry(slug, { shouldContinue, timeoutMs = 120000
   while (shouldContinue() && Date.now() - start < timeoutMs) {
     const outcome = await tryQueueDemoPost(slug);
     if (outcome.kind === 'queued') return outcome;
+    if (outcome.reason === 'auth_failed') {
+      await refreshHostedSession();
+      await sleep(DEMO_QUEUE_RETRY_MS);
+      continue;
+    }
     if (outcome.reason === 'no_harvest_data' || outcome.reason === 'excluded_profile') {
       return null;
     }

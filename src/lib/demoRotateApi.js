@@ -20,9 +20,12 @@ export async function queueDemoSinglePost(profileSlug) {
   });
 
   if (!res.ok) {
+    const reason = res.status === 401
+      ? 'auth_failed'
+      : (body?.reason ?? body?.error ?? 'request_failed');
     return {
       queued: false,
-      reason: body?.reason ?? body?.error ?? 'request_failed',
+      reason,
       alreadyQueued: body?.alreadyQueued ?? false,
       jobId: body?.jobId ?? null,
       status: body?.status ?? null,

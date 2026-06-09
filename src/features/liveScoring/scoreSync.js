@@ -22,7 +22,7 @@ export async function syncLiveScoringRecords(profileSlug, records) {
         body: JSON.stringify({ records: records ?? {} }),
       },
     );
-    if (!res.ok && res.status !== 403) {
+    if (!res.ok && res.status !== 403 && res.status !== 404) {
       console.warn('[liveScoring] hosted records sync failed:', res.status);
     }
   } catch (err) {

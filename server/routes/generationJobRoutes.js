@@ -15,6 +15,7 @@ import {
 } from '../lib/generationQueue.js';
 import { isDemoRotateOperator, isDemoRotateTargetProfile } from '../lib/demoRotate.js';
 import { resolveDemoSinglePostPersona } from '../lib/demoRotatePersona.js';
+import { resolveProfileHarvestDataJson } from '../lib/resolveProfileHarvestData.js';
 
 const workerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -207,6 +208,9 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       const slug = String(req.body?.profileSlug || '').trim();
       if (!slug) return res.status(400).json({ error: 'profileSlug required' });
 
+      const row = await profileStore.getProfileRowBySlug(slug);
+      if (!row) return res.status(404).json({ error: 'Profile not found' });
+
       const target = await profileStore.getProfileBySlug(slug);
       if (!target) return res.status(404).json({ error: 'Profile not found' });
       if (!isDemoRotateTargetProfile(target)) {
@@ -218,20 +222,29 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         { profileSlug: slug },
         { jobStore },
       );
-      if (!harvestPayloadHasContent(ctx.dataJson)) {
+      let dataJson = ctx.dataJson;
+      if (!harvestPayloadHasContent(dataJson)) {
+        dataJson = await resolveProfileHarvestDataJson(
+          row.raw_profile,
+          row.id,
+          jobStore,
+          { profileRow: row, apiProfile: target, allowSynthesize: true },
+        );
+      }
+      if (!harvestPayloadHasContent(dataJson)) {
         return res.status(400).json({ error: 'No stored harvest data for profile', reason: 'no_harvest_data' });
       }
 
       const generatingPersona = await resolveDemoSinglePostPersona({
         profile: target,
-        dataJson: ctx.dataJson,
+        dataJson,
       });
 
       const outcome = await queueSinglePostJob({
         profileStore,
         jobStore,
         profileSlug: slug,
-        syncDataJson: ctx.dataJson,
+        syncDataJson: dataJson,
       });
 
       const personaPayload = generatingPersona ? { generatingPersona } : {};

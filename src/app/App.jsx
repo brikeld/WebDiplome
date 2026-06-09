@@ -87,6 +87,7 @@ import {
   canUseHostedAccountFeatures,
   clearHostedAccountStorage,
   fetchLinkedProfile,
+  fetchWithHostedAuth,
   hostedAuthHeaders,
   ingestHostedSessionFromHash,
   readHostedSession,
@@ -1565,15 +1566,15 @@ export default function App() {
         inferPublicMediaConfigFromProfiles(normalized);
 
         if (isHostedApiOrigin() && readHostedSession()?.access_token) {
-          const meRes = await fetch(`${API_ORIGIN}/api/profile/me`, {
-            headers: { ...hostedAuthHeaders() },
-          }).catch(() => null);
+          const meRes = await fetchWithHostedAuth(`${API_ORIGIN}/api/profile/me`).catch(() => null);
           if (!meRes?.ok) {
             if (shouldResetHostedSessionForProfileMeStatus(meRes?.status)) {
-              clearHostedAccountStorage();
-              setLinkedProfileSlug(null);
-              setProfile(null);
-              setLandingOwnedProfile(null);
+              if (!demoRotateActiveRef.current) {
+                clearHostedAccountStorage();
+                setLinkedProfileSlug(null);
+                setProfile(null);
+                setLandingOwnedProfile(null);
+              }
               setAllProfiles(normalized);
               scheduleSpectatorIngest(normalized, cancelledRef);
               return;

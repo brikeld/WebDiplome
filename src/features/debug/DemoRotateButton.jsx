@@ -62,12 +62,6 @@ export default function DemoRotateButton({
       setError(err?.message || 'Demo rotate stopped');
     } finally {
       setBusy(false);
-      if (runningRef.current) {
-        runningRef.current = false;
-        setRunning(false);
-        onActiveChange?.(false);
-        onGeneratingPersona?.(null);
-      }
     }
   }, [allProfiles, reloadProfileFromApi, spectateController, onGeneratingPersona, stop, onActiveChange]);
 

@@ -3,6 +3,14 @@ function throwIfError(result, label) {
   return result?.data;
 }
 
+import { harvestPayloadHasContent } from './generationQueue.js';
+
+function harvestDataFromPayload(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+  const data = payload.dataJson ?? payload.data_json ?? null;
+  return harvestPayloadHasContent(data) ? data : null;
+}
+
 function mapJobRow(row) {
   if (!row) return null;
   const payload = row.request_payload && typeof row.request_payload === 'object'
@@ -268,6 +276,28 @@ export function createGenerationJobStore(supabase) {
           : {};
         return (payload.jobType || 'posts') === jobType;
       }) ?? null;
+    },
+
+    /** Newest job payload that still carries usable harvest dataJson (any job type). */
+    async findLatestHarvestDataJson(profileId) {
+      if (!profileId) return null;
+      const rows = throwIfError(
+        await supabase
+          .from('generation_jobs')
+          .select('request_payload, created_at')
+          .eq('profile_id', profileId)
+          .order('created_at', { ascending: false })
+          .limit(24),
+        'find latest harvest dataJson',
+      );
+      for (const row of Array.isArray(rows) ? rows : []) {
+        const payload = row?.request_payload && typeof row.request_payload === 'object'
+          ? row.request_payload
+          : {};
+        const data = harvestDataFromPayload(payload);
+        if (data) return data;
+      }
+      return null;
     },
 
     mapJobRow,
