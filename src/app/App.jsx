@@ -104,7 +104,6 @@ import {
 } from '@/lib/profileSlugStorage.js';
 import { selectProfileBySlug } from '@/lib/profileDirectory.js';
 import { canManuallyGenerateDashboardUpdate } from '@/lib/adminProfile.js';
-import { mergeSummaryAndFeedProfiles } from '@/lib/publicFeedMerge.js';
 
 function selectedProfileSlug() {
   return readStoredProfileSlug();
@@ -114,7 +113,6 @@ const API_ORIGIN = resolveApiOrigin();
 const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
 const PUBLIC_DIRECTORY_POLL_MS = 30_000;
 const PUBLIC_FEED_POLL_MS = 30_000;
-const PUBLIC_FEED_LIMIT = 20;
 const TELL_LAYOUT_MS = 1500;
 const TELL_CROSSFADE_MS = 520;
 const TELL_RADAR_HOLD_MS = 3400;
@@ -244,27 +242,12 @@ function isFeedGenerationPhase(phase) {
   return phase === 'generating';
 }
 
-async function fetchPublicDirectorySnapshot({ includeFeed = false } = {}) {
-  try {
-    const summaryRes = await fetch(`${API_ORIGIN}/api/profiles/summary`, { cache: 'no-store' });
-    if (!summaryRes.ok) throw new Error(`Profile summary failed (${summaryRes.status})`);
-    const summaries = await summaryRes.json();
-    let feedProfiles = [];
-    if (includeFeed) {
-      const feedRes = await fetch(`${API_ORIGIN}/api/feed?limit=${PUBLIC_FEED_LIMIT}`, {
-        cache: 'no-store',
-      });
-      if (feedRes.ok) {
-        const feed = await feedRes.json().catch(() => ({}));
-        feedProfiles = Array.isArray(feed?.profiles) ? feed.profiles : [];
-      }
-    }
-    return mergeSummaryAndFeedProfiles(summaries, feedProfiles);
-  } catch {
-    const fallback = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
-    if (!fallback.ok) throw new Error('failed');
-    return fallback.json();
-  }
+/** Full directory with every profile's posts — summaries-only snapshots drop posts on navigation. */
+async function fetchPublicDirectorySnapshot() {
+  const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Profile directory failed (${res.status})`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 function computePersonaDeltas(before, after) {
@@ -338,6 +321,9 @@ function AppInner({
   accountResetKey = 0,
   onGoLanding,
   reloadProfileFromApi,
+  spectateRevealRef,
+  setDemoRotateActive,
+  setAllProfiles,
 }) {
   const {
     adjustedScores,
@@ -990,16 +976,16 @@ function AppInner({
           || p?.id === targetSlug
           || (explicitSlug && slugsReferToSameAccount(p?.slug ?? p?.id, explicitSlug)),
       );
-      if (!target && explicitSlug) {
-        try {
-          const res = await fetch(
-            `${API_ORIGIN}/api/profiles/${encodeURIComponent(targetSlug)}`,
-            { cache: 'no-store' },
-          );
-          if (res.ok) target = await res.json();
-        } catch (e) {
-          console.warn('[profile] fetch by slug failed', e?.message || e);
+      try {
+        const res = await fetch(
+          `${API_ORIGIN}/api/profiles/${encodeURIComponent(targetSlug)}`,
+          { cache: 'no-store' },
+        );
+        if (res.ok) {
+          target = await res.json();
         }
+      } catch (e) {
+        console.warn('[profile] fetch by slug failed', e?.message || e);
       }
       if (!target) {
         if (explicitSlug) {
@@ -1010,13 +996,26 @@ function AppInner({
         return;
       }
       ingestProfileAvatars([target]);
-      setViewedProfile(normalizeProfilesFromApi([target])[0] ?? target);
+      const normalizedTarget = normalizeProfilesFromApi([target])[0] ?? target;
+      setViewedProfile(normalizedTarget);
+      const targetKey = String(normalizedTarget?.slug ?? normalizedTarget?.id ?? targetSlug);
+      setAllProfiles((prev) => {
+        const list = Array.isArray(prev) ? prev : [];
+        let matched = false;
+        const next = list.map((p) => {
+          const key = String(p?.slug ?? p?.id ?? '');
+          if (key !== targetKey) return p;
+          matched = true;
+          return normalizedTarget;
+        });
+        return matched ? next : [normalizedTarget, ...list];
+      });
       setMainView('profile');
       setActiveTab(tab);
       resetProfileChrome();
       bumpProfileEntryReplay?.();
     },
-    [allProfiles, ownProfileSlug, resetProfileChrome, setActiveTab, setMainView, bumpProfileEntryReplay],
+    [allProfiles, ownProfileSlug, resetProfileChrome, setActiveTab, setMainView, bumpProfileEntryReplay, setAllProfiles],
   );
 
   const handleSelectView = useCallback(
@@ -1085,6 +1084,8 @@ function AppInner({
           <DemoRotateButton
             allProfiles={allProfiles}
             reloadProfileFromApi={reloadProfileFromApi}
+            spectateController={spectateRevealRef.current}
+            onActiveChange={setDemoRotateActive}
           />
         )}
       </div>
@@ -1219,9 +1220,17 @@ export default function App() {
   const deferCompliantRef = useRef(false);
   const pendingCompliantRef = useRef([]);
   const spectateRevealRef = useRef(null);
+  const postRevealFlashHandlerRef = useRef(null);
+  postRevealFlashHandlerRef.current = (persona) => {
+    setPostRevealFlash({ persona, nonce: Date.now() });
+  };
   if (!spectateRevealRef.current) {
-    spectateRevealRef.current = createFeedSpectatorRevealController({ setAllProfiles });
+    spectateRevealRef.current = createFeedSpectatorRevealController({
+      setAllProfiles,
+      onPostRevealed: (persona) => postRevealFlashHandlerRef.current?.(persona),
+    });
   }
+  const [demoRotateActive, setDemoRotateActive] = useState(false);
   const personaDeltasClearRef = useRef(null);
   /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
@@ -1456,7 +1465,7 @@ export default function App() {
       if (await syncAccountDeletionState()) return;
 
       try {
-        const data = await fetchPublicDirectorySnapshot({ includeFeed: mainView === 'home' });
+        const data = await fetchPublicDirectorySnapshot();
         if (cancelledRef.cancelled) return;
         if (!Array.isArray(data) || data.length === 0) {
           setLandingOwnedProfile(null);
@@ -1571,7 +1580,11 @@ export default function App() {
     };
   }, [syncAccountDeletionState, mainView, linkedProfileSlug, applyFullAccountReset, scheduleSpectatorIngest, syncDeletedProfileIds]);
 
-  const reloadProfileFromApi = useCallback(async ({ skipPostsMerge = false, forcePostsMerge = false } = {}) => {
+  const reloadProfileFromApi = useCallback(async ({
+    skipPostsMerge = false,
+    forcePostsMerge = false,
+    preservePersonaPostsForSlugs = [],
+  } = {}) => {
     const res = await fetch(`${API_ORIGIN}/api/profiles`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to reload profile');
     const data = await res.json();
@@ -1588,10 +1601,29 @@ export default function App() {
     }
     const normalized = normalizeProfilesFromApi(filtered);
     ingestProfileAvatars(normalized);
-    setAllProfiles(normalized);
-    queueMicrotask(() => {
+    const preserveSet = new Set(
+      (Array.isArray(preservePersonaPostsForSlugs) ? preservePersonaPostsForSlugs : [])
+        .map((s) => String(s || '').trim())
+        .filter(Boolean),
+    );
+    if (preserveSet.size > 0) {
+      setAllProfiles((prev) => {
+        const prevList = Array.isArray(prev) ? prev : [];
+        return normalized.map((p) => {
+          const slug = String(p?.slug ?? p?.id ?? '');
+          if (!preserveSet.has(slug)) return p;
+          const old = prevList.find((row) => String(row?.slug ?? row?.id ?? '') === slug);
+          if (!Array.isArray(old?.personaPosts)) return p;
+          return { ...p, personaPosts: old.personaPosts };
+        });
+      });
       spectateRevealRef.current?.ingestProfiles(normalized);
-    });
+    } else {
+      setAllProfiles(normalized);
+      queueMicrotask(() => {
+        spectateRevealRef.current?.ingestProfiles(normalized);
+      });
+    }
     inferPublicMediaConfigFromProfiles(normalized);
     const hosted = isHostedApiOrigin();
     const pickSlug = linkedProfileSlug || (hosted ? null : selectedProfileSlug());
@@ -1624,11 +1656,14 @@ export default function App() {
   }, [deletedProfileIds, linkedProfileSlug]);
 
   useEffect(() => {
+    const operatorSlug = profile?.slug ?? profile?.id ?? null;
     const skip = postGen.loading
-      ? linkedProfileSlug ?? profile?.slug ?? profile?.id ?? null
-      : null;
+      ? linkedProfileSlug ?? operatorSlug
+      : demoRotateActive
+        ? operatorSlug
+        : null;
     spectateRevealRef.current?.setSkipSlug(skip);
-  }, [postGen.loading, linkedProfileSlug, profile?.slug, profile?.id]);
+  }, [postGen.loading, demoRotateActive, linkedProfileSlug, profile?.slug, profile?.id]);
 
   const pollHarvestUntilDone = useCallback(async (scoresBefore, profileSlug) => {
     const slug = String(profileSlug || '').trim();
@@ -2274,6 +2309,9 @@ export default function App() {
         postRevealFlash={postRevealFlash}
         onGoLanding={handleGoLanding}
         reloadProfileFromApi={reloadProfileFromApi}
+        spectateRevealRef={spectateRevealRef}
+        setDemoRotateActive={setDemoRotateActive}
+        setAllProfiles={setAllProfiles}
       />
     </LiveScoringProvider>
   );

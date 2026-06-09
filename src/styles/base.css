@@ -855,6 +855,32 @@ body {
   padding: 36px var(--posts-capsule-pad-x) 40px;
 }
 
+.feed-see-more-btn {
+  appearance: none;
+  display: block;
+  width: calc(100% - (var(--post-card-gutter-x) * 2));
+  margin: 8px auto 0;
+  padding: 12px 16px;
+  border: 2px solid var(--persona-accent, #759aef);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: #000;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.feed-see-more-btn:hover {
+  background: color-mix(in srgb, var(--persona-accent, #759aef) 12%, #fff);
+}
+
+.feed-see-more-btn:focus-visible {
+  outline: 2px solid var(--persona-accent, #000);
+  outline-offset: 2px;
+}
+
   @media (max-width: 900px) {
   .sidebar {
     position: static;

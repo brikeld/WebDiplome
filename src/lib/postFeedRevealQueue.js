@@ -158,6 +158,15 @@ export function createPostFeedRevealQueue({
     hasRevealedKey(key) {
       return revealedKeys.has(key);
     },
+    hasBaselineKey(key) {
+      return baselineKeys.has(key);
+    },
+    hasPendingKey(key) {
+      return pendingKeys.has(key);
+    },
+    isBaselineEstablished() {
+      return baselineKeys.size > 0;
+    },
     findUnrevealed(posts) {
       return findUnrevealedPosts(posts, revealedKeys);
     },

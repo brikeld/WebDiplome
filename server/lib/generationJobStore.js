@@ -233,6 +233,25 @@ export function createGenerationJobStore(supabase) {
       );
     },
 
+    /** First in-flight job whose payload jobType is in the given list. */
+    async findAnyActiveJobByTypes(jobTypes = []) {
+      const allowed = new Set(
+        (Array.isArray(jobTypes) ? jobTypes : []).map((t) => String(t || '').trim()).filter(Boolean),
+      );
+      if (allowed.size === 0) return null;
+      const rows = throwIfError(
+        await supabase
+          .from('generation_jobs')
+          .select('*')
+          .in('status', ['queued', 'claimed'])
+          .order('created_at', { ascending: true })
+          .limit(24),
+        'find any active generation job',
+      );
+      const list = Array.isArray(rows) ? rows.filter(Boolean) : [];
+      return list.find((row) => allowed.has(jobTypeFromRow(row))) ?? null;
+    },
+
     async findLatestJobPayload(profileId, jobType = 'posts') {
       const rows = throwIfError(
         await supabase

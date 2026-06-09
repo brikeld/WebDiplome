@@ -17,6 +17,8 @@ import { personaUiColor } from '@/lib/personaColors.js';
 
 /** Keep in sync with the `feed-top-flash` animation in base.css. */
 const FEED_FLASH_MS = 1100;
+/** Home feed renders this many cards first; older posts stay available via See more. */
+const HOME_FEED_PAGE_SIZE = 20;
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -224,6 +226,7 @@ export default function PostsTab({
   onOpenProfile,
 }) {
   const [openCommentsPostIds, setOpenCommentsPostIds] = useState(() => new Set());
+  const [homeVisibleCount, setHomeVisibleCount] = useState(HOME_FEED_PAGE_SIZE);
   const { isHidden, isRevealing, isLeaderboardSelfHidden, isLeaderboardSelfRevealing } = useLiveScoring();
   const [commentsByPostId, setCommentsByPostId] = useState({});
   const [placeholderMounted, setPlaceholderMounted] = useState(isGeneratingPosts);
@@ -300,6 +303,17 @@ export default function PostsTab({
     // Newest first; tie-break so staggered client posts keep order even if timestamps collide.
     return all.sort(sortNewestFirst);
   }, [feedContext, feedProfiles, personaBadgePersona, profile, deletedProfileIds]);
+
+  useEffect(() => {
+    if (feedContext !== 'home') return;
+    setHomeVisibleCount(HOME_FEED_PAGE_SIZE);
+  }, [feedContext, posts.length]);
+
+  const displayedPosts = feedContext === 'home'
+    ? posts.slice(0, homeVisibleCount)
+    : posts;
+  const homeHasMore = feedContext === 'home' && posts.length > homeVisibleCount;
+  const homeRemaining = homeHasMore ? posts.length - homeVisibleCount : 0;
 
   const persistablePostIds = useMemo(
     () => posts.map((p) => p.id).filter((id) => isPersistablePostId(id)),
@@ -381,7 +395,7 @@ export default function PostsTab({
           <div className="posts-generating-spinner" aria-hidden />
         </div>
       ) : null}
-      {posts.map((p) => (
+      {displayedPosts.map((p) => (
         <div
           key={`${p.authorSlug ?? ''}:${p.id}`}
           className={`post-card-shell${
@@ -436,6 +450,15 @@ export default function PostsTab({
           />
         </div>
       ))}
+      {homeHasMore ? (
+        <button
+          type="button"
+          className="feed-see-more-btn"
+          onClick={() => setHomeVisibleCount((n) => n + HOME_FEED_PAGE_SIZE)}
+        >
+          See more ({Math.min(homeRemaining, HOME_FEED_PAGE_SIZE)} of {homeRemaining} older posts)
+        </button>
+      ) : null}
     </div>
   );
 

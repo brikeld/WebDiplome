@@ -17,12 +17,22 @@ export async function queueDemoSinglePost(profileSlug) {
     body: JSON.stringify({ profileSlug: slug }),
   });
 
-  if (!res.ok) {
+  const body = await res.json().catch(async () => {
     const errText = await res.text().catch(() => '');
-    throw new Error(errText.slice(0, 200) || `Demo rotate failed (${res.status})`);
+    return { error: errText.slice(0, 200) || `Demo rotate failed (${res.status})` };
+  });
+
+  if (!res.ok) {
+    return {
+      queued: false,
+      reason: body?.reason ?? body?.error ?? 'request_failed',
+      alreadyQueued: body?.alreadyQueued ?? false,
+      jobId: body?.jobId ?? null,
+      status: body?.status ?? null,
+    };
   }
 
-  return res.json();
+  return body;
 }
 
 export async function runDemoSinglePostAndWait(profileSlug, pollOptions) {

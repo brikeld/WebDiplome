@@ -1,33 +1,46 @@
-import { postIdentityKey } from '@/lib/mergePersonaPosts.js';
+import { mergePostsPrepend, postIdentityKey } from '@/lib/mergePersonaPosts.js';
 import {
   createPostFeedRevealQueue,
   POST_REVEAL_GAP_MS,
   sortPostsForReveal,
+  stripFeedRevealMetaFromPosts,
 } from '@/lib/postFeedRevealQueue.js';
 
 /**
  * When the global profile directory poll picks up new posts from other users,
  * reveal them on the home feed with the same staggered enter animation.
  */
-export function createFeedSpectatorRevealController({ setAllProfiles, gapMs = POST_REVEAL_GAP_MS }) {
+export function createFeedSpectatorRevealController({
+  setAllProfiles,
+  gapMs = POST_REVEAL_GAP_MS,
+  onPostRevealed = null,
+}) {
   const queuesBySlug = new Map();
+  const baselineEstablished = new Set();
+  const latestApiPostsBySlug = new Map();
   let skipSlug = null;
 
-  const getOrCreateQueue = (slug, baselinePosts) => {
-    const incoming = [...(Array.isArray(baselinePosts) ? baselinePosts : [])];
+  const mergeAnimatedWithApiPosts = (slugKey, queuePosts) => {
+    const apiPosts = latestApiPostsBySlug.get(slugKey) ?? [];
+    const animated = (Array.isArray(queuePosts) ? queuePosts : []).filter(
+      (p) => p?._feedEnter || p?._feedEnterDone,
+    );
+    const stableApi = stripFeedRevealMetaFromPosts(apiPosts);
+    return mergePostsPrepend(animated, stableApi);
+  };
+
+  const getOrCreateQueue = (slug) => {
     if (queuesBySlug.has(slug)) {
-      const queue = queuesBySlug.get(slug);
-      // First poll may have had zero posts; expand baseline when the API catches up.
-      if (incoming.length > 0) {
-        queue.markBaseline(incoming);
-      }
-      return queue;
+      return queuesBySlug.get(slug);
     }
-    const fixedBaseline = incoming;
+
     const queue = createPostFeedRevealQueue({
       gapMs,
-      getBaseline: () => fixedBaseline,
-      onPostsChange: (personaPosts) => {
+      // Spectator reveals merge against latest API posts — not a frozen baseline copy.
+      getBaseline: () => [],
+      onPostRevealed,
+      onPostsChange: (queuePosts) => {
+        const merged = mergeAnimatedWithApiPosts(slug, queuePosts);
         setAllProfiles((prev) => {
           const list = Array.isArray(prev) ? prev : [];
           if (list.length === 0) return list;
@@ -36,13 +49,19 @@ export function createFeedSpectatorRevealController({ setAllProfiles, gapMs = PO
             const ps = p?.slug ?? p?.id;
             if (String(ps) !== String(slug)) return p;
             matched = true;
-            return { ...p, personaPosts };
+            return { ...p, personaPosts: merged };
           });
           return matched ? next : list;
         });
       },
     });
-    queue.markBaseline(fixedBaseline);
+
+    queue.establishBaseline = (posts) => {
+      const list = Array.isArray(posts) ? posts : [];
+      queue.markBaseline(list);
+      baselineEstablished.add(slug);
+    };
+
     queuesBySlug.set(slug, queue);
     return queue;
   };
@@ -58,13 +77,26 @@ export function createFeedSpectatorRevealController({ setAllProfiles, gapMs = PO
         if (!slug) continue;
         if (skipSlug && String(slug) === skipSlug) continue;
 
+        const slugKey = String(slug);
         const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
-        const queue = getOrCreateQueue(String(slug), posts);
+        latestApiPostsBySlug.set(slugKey, [...posts]);
+
+        const queue = getOrCreateQueue(slugKey);
+
+        if (!baselineEstablished.has(slugKey)) {
+          if (posts.length === 0) continue;
+          queue.establishBaseline(posts);
+          continue;
+        }
 
         const fresh = sortPostsForReveal(
           posts.filter((p) => {
             const key = postIdentityKey(p);
-            return key && !queue.hasRevealedKey(key);
+            if (!key) return false;
+            if (queue.hasBaselineKey(key)) return false;
+            if (queue.hasRevealedKey(key)) return false;
+            if (queue.hasPendingKey(key)) return false;
+            return true;
           }),
         );
         if (fresh.length > 0) {
@@ -72,8 +104,19 @@ export function createFeedSpectatorRevealController({ setAllProfiles, gapMs = PO
         }
       }
     },
+    isSlugIdle(slug) {
+      const queue = queuesBySlug.get(String(slug));
+      return !queue || queue.isIdle();
+    },
+    async waitForSlugIdle(slug, options) {
+      const queue = queuesBySlug.get(String(slug));
+      if (!queue) return;
+      await queue.waitUntilIdle(options);
+    },
     reset() {
       skipSlug = null;
+      baselineEstablished.clear();
+      latestApiPostsBySlug.clear();
       queuesBySlug.clear();
     },
   };

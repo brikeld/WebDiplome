@@ -182,7 +182,10 @@ function profilePosts(profile) {
 }
 
 export function profilePostCount(profile) {
-  return profilePosts(profile).length;
+  const posts = profilePosts(profile);
+  if (posts.length > 0) return posts.length;
+  const summaryCount = Number(profile?.postCount ?? profile?.post_count);
+  return Number.isFinite(summaryCount) && summaryCount >= 0 ? summaryCount : 0;
 }
 
 export function profileRankingCountFromPosts(profile) {

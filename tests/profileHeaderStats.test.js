@@ -22,6 +22,8 @@ describe('profile header stats', () => {
         { content: 'two' },
       ],
     })).toBe(2);
+
+    expect(profilePostCount({ personaPosts: [], postCount: 6 })).toBe(6);
   });
 
   it('counts unique rankings where the user appears on post snapshots', () => {

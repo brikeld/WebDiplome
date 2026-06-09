@@ -237,9 +237,13 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         });
       }
       if (!outcome.queued) {
-        return res.status(400).json({
+        const status = outcome.reason === 'generation_in_progress' ? 409 : 400;
+        return res.status(status).json({
           error: outcome.reason || 'Could not queue demo post',
           reason: outcome.reason ?? null,
+          alreadyQueued: outcome.alreadyQueued ?? false,
+          jobId: outcome.jobId ?? null,
+          status: outcome.status ?? null,
         });
       }
       res.json({ success: true, jobId: outcome.jobId, status: outcome.status });
