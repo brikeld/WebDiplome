@@ -515,10 +515,20 @@ body {
   color: #000;
 }
 
-.project-name {
+.project-brand {
   position: fixed;
   left: var(--shell-rail-inset);
   top: 18px;
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.project-name {
+  position: relative;
+  left: auto;
+  top: auto;
   bottom: auto;
   z-index: 70;
   width: auto;
@@ -670,9 +680,55 @@ body {
   transform: translateY(-50%);
 }
 
-.page-outer.view-home .project-name,
-.page-outer.view-profile .project-name {
+.page-outer.view-home .project-brand,
+.page-outer.view-profile .project-brand {
   left: var(--shell-rail-inset);
+}
+
+.demo-rotate-btn {
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid #000;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.demo-rotate-btn__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  transition: background 0.15s, transform 0.15s;
+}
+
+.demo-rotate-btn--active {
+  border-color: var(--persona-accent, #759aef);
+  background: color-mix(in srgb, var(--persona-accent, #759aef) 12%, #fff);
+}
+
+.demo-rotate-btn--active .demo-rotate-btn__dot {
+  background: var(--persona-accent, #759aef);
+}
+
+.demo-rotate-btn--busy .demo-rotate-btn__dot {
+  animation: demo-rotate-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes demo-rotate-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.65; }
+}
+
+.demo-rotate-btn:focus-visible {
+  outline: 2px solid var(--persona-accent, #000);
+  outline-offset: 2px;
 }
 
 .view-home .page,

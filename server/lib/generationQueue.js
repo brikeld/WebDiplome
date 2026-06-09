@@ -1,6 +1,7 @@
 import { slimProfilePayloadForStorage } from './publicProfileMapping.js';
 import { resolveSubjectProfileContext } from './aiJobProfile.js';
 import { isCompliantSystemPost } from './postsMerge.js';
+import { isDemoRotateTargetProfile } from './demoRotate.js';
 
 /** Persona posts from LM (excludes COMPLIANT system notices). */
 export const EXPECTED_AI_POST_COUNT = 3;
@@ -60,6 +61,14 @@ export function shouldPatchQueuedGenerationPayload(existing = {}, incoming = {})
     !harvestPayloadHasContent(existingData) && harvestPayloadHasContent(incomingData);
   const needsAssets = hasAssetCandidates(incoming) && !hasAssetCandidates(existing);
   return needsHarvest || needsAssets;
+}
+
+async function findActivePostsFamilyJob(jobStore, profileId) {
+  if (!jobStore || !profileId) return null;
+  return (
+    await jobStore.findActiveJob({ profileId, jobType: 'posts' })
+    || await jobStore.findActiveJob({ profileId, jobType: 'posts-single' })
+  );
 }
 
 function userPayloadFromProfileRow(row, apiProfile) {
@@ -158,6 +167,7 @@ async function queuePostsJobFromHarvestSync({
   assetPersona = null,
   mode = 'initial',
 }) {
+  const jobType = mode === 'single' ? 'posts-single' : 'posts';
   const slug = String(profileSlug || '').trim();
   if (!slug || !profileStore || !jobStore) {
     return { queued: false, reason: 'missing_context' };
@@ -174,19 +184,23 @@ async function queuePostsJobFromHarvestSync({
     return { queued: false, reason: 'already_complete', alreadyComplete: true };
   }
 
+  if (mode === 'single' && !isDemoRotateTargetProfile(apiProfile ?? row)) {
+    return { queued: false, reason: 'excluded_profile' };
+  }
+
   const incomingData = syncDataJson ?? null;
   if (!harvestPayloadHasContent(incomingData)) {
     return { queued: false, reason: 'no_harvest_data' };
   }
 
-  const active = await jobStore.findActiveJob({ profileId: row.id, jobType: 'posts' });
+  const active = await findActivePostsFamilyJob(jobStore, row.id);
   if (active) {
     const existingPayload =
       active.request_payload && typeof active.request_payload === 'object'
         ? active.request_payload
         : {};
     const patchPayload = {
-      jobType: 'posts',
+      jobType,
       profile: slimProfilePayloadForStorage(apiProfile ?? {}),
       dataJson: incomingData,
       existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
@@ -215,7 +229,7 @@ async function queuePostsJobFromHarvestSync({
   const priorPayload = latest?.request_payload;
   const requestPayload = priorPayload && typeof priorPayload === 'object'
     ? mergeGenerationRequestPayload(priorPayload, {
-        jobType: 'posts',
+        jobType,
         profile: slimProfilePayloadForStorage(apiProfile ?? {}),
         dataJson: incomingData,
         existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
@@ -223,7 +237,7 @@ async function queuePostsJobFromHarvestSync({
         ...(hasAssetCandidates({ assetCandidates }) ? { assetCandidates, assetPersona } : {}),
       })
     : {
-        jobType: 'posts',
+        jobType,
         user: userPayloadFromProfileRow(row, apiProfile),
         profile: slimProfilePayloadForStorage(apiProfile ?? {}),
         dataJson: incomingData,
@@ -251,4 +265,9 @@ export async function queuePostsJobAfterHarvestSync(args) {
 /** Queue a fresh posts job after a dashboard harvest when the profile already has AI posts. */
 export async function queueUpdatePostsJobAfterHarvestSync(args) {
   return queuePostsJobFromHarvestSync({ ...args, mode: 'update' });
+}
+
+/** Queue one LM slot (one post) for demo round-robin — uses stored harvest only. */
+export async function queueSinglePostJob(args) {
+  return queuePostsJobFromHarvestSync({ ...args, mode: 'single' });
 }

@@ -5,6 +5,7 @@ import {
   countAiGeneratedPosts,
   queuePostsJobAfterHarvestSync,
   queueUpdatePostsJobAfterHarvestSync,
+  queueSinglePostJob,
   profileNeedsInitialGeneration,
   hasAssetCandidates,
   shouldPatchQueuedGenerationPayload,
@@ -94,5 +95,51 @@ describe('generationQueue helpers', () => {
     expect(outcome.jobId).toBe('job-update-1');
     expect(createdPayload.dataJson).toEqual({ hostname: 'fresh-harvest' });
     expect(profileNeedsInitialGeneration(apiProfile)).toBe(false);
+  });
+
+  it('queues single-post jobs with posts-single jobType', async () => {
+    const profileRow = { id: 'p2', user_id: 'u2', firstname: 'Alex', lastname: 'Johnson' };
+    const apiProfile = {
+      displayName: 'Alex Johnson',
+      personaPosts: [{ content: 'one', persona: 'productivite' }],
+    };
+    let createdPayload = null;
+    const outcome = await queueSinglePostJob({
+      profileStore: {
+        getProfileRowBySlug: async () => profileRow,
+        getProfileBySlug: async () => apiProfile,
+      },
+      jobStore: {
+        findActiveJob: async () => null,
+        findLatestJobPayload: async () => null,
+        createJob: async ({ requestPayload }) => {
+          createdPayload = requestPayload;
+          return { id: 'job-single-1', status: 'queued' };
+        },
+      },
+      profileSlug: 'alex-johnson',
+      syncDataJson: { hostname: 'stored-harvest' },
+    });
+    expect(outcome.queued).toBe(true);
+    expect(createdPayload.jobType).toBe('posts-single');
+  });
+
+  it('rejects single-post jobs for excluded operator profile', async () => {
+    const outcome = await queueSinglePostJob({
+      profileStore: {
+        getProfileRowBySlug: async () => ({ id: 'p3', user_id: 'u3' }),
+        getProfileBySlug: async () => ({
+          firstname: 'Brikeld',
+          lastname: 'Hoxha',
+          personaPosts: [],
+        }),
+      },
+      jobStore: {
+        findActiveJob: async () => null,
+      },
+      profileSlug: 'brikeld-hoxha',
+      syncDataJson: { hostname: 'demo' },
+    });
+    expect(outcome.reason).toBe('excluded_profile');
   });
 });

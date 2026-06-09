@@ -94,6 +94,8 @@ import {
   resolveOwnedProfileForFeatures,
   shouldResetHostedSessionForProfileMeStatus,
 } from '@/lib/hostedAccount.js';
+import DemoRotateButton from '@/features/debug/DemoRotateButton.jsx';
+import { canUseDemoRotateControl } from '@/lib/demoRotate.js';
 import {
   persistProfileSlug,
   readStoredProfileSlug,
@@ -335,6 +337,7 @@ function AppInner({
   deletedProfileIds = [],
   accountResetKey = 0,
   onGoLanding,
+  reloadProfileFromApi,
 }) {
   const {
     adjustedScores,
@@ -1069,14 +1072,22 @@ function AppInner({
           {personaToggleLabel}
         </button>
       )}
-      <button
-        type="button"
-        className="project-name project-name--button"
-        onClick={onGoLanding}
-        aria-label="Go to landing page"
-      >
-        COMPLIANT
-      </button>
+      <div className="project-brand">
+        <button
+          type="button"
+          className="project-name project-name--button"
+          onClick={onGoLanding}
+          aria-label="Go to landing page"
+        >
+          COMPLIANT
+        </button>
+        {canUseDemoRotateControl(profile) && (
+          <DemoRotateButton
+            allProfiles={allProfiles}
+            reloadProfileFromApi={reloadProfileFromApi}
+          />
+        )}
+      </div>
       <Sidebar mainView={mainView} onSelectView={handleSelectView} />
       <div className="page">
         {mainView === 'home' && (
@@ -2262,6 +2273,7 @@ export default function App() {
         updateSessionActive={updateSessionActive}
         postRevealFlash={postRevealFlash}
         onGoLanding={handleGoLanding}
+        reloadProfileFromApi={reloadProfileFromApi}
       />
     </LiveScoringProvider>
   );

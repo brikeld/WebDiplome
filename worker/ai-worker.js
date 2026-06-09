@@ -3,9 +3,11 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import {
   generatePersonaPosts,
+  generateSinglePersonaPost,
   generateUserSummary,
   preparePersonaPostSlotPlan,
 } from '../server/lib/personaPostGenerator.js';
+import { countAiGeneratedPosts } from '../server/lib/generationQueue.js';
 import { generateCommentSuggestions } from '../server/lib/commentSuggestions.js';
 import { generatePersonaBlurbs } from '../server/lib/personaBlurbs.js';
 import { loadPrompts } from '../server/lib/prompts.js';
@@ -296,6 +298,57 @@ async function processPostsJob(payload, jobId, ownerUserId) {
   };
 }
 
+async function processPostsSingleJob(payload, jobId, ownerUserId) {
+  const profile = payload.profile || {};
+  const dataJson = resolveDataJson(payload);
+  const user = payload.user || {};
+  const existingPosts = Array.isArray(payload.existingPosts) ? payload.existingPosts : [];
+  const isFirstGeneration = existingPosts.length === 0;
+  const userPayload = buildUserPayload(user, dataJson);
+  const prompts = await loadPrompts(process.cwd());
+  const assetCandidate = pickRecencyFirstUnusedAssetCandidate(
+    Array.isArray(payload.assetCandidates) ? payload.assetCandidates : [],
+    existingPosts,
+  );
+  const assetAssignment = await fetchAssetAsAssignment(
+    assetCandidate,
+    payload.assetPersona || nextAssetPersona(existingPosts),
+  );
+
+  await fs.mkdir(CHART_UPLOAD_DIR, { recursive: true });
+
+  const slotIndex = countAiGeneratedPosts(existingPosts) % 3;
+  const revealBaseTimeMs = Date.now();
+
+  const post = await generateSinglePersonaPost({
+    baseUrl: LM_STUDIO_BASE_URL,
+    model: LM_STUDIO_MODEL,
+    userPayload,
+    timeoutMs: TIMEOUT_MS,
+    retries: RETRIES,
+    assetAssignment,
+    prompts,
+    dataJson,
+    profile,
+    existingPosts,
+    chartUploadDir: CHART_UPLOAD_DIR,
+    skipLeaderboard: isFirstGeneration,
+    preferMetadataFallback: true,
+  });
+
+  if (!post?.content) {
+    return { posts: [], finalizeOnly: true };
+  }
+
+  stampPostForRevealSlot(post, slotIndex, revealBaseTimeMs);
+  const [rewritten] = await rewritePostAssetUrls([post], ownerUserId);
+  if (!rewritten) {
+    return { posts: [], finalizeOnly: true };
+  }
+
+  return { posts: [rewritten], finalizeOnly: false };
+}
+
 async function processBioJob(payload, jobId) {
   const dataJson = resolveDataJson(payload);
   const user = payload.user || {};
@@ -368,6 +421,8 @@ async function processJob(job) {
       return processCommentsJob(payload);
     case 'blurbs':
       return processBlurbsJob(payload);
+    case 'posts-single':
+      return processPostsSingleJob(payload, job.id, job.user_id ?? null);
     case 'posts':
     default:
       return processPostsJob(payload, job.id, job.user_id ?? null);
@@ -421,7 +476,7 @@ async function tick() {
       headers: headers(),
       body: JSON.stringify(outcome),
     });
-    if (jobType === 'posts') {
+    if (jobType === 'posts' || jobType === 'posts-single') {
       console.log(`[worker] completed ${job.id} with ${outcome.posts?.length ?? 0} posts`);
     } else {
       console.log(`[worker] completed ${job.id} (${jobType})`);

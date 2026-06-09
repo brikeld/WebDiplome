@@ -10,8 +10,10 @@ import {
   mergeGenerationRequestPayload,
   queueInitialPostsJobIfNeeded,
   queueUpdatePostsJobAfterHarvestSync,
+  queueSinglePostJob,
   shouldPatchQueuedGenerationPayload,
 } from '../lib/generationQueue.js';
+import { isDemoRotateOperator, isDemoRotateTargetProfile } from '../lib/demoRotate.js';
 
 const workerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -189,6 +191,58 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         },
       });
       res.json({ success: true, jobId: job.id, status: job.status });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.post('/debug/demo-rotate/single', requireUser, async (req, res) => {
+    try {
+      const operator = await profileStore.getProfileByUserId(req.authUser.id);
+      if (!isDemoRotateOperator(operator)) {
+        return res.status(403).json({ error: 'Demo rotate restricted' });
+      }
+
+      const slug = String(req.body?.profileSlug || '').trim();
+      if (!slug) return res.status(400).json({ error: 'profileSlug required' });
+
+      const target = await profileStore.getProfileBySlug(slug);
+      if (!target) return res.status(404).json({ error: 'Profile not found' });
+      if (!isDemoRotateTargetProfile(target)) {
+        return res.status(403).json({ error: 'Profile excluded from demo rotate' });
+      }
+
+      const ctx = await resolveSubjectProfileContext(
+        profileStore,
+        { profileSlug: slug },
+        { jobStore },
+      );
+      if (!harvestPayloadHasContent(ctx.dataJson)) {
+        return res.status(400).json({ error: 'No stored harvest data for profile', reason: 'no_harvest_data' });
+      }
+
+      const outcome = await queueSinglePostJob({
+        profileStore,
+        jobStore,
+        profileSlug: slug,
+        syncDataJson: ctx.dataJson,
+      });
+
+      if (outcome.alreadyQueued) {
+        return res.json({
+          success: true,
+          alreadyQueued: true,
+          jobId: outcome.jobId,
+          status: outcome.status,
+        });
+      }
+      if (!outcome.queued) {
+        return res.status(400).json({
+          error: outcome.reason || 'Could not queue demo post',
+          reason: outcome.reason ?? null,
+        });
+      }
+      res.json({ success: true, jobId: outcome.jobId, status: outcome.status });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -403,13 +457,14 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       const profileSummary = req.body?.profileSummary ?? req.body?.profile_summary ?? '';
       const result = req.body?.result ?? null;
 
+      const isPostsFamily = jobType === 'posts' || jobType === 'posts-single';
       const job = await jobStore.completeJob({
         jobId: req.params.id,
-        posts: jobType === 'posts' ? posts : undefined,
-        result: jobType === 'posts' ? posts : result,
+        posts: isPostsFamily ? posts : undefined,
+        result: isPostsFamily ? posts : result,
       });
 
-      if (jobType === 'posts' || jobType === 'bio') {
+      if (isPostsFamily || jobType === 'bio') {
         if (profileSummary) {
           await profileStore.updateProfileSummary({
             profileId: job.profile_id,
@@ -419,7 +474,7 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         }
       }
 
-      if (jobType === 'posts' && Array.isArray(posts) && posts.length > 0 && !req.body?.finalizeOnly) {
+      if (isPostsFamily && Array.isArray(posts) && posts.length > 0 && !req.body?.finalizeOnly) {
         await profileStore.appendPosts({
           profileId: job.profile_id,
           userId: job.user_id,

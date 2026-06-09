@@ -12,6 +12,7 @@
 import crypto from 'crypto';
 import path from 'path';
 import { promises as fs } from 'fs';
+import { countAiGeneratedPosts } from './generationQueue.js';
 import {
   extractBrowserSlice,
   extractWifiSlice,
@@ -1261,6 +1262,58 @@ export async function generatePersonaPosts({
   );
 
   return results;
+}
+
+/**
+ * Generate exactly one persona post — slot cycles via existing AI post count mod 3.
+ * Used by demo round-robin (no re-harvest).
+ */
+export async function generateSinglePersonaPost({
+  baseUrl,
+  model,
+  userPayload,
+  timeoutMs,
+  retries,
+  assetAssignment,
+  prompts: promptsParam,
+  dataJson,
+  profile,
+  existingPosts = [],
+  chartUploadDir,
+  skipLeaderboard = false,
+  preferMetadataFallback = false,
+}) {
+  const aiCount = countAiGeneratedPosts(existingPosts);
+  const slotIndex = aiCount % 3;
+
+  const { slots, SP } = await buildPersonaGenerationSlots({
+    userPayload,
+    assetAssignment,
+    prompts: promptsParam,
+    dataJson,
+    profile,
+    existingPosts,
+    chartUploadDir,
+    skipLeaderboard,
+    model,
+  });
+
+  const slot = slots[slotIndex];
+  if (!slot) return null;
+
+  try {
+    const post = await runSlot(slot, {
+      baseUrl,
+      timeoutMs,
+      retries,
+      SP,
+      preferMetadataFallback,
+    });
+    return post?.content ? post : null;
+  } catch (err) {
+    console.error(`[personaPostGenerator] single slot ${slot.id} failed:`, err?.message || err);
+    return null;
+  }
 }
 
 // ─── Profile bio (user summary) ─────────────────────────────────────────────

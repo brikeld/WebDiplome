@@ -16,7 +16,7 @@ function mapJobRow(row) {
     jobType,
     error: row.error ?? null,
     result,
-    posts: jobType === 'posts' && Array.isArray(result) ? result : null,
+    posts: (jobType === 'posts' || jobType === 'posts-single') && Array.isArray(result) ? result : null,
     generationPlan: Array.isArray(payload.generationPlan) ? payload.generationPlan : null,
     createdAt: row.created_at,
     completedAt: row.completed_at,
