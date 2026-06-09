@@ -8,6 +8,23 @@ import {
 
 const API_ORIGIN = resolveApiOrigin();
 
+const DEMO_JOB_POLL_MS = 400;
+const DEMO_REVEAL_POLL_MS = 200;
+
+/** Persona key for the post at `index` in the demo reveal order. */
+export function demoSpinnerPersonaForIndex(ordered, index) {
+  if (!Array.isArray(ordered) || index < 0 || index >= ordered.length) return null;
+  return ordered[index]?.generatingPersona ?? null;
+}
+
+/** Read persona from a completed generation job (French keys from worker). */
+export function personaFromGenerationJob(job) {
+  const posts = Array.isArray(job?.posts) ? job.posts : job?.result;
+  if (!Array.isArray(posts) || posts.length === 0) return null;
+  const persona = posts[0]?.persona;
+  return persona ? String(persona) : null;
+}
+
 async function fetchGenerationJob(jobId) {
   const res = await fetch(`${API_ORIGIN}/api/generation-jobs/${encodeURIComponent(jobId)}`, {
     cache: 'no-store',
@@ -21,6 +38,19 @@ async function fetchGenerationJob(jobId) {
   return job;
 }
 
+async function waitForJobComplete(jobId, { pollMs = DEMO_JOB_POLL_MS, timeoutMs = 300000 } = {}) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const job = await fetchGenerationJob(jobId);
+    if (job.status === 'complete') return job;
+    if (job.status === 'failed') {
+      throw new Error(job.error || 'Demo generation failed');
+    }
+    await sleep(pollMs);
+  }
+  throw new Error('Demo generation timed out — is your AI PC worker running?');
+}
+
 async function queueDemoJobForSlug(slug, { pollMs, timeoutMs }) {
   const start = Date.now();
   let generatingPersona = null;
@@ -31,23 +61,26 @@ async function queueDemoJobForSlug(slug, { pollMs, timeoutMs }) {
       return { slug, jobId: created.jobId, generatingPersona };
     }
     if (created?.reason === 'no_harvest_data' || created?.reason === 'excluded_profile') {
+      console.warn(`[demo-rotate] skip ${slug}: ${created.reason}`);
       return null;
     }
     const waiting =
       created?.reason === 'generation_in_progress' || created?.alreadyQueued;
     if (!waiting) {
-      throw new Error(created?.reason || 'Could not queue demo post');
+      console.warn(`[demo-rotate] queue ${slug} failed:`, created?.reason || 'unknown');
+      return null;
     }
     await sleep(pollMs);
   }
-  throw new Error(`Timed out waiting to queue demo post for ${slug}`);
+  console.warn(`[demo-rotate] timed out queueing ${slug}`);
+  return null;
 }
 
 async function waitForRevealStart(slug, {
   reloadProfileFromApi,
   spectateController,
-  pollMs,
-  timeoutMs,
+  pollMs = DEMO_REVEAL_POLL_MS,
+  timeoutMs = 60000,
   allSlugs = [],
 }) {
   const preserveOthers = allSlugs
@@ -60,21 +93,20 @@ async function waitForRevealStart(slug, {
     if (spectateController && !spectateController.isSlugIdle(slug)) return;
     await sleep(pollMs);
   }
+  throw new Error(`Timed out waiting for feed reveal (${slug})`);
 }
 
-async function revealSlugInOrder(slug, {
+async function revealSlugInOrder(entry, {
   reloadProfileFromApi,
   spectateController,
-  pollMs,
-  timeoutMs,
   allSlugs,
 }) {
+  const slug = entry.slug;
   try {
+    spectateController?.setIngestAllowSlugs?.([slug]);
     await waitForRevealStart(slug, {
       reloadProfileFromApi,
       spectateController,
-      pollMs,
-      timeoutMs,
       allSlugs,
     });
     if (spectateController?.waitForSlugIdle) {
@@ -89,15 +121,15 @@ async function revealSlugInOrder(slug, {
 }
 
 /**
- * Queue one post per demo profile in parallel, then reveal each in round order
- * with the standard feed enter animation and gap between posts.
+ * Queue one post per demo profile, then reveal each in round order as soon as its
+ * job finishes — one animated post at a time, worker may pipeline queued jobs.
  */
 export async function runDemoRotateRound({
   targets,
   reloadProfileFromApi,
   spectateController,
   onGeneratingPersona,
-  pollMs = 1000,
+  pollMs = DEMO_JOB_POLL_MS,
   timeoutMs = 300000,
 }) {
   const list = (Array.isArray(targets) ? targets : [])
@@ -117,7 +149,7 @@ export async function runDemoRotateRound({
     )
   ).filter(Boolean);
 
-  if (queued.length === 0) throw new Error('No demo posts queued');
+  if (queued.length === 0) throw new Error('No demo posts queued (missing harvest data?)');
 
   const jobsBySlug = new Map(queued.map((job) => [job.slug, job]));
   const ordered = list
@@ -129,60 +161,42 @@ export async function runDemoRotateRound({
         jobsBySlug.get(entry.slug).generatingPersona ?? entry.generatingPersona,
     }));
 
-  const completed = new Set();
-  let revealed = 0;
   const allSlugs = ordered.map((entry) => entry.slug);
 
-  const syncSpinner = () => {
-    const nextIdx = Math.min(revealed, ordered.length - 1);
-    const upcomingIdx = Math.min(revealed + 1, ordered.length - 1);
-    const stillGenerating = ordered.some((entry) => !completed.has(entry.slug));
-    const persona = stillGenerating
-      ? (ordered[upcomingIdx]?.generatingPersona ?? ordered[nextIdx]?.generatingPersona)
-      : null;
-    onGeneratingPersona?.(persona);
+  const showSpinner = (index) => {
+    onGeneratingPersona?.(demoSpinnerPersonaForIndex(ordered, index));
   };
 
-  syncSpinner();
+  let revealedCount = 0;
 
   try {
-  const pollStart = Date.now();
-  while (completed.size < ordered.length && Date.now() - pollStart < timeoutMs) {
-    await Promise.all(
-      ordered.map(async (entry) => {
-        if (completed.has(entry.slug)) return;
-        const job = await fetchGenerationJob(entry.jobId);
-        if (job.status === 'complete') completed.add(entry.slug);
-        if (job.status === 'failed') {
-          throw new Error(job.error || `Demo generation failed for ${entry.slug}`);
-        }
-      }),
-    );
+    for (let i = 0; i < ordered.length; i += 1) {
+      showSpinner(i);
 
-    while (revealed < ordered.length && completed.has(ordered[revealed].slug)) {
-      syncSpinner();
-      await revealSlugInOrder(ordered[revealed].slug, {
-        reloadProfileFromApi,
-        spectateController,
-        pollMs,
-        timeoutMs,
-        allSlugs,
-      });
-      revealed += 1;
-      syncSpinner();
+      try {
+        const job = await waitForJobComplete(ordered[i].jobId, { pollMs, timeoutMs });
+        const resolvedPersona = personaFromGenerationJob(job) ?? ordered[i].generatingPersona;
+        if (resolvedPersona) ordered[i].generatingPersona = resolvedPersona;
+        showSpinner(i);
+
+        await revealSlugInOrder(ordered[i], {
+          reloadProfileFromApi,
+          spectateController,
+          allSlugs,
+        });
+        revealedCount += 1;
+      } catch (err) {
+        console.warn(`[demo-rotate] ${ordered[i].slug}:`, err?.message || err);
+        spectateController?.setIngestAllowSlugs?.([]);
+      }
     }
 
-    if (completed.size < ordered.length) {
-      syncSpinner();
-      await sleep(pollMs);
+    if (revealedCount === 0) {
+      throw new Error('No demo posts revealed this round');
     }
-  }
 
-  if (completed.size < ordered.length) {
-    throw new Error('Demo generation timed out — is your AI PC worker running?');
-  }
-
-  return reloadProfileFromApi({ forcePostsMerge: true });
+    onGeneratingPersona?.(null);
+    await reloadProfileFromApi({ preservePersonaPostsForSlugs: allSlugs });
   } finally {
     spectateController?.setIngestAllowSlugs?.(null);
   }

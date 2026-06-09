@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { listDemoRotateTargets } from '@/lib/demoRotate.js';
 import { runDemoRotateRound } from '@/lib/demoRotateFeed.js';
+import { sleep } from '@/lib/postFeedRevealQueue.js';
 import { profileSlugFromProfile } from '@/lib/aiJobClient.js';
 
 export default function DemoRotateButton({
@@ -58,7 +59,10 @@ export default function DemoRotateButton({
     }
 
     if (runningRef.current) {
-      cycleRef.current = runRound();
+      await sleep(400);
+      if (runningRef.current) {
+        cycleRef.current = runRound();
+      }
     }
   }, [allProfiles, reloadProfileFromApi, spectateController, onGeneratingPersona, stop]);
 

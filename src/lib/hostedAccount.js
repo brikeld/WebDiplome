@@ -87,7 +87,7 @@ export function ingestHostedSessionFromHash() {
   return true;
 }
 
-async function refreshHostedSession() {
+export async function refreshHostedSession() {
   const session = readHostedSession();
   if (!session?.refresh_token) return null;
   const res = await fetch(`${API_ORIGIN}/api/auth/refresh`, {
@@ -104,19 +104,30 @@ async function refreshHostedSession() {
   return null;
 }
 
+/** fetch() with bearer auth; refreshes the Supabase session once on 401. */
+export async function fetchWithHostedAuth(url, options = {}) {
+  const baseHeaders = options.headers && typeof options.headers === 'object'
+    ? options.headers
+    : {};
+  let res = await fetch(url, {
+    ...options,
+    headers: { ...baseHeaders, ...hostedAuthHeaders() },
+  });
+  if (res.status === 401) {
+    await refreshHostedSession();
+    res = await fetch(url, {
+      ...options,
+      headers: { ...baseHeaders, ...hostedAuthHeaders() },
+    });
+  }
+  return res;
+}
+
 /** Load the profile owned by this browser’s linked Supabase session. */
 export async function fetchLinkedProfile() {
   if (!readHostedSession()?.access_token) return null;
 
-  let res = await fetch(`${API_ORIGIN}/api/profile/me`, {
-    headers: { ...hostedAuthHeaders() },
-  });
-  if (res.status === 401) {
-    await refreshHostedSession();
-    res = await fetch(`${API_ORIGIN}/api/profile/me`, {
-      headers: { ...hostedAuthHeaders() },
-    });
-  }
+  const res = await fetchWithHostedAuth(`${API_ORIGIN}/api/profile/me`);
   if (!res.ok) return null;
 
   const json = await res.json();

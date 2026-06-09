@@ -1,6 +1,6 @@
 import { resolveApiOrigin } from '@/lib/apiOrigin.js';
 import { pollGenerationJob } from '@/lib/aiJobClient.js';
-import { hostedAuthHeaders } from '@/lib/hostedAccount.js';
+import { fetchWithHostedAuth } from '@/lib/hostedAccount.js';
 
 const API_ORIGIN = resolveApiOrigin();
 
@@ -8,12 +8,9 @@ export async function queueDemoSinglePost(profileSlug) {
   const slug = String(profileSlug || '').trim();
   if (!slug) throw new Error('Profile slug required');
 
-  const res = await fetch(`${API_ORIGIN}/api/debug/demo-rotate/single`, {
+  const res = await fetchWithHostedAuth(`${API_ORIGIN}/api/debug/demo-rotate/single`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...hostedAuthHeaders(),
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ profileSlug: slug }),
   });
 

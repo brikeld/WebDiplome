@@ -256,6 +256,9 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
           ...personaPayload,
         });
       }
+      if (generatingPersona && outcome.jobId) {
+        await jobStore.patchRequestPayload(outcome.jobId, { generatingPersona });
+      }
       res.json({ success: true, jobId: outcome.jobId, status: outcome.status, ...personaPayload });
     } catch (err) {
       res.status(500).json({ error: err.message });
