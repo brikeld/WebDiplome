@@ -350,6 +350,7 @@ function AppInner({
   const [confirmingHide, setConfirmingHide] = useState(false);
   const [confirmingUnhide, setConfirmingUnhide] = useState(false);
   const [highlightedPost, setHighlightedPost] = useState(null);
+  const [hideTargetPost, setHideTargetPost] = useState(null);
   const [tellPhase, setTellPhase] = useState('idle');
   const tellCloseTimerRef = useRef(null);
   const tellPhaseTimersRef = useRef([]);
@@ -704,7 +705,7 @@ function AppInner({
     scheduleTellPhaseTimers();
   }, [clearTellTimers, scheduleTellPhaseTimers]);
 
-  const closeTell = useCallback(() => {
+  const closeTell = useCallback(({ preserveHighlight = false } = {}) => {
     clearTellTimers();
     tellRunIdRef.current += 1;
 
@@ -714,7 +715,7 @@ function AppInner({
 
     tellCloseTimerRef.current = setTimeout(() => {
       setTellPhase('idle');
-      setHighlightedPost(null);
+      if (!preserveHighlight) setHighlightedPost(null);
       tellCloseTimerRef.current = null;
     }, TELL_CLOSE_FADE_MS);
   }, [clearTellTimers, tellPhase]);
@@ -727,15 +728,14 @@ function AppInner({
     if (highlightedPost) tellThemePostRef.current = highlightedPost;
   }, [highlightedPost]);
 
-  // Safety net: any code path that sets highlightedPost without calling beginTellForPost.
-  useEffect(() => {
-    if (!highlightedPost) return;
-    if (tellPhase !== 'idle') return;
-    beginTellForPost(highlightedPost);
-  }, [highlightedPost?.id, tellPhase, beginTellForPost, highlightedPost]);
-
   const tellDisplayPost =
-    highlightedPost ?? (tellPhase === 'closing' ? tellThemePostRef.current : null);
+    tellPhase === 'idle'
+      ? null
+      : (highlightedPost ?? (tellPhase === 'closing' ? tellThemePostRef.current : null));
+
+  const tellActive = tellPhase !== 'idle';
+  const feedHighlightedPostId =
+    hideTargetPost?.id ?? (tellActive ? highlightedPost?.id : null) ?? null;
 
   const dashboardCapsuleStyle = useMemo(() => {
     const base = { '--persona-accent': personaColor };
@@ -753,27 +753,34 @@ function AppInner({
   }, [tellDisplayPost, tellPhase, personaColor, personaKey]);
 
   const handleHighlightPost = useCallback((post) => {
-    const isDeselect = highlightedPost?.id === post.id;
+    const isDeselect = highlightedPost?.id === post.id && tellActive;
     if (isDeselect) {
       setHighlightedPost(null);
       closeTell();
       return;
     }
+    setHideTargetPost(null);
     setConfirmingHide(false);
     setConfirmingUnhide(false);
     setHideBlocked(false);
     beginTellForPost(post);
-  }, [highlightedPost?.id, closeTell, beginTellForPost]);
+  }, [highlightedPost?.id, tellActive, closeTell, beginTellForPost]);
 
-  const highlightedPostIsHidden = highlightedPost
-    ? (highlightedPost.leaderboard
-        ? isLeaderboardSelfHidden(highlightedPost.leaderboard.boardId)
-        : isHidden(normalizePostHideKey(highlightedPost.createdAt)))
+  const hideTargetPostIsHidden = hideTargetPost
+    ? (hideTargetPost.leaderboard
+        ? isLeaderboardSelfHidden(hideTargetPost.leaderboard.boardId)
+        : isHidden(normalizePostHideKey(hideTargetPost.createdAt)))
     : false;
 
-  const highlightedPostPersonaLabel = highlightedPost
-    ? (PERSONA_LABEL_BY_POST[highlightedPost.persona] ?? 'Social')
+  const hideTargetPostPersonaLabel = hideTargetPost
+    ? (PERSONA_LABEL_BY_POST[hideTargetPost.persona] ?? 'Social')
     : null;
+
+  const tellPostIsHidden = tellDisplayPost
+    ? (tellDisplayPost.leaderboard
+        ? isLeaderboardSelfHidden(tellDisplayPost.leaderboard.boardId)
+        : isHidden(normalizePostHideKey(tellDisplayPost.createdAt)))
+    : false;
 
   // Returns the bounding rect of the currently highlighted post card in the feed.
   // Used as the animation source so the scoring particle arcs from the post (left
@@ -806,42 +813,59 @@ function AppInner({
     null;
 
   const handleConfirmHide = () => {
-    if (highlightedPost) {
+    if (hideTargetPost) {
       const actionRect = getDashboardHideActionRect();
-      if (highlightedPost.leaderboard) {
-        hideLeaderboardSelf(highlightedPost, actionRect ?? getHighlightedLeaderboardSelfRect(), {
+      if (hideTargetPost.leaderboard) {
+        hideLeaderboardSelf(hideTargetPost, actionRect ?? getHighlightedLeaderboardSelfRect(), {
           waypointRect: getHighlightedLeaderboardSelfRect(),
         });
       } else {
         const postWaypointRect =
-          getPostCapsuleRect(highlightedPost.id) ?? getPostCardRect(highlightedPost.id);
-        hidePost(highlightedPost, actionRect ?? postWaypointRect, {
+          getPostCapsuleRect(hideTargetPost.id) ?? getPostCardRect(hideTargetPost.id);
+        hidePost(hideTargetPost, actionRect ?? postWaypointRect, {
           waypointRect: postWaypointRect,
         });
       }
     }
     setConfirmingHide(false);
-    setHighlightedPost(null);
+    setHideTargetPost(null);
     closeTell();
   };
 
   const handleConfirmUnhide = () => {
-    if (highlightedPost) {
-      if (highlightedPost.leaderboard) {
-        revealLeaderboardSelf(highlightedPost, getPostCardRect(highlightedPost.id));
+    if (hideTargetPost) {
+      if (hideTargetPost.leaderboard) {
+        revealLeaderboardSelf(hideTargetPost, getPostCardRect(hideTargetPost.id));
       } else {
-        revealPost(highlightedPost, getPostCardRect(highlightedPost.id));
+        revealPost(hideTargetPost, getPostCardRect(hideTargetPost.id));
       }
     }
     setConfirmingUnhide(false);
-    setHighlightedPost(null);
+    setHideTargetPost(null);
     closeTell();
   };
+
+  const handleTellRedactedUnhideConfirm = useCallback(() => {
+    const post = tellDisplayPost ?? highlightedPost;
+    if (!post) return;
+    if (post.leaderboard) {
+      revealLeaderboardSelf(post, getPostCardRect(post.id));
+    } else {
+      revealPost(post, getPostCardRect(post.id));
+    }
+  }, [
+    tellDisplayPost,
+    highlightedPost,
+    revealLeaderboardSelf,
+    revealPost,
+    getPostCardRect,
+  ]);
 
   const handleCancelHide = () => {
     setConfirmingHide(false);
     setConfirmingUnhide(false);
     setHideBlocked(false);
+    setHideTargetPost(null);
   };
 
   const handlePostHideClick = useCallback(
@@ -852,8 +876,8 @@ function AppInner({
         ? isLeaderboardSelfHidden(post.leaderboard.boardId)
         : isHidden(normalizePostHideKey(post.createdAt));
 
-      setHighlightedPost(post);
       closeTell();
+      setHideTargetPost(post);
 
       if (postIsHidden) {
         setConfirmingHide(false);
@@ -891,6 +915,7 @@ function AppInner({
 
   const handlePostTellMeMoreClick = useCallback((post) => {
     if (!post) return;
+    setHideTargetPost(null);
     setHideBlocked(false);
     setConfirmingHide(false);
     setConfirmingUnhide(false);
@@ -906,14 +931,12 @@ function AppInner({
 
   const resetProfileChrome = useCallback(() => {
     setHighlightedPost(null);
+    setHideTargetPost(null);
     setConfirmingHide(false);
     setConfirmingUnhide(false);
     setHideBlocked(false);
     clearTellTimers();
-    setTellClosing(false);
-    setTellExpanded(false);
     setTellPhase('idle');
-    setTellLayoutCollapsed(false);
   }, [clearTellTimers]);
 
   useEffect(() => {
@@ -1067,11 +1090,11 @@ function AppInner({
                 isGeneratingPosts={postGen.phase === 'generating' && postGen.loading}
                 generatingPersona={postGen.generatingPersona}
                 postRevealFlash={postRevealFlash}
-                highlightedPostId={highlightedPost?.id ?? null}
+                highlightedPostId={feedHighlightedPostId}
                 onHighlightPost={handleHighlightPost}
                 onPostHide={handlePostHideClick}
                 onPostTellMeMore={handlePostTellMeMoreClick}
-                tellMeMorePostId={highlightedPost?.id ?? null}
+                tellMeMorePostId={tellActive ? highlightedPost?.id ?? null : null}
                 personaBadgePersona={personaKey}
                 onOpenProfile={handleOpenProfile}
                 deletedProfileIds={deletedProfileIds}
@@ -1107,9 +1130,9 @@ function AppInner({
               data-tell-step={tellPhase}
             >
               <DashboardTimerRow
-                highlightedPost={highlightedPost}
-                highlightedPostIsHidden={highlightedPostIsHidden}
-                highlightedPostPersonaLabel={highlightedPostPersonaLabel}
+                highlightedPost={hideTargetPost}
+                highlightedPostIsHidden={hideTargetPostIsHidden}
+                highlightedPostPersonaLabel={hideTargetPostPersonaLabel}
                 personaKey={personaKey}
                 personaColor={personaColor}
                 personaLabels={PERSONA_LABELS}
@@ -1142,8 +1165,8 @@ function AppInner({
                   personaAccent={personaColor}
                   personaPastel={PERSONA_PASTEL_COLORS[personaKey] ?? PERSONA_PASTEL_COLORS.security}
                   holdLoadingOverlay={postGen.loading && isFeedGenerationPhase(postGen.phase)}
-                  isAnalysisRedacted={Boolean(tellDisplayPost && highlightedPostIsHidden)}
-                  onRedactedUnhideConfirm={highlightedPostIsHidden ? handleConfirmUnhide : null}
+                  isAnalysisRedacted={Boolean(tellDisplayPost && tellPostIsHidden)}
+                  onRedactedUnhideConfirm={tellPostIsHidden ? handleTellRedactedUnhideConfirm : null}
                 />
               </div>
             </div>

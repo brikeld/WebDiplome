@@ -12,6 +12,7 @@ export default function PostTellMeMoreToggle({
       aria-label="Tell me more"
       aria-pressed={isActive}
       disabled={disabled}
+      onMouseDown={(e) => e.stopPropagation()}
       onClick={onClick}
     >
       <PostMetaMagnifierIcon />

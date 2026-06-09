@@ -7,6 +7,7 @@ export default function PostHideToggle({ isHidden, onClick, disabled = false }) 
       className={`post-meta-pill post-meta-pill--hide post-action-btn post-action-btn--hide${isHidden ? ' post-action-btn--hide--reveal' : ''}`}
       aria-label={isHidden ? 'Unhide post' : 'Hide post'}
       disabled={disabled}
+      onMouseDown={(e) => e.stopPropagation()}
       onClick={onClick}
     >
       {isHidden ? <PostMetaEyeIcon /> : <PostMetaEyeOffIcon />}

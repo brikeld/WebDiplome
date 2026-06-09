@@ -218,7 +218,8 @@ function PostCard({
       data-persona={post.persona}
       style={{ '--post-accent': noteColor }}
       onClick={isHighlightable ? (e) => {
-        if (!e.target.closest('button, a, [role="button"]')) onHighlight?.();
+        if (e.target.closest('button, a, [role="button"], .post-card-meta-row')) return;
+        onHighlight?.();
       } : undefined}
     >
       <div className="post-unified-capsule">
@@ -358,6 +359,7 @@ function PostCard({
               <PostHideToggle
                 isHidden={isHidden}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   onHide();
                 }}
@@ -367,6 +369,7 @@ function PostCard({
               <PostTellMeMoreToggle
                 isActive={tellMeMoreActive}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   onTellMeMore();
                 }}
