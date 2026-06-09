@@ -6,7 +6,12 @@ import {
   recordHostedAccountDeletion,
 } from '../lib/hostedAccountDeletion.js';
 import { serverConfig } from '../lib/env.js';
-import { queuePostsJobAfterHarvestSync } from '../lib/generationQueue.js';
+import {
+  harvestPayloadHasContent,
+  profileNeedsInitialGeneration,
+  queuePostsJobAfterHarvestSync,
+  queueUpdatePostsJobAfterHarvestSync,
+} from '../lib/generationQueue.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 const PUBLIC_READ_CACHE_TTL_MS = Number(process.env.PUBLIC_READ_CACHE_TTL_MS || 30_000);
@@ -116,7 +121,7 @@ export function createPublicDemoRoutes({
         const syncDataJson = req.body?.dataJson ?? req.body?.data_json ?? null;
         const assetCandidates = req.body?.generationAssetCandidates ?? req.body?.assetCandidates ?? null;
         const assetPersona = req.body?.assetPersona ?? null;
-        generation = await queuePostsJobAfterHarvestSync({
+        const queueArgs = {
           profileStore,
           jobStore,
           profileSlug: slug,
@@ -124,7 +129,14 @@ export function createPublicDemoRoutes({
           syncDataJson,
           assetCandidates,
           assetPersona,
-        });
+        };
+        if (harvestPayloadHasContent(syncDataJson)) {
+          generation = profileNeedsInitialGeneration(profile)
+            ? await queuePostsJobAfterHarvestSync(queueArgs)
+            : await queueUpdatePostsJobAfterHarvestSync(queueArgs);
+        } else {
+          generation = await queuePostsJobAfterHarvestSync(queueArgs);
+        }
       }
 
       res.json({ success: true, profile, generation });

@@ -4,6 +4,8 @@ import {
   mergeGenerationRequestPayload,
   countAiGeneratedPosts,
   queuePostsJobAfterHarvestSync,
+  queueUpdatePostsJobAfterHarvestSync,
+  profileNeedsInitialGeneration,
   hasAssetCandidates,
   shouldPatchQueuedGenerationPayload,
 } from '../server/lib/generationQueue.js';
@@ -60,5 +62,37 @@ describe('generationQueue helpers', () => {
       syncDataJson: {},
     });
     expect(outcome.reason).toBe('profile_not_found');
+  });
+
+  it('queues update jobs even when the profile already has AI posts', async () => {
+    const profileRow = { id: 'p1', user_id: 'u1', firstname: 'A', lastname: 'B' };
+    const apiProfile = {
+      personaPosts: [
+        { content: 'one', persona: 'productivite' },
+        { content: 'two', persona: 'securite' },
+        { content: 'three', persona: 'popularite' },
+      ],
+    };
+    let createdPayload = null;
+    const outcome = await queueUpdatePostsJobAfterHarvestSync({
+      profileStore: {
+        getProfileRowBySlug: async () => profileRow,
+        getProfileBySlug: async () => apiProfile,
+      },
+      jobStore: {
+        findActiveJob: async () => null,
+        findLatestJobPayload: async () => ({ request_payload: { jobType: 'posts', dataJson: { old: true } } }),
+        createJob: async ({ requestPayload }) => {
+          createdPayload = requestPayload;
+          return { id: 'job-update-1', status: 'queued' };
+        },
+      },
+      profileSlug: 'a-b',
+      syncDataJson: { hostname: 'fresh-harvest' },
+    });
+    expect(outcome.queued).toBe(true);
+    expect(outcome.jobId).toBe('job-update-1');
+    expect(createdPayload.dataJson).toEqual({ hostname: 'fresh-harvest' });
+    expect(profileNeedsInitialGeneration(apiProfile)).toBe(false);
   });
 });

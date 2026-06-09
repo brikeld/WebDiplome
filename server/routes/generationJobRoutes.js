@@ -8,7 +8,9 @@ import { resolveCommenterProfileContext, resolveSubjectProfileContext } from '..
 import {
   harvestPayloadHasContent,
   mergeGenerationRequestPayload,
+  harvestPayloadHasContent,
   queueInitialPostsJobIfNeeded,
+  queueUpdatePostsJobAfterHarvestSync,
   shouldPatchQueuedGenerationPayload,
 } from '../lib/generationQueue.js';
 
@@ -235,44 +237,57 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       const row = slug ? await profileStore.getProfileRowBySlug(slug) : null;
       if (!row) return res.status(404).json({ error: 'Profile not found' });
 
-      if (await jobStore.hasActiveJob(row.id)) {
-        const active = await jobStore.findActiveJob({ profileId: row.id, jobType: 'posts' });
+      const active = await jobStore.findActiveJob({ profileId: row.id, jobType: 'posts' });
+      if (active) {
         return res.json({
           success: true,
           alreadyQueued: true,
-          jobId: active?.id ?? null,
-          status: active?.status ?? 'queued',
+          jobId: active.id,
+          status: active.status ?? 'queued',
         });
       }
 
-      const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
-      const priorPayload = latest?.request_payload;
-      if (!priorPayload || typeof priorPayload !== 'object') {
+      const syncDataJson = req.body?.dataJson ?? req.body?.data_json ?? null;
+      const ctx = await resolveSubjectProfileContext(
+        profileStore,
+        { profileSlug: slug, dataJson: syncDataJson },
+        { jobStore },
+      );
+      const dataJson = harvestPayloadHasContent(syncDataJson) ? syncDataJson : ctx.dataJson;
+      if (!harvestPayloadHasContent(dataJson)) {
         return res.status(400).json({
-          error: 'No prior generation job for this profile — open the Compliant desktop app first.',
+          error: 'No harvest data available — run harvest from the Compliant desktop app first.',
         });
       }
 
-      const apiProfile = await profileStore.getProfileBySlug(slug);
       const profileRow = await profileStore.getProfileRowBySlug(slug);
       const storedPool = profileRow?.raw_profile?.generationAssetCandidates ?? [];
-      const priorPool = priorPayload?.assetCandidates ?? [];
-      const assetCandidates = mergeAssetCandidatePool(storedPool, priorPool);
-      const existingPosts = Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [];
-      const job = await jobStore.createJob({
-        userId: row.user_id,
-        profileId: row.id,
-        requestPayload: {
-          ...(priorPayload && typeof priorPayload === 'object' ? priorPayload : {}),
-          jobType: 'posts',
-          profile: slimProfilePayloadForStorage(apiProfile ?? {}),
-          dataJson: priorPayload?.dataJson ?? priorPayload?.data_json ?? null,
-          existingPosts,
-          ...(assetCandidates.length > 0 ? { assetCandidates } : {}),
-          assetPersona: priorPayload?.assetPersona ?? nextAssetPersona(existingPosts),
-        },
+      const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
+      const priorPool = latest?.request_payload?.assetCandidates ?? [];
+      const incomingPool = req.body?.generationAssetCandidates ?? req.body?.assetCandidates ?? [];
+      const assetCandidates = mergeAssetCandidatePool(storedPool, [...priorPool, ...incomingPool]);
+
+      const outcome = await queueUpdatePostsJobAfterHarvestSync({
+        profileStore,
+        jobStore,
+        profileSlug: slug,
+        syncDataJson: dataJson,
+        assetCandidates: assetCandidates.length > 0 ? assetCandidates : null,
+        assetPersona: req.body?.assetPersona ?? null,
       });
-      res.json({ success: true, jobId: job.id, status: job.status });
+
+      if (outcome.alreadyQueued || outcome.payloadUpdated) {
+        return res.json({
+          success: true,
+          alreadyQueued: true,
+          jobId: outcome.jobId,
+          status: outcome.status,
+        });
+      }
+      if (!outcome.queued) {
+        return res.status(400).json({ error: outcome.reason || 'Could not queue generation' });
+      }
+      res.json({ success: true, jobId: outcome.jobId, status: outcome.status });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

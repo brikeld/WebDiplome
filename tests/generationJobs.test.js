@@ -16,6 +16,8 @@ describe('generation job implementation', () => {
     expect(src).toContain("router.post('/generation-jobs/trigger-initial'");
     expect(src).toContain("router.post('/generation-jobs/trigger-update'");
     expect(src).toContain('queueInitialPostsJobIfNeeded');
+    expect(src).toContain('queueUpdatePostsJobAfterHarvestSync');
+    expect(src).not.toContain('hasActiveJob(row.id)');
     expect(src).toContain('resolveSubjectProfileContext');
     expect(src).toContain('resolveCommenterProfileContext');
   });

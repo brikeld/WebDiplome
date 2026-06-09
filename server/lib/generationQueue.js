@@ -148,11 +148,7 @@ export async function queueInitialPostsJobIfNeeded({
   return { queued: true, jobId: job.id, status: job.status };
 }
 
-/**
- * After Electron harvest sync: start worker generation without opening the website.
- * Updates a stale queued job when sync carries real harvest dataJson.
- */
-export async function queuePostsJobAfterHarvestSync({
+async function queuePostsJobFromHarvestSync({
   profileStore,
   jobStore,
   profileSlug,
@@ -160,6 +156,7 @@ export async function queuePostsJobAfterHarvestSync({
   syncDataJson = null,
   assetCandidates = null,
   assetPersona = null,
+  mode = 'initial',
 }) {
   const slug = String(profileSlug || '').trim();
   if (!slug || !profileStore || !jobStore) {
@@ -173,7 +170,7 @@ export async function queuePostsJobAfterHarvestSync({
   }
 
   const apiProfile = await profileStore.getProfileBySlug(slug);
-  if (!profileNeedsInitialGeneration(apiProfile)) {
+  if (mode === 'initial' && !profileNeedsInitialGeneration(apiProfile)) {
     return { queued: false, reason: 'already_complete', alreadyComplete: true };
   }
 
@@ -188,7 +185,6 @@ export async function queuePostsJobAfterHarvestSync({
       active.request_payload && typeof active.request_payload === 'object'
         ? active.request_payload
         : {};
-    const existingData = existingPayload.dataJson ?? existingPayload.data_json;
     const patchPayload = {
       jobType: 'posts',
       profile: slimProfilePayloadForStorage(apiProfile ?? {}),
@@ -215,14 +211,25 @@ export async function queuePostsJobAfterHarvestSync({
     };
   }
 
-  const requestPayload = {
-    jobType: 'posts',
-    user: userPayloadFromProfileRow(row, apiProfile),
-    profile: slimProfilePayloadForStorage(apiProfile ?? {}),
-    dataJson: incomingData,
-    existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
-    ...(hasAssetCandidates({ assetCandidates }) ? { assetCandidates, assetPersona } : {}),
-  };
+  const latest = await jobStore.findLatestJobPayload(row.id, 'posts');
+  const priorPayload = latest?.request_payload;
+  const requestPayload = priorPayload && typeof priorPayload === 'object'
+    ? mergeGenerationRequestPayload(priorPayload, {
+        jobType: 'posts',
+        profile: slimProfilePayloadForStorage(apiProfile ?? {}),
+        dataJson: incomingData,
+        existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
+        user: userPayloadFromProfileRow(row, apiProfile),
+        ...(hasAssetCandidates({ assetCandidates }) ? { assetCandidates, assetPersona } : {}),
+      })
+    : {
+        jobType: 'posts',
+        user: userPayloadFromProfileRow(row, apiProfile),
+        profile: slimProfilePayloadForStorage(apiProfile ?? {}),
+        dataJson: incomingData,
+        existingPosts: Array.isArray(apiProfile?.personaPosts) ? apiProfile.personaPosts : [],
+        ...(hasAssetCandidates({ assetCandidates }) ? { assetCandidates, assetPersona } : {}),
+      };
 
   const job = await jobStore.createJob({
     userId: row.user_id,
@@ -231,4 +238,17 @@ export async function queuePostsJobAfterHarvestSync({
   });
 
   return { queued: true, jobId: job.id, status: job.status };
+}
+
+/**
+ * After Electron harvest sync: start worker generation without opening the website.
+ * Updates a stale queued job when sync carries real harvest dataJson.
+ */
+export async function queuePostsJobAfterHarvestSync(args) {
+  return queuePostsJobFromHarvestSync({ ...args, mode: 'initial' });
+}
+
+/** Queue a fresh posts job after a dashboard harvest when the profile already has AI posts. */
+export async function queueUpdatePostsJobAfterHarvestSync(args) {
+  return queuePostsJobFromHarvestSync({ ...args, mode: 'update' });
 }

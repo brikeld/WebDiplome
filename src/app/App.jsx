@@ -2107,18 +2107,21 @@ export default function App() {
     if (hosted) {
       const slug = freshProfile?.slug ?? freshProfile?.id ?? profile?.slug ?? profile?.id;
       if (slug) {
-        try {
-          const triggerRes = await fetch(`${API_ORIGIN}/api/generation-jobs/trigger-update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ profileSlug: slug }),
-          });
-          if (triggerRes.ok) {
-            const triggerBody = await triggerRes.json().catch(() => ({}));
-            generationJobId = triggerBody?.jobId ?? null;
-          }
-        } catch {
-          /* Electron may have already queued the job */
+        const triggerRes = await fetch(`${API_ORIGIN}/api/generation-jobs/trigger-update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...hostedAuthHeaders(),
+          },
+          body: JSON.stringify({ profileSlug: slug }),
+        });
+        const triggerBody = await triggerRes.json().catch(() => ({}));
+        if (!triggerRes.ok) {
+          throw new Error(triggerBody?.error || `Generation queue failed (${triggerRes.status})`);
+        }
+        generationJobId = triggerBody?.jobId ?? null;
+        if (!generationJobId) {
+          throw new Error('Generation queue did not return a job id');
         }
       }
     }
