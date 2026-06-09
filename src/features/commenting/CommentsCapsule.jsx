@@ -7,6 +7,7 @@ import {
   mockCommentTimeAgo,
 } from '@/lib/commentMetaStrip.js';
 import { getMockCommentsFor } from './commentingMock.js';
+import { DEMO_OTHER_COMMENTER } from '@/lib/demoCommentIdentity.js';
 import { fetchCommentSuggestions } from './fetchCommentSuggestions.js';
 import { LiveScoringContext } from '@/features/liveScoring/LiveScoringContext.jsx';
 import { getAllowedCommentPersonas } from '@/lib/personaScoreCompliance.js';
@@ -229,10 +230,9 @@ export default function CommentsCapsule({
     }
   };
 
+  const mockComments = getMockCommentsFor(post.id).comments;
   const persistedComments = Array.isArray(realComments) ? realComments : [];
-  const comments = persistedComments.length > 0
-    ? persistedComments
-    : getMockCommentsFor(post.id).comments;
+  const comments = [...mockComments, ...persistedComments];
 
   return (
     <div
@@ -265,11 +265,11 @@ export default function CommentsCapsule({
                   content={c.content}
                   metaLeft={mockCommentTimeAgo(post.id, c.persona, i)}
                   metaCenter={commentMetaCenterLine(post.id, c.persona)}
-                  displayName={c.displayName ?? commenterDisplayName}
-                  handle={c.handle ?? commenterHandle}
-                  avatarSrc={c.avatarSrc ?? commenterAvatarSrc}
-                  avatarInitials={c.avatarInitials ?? commenterAvatarInitials}
-                  personaBadgePersona={c.personaBadgePersona ?? commenterPersonaBadgePersona}
+                  displayName={c.displayName ?? DEMO_OTHER_COMMENTER.displayName}
+                  handle={c.handle ?? DEMO_OTHER_COMMENTER.handle}
+                  avatarSrc={c.avatarSrc ?? DEMO_OTHER_COMMENTER.avatarSrc}
+                  avatarInitials={c.avatarInitials ?? DEMO_OTHER_COMMENTER.avatarInitials}
+                  personaBadgePersona={c.personaBadgePersona ?? DEMO_OTHER_COMMENTER.personaBadgePersona}
                   onOpenProfile={onOpenProfile}
                   staggerIndex={i}
                 />

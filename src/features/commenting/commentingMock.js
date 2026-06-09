@@ -1,6 +1,7 @@
 import { hash } from '@/lib/commentMetaStrip.js';
+import { DEMO_OTHER_COMMENTER } from '@/lib/demoCommentIdentity.js';
 
-const PERSONA_ORDER = ['productivite', 'securite', 'popularite'];
+const MOCK_PERSONA = 'securite';
 
 const COMMENT_BANK = {
   productivite: [
@@ -30,15 +31,21 @@ function pick(bank, seed) {
   return bank[seed % bank.length];
 }
 
-/** Other users' mock thread comments (suggestions are AI-generated on open). */
+/** Single Alex Johnson mock thread comment (suggestions are AI-generated on open). */
 export function getMockCommentsFor(postId) {
-  const comments = PERSONA_ORDER.map((persona, i) => {
-    const seed = hash(`${postId}|comment|${persona}|${i}`);
-    return {
-      persona,
-      content: pick(COMMENT_BANK[persona], seed),
-    };
-  });
-
-  return { comments };
+  const seed = hash(`${postId}|comment|${MOCK_PERSONA}|mock`);
+  return {
+    comments: [
+      {
+        persona: MOCK_PERSONA,
+        content: pick(COMMENT_BANK[MOCK_PERSONA], seed),
+        displayName: DEMO_OTHER_COMMENTER.displayName,
+        handle: DEMO_OTHER_COMMENTER.handle,
+        avatarSrc: DEMO_OTHER_COMMENTER.avatarSrc,
+        avatarInitials: DEMO_OTHER_COMMENTER.avatarInitials,
+        personaBadgePersona: DEMO_OTHER_COMMENTER.personaBadgePersona,
+        isMock: true,
+      },
+    ],
+  };
 }

@@ -2,14 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { getMockCommentsFor } from '../src/features/commenting/commentingMock.js';
 
 describe('getMockCommentsFor', () => {
-  it('returns three comments, one per persona in fixed order', () => {
+  it('returns one Alex Johnson mock comment', () => {
     const { comments } = getMockCommentsFor('post-abc');
-    expect(comments).toHaveLength(3);
-    expect(comments.map((c) => c.persona)).toEqual([
-      'productivite',
-      'securite',
-      'popularite',
-    ]);
+    expect(comments).toHaveLength(1);
+    expect(comments[0].persona).toBe('securite');
+    expect(comments[0].displayName).toBe('Alex Johnson');
+    expect(comments[0].avatarSrc).toBe('/imgs/AlexP.png');
+    expect(comments[0].isMock).toBe(true);
   });
 
   it('does not return suggestions (AI-generated on comment open)', () => {
