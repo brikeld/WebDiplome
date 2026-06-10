@@ -454,12 +454,13 @@ function LandingFooter() {
 export default function LandingPage({ onBrowseFeed, onLoginClick, profile, profileEntryLoading }) {
   return (
     <div className="lp-root">
-      <LandingNavbar
-        profile={profile}
-        onLoginClick={onLoginClick}
-        profileEntryLoading={profileEntryLoading}
-      />
-      <main>
+      {/* Gradient zone: navbar + hero share the lime→white gradient */}
+      <div className="lp-hero-zone">
+        <LandingNavbar
+          profile={profile}
+          onLoginClick={onLoginClick}
+          profileEntryLoading={profileEntryLoading}
+        />
         <section className="lp-screen lp-hero" style={{ '--stagger-i': 0 }}>
           <div className="lp-hero-body">
             <h2 className="lp-hero-question">Who are you really?</h2>
@@ -479,6 +480,8 @@ export default function LandingPage({ onBrowseFeed, onLoginClick, profile, profi
             </button>
           </h1>
         </section>
+      </div>
+      <main>
         <AppCarousel />
         <PersonaSections />
         <ProfileCardSection />
