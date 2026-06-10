@@ -56,7 +56,7 @@ import {
   ingestProfileAvatars,
   normalizeProfilesFromApi,
 } from '@/lib/publicAvatarRegistry.js';
-import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
+import { isHostedApiOrigin, profileSlugFromProfile } from '@/lib/aiJobClient.js';
 import { createFeedSpectatorRevealController } from '@/lib/feedSpectatorReveals.js';
 import { runHostedPostGenerationWithReveal } from '@/lib/hostedPostGeneration.js';
 import { createGenerationBeforeReveal } from '@/lib/generationParticleFlight.js';
@@ -360,19 +360,39 @@ function AppInner({
   const [viewedProfile, setViewedProfile] = useState(null);
   const previousLivePersonaRef = useRef(null);
   const previousPersonaScoresRef = useRef(null);
+  const boundProfileIdentityRef = useRef(null);
+  const pendingPersonaChangeRef = useRef(null);
   const joinEnsureAttemptedRef = useRef(false);
   const updateTimerLastTickRef = useRef(Date.now());
   const autoDashboardGenerateRef = useRef(false);
   const [updateRemainingMs, setUpdateRemainingMs] = useState(DASHBOARD_UPDATE_INTERVAL_MS);
 
   const profileId = useMemo(() => {
-    if (!profile) return null;
+    if (!profile) return boundProfileIdentityRef.current;
+    let candidate;
     if (isHostedApiOrigin()) {
-      return profile.slug ?? profile.id ?? null;
+      candidate = profileSlugFromProfile(profile);
+    } else {
+      const first = String(profile.firstname ?? '').trim().toLowerCase();
+      const last = String(profile.lastname ?? '').trim().toLowerCase();
+      candidate = first && last ? `${first}-${last}` : null;
     }
-    const first = String(profile.firstname ?? '').trim().toLowerCase();
-    const last = String(profile.lastname ?? '').trim().toLowerCase();
-    return first && last ? `${first}-${last}` : null;
+    if (!candidate) return boundProfileIdentityRef.current;
+    const bound = boundProfileIdentityRef.current;
+    if (
+      bound === candidate
+      || (bound && slugsReferToSameAccount(bound, candidate))
+      || (
+        profile?.id
+        && profile?.slug
+        && bound === String(profile.id).trim()
+        && candidate === String(profile.slug).trim()
+      )
+    ) {
+      if (bound !== candidate) boundProfileIdentityRef.current = candidate;
+      return boundProfileIdentityRef.current ?? candidate;
+    }
+    return candidate;
   }, [profile?.slug, profile?.id, profile?.firstname, profile?.lastname]);
 
   const prependCompliantPost = useCallback(
@@ -536,54 +556,118 @@ function AppInner({
     handleGeneratePersonaPosts();
   }, [manualDashboardGenerateEnabled, handleGeneratePersonaPosts]);
 
+  const showPersonaChangeTransition = useCallback(
+    (fromPersona, toPersona) => {
+      if (!profile || !fromPersona || !toPersona || fromPersona === toPersona) return;
+      const userDisplayName = displayNameFromProfileLite(profile);
+      setPersonaChangeBannerExiting(false);
+      setPersonaChangeBanner({
+        fromPersona,
+        toPersona,
+        userDisplayName,
+        key: Date.now(),
+      });
+      previousLivePersonaRef.current = toPersona;
+
+      const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
+      if (!shouldCreatePersonaChangePost(posts, fromPersona, toPersona)) return;
+
+      const post = createCompliantPersonaChangePost({
+        profile,
+        fromPersona,
+        toPersona,
+        userDisplayName,
+      });
+      prependCompliantPost(post);
+    },
+    [profile, prependCompliantPost],
+  );
+
   useEffect(() => {
     if (!profile || !liveDominantPersona || !scoresLoaded) return;
-    if (updateSessionActive || postGen.loading) return;
 
     const previous = previousLivePersonaRef.current;
     if (previous === null) {
       previousLivePersonaRef.current = liveDominantPersona;
+      pendingPersonaChangeRef.current = null;
       return;
     }
 
-    if (previous === liveDominantPersona) return;
+    if (previous === liveDominantPersona) {
+      pendingPersonaChangeRef.current = null;
+      return;
+    }
 
-    const userDisplayName = displayNameFromProfileLite(profile);
-    setPersonaChangeBannerExiting(false);
-    setPersonaChangeBanner({
-      fromPersona: previous,
-      toPersona: liveDominantPersona,
-      userDisplayName,
-      key: Date.now(),
-    });
+    if (updateSessionActive || postGen.loading) {
+      pendingPersonaChangeRef.current = {
+        fromPersona: previous,
+        toPersona: liveDominantPersona,
+      };
+      return;
+    }
 
-    previousLivePersonaRef.current = liveDominantPersona;
-
-    const posts = Array.isArray(profile.personaPosts) ? profile.personaPosts : [];
-    if (!shouldCreatePersonaChangePost(posts, previous, liveDominantPersona)) return;
-
-    const post = createCompliantPersonaChangePost({
-      profile,
-      fromPersona: previous,
-      toPersona: liveDominantPersona,
-      userDisplayName,
-    });
-    prependCompliantPost(post);
+    pendingPersonaChangeRef.current = null;
+    showPersonaChangeTransition(previous, liveDominantPersona);
   }, [
     liveDominantPersona,
     profile,
     scoresLoaded,
     updateSessionActive,
     postGen.loading,
-    prependCompliantPost,
+    showPersonaChangeTransition,
   ]);
 
   useEffect(() => {
+    if (!profile || !scoresLoaded || updateSessionActive || postGen.loading) return;
+    const pending = pendingPersonaChangeRef.current;
+    if (!pending) return;
+    if (previousLivePersonaRef.current === pending.toPersona) {
+      pendingPersonaChangeRef.current = null;
+      return;
+    }
+    pendingPersonaChangeRef.current = null;
+    showPersonaChangeTransition(pending.fromPersona, pending.toPersona);
+  }, [
+    profile,
+    scoresLoaded,
+    updateSessionActive,
+    postGen.loading,
+    liveDominantPersona,
+    showPersonaChangeTransition,
+  ]);
+
+  useEffect(() => {
+    if (!profileId) {
+      boundProfileIdentityRef.current = null;
+      previousLivePersonaRef.current = null;
+      previousPersonaScoresRef.current = null;
+      pendingPersonaChangeRef.current = null;
+      setPersonaChangeBanner(null);
+      setPersonaChangeBannerExiting(false);
+      return;
+    }
+
+    const prev = boundProfileIdentityRef.current;
+    const sameAccount =
+      prev === profileId
+      || (prev && slugsReferToSameAccount(prev, profileId))
+      || (
+        profile?.id
+        && profile?.slug
+        && prev === String(profile.id).trim()
+        && profileId === String(profile.slug).trim()
+      );
+
+    boundProfileIdentityRef.current = profileId;
+
+    if (!prev || sameAccount) return;
+
     previousLivePersonaRef.current = null;
     previousPersonaScoresRef.current = null;
+    pendingPersonaChangeRef.current = null;
     setPersonaChangeBanner(null);
     setPersonaChangeBannerExiting(false);
-  }, [profileId]);
+  }, [profileId, profile?.id, profile?.slug]);
 
   useEffect(() => {
     if (!personaChangeBanner) return undefined;
