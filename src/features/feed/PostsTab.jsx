@@ -247,7 +247,9 @@ export default function PostsTab({
   const [feedFlash, setFeedFlash] = useState(null);
   const feedFlashTimerRef = useRef(null);
   useEffect(() => {
-    if (!flashNonce || feedContext !== 'home') return undefined;
+    // No flash once generation is done — avoids lingering colour overlays
+    // on top of the last revealed post.
+    if (!flashNonce || feedContext !== 'home' || !isGeneratingPosts) return undefined;
     setFeedFlash({ nonce: flashNonce, color: personaUiColor(postRevealFlash?.persona) });
     if (feedFlashTimerRef.current) clearTimeout(feedFlashTimerRef.current);
     feedFlashTimerRef.current = setTimeout(() => {
@@ -258,6 +260,17 @@ export default function PostsTab({
     // Retrigger only on nonce changes; persona is read fresh each bump.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flashNonce]);
+
+  // Clear any in-progress flash the moment generation finishes.
+  useEffect(() => {
+    if (isGeneratingPosts) return;
+    if (feedFlashTimerRef.current) {
+      clearTimeout(feedFlashTimerRef.current);
+      feedFlashTimerRef.current = null;
+    }
+    setFeedFlash(null);
+  }, [isGeneratingPosts]);
+
   useEffect(
     () => () => {
       if (feedFlashTimerRef.current) clearTimeout(feedFlashTimerRef.current);
@@ -361,10 +374,10 @@ export default function PostsTab({
     });
   }, []);
 
-  // The placeholder shows throughout the full generation phase. Always use the
-  // dominant persona colour so the bar is stable — generatingPersona updates in
-  // the same React batch as the particle appearing, causing a visible "jump".
-  const generatingAccent = personaUiColor(resolveDominantPersonaKey(profile));
+  // Use the next-to-reveal post's persona for the loading bar colour so it
+  // "knows in advance" what's coming. Falls back to dominant persona while the
+  // plan hasn't arrived yet (generatingPersona is null).
+  const generatingAccent = personaUiColor(generatingPersona ?? resolveDominantPersonaKey(profile));
 
   const leaderboardDirectorySlugs = useMemo(() => {
     const sources = feedContext === 'home' && Array.isArray(feedProfiles) && feedProfiles.length > 0

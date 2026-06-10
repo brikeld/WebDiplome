@@ -98,19 +98,18 @@ export function prefersReducedGenerationMotion() {
 export function animateGenerationParticleToFeed(persona) {
   if (prefersReducedGenerationMotion()) return Promise.resolve();
 
-  const sourceRect = getGeneratingSourceRect(persona);
-  const targetRect = getFeedRevealTargetRect();
-  if (!sourceRect || !targetRect) return Promise.resolve();
-
+  // Defer by one macrotask so React flushes any pending state updates
+  // (e.g., generatingPersona from onNextPostChange) and renders the correct
+  // loading-bar colour before the particle appears on screen.
   return new Promise((resolve) => {
-    window.dispatchEvent(new CustomEvent(GENERATION_PARTICLE_EVENT, {
-      detail: {
-        persona,
-        sourceRect,
-        targetRect,
-        resolve,
-      },
-    }));
+    setTimeout(() => {
+      const sourceRect = getGeneratingSourceRect(persona);
+      const targetRect = getFeedRevealTargetRect();
+      if (!sourceRect || !targetRect) { resolve(); return; }
+      window.dispatchEvent(new CustomEvent(GENERATION_PARTICLE_EVENT, {
+        detail: { persona, sourceRect, targetRect, resolve },
+      }));
+    }, 0);
   });
 }
 
