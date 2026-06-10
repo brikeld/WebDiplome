@@ -47,7 +47,7 @@ export default function LoginEntryPage({
           onClick={onEnterProfile}
           disabled={loading || !profile}
         >
-          {loading ? 'opening' : 'login'}
+          {loading ? 'opening…' : 'enter COMPLIANT'}
         </button>
       </main>
     </div>

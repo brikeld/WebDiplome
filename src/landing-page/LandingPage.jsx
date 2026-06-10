@@ -2,10 +2,7 @@ import UserSilhouetteIcon from '@/features/identity/UserSilhouetteIcon.jsx';
 import PostCard from '@/features/feed/PostCard.jsx';
 import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
-import {
-  avatarSrcFromProfile,
-  getPersonaBadgeModel,
-} from '@/lib/profileUtils.js';
+import { avatarSrcFromProfile, getPersonaBadgeModel } from '@/lib/profileUtils.js';
 import './landingPage.css';
 
 const MOCK_AVATAR = '/imgs/AlexP.png';
@@ -18,14 +15,11 @@ const MOCK_PROFILE = {
   machineName: 'Alexs MacBook Pro',
   dominantPersona: 'productivity',
   globalScore: 78,
-  personaScores: {
-    productivity: 71,
-    security: 64,
-    social: 84,
-  },
+  personaScores: { productivity: 71, security: 64, social: 84 },
   avatarUrl: MOCK_AVATAR,
   wallpaperBase64: MOCK_AVATAR,
-  profileSummary: 'I keep every signal tidy, every system current, and every conversation moving just in case my digital identity needs to pass inspection.',
+  profileSummary:
+    'I keep every signal tidy, every system current, and every conversation moving just in case my digital identity needs to pass inspection.',
   personaPosts: [],
 };
 
@@ -193,21 +187,24 @@ const APP_SCREENS = [
 const PERSONAS = [
   {
     name: 'Social',
-    className: 'lp-persona-card--social',
-    about: 'Communication, collaboration and socially oriented usage.',
-    focus: "'Chat/collab apps in installed apps and recent use. Browser/social patterns where implemented. Anything that suggests connected, communicative behavior rather than offline solo work.",
+    key: 'social',
+    tagline: 'Communication, Collaboration & Socially Oriented Usage',
+    focus:
+      'Chat/collab apps in installed apps and recent use. Browser/social patterns where implemented. Anything that suggests connected, communicative behavior rather than offline solo work.',
   },
   {
     name: 'Productivity',
-    className: 'lp-persona-card--productivity',
-    about: 'Work output, structure and professional usage.',
-    focus: 'Apps and habits that look like professional or creative work: dev tools, office/design suites, terminals, scripts, project files, recent files and shell history.',
+    key: 'productivity',
+    tagline: 'Work Output, Structure & Professional Usage',
+    focus:
+      'Apps and habits that look like professional or creative work: dev tools, office/design suites, terminals, scripts, project files, recent files and shell history.',
   },
   {
     name: 'Security',
-    className: 'lp-persona-card--security',
-    about: 'Digital hygiene, risk surface and conformity.',
-    focus: 'System defenses and posture. FileVault, Gatekeeper, SIP, firewall, updates, disk health, fewer sketchy downloads, fewer repeated errors and fewer neglect signals.',
+    key: 'security',
+    tagline: 'Digital Hygiene, Risk Surface & Conformity',
+    focus:
+      'System defenses and posture. FileVault, Gatekeeper, SIP, firewall, updates, disk health, fewer sketchy downloads, fewer repeated errors and fewer neglect signals.',
   },
 ];
 
@@ -217,7 +214,8 @@ const FAKE_POSTS = [
     persona: 'productivite',
     personaBadgePersona: 'productivity',
     noteColor: '#D8D8D8',
-    content: 'I save every screenshot and asset folder just in case my digital existence ever needs to be perfectly optimized for compliance.',
+    content:
+      'I save every screenshot and asset folder just in case my digital existence ever needs to be perfectly optimized for compliance.',
     systemDeltaPct: 3,
   },
   {
@@ -225,7 +223,8 @@ const FAKE_POSTS = [
     persona: 'securite',
     personaBadgePersona: 'security',
     noteColor: '#759AEF',
-    content: "The list of saved Wi-Fi networks is a digital breadcrumb trail. From my secure home router to that 'Guest' network... I swear someone is tracking every single stop. 📶 paranoia mode activated. 😱🧐",
+    content:
+      "The list of saved Wi-Fi networks is a digital breadcrumb trail. From my secure home router to that 'Guest' network... I swear someone is tracking every single stop.",
     systemDeltaPct: 2,
   },
   {
@@ -233,7 +232,8 @@ const FAKE_POSTS = [
     persona: 'popularite',
     personaBadgePersona: 'popularity',
     noteColor: '#CCF847',
-    content: 'Three chat apps open, two group threads revived, and somehow every calendar invite has become a personality test. Presence is the product.',
+    content:
+      'Three chat apps open, two group threads revived, and somehow every calendar invite has become a personality test. Presence is the product.',
     systemDeltaPct: 4,
   },
   {
@@ -241,10 +241,44 @@ const FAKE_POSTS = [
     persona: 'productivite',
     personaBadgePersona: 'productivity',
     noteColor: '#D8D8D8',
-    content: 'Terminal history tells the story — twelve commits, three rebases, and one suspiciously long grep session. Productivity is a performance.',
+    content:
+      'Terminal history tells the story — twelve commits, three rebases, and one suspiciously long grep session. Productivity is a performance.',
     systemDeltaPct: 2,
   },
 ];
+
+function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
+  const hasProfile = Boolean(profile);
+  const avatarSrc = hasProfile ? avatarSrcFromProfile(profile) : null;
+  const personaColor = hasProfile ? getPersonaBadgeModel(profile).color : '#ccf847';
+
+  return (
+    <nav className="lp-navbar">
+      <span className="lp-navbar-brand">COMPLIANT</span>
+      <div className="lp-navbar-actions">
+        {hasProfile ? (
+          <button
+            type="button"
+            className={`lp-navbar-avatar${profileEntryLoading ? ' lp-navbar-avatar--loading' : ''}`}
+            onClick={onLoginClick}
+            disabled={profileEntryLoading}
+            style={{ '--nav-persona': personaColor }}
+            aria-label="Enter COMPLIANT"
+          >
+            {avatarSrc ? (
+              <img src={avatarSrc} alt="" className="lp-navbar-avatar-img" />
+            ) : (
+              <UserSilhouetteIcon className="lp-navbar-avatar-icon" />
+            )}
+          </button>
+        ) : (
+          <span className="lp-navbar-login">Login</span>
+        )}
+        <button type="button" className="lp-navbar-register">Register</button>
+      </div>
+    </nav>
+  );
+}
 
 function AppCarousel() {
   return (
@@ -253,11 +287,7 @@ function AppCarousel() {
         <h2 id="lp-app-title">THE COMPLIANT APP</h2>
         <div className="lp-app-step-list" aria-label="App screens">
           {APP_SCREENS.map((screen, index) => (
-            <div
-              key={screen.id}
-              className="lp-app-step"
-              style={{ '--step-i': index }}
-            >
+            <div key={screen.id} className="lp-app-step" style={{ '--step-i': index }}>
               <span>{screen.number}</span>
               <p>{screen.description}</p>
             </div>
@@ -285,21 +315,18 @@ function AppCarousel() {
 function PersonaSections() {
   return (
     <section className="lp-screen lp-personas" aria-labelledby="lp-personas-title" style={{ '--stagger-i': 2 }}>
-      <h2 id="lp-personas-title">THE THREE PERSONAS</h2>
-      <div className="lp-persona-grid">
+      <div className="lp-personas-head">
+        <h2 id="lp-personas-title">The Three Personas</h2>
+        <p>COMPLIANT will choose for you based on your information.</p>
+      </div>
+      <div className="lp-persona-list">
         {PERSONAS.map((persona) => (
-          <article key={persona.name} className={`lp-persona-card ${persona.className}`}>
-            <h3>{persona.name}</h3>
-            <div className="lp-persona-card-content">
-              <div className="lp-persona-section">
-                <h4>About</h4>
-                <p>{persona.about}</p>
-              </div>
-              <div className="lp-persona-section">
-                <h4>Focus</h4>
-                <p>{persona.focus}</p>
-              </div>
+          <article key={persona.key} className={`lp-persona-row lp-persona-row--${persona.key}`}>
+            <div className="lp-persona-row-badge">
+              <span className="lp-persona-row-name">{persona.name.toUpperCase()}</span>
+              <span className="lp-persona-row-tagline">{persona.tagline}</span>
             </div>
+            <p className="lp-persona-row-focus">{persona.focus}</p>
           </article>
         ))}
       </div>
@@ -307,31 +334,58 @@ function PersonaSections() {
   );
 }
 
-function IdentitySection() {
+function ProfileCardSection() {
   return (
-    <section className="lp-screen lp-identity" aria-labelledby="lp-identity-title" style={{ '--stagger-i': 3 }}>
-      <div className="lp-identity-copy">
-        <h2 id="lp-identity-title">YOUR COMPLIANT IDENTITY</h2>
+    <section className="lp-profile-card-section" aria-labelledby="lp-identity-title" style={{ '--stagger-i': 3 }}>
+      <div className="lp-section-center-head">
+        <h2 id="lp-identity-title">Your Identity</h2>
         <p>
-          Let <span className="lp-identity-emphasis">COMPLIANT</span> build your presence from who you already are.
+          No need to create an account.<br />
+          COMPLIANT does everything for you.
         </p>
-        <p>Your habits, rhythms, interactions, and behaviors become content automatically.</p>
-        <div
-          className="lp-identity-profile-card"
-          style={{ '--persona-accent': '#D8D8D8', '--score-fill': '#D8D8D8' }}
-        >
-          <ProfileHeader
-            profile={MOCK_PROFILE}
-            personaColor="#D8D8D8"
-            personaBadgePersona="productivity"
-            onNavigateTab={() => {}}
-            statsOverride={{ postCount: 8, rankingCount: 20 }}
-          />
-        </div>
+      </div>
+      <div
+        className="lp-profile-card-wrap"
+        style={{ '--persona-accent': '#D8D8D8', '--score-fill': '#D8D8D8' }}
+      >
+        <ProfileHeader
+          profile={MOCK_PROFILE}
+          personaColor="#D8D8D8"
+          personaBadgePersona="productivity"
+          onNavigateTab={() => {}}
+          statsOverride={{ postCount: 8, rankingCount: 20 }}
+        />
+      </div>
+    </section>
+  );
+}
+
+function TransitionBanner() {
+  return (
+    <div className="lp-transition-banner" style={{ '--stagger-i': 4 }}>
+      <p>
+        Your habits become content.
+        <br />
+        Your content defines your score.
+        <br />
+        Your score determines your visibility.
+      </p>
+    </div>
+  );
+}
+
+function FeedSection() {
+  return (
+    <section className="lp-feed-section" style={{ '--stagger-i': 5 }}>
+      <div className="lp-section-center-head">
+        <h2>Your Feed, Automated</h2>
+        <p>
+          COMPLIANT makes your habits, rhythms, interactions,<br />
+          and behaviours become content automatically.
+        </p>
       </div>
       <LiveScoringProvider profile={MOCK_PROFILE}>
-        <div className="lp-identity-post-capsule">
-        <div className="lp-identity-feed" aria-label="Fake posts">
+        <div className="lp-feed-capsule">
           {FAKE_POSTS.map((post) => (
             <PostCard
               key={post.id}
@@ -348,8 +402,19 @@ function IdentitySection() {
             />
           ))}
         </div>
-        </div>
       </LiveScoringProvider>
+    </section>
+  );
+}
+
+function CtaSection() {
+  return (
+    <section className="lp-cta-section" style={{ '--stagger-i': 6 }}>
+      <h2>
+        Start the experience now<br />
+        &amp; become COMPLIANT
+      </h2>
+      <button type="button" className="lp-cta-download">Download</button>
     </section>
   );
 }
@@ -395,58 +460,23 @@ function LandingFooter() {
   );
 }
 
-function LandingHeroAccess({ profile, onEnterProfile, onRegister, profileEntryLoading }) {
-  const hasProfile = Boolean(profile);
-
-  if (hasProfile) {
-    const avatarSrc = avatarSrcFromProfile(profile);
-    const personaColor = getPersonaBadgeModel(profile).color;
-
-    return (
-      <div className="lp-hero-access">
-        <button
-          type="button"
-          className={`lp-hero-access-profile${profileEntryLoading ? ' lp-hero-access-profile--loading' : ''}`}
-          onClick={() => onEnterProfile?.()}
-          disabled={profileEntryLoading}
-          aria-busy={profileEntryLoading}
-          aria-label="Enter COMPLIANT"
-        >
-          <span
-            className={`lp-hero-avatar-box${profileEntryLoading ? ' lp-hero-avatar-box--loading' : ''}`}
-            style={{
-              '--lp-avatar-top': personaColor,
-              '--lp-avatar-bottom': '#e88a2d',
-            }}
-          >
-            {avatarSrc ? (
-              <img className="lp-hero-avatar-img" src={avatarSrc} alt="" />
-            ) : (
-              <UserSilhouetteIcon className="lp-hero-avatar-initials" />
-            )}
-          </span>
-          <span className="lp-hero-access-btn">
-            {profileEntryLoading ? 'Loading…' : 'enter COMPLIANT'}
-          </span>
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="lp-hero-access">
-      <button type="button" className="lp-hero-access-btn lp-hero-access-btn--solo" onClick={onRegister}>
-        Register
-      </button>
-    </div>
-  );
-}
-
-export default function LandingPage({ profile, onEnterProfile, onBrowseFeed, onRegister, profileEntryLoading }) {
+export default function LandingPage({ onBrowseFeed, onLoginClick, profile, profileEntryLoading }) {
   return (
     <div className="lp-root">
+      <LandingNavbar
+        profile={profile}
+        onLoginClick={onLoginClick}
+        profileEntryLoading={profileEntryLoading}
+      />
       <main>
         <section className="lp-screen lp-hero" style={{ '--stagger-i': 0 }}>
+          <div className="lp-hero-body">
+            <h2 className="lp-hero-question">Who are you really?</h2>
+            <p className="lp-hero-answer">
+              <em>Let our algorithm answer that for you.</em>
+            </p>
+            <button type="button" className="lp-hero-cta-btn">Get Started</button>
+          </div>
           <h1 className="lp-hero-title">
             <button
               type="button"
@@ -457,25 +487,13 @@ export default function LandingPage({ profile, onEnterProfile, onBrowseFeed, onR
               COMPLIANT
             </button>
           </h1>
-          <div className="lp-hero-footer">
-            <div className="lp-hero-text">
-              <h2 className="lp-hero-sub">
-                Who are you really?
-                <br />
-                <em>Let our algorithm answer that for you.</em>
-              </h2>
-            </div>
-            <LandingHeroAccess
-              profile={profile}
-              onEnterProfile={onEnterProfile}
-              onRegister={onRegister}
-              profileEntryLoading={profileEntryLoading}
-            />
-          </div>
         </section>
         <AppCarousel />
         <PersonaSections />
-        <IdentitySection />
+        <ProfileCardSection />
+        <TransitionBanner />
+        <FeedSection />
+        <CtaSection />
       </main>
       <LandingFooter />
     </div>

@@ -1459,15 +1459,15 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!landingOwnedProfile) {
+    if (!landingOwnedProfile && mainView === 'login') {
       landingManualReturnRef.current = false;
-      if (mainView === 'login') setMainView('landing');
-      return;
+      setMainView('landing');
     }
-    if (mainView !== 'landing') return;
-    if (landingManualReturnRef.current) return;
-    setMainView('login');
   }, [landingOwnedProfile, mainView]);
+
+  const handleLandingLoginClick = useCallback(() => {
+    setMainView('login');
+  }, []);
 
   useEffect(() => {
     if (mainView === 'profile' && prevMainViewRef.current !== 'profile') {
@@ -2405,6 +2405,7 @@ export default function App() {
           profile={landingOwnedProfile}
           onEnterProfile={handleLandingEnterProfile}
           onBrowseFeed={handleLandingBrowseFeed}
+          onLoginClick={handleLandingLoginClick}
           profileEntryLoading={landingEnteringProfile}
         />
       </>
