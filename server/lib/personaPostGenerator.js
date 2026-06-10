@@ -997,6 +997,7 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
       title: board.title,
       persona: board.persona,
       cloneHidden,
+      postedUserRank: standing.userRank,
       userRank: standing.userRank,
       previousUserRank: prevRank,
       entries: standing.entries.map((e) => ({

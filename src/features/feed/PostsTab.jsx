@@ -26,7 +26,7 @@ const PERSONA_COLORS = {
   popularity: '#CCF847',
 };
 
-import { resolveLeaderboardForFeed } from '@/lib/resolveLeaderboardForFeed.js';
+import { enrichLeaderboardPostForFeed } from '@/lib/leaderboardPostSync.js';
 import { dedupeLeaderboardPostsNewestOnly } from '@/lib/leaderboardFeedDedupe.js';
 import { API_ORIGIN } from '@/lib/apiClient.js';
 import { getPublicMediaConfig } from '@/lib/publicMediaConfig.js';
@@ -140,12 +140,27 @@ function buildEnrichedPosts(
     const isCompliantLowScore = Boolean(p.compliantLowScore);
     const isCompliantJoin = Boolean(p.compliantJoin);
     const isCompliantSystem = isCompliantPersonaChange || isCompliantLowScore || isCompliantJoin;
+
+    const directory = allProfilesForLeaderboards?.length
+      ? allProfilesForLeaderboards
+      : [profile];
+    const leaderboardSync = (p.leaderboard && Array.isArray(p.leaderboard.entries))
+      ? enrichLeaderboardPostForFeed({
+        storedLeaderboard: p.leaderboard,
+        storedContent: p.content,
+        directory,
+        authorSlug,
+        deletedProfileIds,
+      })
+      : null;
+    const resolvedContent = leaderboardSync?.content ?? p.content;
+
     return {
       id: postStableKey(p, i),
       authorSlug,
       _authorLiveScoringRecords: authorLiveScoringRecords,
       persona: p.persona,
-      content: sanitizePostContent(p.content),
+      content: sanitizePostContent(resolvedContent),
       noteColor: isCompliantSystem ? '#000' : (PERSONA_COLORS[p.persona] ?? '#2323FF'),
       displayName: isCompliantSystem ? 'COMPLIANT' : displayName,
       handle: isCompliantSystem ? '' : handle,
@@ -159,7 +174,7 @@ function buildEnrichedPosts(
         p?.timestamp ??
         p?.time ??
         createdAtFallback(i),
-      systemDeltaPct: stablePct(`${authorSlug ?? ''}|${p?.persona ?? ''}|${p?.content ?? ''}|${i}`),
+      systemDeltaPct: stablePct(`${authorSlug ?? ''}|${p?.persona ?? ''}|${resolvedContent ?? ''}|${i}`),
       attachedAsset: resolveAttachedAsset(p.attachedAsset ?? p.attached_asset),
       chartType: p.chartType ?? p.chart_type ?? null,
       inferenceChain: Array.isArray(p.inferenceChain) ? p.inferenceChain : null,
@@ -169,33 +184,10 @@ function buildEnrichedPosts(
       compliantPersonaChange: p.compliantPersonaChange ?? null,
       compliantLowScore: p.compliantLowScore ?? null,
       compliantJoin: p.compliantJoin ?? null,
-      leaderboard: (p.leaderboard && Array.isArray(p.leaderboard.entries)) ? (() => {
-        const base = {
-          boardId: p.leaderboard.boardId,
-          title: p.leaderboard.title,
-          persona: p.leaderboard.persona ?? p.persona,
-          userRank: p.leaderboard.userRank,
-          previousUserRank: p.leaderboard.previousUserRank ?? null,
-          cloneHidden: Array.isArray(p.leaderboard.cloneHidden) ? p.leaderboard.cloneHidden : [false, false, false, false],
-          rationales: Array.isArray(p.leaderboard.rationales) ? p.leaderboard.rationales : null,
-          climbTip: typeof p.leaderboard.climbTip === 'string' ? p.leaderboard.climbTip : null,
-        };
-        const directory = allProfilesForLeaderboards?.length
-          ? allProfilesForLeaderboards
-          : [profile];
-        const remixed = resolveLeaderboardForFeed(
-          { ...base, entries: p.leaderboard.entries },
-          directory,
-          authorSlug,
-          deletedProfileIds,
-        );
-        return {
-          ...base,
-          userRank: remixed.userRank ?? base.userRank ?? null,
-          hint: remixed.hint ?? p.leaderboard.hint ?? null,
-          entries: enrichLeaderboardEntries(remixed.entries ?? []),
-        };
-      })() : null,
+      leaderboard: leaderboardSync ? {
+        ...leaderboardSync.leaderboard,
+        entries: enrichLeaderboardEntries(leaderboardSync.leaderboard.entries ?? []),
+      } : null,
       _feedEnter: !!p._feedEnter,
       _feedEnterDone: !!p._feedEnterDone,
       _feedKey: p._feedKey ?? null,
