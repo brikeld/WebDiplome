@@ -14,6 +14,7 @@ import {
 } from '@/lib/profileUtils.js';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { personaUiColor } from '@/lib/personaColors.js';
+import { PLACEHOLDER_HANDOFF_MS } from '@/lib/postFeedRevealQueue.js';
 /** Home feed renders this many cards first; older posts stay available via See more. */
 const HOME_FEED_PAGE_SIZE = 20;
 
@@ -234,7 +235,22 @@ export default function PostsTab({
   const [commentsByPostId, setCommentsByPostId] = useState({});
   const [placeholderMounted, setPlaceholderMounted] = useState(isGeneratingPosts);
   const [placeholderLeaving, setPlaceholderLeaving] = useState(false);
+  const [placeholderHandoff, setPlaceholderHandoff] = useState(false);
+  const [generationSlotCollapsed, setGenerationSlotCollapsed] = useState(false);
   const placeholderTimerRef = useRef(null);
+  const lastHandoffKeyRef = useRef(null);
+
+  useEffect(() => {
+    if (isGeneratingPosts) {
+      lastHandoffKeyRef.current = null;
+      setGenerationSlotCollapsed(false);
+      setPlaceholderHandoff(false);
+      return;
+    }
+    setGenerationSlotCollapsed(false);
+    setPlaceholderHandoff(false);
+    lastHandoffKeyRef.current = null;
+  }, [isGeneratingPosts]);
 
   useEffect(() => {
     if (placeholderTimerRef.current) {
@@ -292,6 +308,19 @@ export default function PostsTab({
   const displayedPosts = feedContext === 'home'
     ? posts.slice(0, homeVisibleCount)
     : posts;
+
+  useEffect(() => {
+    if (!isGeneratingPosts) return undefined;
+    const entering = displayedPosts.find((p) => p._feedEnter);
+    const key = entering?._feedKey;
+    if (!key || key === lastHandoffKeyRef.current) return undefined;
+    lastHandoffKeyRef.current = key;
+    setPlaceholderHandoff(true);
+    setGenerationSlotCollapsed(true);
+    const t = window.setTimeout(() => setPlaceholderHandoff(false), PLACEHOLDER_HANDOFF_MS);
+    return () => window.clearTimeout(t);
+  }, [displayedPosts, isGeneratingPosts]);
+
   const homeHasMore = feedContext === 'home' && posts.length > homeVisibleCount;
   const homeRemaining = homeHasMore ? posts.length - homeVisibleCount : 0;
 
@@ -353,14 +382,14 @@ export default function PostsTab({
     <div
       className={`posts-tab${feedContext === 'profile' ? ' posts-tab--profile-inline' : ''}${
         (isGeneratingPosts || (placeholderMounted && !placeholderLeaving)) ? ' posts-tab--generating' : ''
-      }`}
+      }${generationSlotCollapsed ? ' posts-tab--slot-collapsed' : ''}`}
     >
       {placeholderMounted ? (
         <div
           className={`posts-generating-placeholder${
             placeholderLeaving ? ' posts-generating-placeholder--leaving' : ''
-          }`}
-          data-feed-reveal-target=""
+          }${placeholderHandoff ? ' posts-generating-placeholder--handoff' : ''}`}
+          data-feed-reveal-target={generationSlotCollapsed ? undefined : ''}
           style={{
             '--persona-accent': generatingAccent,
             '--post-accent': generatingAccent,
@@ -377,6 +406,7 @@ export default function PostsTab({
           className={`post-card-shell${
             p._feedEnter ? ' post-card-shell--entering' : p._feedEnterDone ? ' post-card-shell--entered' : ''
           }`}
+          data-feed-reveal-target={p._feedEnter && generationSlotCollapsed ? '' : undefined}
         >
           <PostCard
             post={p}
