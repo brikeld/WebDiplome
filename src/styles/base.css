@@ -788,15 +788,6 @@ body {
   background: var(--persona-accent, #759aef);
 }
 
-.demo-rotate-btn--busy .demo-rotate-btn__dot {
-  animation: demo-rotate-pulse 0.9s ease-in-out infinite;
-}
-
-@keyframes demo-rotate-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.25); opacity: 0.65; }
-}
-
 .demo-rotate-btn:focus-visible {
   outline: 2px solid var(--persona-accent, #000);
   outline-offset: 2px;

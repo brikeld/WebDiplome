@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { listDemoRotateTargets } from '@/lib/demoRotate.js';
 import { runDemoRotatePipeline } from '@/lib/demoRotateFeed.js';
-import { personaUiColor } from '@/lib/personaColors.js';
 import { displayNameFromProfile } from '@/lib/profileUtils.js';
 import { profileSlugFromProfile } from '@/lib/aiJobClient.js';
 
@@ -11,7 +10,6 @@ export default function DemoRotateButton({
   spectateController,
   onActiveChange,
   onGeneratingPersona,
-  generatingPersona = null,
 }) {
   const [running, setRunning] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -25,11 +23,6 @@ export default function DemoRotateButton({
     onActiveChangeRef.current = onActiveChange;
     onGeneratingPersonaRef.current = onGeneratingPersona;
   }, [onActiveChange, onGeneratingPersona]);
-
-  const accent = useMemo(
-    () => (running && generatingPersona ? personaUiColor(generatingPersona) : null),
-    [running, generatingPersona],
-  );
 
   const stop = useCallback(() => {
     runningRef.current = false;
@@ -96,27 +89,16 @@ export default function DemoRotateButton({
       : 'Demo rotate: active')
     : 'Start demo rotate (each demo user, one post at a time)';
 
-  const buttonStyle = accent
-    ? {
-        borderColor: accent,
-        background: `color-mix(in srgb, ${accent} 12%, #fff)`,
-        '--persona-accent': accent,
-      }
-    : undefined;
-
-  const dotStyle = accent ? { background: accent } : undefined;
-
   return (
     <button
       type="button"
-      className={`demo-rotate-btn${running ? ' demo-rotate-btn--active' : ''}${busy ? ' demo-rotate-btn--busy' : ''}`}
+      className={`demo-rotate-btn${running ? ' demo-rotate-btn--active' : ''}`}
       onClick={toggle}
       aria-pressed={running}
       aria-label={title}
       title={error ? `${title} — ${error}` : title}
-      style={buttonStyle}
     >
-      <span className="demo-rotate-btn__dot" style={dotStyle} aria-hidden="true" />
+      <span className="demo-rotate-btn__dot" aria-hidden="true" />
     </button>
   );
 }
