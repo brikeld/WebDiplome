@@ -4,7 +4,7 @@
  * via the shared lmChatCompletion helper.
  */
 
-import { RATIONALE_TEMPLATES } from './prompts.js';
+import { RATIONALE_TEMPLATES } from './rationaleTemplates.js';
 import { isLeaderboardBotEntry } from '../../src/lib/leaderboardEntryVisibility.js';
 
 const PHRASE_MAX = 90;
