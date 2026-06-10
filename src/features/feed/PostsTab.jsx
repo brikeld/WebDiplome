@@ -14,9 +14,6 @@ import {
 } from '@/lib/profileUtils.js';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { personaUiColor } from '@/lib/personaColors.js';
-
-/** Keep in sync with the `feed-top-flash` animation in base.css. */
-const FEED_FLASH_MS = 1100;
 /** Home feed renders this many cards first; older posts stay available via See more. */
 const HOME_FEED_PAGE_SIZE = 20;
 
@@ -216,7 +213,6 @@ export default function PostsTab({
   feedContext = 'home',
   isGeneratingPosts = false,
   generatingPersona = null,
-  postRevealFlash = null,
   hideInteractions = false,
   highlightedPostId = null,
   onHighlightPost,
@@ -239,44 +235,6 @@ export default function PostsTab({
   const [placeholderMounted, setPlaceholderMounted] = useState(isGeneratingPosts);
   const [placeholderLeaving, setPlaceholderLeaving] = useState(false);
   const placeholderTimerRef = useRef(null);
-
-  // Flash the matching persona accent at the top of the feed each time a post
-  // is revealed, mirroring the flash on the generate button so the two read as
-  // connected. Only in the live home feed.
-  const flashNonce = postRevealFlash?.nonce ?? 0;
-  const [feedFlash, setFeedFlash] = useState(null);
-  const feedFlashTimerRef = useRef(null);
-  useEffect(() => {
-    // No flash once generation is done — avoids lingering colour overlays
-    // on top of the last revealed post.
-    if (!flashNonce || feedContext !== 'home' || !isGeneratingPosts) return undefined;
-    setFeedFlash({ nonce: flashNonce, color: personaUiColor(postRevealFlash?.persona) });
-    if (feedFlashTimerRef.current) clearTimeout(feedFlashTimerRef.current);
-    feedFlashTimerRef.current = setTimeout(() => {
-      setFeedFlash(null);
-      feedFlashTimerRef.current = null;
-    }, FEED_FLASH_MS);
-    return undefined;
-    // Retrigger only on nonce changes; persona is read fresh each bump.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flashNonce]);
-
-  // Clear any in-progress flash the moment generation finishes.
-  useEffect(() => {
-    if (isGeneratingPosts) return;
-    if (feedFlashTimerRef.current) {
-      clearTimeout(feedFlashTimerRef.current);
-      feedFlashTimerRef.current = null;
-    }
-    setFeedFlash(null);
-  }, [isGeneratingPosts]);
-
-  useEffect(
-    () => () => {
-      if (feedFlashTimerRef.current) clearTimeout(feedFlashTimerRef.current);
-    },
-    [],
-  );
 
   useEffect(() => {
     if (placeholderTimerRef.current) {
@@ -397,20 +355,11 @@ export default function PostsTab({
         (isGeneratingPosts || (placeholderMounted && !placeholderLeaving)) ? ' posts-tab--generating' : ''
       }`}
     >
-      {feedFlash ? (
-        <div
-          key={feedFlash.nonce}
-          className="feed-top-flash"
-          style={{ '--flash-color': feedFlash.color }}
-          aria-hidden
-        />
-      ) : null}
       {placeholderMounted ? (
         <div
           className={`posts-generating-placeholder${
             placeholderLeaving ? ' posts-generating-placeholder--leaving' : ''
           }`}
-          data-feed-reveal-target=""
           style={{
             '--persona-accent': generatingAccent,
             '--post-accent': generatingAccent,

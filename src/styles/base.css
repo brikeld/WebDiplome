@@ -1047,52 +1047,6 @@ body {
   z-index: 3;
 }
 
-/*
- * Persona-accent wash at the very top of the feed, fired in sync with the
- * generate-button flash each time a freshly generated post is revealed — the
- * "bridge" that links the button on the right to the new post at the top.
- * Absolutely positioned so it never adds to the flex column gap.
- * Duration MUST match FEED_FLASH_MS in PostsTab.jsx.
- */
-.feed-top-flash {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 88px;
-  z-index: 4;
-  pointer-events: none;
-  border-radius: var(--radius-post-surface, 18px);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--flash-color, #759aef) 72%, transparent) 0%,
-    color-mix(in srgb, var(--flash-color, #759aef) 20%, transparent) 46%,
-    transparent 100%
-  );
-  animation: feed-top-flash 1100ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes feed-top-flash {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  16% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .feed-top-flash {
-    animation-duration: 0.5s;
-  }
-}
-
 .posts-generating-placeholder {
   box-sizing: border-box;
   display: flex;

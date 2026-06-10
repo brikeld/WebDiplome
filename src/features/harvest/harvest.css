@@ -135,70 +135,6 @@
   position: relative;
 }
 
-/* Persona-accent flash on the generate card, fired in sync with each feed
- * reveal so the button and the new post read as one action. */
-.update-flow__post-flash {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  background: radial-gradient(
-    130% 90% at 100% 0%,
-    color-mix(in srgb, var(--flash-color, #759aef) 80%, transparent) 0%,
-    color-mix(in srgb, var(--flash-color, #759aef) 32%, transparent) 38%,
-    transparent 72%
-  );
-  animation: post-reveal-flash 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-/* The matching persona row pulses when its post lands. */
-.update-gen-row--posted {
-  animation: update-gen-row-posted 1.1s ease-out both;
-}
-
-.update-gen-row--posted .update-gen-row__track {
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--gen-bar-color, #759aef) 75%, transparent),
-    0 0 16px color-mix(in srgb, var(--gen-bar-color, #759aef) 60%, transparent);
-}
-
-.update-gen-row--posted .update-gen-row__phrase {
-  color: color-mix(in srgb, var(--gen-bar-color, #759aef) 60%, #000);
-}
-
-@keyframes post-reveal-flash {
-  0% {
-    opacity: 0;
-  }
-  14% {
-    opacity: 0.6;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes update-gen-row-posted {
-  0% {
-    transform: scale(1);
-  }
-  18% {
-    transform: scale(1.04);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .update-flow__post-flash {
-    animation-duration: 0.5s;
-  }
-  .update-gen-row--posted {
-    animation: none;
-  }
-}
-
 .update-flow__generating-title {
   margin: 0 0 clamp(8px, 0.9vh, 13px);
   font-size: clamp(17px, 1.8vw, 22px);
@@ -255,28 +191,6 @@
 
 .update-gen-row:nth-child(3) .update-gen-row__shimmer {
   animation-delay: 0.4s;
-}
-
-.update-gen-row--active .update-gen-row__track {
-  background: color-mix(in srgb, var(--gen-bar-color, #759aef) 34%, #fff);
-}
-
-.update-gen-row--active .update-gen-row__shimmer {
-  width: 52%;
-}
-
-.posts-generating-placeholder.lsc-target-pulse {
-  animation: lsc-target-pulse 980ms ease-out both;
-}
-
-.generation-particle-target-ghost {
-  position: fixed;
-  width: 28px;
-  height: 28px;
-  margin: -14px 0 0 -14px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9998;
 }
 
 @keyframes update-phrase-in {

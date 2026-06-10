@@ -29,7 +29,6 @@ import { applyAccountDeletionFromServer } from '@/lib/liveScoringStorage.js';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
 import { PersonaBlurbsProvider } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
-import GenerationParticleAnimator from '@/features/harvest/GenerationParticleAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import {
   canHideContentForScores,
@@ -59,7 +58,6 @@ import {
 import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
 import { createFeedSpectatorRevealController } from '@/lib/feedSpectatorReveals.js';
 import { runHostedPostGenerationWithReveal } from '@/lib/hostedPostGeneration.js';
-import { createGenerationBeforeReveal } from '@/lib/generationParticleFlight.js';
 import {
   attachApiPersonaPosts,
   mergeProfilePreservePosts,
@@ -237,8 +235,6 @@ const POST_GEN_IDLE = {
   generatingPersona: null,
   generationPlan: null,
 };
-const generationBeforeReveal = createGenerationBeforeReveal();
-
 function sleep(ms) {
   return feedRevealSleep(ms);
 }
@@ -1102,7 +1098,6 @@ function AppInner({
       }}
     >
       <ScoreAnimator />
-      <GenerationParticleAnimator />
       {mainView !== 'home' && mainView !== 'profile' && (
         <button
           type="button"
@@ -1151,7 +1146,6 @@ function AppInner({
                   (postGen.phase === 'generating' && postGen.loading) || demoRotateActive
                 }
                 generatingPersona={demoGeneratingPersona ?? postGen.generatingPersona}
-                postRevealFlash={postRevealFlash}
                 highlightedPostId={feedHighlightedPostId}
                 onHighlightPost={handleHighlightPost}
                 onPostHide={handlePostHideClick}
@@ -1857,7 +1851,6 @@ export default function App() {
     revealQueue = createPostFeedRevealQueue({
       gapMs: POST_REVEAL_GAP_MS,
       getBaseline: () => streamPostsBaselineRef.current,
-      beforeRevealPost: generationBeforeReveal,
       onPostRevealed: (persona) => {
         handlePostRevealedRef.current?.(persona);
         planRevealCount += 1;
@@ -2095,7 +2088,6 @@ export default function App() {
             jobId,
             reloadProfileFromApi,
             getBaselinePosts: () => streamPostsBaselineRef.current,
-            beforeRevealPost: generationBeforeReveal,
             onGenerationPlan: applyGenerationPlan,
             onPostRevealed: (persona) => {
               handlePostRevealed(persona);
@@ -2288,7 +2280,6 @@ export default function App() {
           jobId: generationJobId,
           reloadProfileFromApi,
           getBaselinePosts: () => streamPostsBaselineRef.current,
-          beforeRevealPost: generationBeforeReveal,
           onGenerationPlan: applyGenerationPlan,
           onPostRevealed: (persona) => {
             handlePostRevealed(persona);
