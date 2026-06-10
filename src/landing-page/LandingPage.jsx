@@ -213,6 +213,7 @@ const PERSONAS = [
 const FEED_VISIBLE = 3;
 const FEED_HOLD_MS = 3000;
 const FEED_EXIT_MS = 360;
+const FEED_LOADER_LEAVE_MS = 320;
 
 const FEED_PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -276,6 +277,10 @@ function toFeedItem(post, { uid = post.id, anim = 'visible' } = {}) {
     uid,
     anim,
   };
+}
+
+function feedAccentForIndex(poolIndex) {
+  return FEED_PERSONA_COLORS[FEED_POOL[poolIndex % FEED_POOL.length].persona] ?? '#ccf847';
 }
 
 function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
@@ -417,10 +422,17 @@ function FeedSection() {
     FEED_POOL.slice(0, FEED_VISIBLE).map((p) => toFeedItem(p))
   );
   const [cycle, setCycle] = useState(0);
+  const [loaderMounted, setLoaderMounted] = useState(true);
+  const [loaderLeaving, setLoaderLeaving] = useState(false);
   const nextRef = useRef(FEED_VISIBLE);
+  const nextAccent = feedAccentForIndex(nextRef.current);
 
   useEffect(() => {
+    setLoaderMounted(true);
+    setLoaderLeaving(false);
+
     let exitTimer;
+    let leaveTimer;
     const holdTimer = setTimeout(() => {
       setItems((prev) => {
         const copy = [...prev];
@@ -429,21 +441,28 @@ function FeedSection() {
       });
 
       exitTimer = setTimeout(() => {
-        const nextPost = FEED_POOL[nextRef.current % FEED_POOL.length];
-        const uid = `${nextPost.id}-${nextRef.current}`;
-        nextRef.current += 1;
+        setLoaderLeaving(true);
 
-        setItems((prev) => [
-          toFeedItem(nextPost, { uid, anim: 'enter' }),
-          ...prev.filter((x) => x.anim !== 'exit'),
-        ]);
-        setCycle((n) => n + 1);
+        leaveTimer = setTimeout(() => {
+          const nextPost = FEED_POOL[nextRef.current % FEED_POOL.length];
+          const uid = `${nextPost.id}-${nextRef.current}`;
+          nextRef.current += 1;
+
+          setItems((prev) => [
+            toFeedItem(nextPost, { uid, anim: 'enter' }),
+            ...prev.filter((x) => x.anim !== 'exit'),
+          ]);
+          setLoaderMounted(false);
+          setLoaderLeaving(false);
+          setCycle((n) => n + 1);
+        }, FEED_LOADER_LEAVE_MS);
       }, FEED_EXIT_MS);
     }, FEED_HOLD_MS);
 
     return () => {
       clearTimeout(holdTimer);
       clearTimeout(exitTimer);
+      clearTimeout(leaveTimer);
     };
   }, [cycle]);
 
@@ -459,6 +478,21 @@ function FeedSection() {
       <LiveScoringProvider profile={MOCK_PROFILE}>
         <div className="lp-feed-capsule">
           <div className="lp-feed-posts">
+            {loaderMounted ? (
+              <div
+                className={`posts-generating-placeholder lp-feed-generating-placeholder${
+                  loaderLeaving ? ' posts-generating-placeholder--leaving' : ''
+                }`}
+                style={{
+                  '--persona-accent': nextAccent,
+                  '--post-accent': nextAccent,
+                }}
+                aria-busy={!loaderLeaving}
+                aria-label="Generating post"
+              >
+                <div className="posts-generating-spinner lp-feed-generating-spinner" aria-hidden />
+              </div>
+            ) : null}
             {items.map((item) => (
               <div key={item.uid} className={`lp-feed-post-wrap lp-feed-post-wrap--${item.anim}`}>
                 <PostCard

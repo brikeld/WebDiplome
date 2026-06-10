@@ -782,6 +782,29 @@
   flex-direction: column;
   gap: clamp(12px, 2vh, 22px);
   overflow: hidden;
+  position: relative;
+}
+
+/* Same spinner as main feed (base.css), scaled down for landing */
+.lp-feed-generating-placeholder {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  width: 100%;
+  min-height: clamp(52px, 7vh, 76px);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.lp-feed-generating-placeholder.posts-generating-placeholder--leaving {
+  margin-bottom: calc(-1 * clamp(12px, 2vh, 22px));
+}
+
+.lp-feed-generating-spinner {
+  width: 28px;
+  height: 28px;
+  border-width: 2.5px;
 }
 
 @keyframes lp-post-enter {
@@ -1029,6 +1052,18 @@
   .lp-profile-card-wrap .profile-hero-badge-slot .persona-badge {
     --persona-badge-size: clamp(40px, 3.2vw, 64px);
   }
+
+  .lp-feed-capsule {
+    --radius-post-surface: 24px;
+    --post-body-size: clamp(19px, 1.45vw, 28px);
+    --post-name-size: clamp(14px, 1vw, 17px);
+    --post-handle-size: clamp(12px, 0.85vw, 14px);
+    --post-avatar-size: clamp(7rem, 9vw, 11rem);
+  }
+
+  .lp-feed-generating-placeholder {
+    min-height: clamp(58px, 7.5vh, 84px);
+  }
 }
 
 @media (min-width: 2560px) {
@@ -1156,6 +1191,23 @@
 
   .lp-profile-card-wrap .profile-hero-badge-slot .persona-badge {
     --persona-badge-size: clamp(44px, 3vw, 72px);
+  }
+
+  .lp-feed-capsule {
+    --radius-post-surface: 30px;
+    --post-body-size: clamp(21px, 1.35vw, 32px);
+    --post-name-size: clamp(15px, 0.95vw, 19px);
+    --post-handle-size: clamp(13px, 0.8vw, 16px);
+    --post-avatar-size: clamp(7.5rem, 8.5vw, 12rem);
+    max-width: 1100px;
+  }
+
+  .lp-feed-generating-placeholder {
+    min-height: clamp(64px, 8vh, 92px);
+  }
+
+  .lp-feed-posts {
+    gap: clamp(14px, 2.2vh, 26px);
   }
 }
 
