@@ -29,6 +29,7 @@ export function createPostFeedRevealQueue({
   onFirstReveal,
   onPostRevealed,
   onNextPostChange,
+  beforeRevealPost = null,
 }) {
   const revealedKeys = new Set();
   const baselineKeys = new Set();
@@ -114,6 +115,13 @@ export function createPostFeedRevealQueue({
       if (!firstRevealFired) {
         firstRevealFired = true;
         onFirstReveal?.();
+      }
+      if (typeof beforeRevealPost === 'function') {
+        try {
+          await beforeRevealPost(raw);
+        } catch {
+          /* particle bridge must never block reveals */
+        }
       }
       flushToUi();
       // Notify listeners after the post has been committed into the feed. This

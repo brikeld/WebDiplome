@@ -360,6 +360,7 @@ export default function PostsTab({
           className={`posts-generating-placeholder${
             placeholderLeaving ? ' posts-generating-placeholder--leaving' : ''
           }`}
+          data-feed-reveal-target=""
           style={{
             '--persona-accent': generatingAccent,
             '--post-accent': generatingAccent,

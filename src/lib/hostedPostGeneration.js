@@ -45,6 +45,7 @@ export async function runHostedPostGenerationWithReveal({
   onGenerationPlan,
   onPostRevealed,
   onNextPostChange,
+  beforeRevealPost = null,
   pollMs = 1000,
   timeoutMs = 120000,
   postJobDoneGraceMs = 12000,
@@ -55,6 +56,7 @@ export async function runHostedPostGenerationWithReveal({
     onPostsChange: applyRevealedPosts,
     onPostRevealed,
     onNextPostChange,
+    beforeRevealPost,
   });
   queue.markBaseline(getBaselinePosts());
 

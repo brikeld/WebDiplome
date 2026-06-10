@@ -19,7 +19,7 @@ export function GeneratingEllipsis() {
   );
 }
 
-function GeneratingBarRow({ persona, color }) {
+function GeneratingBarRow({ persona, color, personaKey }) {
   const phrases = useMemo(() => shuffledTextsForPersona(persona), [persona]);
   const [phraseIndex, setPhraseIndex] = useState(0);
 
@@ -34,7 +34,7 @@ function GeneratingBarRow({ persona, color }) {
   const phrase = phrases[phraseIndex] ?? phrases[0] ?? 'Generating';
 
   return (
-    <div className="update-gen-row" style={{ '--gen-bar-color': color }}>
+    <div className="update-gen-row" data-gen-persona={personaKey} style={{ '--gen-bar-color': color }}>
       <p key={phraseIndex} className="update-gen-row__phrase">
         {phrase}
       </p>
@@ -60,7 +60,7 @@ export default function GeneratingContentLabel() {
       </h3>
       <div className="update-flow__gen-rows">
         {GENERATING_BAR_ROWS.map(({ key, persona, color }) => (
-          <GeneratingBarRow key={key} persona={persona} color={color} />
+          <GeneratingBarRow key={key} persona={persona} color={color} personaKey={key} />
         ))}
       </div>
     </div>

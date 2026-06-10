@@ -29,6 +29,7 @@ import { applyAccountDeletionFromServer } from '@/lib/liveScoringStorage.js';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
 import { PersonaBlurbsProvider } from '@/features/personaBlurbs/PersonaBlurbsContext.jsx';
 import ScoreAnimator from '@/features/liveScoring/ScoreAnimator.jsx';
+import GenerationParticleAnimator from '@/features/harvest/GenerationParticleAnimator.jsx';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import {
   canHideContentForScores,
@@ -58,6 +59,7 @@ import {
 import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
 import { createFeedSpectatorRevealController } from '@/lib/feedSpectatorReveals.js';
 import { runHostedPostGenerationWithReveal } from '@/lib/hostedPostGeneration.js';
+import { createGenerationBeforeReveal } from '@/lib/generationParticleFlight.js';
 import {
   attachApiPersonaPosts,
   mergeProfilePreservePosts,
@@ -235,6 +237,8 @@ const POST_GEN_IDLE = {
   generatingPersona: null,
   generationPlan: null,
 };
+const generationBeforeReveal = createGenerationBeforeReveal();
+
 function sleep(ms) {
   return feedRevealSleep(ms);
 }
@@ -317,7 +321,6 @@ function AppInner({
   linkedProfileSlug,
   tryDeferCompliant,
   updateSessionActive,
-  postRevealFlash,
   deletedProfileIds = [],
   accountResetKey = 0,
   onGoLanding,
@@ -1098,6 +1101,7 @@ function AppInner({
       }}
     >
       <ScoreAnimator />
+      <GenerationParticleAnimator />
       {mainView !== 'home' && mainView !== 'profile' && (
         <button
           type="button"
@@ -1210,7 +1214,6 @@ function AppInner({
                 updateRemainingMs={updateRemainingMs}
                 onGeneratePersonaPosts={handleDashboardGenerateClick}
                 manualGenerateEnabled={manualDashboardGenerateEnabled}
-                postRevealFlash={postRevealFlash}
               />
 
               <div className="dashboard-tell-row">
@@ -1267,21 +1270,15 @@ export default function App() {
   const [personaDeltas, setPersonaDeltas] = useState(null);
   // Bumps once per revealed post; drives the synced accent flash on the
   // generate button and the feed top so users link the two.
-  const [postRevealFlash, setPostRevealFlash] = useState({ persona: null, nonce: 0 });
   const streamPostsBaselineRef = useRef([]);
   const generationSessionActiveRef = useRef(false);
   const [updateSessionActive, setUpdateSessionActive] = useState(false);
   const deferCompliantRef = useRef(false);
   const pendingCompliantRef = useRef([]);
   const spectateRevealRef = useRef(null);
-  const postRevealFlashHandlerRef = useRef(null);
-  postRevealFlashHandlerRef.current = (persona) => {
-    setPostRevealFlash({ persona, nonce: Date.now() });
-  };
   if (!spectateRevealRef.current) {
     spectateRevealRef.current = createFeedSpectatorRevealController({
       setAllProfiles,
-      onPostRevealed: (persona) => postRevealFlashHandlerRef.current?.(persona),
     });
   }
   const [demoRotateActive, setDemoRotateActive] = useState(false);
@@ -1333,18 +1330,6 @@ export default function App() {
       generatingPersona: personaAfterReveal(plan, 0),
     }));
   }, []);
-
-  const handlePostRevealed = useCallback((persona) => {
-    setPostRevealFlash((prev) => ({
-      persona: persona ?? prev.persona,
-      nonce: prev.nonce + 1,
-    }));
-  }, []);
-
-  const handlePostRevealedRef = useRef(handlePostRevealed);
-  useEffect(() => {
-    handlePostRevealedRef.current = handlePostRevealed;
-  }, [handlePostRevealed]);
 
   useEffect(() => () => cancelPersonaDeltasClear(), [cancelPersonaDeltasClear]);
 
@@ -1851,8 +1836,8 @@ export default function App() {
     revealQueue = createPostFeedRevealQueue({
       gapMs: POST_REVEAL_GAP_MS,
       getBaseline: () => streamPostsBaselineRef.current,
+      beforeRevealPost: generationBeforeReveal,
       onPostRevealed: (persona) => {
-        handlePostRevealedRef.current?.(persona);
         planRevealCount += 1;
         setPostGen((prev) => (
           prev.loading && prev.phase === 'generating'
@@ -2088,9 +2073,9 @@ export default function App() {
             jobId,
             reloadProfileFromApi,
             getBaselinePosts: () => streamPostsBaselineRef.current,
+            beforeRevealPost: generationBeforeReveal,
             onGenerationPlan: applyGenerationPlan,
             onPostRevealed: (persona) => {
-              handlePostRevealed(persona);
               planRevealCount += 1;
               setPostGen((prev) => (
                 prev.loading && prev.phase === 'generating'
@@ -2133,7 +2118,6 @@ export default function App() {
     countAiGeneratedPosts,
     reloadProfileFromApi,
     applyGenerationPlan,
-    handlePostRevealed,
     schedulePersonaDeltasClearAfterGenerate,
   ]);
 
@@ -2280,9 +2264,9 @@ export default function App() {
           jobId: generationJobId,
           reloadProfileFromApi,
           getBaselinePosts: () => streamPostsBaselineRef.current,
+          beforeRevealPost: generationBeforeReveal,
           onGenerationPlan: applyGenerationPlan,
           onPostRevealed: (persona) => {
-            handlePostRevealed(persona);
             planRevealCount += 1;
             setPostGen((prev) => (
               prev.loading && prev.phase === 'generating'
@@ -2379,7 +2363,6 @@ export default function App() {
         linkedProfileSlug={linkedProfileSlug}
         tryDeferCompliant={tryDeferCompliant}
         updateSessionActive={updateSessionActive}
-        postRevealFlash={postRevealFlash}
         onGoLanding={handleGoLanding}
         reloadProfileFromApi={reloadProfileFromApi}
         spectateRevealRef={spectateRevealRef}
