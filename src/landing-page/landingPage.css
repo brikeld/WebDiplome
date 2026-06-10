@@ -3,15 +3,9 @@
 .lp-root {
   --lp-edge-pad: clamp(20px, 5vw, 80px);
   --lp-hero-title-pad: clamp(6px, 0.5vw, 12px);
-  /* ~4.75em word width for "COMPLIANT" — max of width-fit, capped by remaining viewport height */
-  --lp-hero-size: clamp(
-    88px,
-    min(
-      calc((100vw - 2 * var(--lp-hero-title-pad)) / 4.75),
-      calc((100svh - 220px) / 0.86)
-    ),
-    999px
-  );
+  /* "COMPLIANT" at weight 800 ≈ 5.5em wide (+ small sidebearing buffer) */
+  --lp-hero-word-em: 5.55;
+  --lp-hero-reserved-h: clamp(200px, 28svh, 300px);
   --lp-display: clamp(60px, 8vw, 140px);
   --lp-green: #ccf847;
   --lp-blue: #759aef;
@@ -185,7 +179,7 @@
 .lp-hero-cta-btn:hover { background: #222; }
 
 .lp-hero-title {
-  font-size: var(--lp-hero-size);
+  container-type: inline-size;
   font-weight: 800;
   line-height: 0.86;
   letter-spacing: -0.02em;
@@ -199,7 +193,7 @@
   margin: auto 0 0;
   padding: 0 var(--lp-hero-title-pad);
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .lp-hero-title-link {
@@ -208,6 +202,14 @@
   display: block;
   width: 100%;
   text-align: inherit;
+  font-size: clamp(
+    40px,
+    min(
+      calc(100cqi / var(--lp-hero-word-em)),
+      calc((100svh - var(--lp-hero-reserved-h)) / 0.86)
+    ),
+    900px
+  );
   transition: opacity 0.15s ease;
 }
 
@@ -1249,10 +1251,6 @@
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
-  .lp-hero-title {
-    white-space: normal;
-    font-size: clamp(56px, 14vw, 120px);
-  }
   .lp-app-showcase { grid-template-columns: 1fr; height: auto; align-items: start; }
   .lp-app-left h2 { white-space: normal; }
   .lp-app-step-list {
