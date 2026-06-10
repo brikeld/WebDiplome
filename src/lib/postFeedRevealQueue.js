@@ -3,9 +3,7 @@ import { postIdentityKey, isCompliantSystemPost } from '@/lib/mergePersonaPosts.
 /** Pause between revealing consecutive posts. */
 export const POST_REVEAL_GAP_MS = 2000;
 /** Must match `.post-card-shell--entering` in `src/styles/base.css`. */
-export const POST_FEED_ENTER_ANIM_MS = 520;
-/** Placeholder fade when particle hands off to a new post (PostsTab). */
-export const PLACEHOLDER_HANDOFF_MS = 320;
+export const POST_FEED_ENTER_ANIM_MS = 1000;
 
 export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

@@ -1036,27 +1036,6 @@ body {
   padding-top: calc(120px + var(--posts-stack-gap, 64px));
 }
 
-.posts-tab--generating.posts-tab--slot-collapsed {
-  padding-top: var(--posts-stack-gap, 64px);
-}
-
-.posts-generating-placeholder--handoff {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.posts-generating-placeholder--handoff .posts-generating-spinner {
-  opacity: 0;
-  transform: scale(0.88);
-}
-
-.posts-tab--slot-collapsed .posts-generating-placeholder:not(.posts-generating-placeholder--handoff) {
-  opacity: 0;
-  min-height: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
 /* Placeholder is always absolutely positioned when mounted — its lifetime is
  * controlled by placeholderMounted state, and --generating stays on the parent
  * until it's fully gone, so no layout desync can occur. */
@@ -1078,7 +1057,7 @@ body {
   border-radius: var(--radius-post-surface);
   background: color-mix(in srgb, var(--persona-accent, #759aef) 18%, #fff);
   transition:
-    opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 320ms ease,
     max-height 420ms ease,
     min-height 420ms ease,
     margin-bottom 420ms ease;
@@ -1104,8 +1083,6 @@ body {
   animation: posts-generating-spin 0.75s linear infinite;
   flex-shrink: 0;
   transition:
-    opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
     border-color 420ms cubic-bezier(0.22, 1, 0.36, 1),
     border-top-color 420ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -1152,44 +1129,9 @@ body {
   contain: layout style;
 }
 
-.post-card-shell--entering {
-  animation: post-card-feed-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: opacity, transform;
-}
-
+.post-card-shell--entering,
 .post-card-shell--entered {
-  opacity: 1;
-  transform: none;
-}
-
-@keyframes post-card-feed-enter {
-  0% {
-    opacity: 0;
-    transform: translateY(-14px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .post-card-shell--entering {
-    animation: post-card-feed-enter-reduced 200ms ease both;
-  }
-
-  .posts-generating-placeholder--handoff {
-    transition-duration: 120ms;
-  }
-}
-
-@keyframes post-card-feed-enter-reduced {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  /* No reveal animation — posts appear instantly. */
 }
 
 /* One capsule per post: header + media + comments (no gap between sections). */
