@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import UserSilhouetteIcon from '@/features/identity/UserSilhouetteIcon.jsx';
 import PostCard from '@/features/feed/PostCard.jsx';
 import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
@@ -208,35 +209,70 @@ const PERSONAS = [
   },
 ];
 
-const FAKE_POSTS = [
+// Feed animation config
+const FEED_VISIBLE = 3;
+const FEED_BAR_MS = 3000;
+const FEED_EXIT_MS = 360;
+const FEED_PAUSE_MS = 650;
+
+const FEED_PERSONA_COLORS = {
+  productivite: '#D8D8D8',
+  securite: '#759AEF',
+  popularite: '#CCF847',
+};
+
+// 9-post pool cycling: productivity → security → social × 3
+const FEED_POOL = [
   {
-    id: 'landing-productivity-post',
-    persona: 'productivite',
-    personaBadgePersona: 'productivity',
-    noteColor: '#D8D8D8',
-    content:
-      'I save every screenshot and asset folder just in case my digital existence ever needs to be perfectly optimized for compliance.',
+    id: 'fp-prod-1', persona: 'productivite', personaBadgePersona: 'productivity',
+    content: 'I save every screenshot and asset folder just in case my digital existence ever needs to be perfectly optimized for compliance.',
     systemDeltaPct: 3,
   },
   {
-    id: 'landing-security-post',
-    persona: 'securite',
-    personaBadgePersona: 'security',
-    noteColor: '#759AEF',
-    content:
-      "The list of saved Wi-Fi networks is a digital breadcrumb trail. From my secure home router to that 'Guest' network... I swear someone is tracking every single stop.",
+    id: 'fp-sec-1', persona: 'securite', personaBadgePersona: 'security',
+    content: "The list of saved Wi-Fi networks is a digital breadcrumb trail. From my secure home router to that 'Guest' network — someone is tracking every stop.",
     systemDeltaPct: 2,
   },
   {
-    id: 'landing-social-post',
-    persona: 'popularite',
-    personaBadgePersona: 'popularity',
-    noteColor: '#CCF847',
-    content:
-      'Three chat apps open, two group threads revived, and somehow every calendar invite has become a personality test. Presence is the product.',
+    id: 'fp-soc-1', persona: 'popularite', personaBadgePersona: 'popularity',
+    content: 'Three chat apps open, two group threads revived, and somehow every calendar invite has become a personality test. Presence is the product.',
+    systemDeltaPct: 4,
+  },
+  {
+    id: 'fp-prod-2', persona: 'productivite', personaBadgePersona: 'productivity',
+    content: 'Ran seventeen terminal sessions before noon. Every script is documentation. Every alias is an identity statement. Efficiency is the only persona worth having.',
+    systemDeltaPct: 5,
+  },
+  {
+    id: 'fp-sec-2', persona: 'securite', personaBadgePersona: 'security',
+    content: 'FileVault on, Gatekeeper locked, firewall active. My threat surface is a philosophy, not a checklist. Security hygiene is just hygiene.',
+    systemDeltaPct: 1,
+  },
+  {
+    id: 'fp-soc-2', persona: 'popularite', personaBadgePersona: 'popularity',
+    content: 'Fourteen apps with unread badges, four active group chats, one persistent DM that shapes every context switch. Digital presence is continuous.',
+    systemDeltaPct: 6,
+  },
+  {
+    id: 'fp-prod-3', persona: 'productivite', personaBadgePersona: 'productivity',
+    content: 'Three projects merged into one pipeline overnight. Automation is not laziness — it is structural trust in your own patterns.',
+    systemDeltaPct: 3,
+  },
+  {
+    id: 'fp-sec-3', persona: 'securite', personaBadgePersona: 'security',
+    content: 'System update installed within six hours of release. Safari history cleared on schedule. The machine knows who you are — better to tell it first.',
+    systemDeltaPct: 2,
+  },
+  {
+    id: 'fp-soc-3', persona: 'popularite', personaBadgePersona: 'popularity',
+    content: 'Every platform logged in, every notification enabled. Connectivity is not distraction — it is the signal that constitutes the self.',
     systemDeltaPct: 4,
   },
 ];
+
+function feedBarColor(idx) {
+  return FEED_PERSONA_COLORS[FEED_POOL[idx % FEED_POOL.length].persona] ?? '#ccf847';
+}
 
 function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
   const hasProfile = Boolean(profile);
@@ -373,6 +409,47 @@ function TransitionBanner() {
 }
 
 function FeedSection() {
+  const [items, setItems] = useState(() =>
+    FEED_POOL.slice(0, FEED_VISIBLE).map((p) => ({ ...p, uid: p.id, anim: 'visible' }))
+  );
+  const [barKey, setBarKey] = useState(0);
+  const [barColor, setBarColor] = useState(() => feedBarColor(FEED_VISIBLE));
+  const nextRef = useRef(FEED_VISIBLE);
+
+  useEffect(() => {
+    let t1, t2, t3;
+
+    // Wait for the bar to fill
+    t1 = setTimeout(() => {
+      // Mark bottom post as exiting
+      setItems((prev) => {
+        const copy = [...prev];
+        copy[copy.length - 1] = { ...copy[copy.length - 1], anim: 'exit' };
+        return copy;
+      });
+
+      // After exit animation: remove it, prepend new post at top
+      t2 = setTimeout(() => {
+        const nextPost = FEED_POOL[nextRef.current % FEED_POOL.length];
+        const uid = `${nextPost.id}-${nextRef.current}`;
+        nextRef.current += 1;
+
+        setItems((prev) => [
+          { ...nextPost, uid, anim: 'enter' },
+          ...prev.filter((x) => x.anim !== 'exit'),
+        ]);
+
+        // Pause then restart bar for next cycle
+        t3 = setTimeout(() => {
+          setBarColor(feedBarColor(nextRef.current));
+          setBarKey((k) => k + 1);
+        }, FEED_PAUSE_MS);
+      }, FEED_EXIT_MS);
+    }, FEED_BAR_MS);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [barKey]);
+
   return (
     <section className="lp-feed-section" style={{ '--stagger-i': 5 }}>
       <div className="lp-section-center-head">
@@ -384,21 +461,34 @@ function FeedSection() {
       </div>
       <LiveScoringProvider profile={MOCK_PROFILE}>
         <div className="lp-feed-capsule">
-          {FAKE_POSTS.map((post) => (
-            <PostCard
-              key={post.id}
-              post={{
-                ...post,
-                createdAt: '2026-06-07T15:45:00.000Z',
-                displayName: 'Alex Johnson',
-                handle: '@Alexs MacBook Pro',
-                avatarInitials: 'AJ',
-                avatarSrc: MOCK_AVATAR,
-              }}
-              pillsMode="bottom-only"
-              aiSuggestionsEnabled={false}
-            />
-          ))}
+          <div className="lp-feed-gen-bar" aria-hidden="true">
+            <span className="lp-feed-gen-label">Generating</span>
+            <div className="lp-feed-gen-track">
+              <div
+                key={barKey}
+                className="lp-feed-gen-fill"
+                style={{ '--bar-color': barColor, '--bar-dur': `${FEED_BAR_MS}ms` }}
+              />
+            </div>
+          </div>
+          <div className="lp-feed-posts">
+            {items.map((item) => (
+              <div key={item.uid} className={`lp-feed-post-wrap lp-feed-post-wrap--${item.anim}`}>
+                <PostCard
+                  post={{
+                    ...item,
+                    createdAt: '2026-06-07T15:45:00.000Z',
+                    displayName: 'Alex Johnson',
+                    handle: '@Alexs MacBook Pro',
+                    avatarInitials: 'AJ',
+                    avatarSrc: MOCK_AVATAR,
+                  }}
+                  pillsMode="bottom-only"
+                  aiSuggestionsEnabled={false}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </LiveScoringProvider>
     </section>
