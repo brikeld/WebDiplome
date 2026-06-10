@@ -236,15 +236,6 @@ const FAKE_POSTS = [
       'Three chat apps open, two group threads revived, and somehow every calendar invite has become a personality test. Presence is the product.',
     systemDeltaPct: 4,
   },
-  {
-    id: 'landing-productivity-post-2',
-    persona: 'productivite',
-    personaBadgePersona: 'productivity',
-    noteColor: '#D8D8D8',
-    content:
-      'Terminal history tells the story — twelve commits, three rebases, and one suspiciously long grep session. Productivity is a performance.',
-    systemDeltaPct: 2,
-  },
 ];
 
 function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
@@ -284,7 +275,7 @@ function AppCarousel() {
   return (
     <section className="lp-screen lp-app-showcase" aria-labelledby="lp-app-title" style={{ '--stagger-i': 1 }}>
       <div className="lp-app-left">
-        <h2 id="lp-app-title">THE COMPLIANT APP</h2>
+        <h2 id="lp-app-title">The compliant app</h2>
         <div className="lp-app-step-list" aria-label="App screens">
           {APP_SCREENS.map((screen, index) => (
             <div key={screen.id} className="lp-app-step" style={{ '--step-i': index }}>
@@ -317,7 +308,7 @@ function PersonaSections() {
     <section className="lp-screen lp-personas" aria-labelledby="lp-personas-title" style={{ '--stagger-i': 2 }}>
       <div className="lp-personas-head">
         <h2 id="lp-personas-title">The Three Personas</h2>
-        <p>COMPLIANT will choose for you based on your information.</p>
+        <p><strong>COMPLIANT</strong> will choose for you based on your information.</p>
       </div>
       <div className="lp-persona-list">
         {PERSONAS.map((persona) => (
@@ -341,7 +332,7 @@ function ProfileCardSection() {
         <h2 id="lp-identity-title">Your Identity</h2>
         <p>
           No need to create an account.<br />
-          COMPLIANT does everything for you.
+          <strong>COMPLIANT</strong> does everything for you.
         </p>
       </div>
       <div
@@ -380,7 +371,7 @@ function FeedSection() {
       <div className="lp-section-center-head">
         <h2>Your Feed, Automated</h2>
         <p>
-          COMPLIANT makes your habits, rhythms, interactions,<br />
+          <strong>COMPLIANT</strong> makes your habits, rhythms, interactions,<br />
           and behaviours become content automatically.
         </p>
       </div>
@@ -412,7 +403,7 @@ function CtaSection() {
     <section className="lp-cta-section" style={{ '--stagger-i': 6 }}>
       <h2>
         Start the experience now<br />
-        &amp; become COMPLIANT
+        &amp; become <strong>COMPLIANT</strong>
       </h2>
       <button type="button" className="lp-cta-download">Download</button>
     </section>

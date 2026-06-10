@@ -1986,7 +1986,7 @@
 .ing-section,
 .reason-section {
   flex: 0 0 auto;
-  border: 1px solid rgba(7, 16, 31, 0.1);
+  border: none;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.62);
   padding: clamp(12px, 1vw, 16px);
@@ -2393,7 +2393,7 @@
 .tell-panel-a--alt-palette-2 .ing-section,
 .tell-panel-a--alt-palette-2 .reason-section {
   background: var(--tell-pill-accent, #759aef);
-  border: 2px solid #000;
+  border: none;
 }
 
 .tell-panel-a--alt-palette-2 .panel-a__head {
