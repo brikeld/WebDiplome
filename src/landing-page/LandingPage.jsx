@@ -429,9 +429,15 @@ function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
             )}
           </button>
         ) : (
-          <span className="lp-navbar-login">Login</span>
+          <button
+            type="button"
+            className="lp-navbar-register"
+            onClick={onLoginClick}
+            disabled={profileEntryLoading}
+          >
+            Register
+          </button>
         )}
-        <button type="button" className="lp-navbar-register">Register</button>
       </div>
     </nav>
   );

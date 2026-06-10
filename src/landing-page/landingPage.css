@@ -82,15 +82,6 @@
   gap: 6px;
 }
 
-.lp-navbar-login {
-  font-size: clamp(14px, 1.2vw, 18px);
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.5);
-  letter-spacing: 0.03em;
-  user-select: none;
-  padding: 6px 10px;
-}
-
 .lp-navbar-register,
 .lp-hero-cta-btn,
 .lp-cta-download {
