@@ -98,6 +98,7 @@
       color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
     );
   overflow: hidden;
+  --inference-redacted-clip-radius: var(--tell-morph-radius, var(--capsule-radius, 44px));
   transition:
     border-radius 420ms cubic-bezier(0.22, 1, 0.36, 1),
     border-color 360ms var(--tell-ease),
@@ -252,6 +253,11 @@
   align-items: stretch !important;
   justify-content: flex-start !important;
   overflow: hidden;
+}
+
+/* Blur filter bleeds as a square unless clipped to the morph shell radius */
+.tell-morph .inference-panel--redacted {
+  border-radius: var(--inference-redacted-clip-radius);
 }
 
 /* ── 1) Idle face ── */
@@ -592,12 +598,18 @@
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel {
   --tell-content-pad: clamp(10px, 1.1vh, 14px) clamp(7px, 0.75vw, 10px);
+  --inference-redacted-clip-radius: max(
+    12px,
+    calc(var(--tell-morph-radius, 28px) - clamp(10px, 1.1vh, 14px))
+  );
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
   padding: var(--tell-content-pad);
   box-sizing: border-box;
   background: transparent;
+  overflow: hidden;
+  border-radius: inherit;
 }
 
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2,

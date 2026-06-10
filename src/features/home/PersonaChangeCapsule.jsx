@@ -48,7 +48,7 @@ export default function PersonaChangeCapsule({
           <span className="dashboard-persona-change__persona" style={{ color: accent }}>
             {toLabel}
           </span>
-          {', congratulations.'}
+          .
         </p>
       </div>
     </div>

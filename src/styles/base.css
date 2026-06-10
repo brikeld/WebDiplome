@@ -189,6 +189,10 @@ body {
 
 /* ── RIGHT-SIDE DASHBOARD PANEL (home + profile views) ── */
 .persona-side-panel {
+  /* Shared row heights + inner radius for dashboard timer vs persona-change banner */
+  --dashboard-actions-h: clamp(124px, 13.2vh, 164px);
+  --dashboard-rings-h: clamp(100px, 12.6vh, 124px);
+  --dashboard-timer-radius: 28px;
   position: static;
   flex: 0 0 auto;
   width: 540px;
@@ -361,7 +365,7 @@ body {
 
 /* 3 persona ring cards below the dashboard capsule */
 .dashboard-rings {
-  flex: 0 0 clamp(100px, 12.6vh, 124px);
+  flex: 0 0 var(--dashboard-rings-h, clamp(100px, 12.6vh, 124px));
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 9px;
@@ -372,12 +376,12 @@ body {
 
 /* Replaces .dashboard-rings when the live dominant persona flips */
 .dashboard-persona-change {
-  flex: 0 0 auto;
+  flex: 0 0 var(--dashboard-rings-h, clamp(100px, 12.6vh, 124px));
   width: 100%;
   margin-top: 6px;
   display: flex;
   align-items: stretch;
-  min-height: clamp(100px, 12.6vh, 124px);
+  min-height: var(--dashboard-rings-h, clamp(100px, 12.6vh, 124px));
 }
 
 .dashboard-persona-change__capsule {
@@ -385,7 +389,12 @@ body {
   box-sizing: border-box;
   width: 100%;
   border: var(--capsule-shell-border-width) solid var(--ink, #000);
-  border-radius: 15px;
+  /* Same curvature family as dashboard / for-you shells (44px), scaled to this row height */
+  border-radius: calc(
+    var(--capsule-radius) *
+    var(--dashboard-rings-h, clamp(100px, 12.6vh, 124px)) /
+    var(--dashboard-actions-h, clamp(124px, 13.2vh, 164px))
+  );
   background: var(--ink, #000);
   padding: clamp(14px, 1.8vh, 22px) clamp(16px, 2.2vw, 28px);
   display: flex;

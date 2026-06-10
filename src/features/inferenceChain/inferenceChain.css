@@ -119,6 +119,10 @@
   overflow: hidden;
 }
 
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2.inference-panel--redacted {
+  border-radius: var(--inference-redacted-clip-radius, var(--tell-morph-radius, 28px));
+}
+
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tell-panel-a__stack {
   gap: var(--dash-panel-gap);
 }
@@ -266,6 +270,9 @@
 
 .inference-panel--redacted {
   position: relative;
+  border-radius: var(--inference-redacted-clip-radius, 28px);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .inference-panel__redacted-content {
@@ -277,6 +284,9 @@
 }
 
 .inference-panel--redacted .inference-panel__redacted-content {
+  border-radius: inherit;
+  overflow: hidden;
+  clip-path: inset(0 round var(--inference-redacted-clip-radius, 28px));
   filter: blur(16px) saturate(1.05);
   opacity: 0.9;
   user-select: none;
