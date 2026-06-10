@@ -221,7 +221,7 @@
   /* Title+steps on left, frame on right — 55/45 split */
   grid-template-columns: minmax(0, 1.2fr) minmax(260px, 1fr);
   gap: clamp(24px, 3.5vw, 56px);
-  align-items: stretch;
+  align-items: center;
   overflow: hidden;
   padding-top: clamp(24px, 3.5vh, 48px);
   padding-bottom: clamp(24px, 3.5vh, 48px);
@@ -234,10 +234,10 @@
 }
 
 .lp-app-left {
-  align-self: stretch;
+  align-self: center;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   min-width: 0;
   overflow: hidden;
 }
@@ -259,10 +259,9 @@
   display: flex;
   flex-direction: column;
   margin-top: clamp(14px, 2vh, 28px);
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
   justify-content: flex-start;
-  gap: clamp(10px, 1.2vh, 14px);
+  gap: clamp(12px, 1.5vh, 18px);
 }
 
 /* Step card — default: dim white text on dark bg */
@@ -685,10 +684,12 @@
 /* ── TRANSITION BANNER ───────────────────────────────────────────────────── */
 
 .lp-transition-banner {
-  margin: 0 var(--lp-edge-pad) clamp(48px, 7vh, 88px);
+  margin: 0 auto clamp(48px, 7vh, 88px);
+  width: fit-content;
+  max-width: calc(100% - 2 * var(--lp-edge-pad));
   background: #0b0c0e;
-  border-radius: clamp(20px, 1.85vw, 72px);
-  padding: clamp(44px, 6.5vh, 80px) clamp(32px, 5vw, 72px);
+  border-radius: clamp(18px, 1.4vw, 36px);
+  padding: clamp(22px, 3vh, 36px) clamp(24px, 2.8vw, 44px);
   color: #fff;
 }
 
@@ -696,7 +697,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(16px, 2.5vh, 32px);
+  gap: clamp(10px, 1.5vh, 18px);
 }
 
 .lp-transition-line {
@@ -873,6 +874,34 @@
   .lp-app-step p {
     font-size: clamp(14px, 1.1vw, 21px);
   }
+
+  .lp-profile-card-wrap {
+    max-width: 1200px;
+    border-radius: 52px;
+    padding: 10px;
+  }
+
+  .lp-profile-card-wrap .profile-hero-capsule {
+    --profile-hero-scale: 1.45;
+    --profile-rings-scale: 1.08;
+    --profile-score-size-max: 22rem;
+    min-height: clamp(400px, 50vh, 720px);
+    border-radius: 42px;
+  }
+
+  .lp-profile-card-wrap .profile-hero-main {
+    min-height: clamp(390px, 48vh, 700px);
+    padding: clamp(28px, 3.2vh, 48px) clamp(24px, 2.8vw, 48px);
+    gap: clamp(20px, 2.2vw, 36px);
+  }
+
+  .lp-profile-card-wrap .profile-name-line {
+    font-size: clamp(48px, 4.2vw, 96px);
+  }
+
+  .lp-profile-card-wrap .profile-hero-badge-slot .persona-badge {
+    --persona-badge-size: clamp(40px, 3.2vw, 64px);
+  }
 }
 
 @media (min-width: 2560px) {
@@ -905,6 +934,34 @@
   .lp-app-step-num {
     font-size: clamp(15px, 1.1vw, 24px);
   }
+
+  .lp-profile-card-wrap {
+    max-width: 1400px;
+    border-radius: 58px;
+    padding: 12px;
+  }
+
+  .lp-profile-card-wrap .profile-hero-capsule {
+    --profile-hero-scale: 1.65;
+    --profile-rings-scale: 1.15;
+    --profile-score-size-max: 26rem;
+    min-height: clamp(460px, 52vh, 820px);
+    border-radius: 48px;
+  }
+
+  .lp-profile-card-wrap .profile-hero-main {
+    min-height: clamp(450px, 50vh, 800px);
+    padding: clamp(32px, 3.5vh, 54px) clamp(28px, 2.5vw, 52px);
+    gap: clamp(24px, 2.4vw, 40px);
+  }
+
+  .lp-profile-card-wrap .profile-name-line {
+    font-size: clamp(52px, 3.8vw, 108px);
+  }
+
+  .lp-profile-card-wrap .profile-hero-badge-slot .persona-badge {
+    --persona-badge-size: clamp(44px, 3vw, 72px);
+  }
 }
 
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
@@ -922,7 +979,7 @@
 @media (max-width: 560px) {
   .lp-screen { padding: 28px 20px; }
   .lp-app-showcase { margin-left: 12px; margin-right: 12px; border-radius: 20px; padding-left: 18px; padding-right: 18px; }
-  .lp-transition-banner { margin-left: 12px; margin-right: 12px; border-radius: 20px; }
+  .lp-transition-banner { max-width: calc(100% - 24px); border-radius: 20px; }
   .lp-mac-app-shell { height: min(78vh, 620px); max-width: 84vw; }
   .lp-mac-screen-content { padding: 40px 20px 22px; }
   .lp-mac-wordmark { font-size: 42px; }
