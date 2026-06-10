@@ -2,6 +2,7 @@
 
 .lp-root {
   --lp-edge-pad: clamp(20px, 5vw, 80px);
+  --lp-hero-edge-pad: clamp(10px, 2vw, 32px);
   --lp-hero-title-pad: clamp(6px, 0.5vw, 12px);
   /* "COMPLIANT" at weight 800 ≈ 5.5em wide (+ small sidebearing buffer) */
   --lp-hero-word-em: 5.55;
@@ -44,7 +45,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px var(--lp-edge-pad);
+  padding: 14px var(--lp-edge-pad) 14px var(--lp-hero-edge-pad);
   /* Fully transparent so the lime gradient is uninterrupted */
   background: transparent;
   backdrop-filter: blur(0px);
@@ -140,7 +141,7 @@
   align-items: flex-start;
   /* Tighter gap between the two headline lines */
   gap: 0;
-  padding: 0 var(--lp-edge-pad);
+  padding: 0 var(--lp-edge-pad) 0 0;
 }
 
 .lp-hero-question {
@@ -222,9 +223,13 @@
   padding: clamp(28px, 4vh, 56px) var(--lp-edge-pad);
 }
 
-/* Hero is full-bleed; .lp-screen padding would inset the title away from the edges */
+/* Hero is full-bleed; title keeps minimal edge pad, copy aligns with navbar */
 .lp-screen.lp-hero {
-  padding: clamp(16px, 3vh, 40px) var(--lp-hero-title-pad) var(--lp-hero-title-pad);
+  padding:
+    clamp(16px, 3vh, 40px)
+    var(--lp-hero-title-pad)
+    var(--lp-hero-title-pad)
+    var(--lp-hero-edge-pad);
 }
 
 /* ── APP SHOWCASE ────────────────────────────────────────────────────────── */
@@ -234,9 +239,11 @@
   background: #0b0c0e;
   color: #fff;
   display: grid;
-  /* Title+steps on left, frame on right — 55/45 split */
+  /* Row 1: title · Row 2: steps + app frame (top/bottom aligned) */
   grid-template-columns: minmax(0, 1.2fr) minmax(260px, 1fr);
-  gap: clamp(24px, 3.5vw, 56px);
+  grid-template-rows: auto minmax(0, 1fr);
+  column-gap: clamp(24px, 3.5vw, 56px);
+  row-gap: clamp(14px, 2vh, 28px);
   align-items: stretch;
   overflow: hidden;
   padding-top: clamp(24px, 3.5vh, 48px);
@@ -249,18 +256,10 @@
   margin-bottom: clamp(48px, 7vh, 88px);
 }
 
-.lp-app-left {
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  height: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-/* Title forced to single line */
-.lp-app-left h2 {
+/* Title forced to single line — row 1, left column only */
+.lp-app-showcase > #lp-app-title {
+  grid-column: 1;
+  grid-row: 1;
   font-size: clamp(28px, 4.2vw, 80px);
   line-height: 0.94;
   letter-spacing: -0.025em;
@@ -269,18 +268,19 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-shrink: 0;
+  min-width: 0;
+  align-self: start;
 }
 
 .lp-app-step-list {
+  grid-column: 1;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
-  flex: 1;
+  justify-content: space-between;
   min-height: 0;
-  margin-top: 0;
-  justify-content: center;
-  align-self: stretch;
-  gap: clamp(14px, 1.7vh, 22px);
+  min-width: 0;
+  gap: clamp(10px, 1.2vh, 16px);
 }
 
 /* Step card — default: dim white text on dark bg */
@@ -346,10 +346,14 @@
 /* ── MAC APP FRAME ───────────────────────────────────────────────────────── */
 
 .lp-mac-app-shell {
+  grid-column: 2;
+  grid-row: 2;
   justify-self: center;
-  align-self: center;
-  /* Scale with viewport — bigger on 2K */
-  height: clamp(360px, 78svh, 860px);
+  align-self: stretch;
+  height: 100%;
+  max-height: 100%;
+  width: auto;
+  max-width: 100%;
   aspect-ratio: 480 / 760;
   display: flex;
   align-items: center;
@@ -505,35 +509,95 @@
 .lp-mac-bio-block blockquote { margin: 0; color: var(--lp-mac-ink); font-size: 19px; font-weight: 900; font-style: oblique; line-height: 1.5; }
 .lp-mac-actions { display: flex; width: 100%; gap: 10px; }
 .lp-mac-actions .lp-mac-btn { flex: 1; }
-.lp-mac-profile { gap: 8px; padding-bottom: 18px; }
-.lp-mac-profile-block { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
-.lp-mac-profile-block header { justify-content: flex-start; }
+.lp-mac-profile { gap: 10px; padding-bottom: 14px; }
+.lp-mac-profile > .lp-mac-profile-block { flex: 1 1 0; min-height: 0; }
+.lp-mac-profile-block { display: flex; flex-direction: column; gap: 7px; min-height: 0; }
+.lp-mac-profile-block header { justify-content: flex-start; flex-shrink: 0; }
 .lp-mac-profile-block header i { flex: 1; height: 1px; background: var(--lp-mac-line); }
 .lp-mac-profile-block header b { width: 7px; height: 7px; border-radius: 50%; background: var(--lp-mac-accent); }
-.lp-mac-profile-hero { display: grid; grid-template-columns: 1fr 112px; gap: 12px; align-items: center; border: 1px solid var(--lp-mac-line-strong); border-radius: 6px; background: linear-gradient(180deg, var(--lp-mac-surface-1), var(--lp-mac-surface-0)); padding: 16px; }
-.lp-mac-profile-id { display: flex; align-items: center; gap: 13px; margin-bottom: 7px; }
-.lp-mac-profile-id img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; }
-.lp-mac-profile-id h3 { margin: 0; font-size: 21px; line-height: 1.05; }
+.lp-mac-profile-hero {
+  flex: 1;
+  min-height: 128px;
+  display: grid;
+  grid-template-columns: 1fr 128px;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--lp-mac-line-strong);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--lp-mac-surface-1), var(--lp-mac-surface-0));
+  padding: 18px;
+}
+.lp-mac-profile-id { display: flex; align-items: center; gap: 14px; margin-bottom: 9px; }
+.lp-mac-profile-id img { width: 64px; height: 64px; border-radius: 11px; object-fit: cover; }
+.lp-mac-profile-id h3 { margin: 0; font-size: 24px; line-height: 1.05; }
 .lp-mac-profile-id span, .lp-mac-profile-block header span { color: var(--lp-mac-accent); }
-.lp-mac-profile-hero p { margin: 0; color: var(--lp-mac-ink); font-size: 11px; font-weight: 900; font-style: oblique; line-height: 1.35; }
-.lp-mac-profile-rings { position: relative; width: 96px; height: 96px; flex-shrink: 0; }
+.lp-mac-profile-hero p { margin: 0; color: var(--lp-mac-ink); font-size: 12px; font-weight: 900; font-style: oblique; line-height: 1.4; }
+.lp-mac-profile-rings { position: relative; width: 112px; height: 112px; flex-shrink: 0; justify-self: center; }
 .lp-mac-profile-ring { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, var(--lp-mac-surface-1) 62%, transparent 63%), conic-gradient(var(--ring-color) calc(var(--ring-score,0) * 1%), rgba(255,255,255,0.08) 0); }
 .lp-mac-profile-ring--security { --ring-color: var(--lp-blue); inset: 0; }
-.lp-mac-profile-ring--productivity { --ring-color: var(--lp-gray); inset: 12px; }
-.lp-mac-profile-ring--social { --ring-color: var(--lp-green); inset: 24px; }
-.lp-mac-profile-block--stats { flex: 0 0 auto; }
-.lp-mac-statgrid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 4px; border: 1px solid var(--lp-mac-line-strong); border-radius: 6px; background: var(--lp-mac-surface-0); padding: 6px; }
-.lp-mac-statgrid span, .lp-mac-algo span { min-width: 0; border: 1px solid var(--lp-mac-line-soft); border-radius: 4px; background: var(--lp-mac-surface-1); padding: 6px 7px; color: var(--lp-mac-ink); font-size: 10px; line-height: 1.15; }
-.lp-mac-statgrid b { display: block; color: var(--lp-mac-ink-faint); font-size: 8px; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; }
-.lp-mac-algo > span { display: grid; place-items: center; gap: 6px; min-height: 78px; text-align: center; text-transform: uppercase; font-size: 8px; font-weight: 900; font-style: oblique; color: var(--lp-mac-ink-faint); }
-.lp-mac-algo-gauge { --gauge-size: 46px; position: relative; width: var(--gauge-size); height: var(--gauge-size); border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle, var(--lp-mac-surface-1) 58%, transparent 59%), conic-gradient(var(--gauge-color) calc(var(--ring-score,0) * 1%), rgba(255,255,255,0.1) 0); }
+.lp-mac-profile-ring--productivity { --ring-color: var(--lp-gray); inset: 14px; }
+.lp-mac-profile-ring--social { --ring-color: var(--lp-green); inset: 28px; }
+.lp-mac-profile-block--stats { flex: 1.08 1 0; }
+.lp-mac-statgrid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 5px;
+  border: 1px solid var(--lp-mac-line-strong);
+  border-radius: 8px;
+  background: var(--lp-mac-surface-0);
+  padding: 8px;
+}
+.lp-mac-statgrid span, .lp-mac-algo > span {
+  min-width: 0;
+  border: 1px solid var(--lp-mac-line-soft);
+  border-radius: 5px;
+  background: var(--lp-mac-surface-1);
+  padding: 9px 8px;
+  color: var(--lp-mac-ink);
+  font-size: 11px;
+  line-height: 1.2;
+}
+.lp-mac-statgrid span { display: flex; flex-direction: column; justify-content: center; }
+.lp-mac-statgrid b { display: block; color: var(--lp-mac-ink-faint); font-size: 8px; font-weight: 900; text-transform: uppercase; margin-bottom: 3px; }
+.lp-mac-algo {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 7px;
+}
+.lp-mac-algo > span {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 0;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 900;
+  font-style: oblique;
+  color: var(--lp-mac-ink-faint);
+}
+.lp-mac-algo-gauge {
+  --gauge-size: clamp(50px, 9vh, 68px);
+  position: relative;
+  width: var(--gauge-size);
+  height: var(--gauge-size);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle, var(--lp-mac-surface-1) 58%, transparent 59%), conic-gradient(var(--gauge-color) calc(var(--ring-score,0) * 1%), rgba(255,255,255,0.1) 0);
+}
 .lp-mac-algo-gauge--security { --gauge-color: var(--lp-blue); }
 .lp-mac-algo-gauge--productivity { --gauge-color: var(--lp-gray); }
 .lp-mac-algo-gauge--social { --gauge-color: var(--lp-green); }
-.lp-mac-algo-gauge b { position: relative; color: var(--lp-mac-ink); font-size: 15px; font-weight: 900; font-style: normal; text-transform: none; }
-.lp-mac-algo { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+.lp-mac-algo-gauge b { position: relative; color: var(--lp-mac-ink); font-size: clamp(16px, 2.4vh, 20px); font-weight: 900; font-style: normal; text-transform: none; }
 .lp-mac-algo .is-main { background: var(--lp-mac-accent-dim); }
-.lp-mac-profile-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 4px; }
+.lp-mac-profile-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-shrink: 0; margin-top: 0; padding-top: 6px; }
 .lp-mac-btn--danger { border-color: rgba(255,95,87,0.72); color: #ff5f57; font-style: oblique; }
 .lp-mac-btn--ghost, .lp-mac-btn--danger { width: 100%; padding: 10px 12px; font-size: 9px; font-style: oblique; }
 .lp-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex: 0 0 auto; }
@@ -1015,12 +1079,12 @@
     gap: clamp(32px, 4vw, 72px);
   }
 
-  .lp-app-left h2 {
-    margin-bottom: clamp(8px, 1vh, 14px);
+  .lp-app-showcase {
+    row-gap: clamp(16px, 2vh, 28px);
   }
 
   .lp-app-step-list {
-    gap: clamp(16px, 2vh, 26px);
+    gap: clamp(12px, 1.4vh, 20px);
   }
 
   .lp-app-step {
@@ -1132,13 +1196,12 @@
     gap: clamp(40px, 4.5vw, 88px);
   }
 
-  .lp-app-left h2 {
+  .lp-app-showcase > #lp-app-title {
     font-size: clamp(48px, 3.6vw, 88px);
-    margin-bottom: clamp(12px, 1.2vh, 18px);
   }
 
   .lp-app-step-list {
-    gap: clamp(18px, 2.2vh, 30px);
+    gap: clamp(14px, 1.6vh, 24px);
   }
 
   .lp-app-step {
@@ -1251,14 +1314,28 @@
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
-  .lp-app-showcase { grid-template-columns: 1fr; height: auto; align-items: start; }
-  .lp-app-left h2 { white-space: normal; }
+  .lp-app-showcase {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    height: auto;
+    align-items: start;
+  }
+  .lp-app-showcase > #lp-app-title { grid-column: 1; grid-row: auto; white-space: normal; }
   .lp-app-step-list {
-    flex: 0 0 auto;
+    grid-column: 1;
+    grid-row: auto;
     justify-content: flex-start;
     margin-top: clamp(14px, 2vh, 28px);
+    gap: clamp(14px, 2vh, 28px);
   }
-  .lp-mac-app-shell { height: min(86vh, 760px); max-width: min(84vw, 480px); margin: 0 auto; }
+  .lp-mac-app-shell {
+    grid-column: 1;
+    grid-row: auto;
+    align-self: auto;
+    height: min(86vh, 760px);
+    max-width: min(84vw, 480px);
+    margin: clamp(24px, 4vh, 40px) auto 0;
+  }
   /* Persona deck on narrow screens */
   .lp-persona-deck {
     width: min(90vw, 340px);

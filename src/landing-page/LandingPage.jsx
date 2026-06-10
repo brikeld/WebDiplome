@@ -319,16 +319,14 @@ function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
 function AppCarousel() {
   return (
     <section className="lp-screen lp-app-showcase" aria-labelledby="lp-app-title" style={{ '--stagger-i': 1 }}>
-      <div className="lp-app-left">
-        <h2 id="lp-app-title">COMPLIANT app</h2>
-        <div className="lp-app-step-list" aria-label="App screens">
-          {APP_SCREENS.map((screen, index) => (
-            <div key={screen.id} className="lp-app-step" style={{ '--step-i': index }}>
-              <div className="lp-app-step-num">{screen.number}</div>
-              <p>{screen.description}</p>
-            </div>
-          ))}
-        </div>
+      <h2 id="lp-app-title">COMPLIANT app</h2>
+      <div className="lp-app-step-list" aria-label="App screens">
+        {APP_SCREENS.map((screen, index) => (
+          <div key={screen.id} className="lp-app-step" style={{ '--step-i': index }}>
+            <div className="lp-app-step-num">{screen.number}</div>
+            <p>{screen.description}</p>
+          </div>
+        ))}
       </div>
       <div className="lp-mac-app-shell" aria-label="COMPLIANT Mac app carousel preview">
         <div className="lp-mac-app-frame">
