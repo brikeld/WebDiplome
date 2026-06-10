@@ -24,6 +24,146 @@ const MOCK_PROFILE = {
   personaPosts: [],
 };
 
+const COLLECT_PHASES = ['Machine identity', 'History · 7d', 'Assets', 'Scoring signals'];
+
+const COLLECT_LOG_SCRIPT = [
+  { line: '[1/4] machine identity · hostname resolved ✓', step: 1, label: 'Reading machine identity…' },
+  { line: 'system_profiler · hardware UUID', step: 1 },
+  { line: '[2/4] history → shell · 612 commands', step: 2, label: 'Reconstructing 7-day history…' },
+  { line: 'sqlite3 Safari/History.db ✓', step: 2 },
+  { line: '[3/4] assets · recent_images scan', step: 3, label: 'Harvesting assets…' },
+  { line: 'wifi known_networks · 9 SSID', step: 3 },
+  { line: 'app usage windows · 7d ✓', step: 3 },
+  { line: '[4/4] scoring signals · persona weights', step: 4, label: 'Computing scoring signals…' },
+  { line: 'login/last sessions parsed ✓', step: 4 },
+];
+
+function MacCollectScreen() {
+  const rootRef = useRef(null);
+  const logBoxRef = useRef(null);
+  const [step, setStep] = useState(0);
+  const [pct, setPct] = useState(0);
+  const [status, setStatus] = useState('Initializing system scan…');
+  const [logs, setLogs] = useState([]);
+  const stepRef = useRef(0);
+  const pctSmoothRef = useRef(0);
+  const lineRef = useRef(0);
+  const wasVisibleRef = useRef(false);
+
+  useEffect(() => {
+    const screenEl = rootRef.current?.closest('.lp-mac-app-screen');
+    if (!screenEl) return undefined;
+
+    const reset = () => {
+      stepRef.current = 0;
+      pctSmoothRef.current = 0;
+      lineRef.current = 0;
+      setStep(0);
+      setPct(0);
+      setStatus('Initializing system scan…');
+      setLogs([]);
+    };
+
+    let tickId = null;
+
+    const advance = () => {
+      const idx = lineRef.current;
+      if (idx >= COLLECT_LOG_SCRIPT.length) {
+        if (tickId) clearInterval(tickId);
+        tickId = null;
+        return;
+      }
+
+      const entry = COLLECT_LOG_SCRIPT[idx];
+      lineRef.current += 1;
+      const ts = `17:25:${String(34 + idx).padStart(2, '0')}`;
+
+      setLogs((prev) => [...prev, { id: idx, ts, text: entry.line, ok: entry.line.includes('✓') }]);
+
+      if (entry.step > stepRef.current) {
+        stepRef.current = entry.step;
+        setStep(entry.step);
+        if (entry.label) setStatus(entry.label);
+      }
+
+      pctSmoothRef.current = Math.min(96, pctSmoothRef.current + 9);
+      const stepPct = Math.round((stepRef.current / 4) * 95);
+      setPct(Math.min(96, Math.max(stepPct, Math.round(pctSmoothRef.current))));
+    };
+
+    const pollId = setInterval(() => {
+      const visible = Number.parseFloat(getComputedStyle(screenEl).opacity) > 0.6;
+
+      if (visible && !wasVisibleRef.current) {
+        wasVisibleRef.current = true;
+        reset();
+        advance();
+        tickId = setInterval(advance, 260);
+      } else if (!visible && wasVisibleRef.current) {
+        wasVisibleRef.current = false;
+        if (tickId) clearInterval(tickId);
+        tickId = null;
+        reset();
+      }
+    }, 80);
+
+    return () => {
+      clearInterval(pollId);
+      if (tickId) clearInterval(tickId);
+    };
+  }, []);
+
+  useEffect(() => {
+    const box = logBoxRef.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [logs]);
+
+  return (
+    <div ref={rootRef} className="lp-mac-screen-content lp-mac-collect">
+      <div className="lp-mac-collect-head">
+        <h3>Collecting data</h3>
+        <p>{status}</p>
+      </div>
+      <div className="lp-mac-progress">
+        <div><span>Step {step} / 4</span><b>{pct}%</b></div>
+        <div className="lp-mac-progress-track">
+          <div className="lp-mac-progress-fill" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+      <div className="lp-mac-phases">
+        {COLLECT_PHASES.map((label, index) => {
+          const phaseNum = index + 1;
+          const className = [
+            phaseNum < step ? 'is-done' : '',
+            phaseNum === step ? 'is-active' : '',
+          ].filter(Boolean).join(' ');
+          return (
+            <div key={label} className={className || undefined}>
+              <span>{String(phaseNum).padStart(2, '0')}</span>
+              <p>{label}</p>
+            </div>
+          );
+        })}
+      </div>
+      <div ref={logBoxRef} className="lp-mac-logbox">
+        {logs.map((log) => (
+          <span key={log.id} className="lp-mac-logline">
+            <b>{log.ts}</b>
+            {log.ok ? (
+              <>
+                {' '}
+                <strong>{log.text}</strong>
+              </>
+            ) : (
+              ` ${log.text}`
+            )}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const APP_SCREENS = [
   {
     id: 'intro',
@@ -74,31 +214,7 @@ const APP_SCREENS = [
     description:
       'A guided, four-phase scan of your machine that turns everyday usage into structured intelligence: identity, history, assets, and scoring signals—delivered with live progress you can trust.',
     theme: 'security',
-    render: () => (
-      <div className="lp-mac-screen-content lp-mac-collect">
-        <div className="lp-mac-collect-head">
-          <h3>Collecting data</h3>
-          <p>Reconstructing 7-day history...</p>
-        </div>
-        <div className="lp-mac-progress">
-          <div><span>Step 3 / 4</span><b>72%</b></div>
-          <i />
-        </div>
-        <div className="lp-mac-phases">
-          <div className="is-done"><span>01</span><p>Machine identity</p></div>
-          <div className="is-done"><span>02</span><p>History · 7d</p></div>
-          <div className="is-active"><span>03</span><p>Assets</p></div>
-          <div><span>04</span><p>Scoring signals</p></div>
-        </div>
-        <div className="lp-mac-logbox">
-          <span><b>17:25:34</b> history → shell · 612 commands</span>
-          <span><b>17:25:35</b> sqlite3 Safari/History.db ✓</span>
-          <span><b>17:25:36</b> wifi known_networks · 9 SSID</span>
-          <span><b>17:25:37</b> app usage windows · 7d ✓</span>
-          <span><b>17:25:38</b> login/last sessions parsed ✓</span>
-        </div>
-      </div>
-    ),
+    render: () => <MacCollectScreen />,
   },
   {
     id: 'verdict',

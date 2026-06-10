@@ -275,6 +275,9 @@
 .lp-app-step-list {
   grid-column: 1;
   grid-row: 2;
+  align-self: center;
+  height: 94%;
+  max-height: 94%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -349,9 +352,9 @@
   grid-column: 2;
   grid-row: 2;
   justify-self: center;
-  align-self: stretch;
-  height: 100%;
-  max-height: 100%;
+  align-self: center;
+  height: 94%;
+  max-height: 94%;
   width: auto;
   max-width: 100%;
   aspect-ratio: 480 / 760;
@@ -493,16 +496,52 @@
 .lp-mac-progress { display: flex; flex-direction: column; gap: 8px; }
 .lp-mac-progress div { display: flex; justify-content: space-between; color: var(--lp-mac-ink-faint); font-size: 10px; font-weight: 900; text-transform: uppercase; }
 .lp-mac-progress b { color: var(--lp-mac-accent); }
-.lp-mac-progress i { height: 4px; border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--lp-mac-accent) 60%, transparent), var(--lp-mac-accent) 72%, var(--lp-mac-surface-2) 72%); }
+.lp-mac-progress-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--lp-mac-surface-2);
+  overflow: hidden;
+}
+.lp-mac-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--lp-mac-accent) 60%, transparent), var(--lp-mac-accent));
+  transition: width 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .lp-mac-phases { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; }
 .lp-mac-phases div { border: 1px solid var(--lp-mac-line); border-radius: 6px; background: var(--lp-mac-surface-0); padding: 9px 8px; }
 .lp-mac-phases .is-active { border-color: color-mix(in srgb, var(--lp-mac-accent) 50%, transparent); background: var(--lp-mac-accent-dim); }
+.lp-mac-phases .is-done { border-color: color-mix(in srgb, var(--lp-mac-accent) 28%, transparent); }
 .lp-mac-phases span { color: var(--lp-mac-ink-faint); font-size: 9px; font-weight: 900; }
 .lp-mac-phases p { margin: 6px 0 0; color: var(--lp-mac-ink-faint); font-size: 10px; line-height: 1.25; }
 .lp-mac-phases .is-active span, .lp-mac-phases .is-active p { color: var(--lp-mac-accent); }
-.lp-mac-logbox { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 9px; overflow: hidden; border: 1px solid var(--lp-mac-line); border-radius: 10px; background: var(--lp-mac-surface-0); padding: 12px 14px; }
-.lp-mac-logbox span { color: var(--lp-mac-ink); font-size: 10px; line-height: 1.55; }
+.lp-mac-phases .is-done span::after { content: ' ✓'; color: var(--lp-mac-accent); }
+.lp-mac-logbox {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  overflow-y: auto;
+  border: 1px solid var(--lp-mac-line);
+  border-radius: 10px;
+  background: var(--lp-mac-surface-0);
+  padding: 12px 14px;
+  scrollbar-width: none;
+}
+.lp-mac-logbox::-webkit-scrollbar { width: 0; }
+.lp-mac-logbox span, .lp-mac-logline { color: var(--lp-mac-ink); font-size: 10px; line-height: 1.55; }
 .lp-mac-logbox b { color: var(--lp-mac-ink-dim); font-weight: 900; }
+.lp-mac-logline {
+  display: block;
+  opacity: 0;
+  animation: lp-mac-logfade 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.lp-mac-logline strong { font-weight: 700; }
+@keyframes lp-mac-logfade {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
 .lp-mac-verdict h3 { color: var(--lp-mac-accent); }
 .lp-mac-bio-block { width: 100%; padding: 16px 18px 18px; border: 1px solid var(--lp-mac-line-strong); border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--lp-mac-accent) 14%, var(--lp-mac-surface-0)), var(--lp-mac-surface-0)); }
 .lp-mac-bio-block span { display: block; margin-bottom: 10px; color: var(--lp-mac-ink-dim); font-size: 10px; font-weight: 900; text-transform: uppercase; }
@@ -1324,6 +1363,9 @@
   .lp-app-step-list {
     grid-column: 1;
     grid-row: auto;
+    height: auto;
+    max-height: none;
+    align-self: auto;
     justify-content: flex-start;
     margin-top: clamp(14px, 2vh, 28px);
     gap: clamp(14px, 2vh, 28px);
