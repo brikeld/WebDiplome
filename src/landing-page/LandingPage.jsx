@@ -435,7 +435,7 @@ function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
 function AppCarousel() {
   return (
     <section className="lp-screen lp-app-showcase" aria-labelledby="lp-app-title" style={{ '--stagger-i': 1 }}>
-      <h2 id="lp-app-title">COMPLIANT app</h2>
+      <h2 id="lp-app-title">COMPLIANT APP</h2>
       <div className="lp-app-step-list" aria-label="App screens">
         {APP_SCREENS.map((screen, index) => (
           <div key={screen.id} className="lp-app-step" style={{ '--step-i': index }}>
@@ -546,8 +546,8 @@ function ProfileCardSection() {
       <div className="lp-section-center-head">
         <h2 id="lp-identity-title">Your Identity</h2>
         <p>
-          No need to create an account.<br />
-          <strong>COMPLIANT</strong> does everything for you.
+          <strong>COMPLIANT</strong> does everything for you.<br />
+          No need to create an account.
         </p>
       </div>
       <div
@@ -622,8 +622,8 @@ function FeedSection() {
             toFeedItem(nextPost, { uid, anim: 'enter' }),
             ...prev.filter((x) => x.anim !== 'exit'),
           ]);
-          setLoaderMounted(false);
           setLoaderLeaving(false);
+          setLoaderMounted(false);
           setCycle((n) => n + 1);
         }, FEED_LOADER_LEAVE_MS);
       }, FEED_EXIT_MS);
@@ -648,21 +648,20 @@ function FeedSection() {
       <LiveScoringProvider profile={MOCK_PROFILE}>
         <div className="lp-feed-capsule">
           <div className="lp-feed-posts">
-            {loaderMounted ? (
-              <div
-                className={`posts-generating-placeholder lp-feed-generating-placeholder${
-                  loaderLeaving ? ' posts-generating-placeholder--leaving' : ''
-                }`}
-                style={{
-                  '--persona-accent': nextAccent,
-                  '--post-accent': nextAccent,
-                }}
-                aria-busy={!loaderLeaving}
-                aria-label="Generating post"
-              >
-                <div className="posts-generating-spinner lp-feed-generating-spinner" aria-hidden />
-              </div>
-            ) : null}
+            <div
+              className={`posts-generating-placeholder lp-feed-generating-placeholder${
+                loaderLeaving ? ' posts-generating-placeholder--leaving' : ''
+              }${!loaderMounted ? ' lp-feed-generating-placeholder--hidden' : ''}`}
+              style={{
+                '--persona-accent': nextAccent,
+                '--post-accent': nextAccent,
+              }}
+              aria-busy={loaderMounted && !loaderLeaving}
+              aria-hidden={!loaderMounted}
+              aria-label="Generating post"
+            >
+              <div className="posts-generating-spinner lp-feed-generating-spinner" aria-hidden />
+            </div>
             {items.map((item) => (
               <div key={item.uid} className={`lp-feed-post-wrap lp-feed-post-wrap--${item.anim}`}>
                 <PostCard
