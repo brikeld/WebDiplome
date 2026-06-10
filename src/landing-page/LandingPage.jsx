@@ -480,7 +480,7 @@ function personaCardStyle(offset) {
   return {
     transform: `translateX(${dir * 62}%) rotate(${dir * 11}deg) scale(0.83)`,
     zIndex: 5,
-    filter: 'brightness(0.68)',
+    filter: 'none',
     pointerEvents: 'auto',
   };
 }
