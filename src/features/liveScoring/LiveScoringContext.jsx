@@ -84,6 +84,13 @@ function scoringReducer(state, action) {
     }
     case 'LOAD':
       return { ...state, records: action.records, loaded: true };
+    case 'MERGE_SERVER_PREFER_LOCAL': {
+      const serverRecords = action.serverRecords && typeof action.serverRecords === 'object'
+        ? action.serverRecords
+        : {};
+      const merged = { ...serverRecords, ...state.records };
+      return { ...state, records: merged, loaded: true };
+    }
     default:
       return state;
   }
@@ -111,24 +118,39 @@ export function LiveScoringProvider({ profile, children }) {
   const animationListenersRef = useRef(new Set());
   const adjustedScoresRef = useRef(ringScores);
   const leaderboardRowRevealTimersRef = useRef(new Map());
+  const activeProfileIdRef = useRef(null);
 
-  // Load from localStorage when profileId changes
+  // Load from localStorage when profileId changes; merge hosted records on poll without wiping reveal UI.
   useEffect(() => {
     if (!profileId) return;
-    setOptimisticHidden(new Set());
-    setOptimisticLeaderboardRowHidden(new Set());
-    setOptimisticLeaderboardRevealing(new Set());
-    setOptimisticLeaderboardRowRevealing(new Set());
-    setRevealPendingLeaderboardPostHidden(new Set());
-    setRevealPendingHidden(new Set());
-    setRevealingKeys(new Set());
-    for (const timer of leaderboardRowRevealTimersRef.current.values()) clearTimeout(timer);
-    leaderboardRowRevealTimersRef.current.clear();
+    const isNewProfile = activeProfileIdRef.current !== profileId;
+    activeProfileIdRef.current = profileId;
+
+    if (isNewProfile) {
+      setOptimisticHidden(new Set());
+      setOptimisticLeaderboardRowHidden(new Set());
+      setOptimisticLeaderboardRevealing(new Set());
+      setOptimisticLeaderboardRowRevealing(new Set());
+      setRevealPendingLeaderboardPostHidden(new Set());
+      setRevealPendingHidden(new Set());
+      setRevealingKeys(new Set());
+      for (const timer of leaderboardRowRevealTimersRef.current.values()) clearTimeout(timer);
+      leaderboardRowRevealTimersRef.current.clear();
+    }
+
     let records = loadFromStorage(profileId);
     if (isHostedApiOrigin() && profile?.liveScoringRecords && typeof profile.liveScoringRecords === 'object') {
-      records = { ...records, ...profile.liveScoringRecords };
+      records = { ...profile.liveScoringRecords, ...records };
     }
-    dispatch({ type: 'LOAD', records });
+
+    if (isNewProfile) {
+      dispatch({ type: 'LOAD', records });
+      return;
+    }
+
+    if (isHostedApiOrigin() && profile?.liveScoringRecords && typeof profile.liveScoringRecords === 'object') {
+      dispatch({ type: 'MERGE_SERVER_PREFER_LOCAL', serverRecords: profile.liveScoringRecords });
+    }
   }, [profileId, profile?.liveScoringRecords]);
 
   useEffect(

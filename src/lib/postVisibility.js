@@ -30,6 +30,16 @@ export function resolvePostHiddenState(
   const authorKey = normalizePostHideKey(post?.createdAt);
   if (!authorKey) return false;
 
+  const ownPost = isOwnAuthorPost(post, viewerSlug);
+
+  // Own posts: viewer live scoring is authoritative (profile.liveScoringRecords can lag sync).
+  if (ownPost) {
+    if (typeof viewerIsHidden !== 'function') return false;
+    const viewerKey = resolveViewerHideStorageKey(post, viewerSlug);
+    if (viewerKey && viewerIsHidden(viewerKey)) return true;
+    return false;
+  }
+
   if (isPostHidden(authorRecs, authorKey)) return true;
 
   if (typeof viewerIsHidden !== 'function') return false;
@@ -38,7 +48,7 @@ export function resolvePostHiddenState(
   if (viewerKey && viewerIsHidden(viewerKey)) return true;
 
   // Legacy: viewer curated another user's post using the author-global key.
-  if (!isOwnAuthorPost(post, viewerSlug) && viewerIsHidden(authorKey)) return true;
+  if (viewerIsHidden(authorKey)) return true;
 
   return false;
 }
@@ -66,6 +76,15 @@ export function resolvePostRevealingState(
   const authorKey = normalizePostHideKey(post?.createdAt);
   if (!authorKey) return false;
 
+  const ownPost = isOwnAuthorPost(post, viewerSlug);
+
+  if (ownPost) {
+    if (typeof viewerIsRevealing !== 'function') return false;
+    const viewerKey = resolveViewerHideStorageKey(post, viewerSlug);
+    if (viewerKey && viewerIsRevealing(viewerKey)) return true;
+    return false;
+  }
+
   if (isPostHidden(authorRecs, authorKey)) return false;
   if ((authorRecs[authorKey]?.restorable ?? 0) > 0) return true;
 
@@ -74,7 +93,7 @@ export function resolvePostRevealingState(
   const viewerKey = resolveViewerHideStorageKey(post, viewerSlug);
   if (viewerKey && viewerIsRevealing(viewerKey)) return true;
 
-  if (!isOwnAuthorPost(post, viewerSlug) && viewerIsRevealing(authorKey)) return true;
+  if (viewerIsRevealing(authorKey)) return true;
 
   return false;
 }

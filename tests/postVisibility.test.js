@@ -82,6 +82,16 @@ describe('resolvePostHiddenState', () => {
     expect(hidden).toBe(true);
   });
 
+  it('prefers live viewer state over stale author records when unhiding own posts', () => {
+    const ownPost = { ...post, authorSlug: 'bob' };
+    const hidden = resolvePostHiddenState(ownPost, {
+      authorRecords: { [hideKey]: { persona: 'security', delta: -2, restorable: 1 } },
+      viewerSlug: 'bob',
+      viewerIsHidden: () => false,
+    });
+    expect(hidden).toBe(false);
+  });
+
   it('never hides leaderboard posts at the card level', () => {
     const leaderboardPost = {
       createdAt,
