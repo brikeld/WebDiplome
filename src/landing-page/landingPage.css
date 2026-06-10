@@ -261,8 +261,8 @@
   margin-top: clamp(14px, 2vh, 28px);
   flex: 1 1 auto;
   min-height: 0;
-  justify-content: space-between;
-  gap: clamp(6px, 0.8vh, 10px);
+  justify-content: flex-start;
+  gap: clamp(10px, 1.2vh, 14px);
 }
 
 /* Step card — default: dim white text on dark bg */
@@ -310,7 +310,7 @@
 /* Step description text */
 .lp-app-step p {
   margin: 0;
-  font-size: clamp(12px, 1.05vw, 17px);
+  font-size: clamp(13px, 1.15vw, 19px);
   font-weight: 700;
   line-height: 1.4;
   min-width: 0;
@@ -321,8 +321,8 @@
 @keyframes lp-step-txt {
   0%   { color: #000; }
   15%  { color: #000; }
-  20%  { color: rgba(255,255,255,0.7); }
-  100% { color: rgba(255,255,255,0.7); }
+  20%  { color: #fff; }
+  100% { color: #fff; }
 }
 
 /* ── MAC APP FRAME ───────────────────────────────────────────────────────── */
@@ -695,12 +695,14 @@
 .lp-transition-lines {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: clamp(16px, 2.5vh, 32px);
 }
 
 .lp-transition-line {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: clamp(16px, 2vw, 28px);
 }
 
@@ -842,6 +844,69 @@
 .lp-login-avatar-fallback span { position: absolute; bottom: 28px; right: 28px; font-size: clamp(28px,4vw,52px); font-weight: 900; }
 .lp-login-text { appearance: none; border: 0; background: transparent; color: #000; font-family: var(--font-avant); font-size: clamp(24px,3.2vw,44px); font-weight: 900; letter-spacing: 0; line-height: 0.9; cursor: pointer; transition: opacity 180ms ease; }
 
+/* ── LARGE SCREENS (2K+) ─────────────────────────────────────────────────── */
+
+@media (min-width: 1920px) {
+  .lp-persona-list {
+    max-width: 1280px;
+  }
+
+  .lp-persona-row {
+    grid-template-columns: clamp(220px, 20vw, 380px) minmax(0, 1fr);
+    gap: clamp(40px, 4vw, 72px);
+    padding: clamp(28px, 3vh, 48px) 0;
+  }
+
+  .lp-persona-row-badge {
+    padding: clamp(22px, 2.4vh, 36px) clamp(18px, 2vw, 32px);
+    border-radius: 14px;
+  }
+
+  .lp-persona-row-name {
+    font-size: clamp(22px, 1.6vw, 36px);
+  }
+
+  .lp-persona-row-tagline {
+    font-size: clamp(12px, 0.85vw, 16px);
+  }
+
+  .lp-app-step p {
+    font-size: clamp(14px, 1.1vw, 21px);
+  }
+}
+
+@media (min-width: 2560px) {
+  .lp-persona-list {
+    max-width: 1500px;
+  }
+
+  .lp-persona-row {
+    grid-template-columns: clamp(280px, 16vw, 460px) minmax(0, 1fr);
+    gap: clamp(52px, 3.5vw, 88px);
+  }
+
+  .lp-persona-row-badge {
+    padding: clamp(28px, 2.8vh, 44px) clamp(24px, 2.2vw, 40px);
+    border-radius: 16px;
+  }
+
+  .lp-persona-row-name {
+    font-size: clamp(28px, 1.4vw, 44px);
+  }
+
+  .lp-persona-row-tagline {
+    font-size: clamp(14px, 0.75vw, 18px);
+  }
+
+  .lp-app-step p {
+    font-size: clamp(16px, 1vw, 24px);
+  }
+
+  .lp-app-step-num {
+    font-size: clamp(15px, 1.1vw, 24px);
+  }
+}
+
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
@@ -874,7 +939,7 @@
   .lp-app-step, .lp-app-step-num, .lp-app-step p { animation: none; }
   .lp-app-step { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.2); }
   .lp-app-step-num { color: rgba(255,255,255,0.45); }
-  .lp-app-step p { color: rgba(255,255,255,0.7); }
+  .lp-app-step p { color: #fff; }
   .lp-login-root--opening .lp-login-transition { animation: lp-login-xfade-r 220ms ease forwards; }
   .lp-login-root--opening .lp-login-main { animation: lp-login-out-r 220ms ease forwards; }
   .lp-login-root--opening .lp-login-logo { animation: lp-login-logo-out 180ms ease forwards; }
