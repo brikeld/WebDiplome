@@ -164,7 +164,7 @@
 }
 
 .lp-hero-cta-btn {
-  margin-top: clamp(16px, 2vh, 24px);
+  margin-top: clamp(22px, 2.6vh, 32px);
   appearance: none;
   border: none;
   background: #000;
@@ -686,6 +686,11 @@
 .lp-personas-head p strong,
 .lp-section-center-head p strong { font-weight: 800; }
 
+.lp-personas-head h2 {
+  font-size: clamp(42px, 5.2vw, 118px);
+  white-space: nowrap;
+}
+
 /* ── PERSONAS — CARD DECK ───────────────────────────────────────────────── */
 
 .lp-personas {
@@ -835,6 +840,10 @@
 }
 
 .lp-profile-card-section .lp-section-center-head p {
+  line-height: 1.1;
+}
+
+.lp-profile-card-wrap .profile-bio {
   line-height: 1.2;
 }
 
@@ -937,7 +946,7 @@
 }
 
 .lp-feed-section .lp-section-center-head p {
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 .lp-feed-capsule {
@@ -957,12 +966,14 @@
 
 /* Post wrapper — animate enter/exit */
 .lp-feed-posts {
+  --lp-feed-loader-h: clamp(64px, 9vh, 96px);
+  --lp-feed-loader-gap: clamp(12px, 2vh, 22px);
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 2vh, 22px);
+  gap: var(--lp-feed-loader-gap);
   overflow: hidden;
   position: relative;
-  padding-top: clamp(64px, 9vh, 96px);
+  padding-top: calc(var(--lp-feed-loader-h) + var(--lp-feed-loader-gap));
 }
 
 /* Landing placeholder — fixed slot so layout never jumps */
@@ -972,8 +983,8 @@
   left: 0;
   right: 0;
   width: 100%;
-  min-height: clamp(64px, 9vh, 96px);
-  max-height: clamp(64px, 9vh, 96px);
+  min-height: var(--lp-feed-loader-h);
+  max-height: var(--lp-feed-loader-h);
   margin: 0 !important;
   flex-shrink: 0;
   border-radius: var(--radius-post-surface, 18px);
@@ -991,8 +1002,8 @@
   animation: none;
   opacity: 0;
   pointer-events: none;
-  min-height: clamp(64px, 9vh, 96px) !important;
-  max-height: clamp(64px, 9vh, 96px) !important;
+  min-height: var(--lp-feed-loader-h) !important;
+  max-height: var(--lp-feed-loader-h) !important;
   margin-bottom: 0 !important;
 }
 
@@ -1093,13 +1104,26 @@
 .lp-footer__status span, .lp-footer__grid h3 { display: block; color: rgba(255,255,255,0.45); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
 .lp-footer__status strong { position: relative; display: block; margin-top: 14px; padding-left: 20px; font-size: clamp(18px,2vw,28px); font-weight: 600; line-height: 1; }
 .lp-footer__status strong::before { content: ""; position: absolute; left: 0; top: 0.28em; width: 10px; height: 10px; border-radius: 50%; background: var(--lp-green); box-shadow: 0 0 0 6px rgba(204,248,71,0.16); }
-.lp-footer__grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(22px,5vw,72px); padding-top: clamp(24px,4vh,48px); border-top: 1px solid rgba(255,255,255,0.22); }
-.lp-footer__grid div { min-width: 0; }
+.lp-footer__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(22px, 5vw, 72px);
+  padding-top: clamp(24px, 4vh, 48px);
+  border-top: 1px solid rgba(255,255,255,0.22);
+}
+
+.lp-footer__grid > div { min-width: 0; }
+.lp-footer__grid > div:nth-child(1) { text-align: left; }
+.lp-footer__grid > div:nth-child(2) { text-align: center; }
+.lp-footer__grid > div:nth-child(3) { text-align: right; }
 .lp-footer__grid h3 { margin: 0 0 18px; }
 .lp-footer__grid a, .lp-footer__brief p, .lp-footer__bottom { color: rgba(255,255,255,0.72); font-size: clamp(14px,1.2vw,18px); font-weight: 600; line-height: 1.35; }
 .lp-footer__grid a { display: block; width: fit-content; margin-top: 10px; text-decoration: none; }
+.lp-footer__grid > div:nth-child(2) a { margin-left: auto; margin-right: auto; }
+.lp-footer__grid > div:nth-child(3) a { margin-left: auto; margin-right: 0; }
 .lp-footer__grid a:hover, .lp-footer__grid a:focus-visible { color: #fff; text-decoration: underline; text-underline-offset: 4px; }
-.lp-footer__brief p { max-width: 420px; margin: 0; }
+.lp-footer__brief p { max-width: 420px; margin: 0 0 0 auto; }
 .lp-footer__bottom { display: flex; justify-content: space-between; gap: 18px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.14); }
 
 /* ── LOGIN ENTRY ─────────────────────────────────────────────────────────── */
@@ -1406,6 +1430,7 @@
 }
 
 @media (max-width: 560px) {
+  .lp-personas-head h2 { white-space: normal; }
   .lp-screen { padding: 28px 20px; }
   .lp-app-showcase { margin-left: 12px; margin-right: 12px; border-radius: 20px; padding-left: 18px; padding-right: 18px; }
   .lp-transition-banner { max-width: calc(100% - 24px); border-radius: 20px; }
