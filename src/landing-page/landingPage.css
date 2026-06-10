@@ -577,83 +577,161 @@
 .lp-personas-head p strong,
 .lp-section-center-head p strong { font-weight: 800; }
 
-/* ── PERSONAS ───────────────────────────────────────────────────────────── */
+/* ── PERSONAS — CARD DECK ───────────────────────────────────────────────── */
 
 .lp-personas {
   background: #fff;
   color: #000;
   padding: clamp(56px, 8vh, 100px) var(--lp-edge-pad);
-  min-height: auto;
+  overflow: hidden;
 }
 
-/* Always a vertical list of rows — never a grid of columns */
-.lp-persona-list {
-  display: flex;
-  flex-direction: column;
-  max-width: min(1200px, 100%);
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* Horizontal row: badge left, description right */
-.lp-persona-row {
-  display: grid;
-  /* Badge occupies ~38% up to 480px; description fills the rest */
-  grid-template-columns: clamp(220px, 36vw, 480px) minmax(0, 1fr);
-  gap: clamp(40px, 6vw, 100px);
-  align-items: center;
-  padding: clamp(32px, 5vh, 60px) 0;
-  border-bottom: 1.5px solid #d0d0d0;
-}
-
-.lp-persona-row:first-child { border-top: 1.5px solid #d0d0d0; }
-
-/* Badge card — colored background + dark border, centered content */
-.lp-persona-row-badge {
-  padding: clamp(24px, 3.5vh, 44px) clamp(20px, 2.5vw, 36px);
-  border: 2.5px solid #000;
-  border-radius: clamp(14px, 1.6vw, 26px);
+/* Full-width overflow wrapper so rotated side cards can bleed to edges */
+.lp-persona-deck-overflow {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: clamp(8px, 1vh, 14px);
-  text-align: center;
-  min-height: clamp(90px, 14vh, 160px);
+  gap: clamp(28px, 4vh, 44px);
+  margin: 0 calc(-1 * var(--lp-edge-pad));
+  padding: clamp(24px, 3.5vh, 48px) 0 clamp(32px, 4.5vh, 52px);
+  overflow: hidden;
 }
 
-.lp-persona-row--social .lp-persona-row-badge { background: var(--lp-green); }
-.lp-persona-row--productivity .lp-persona-row-badge { background: #e0e0e0; }
-.lp-persona-row--security .lp-persona-row-badge { background: var(--lp-blue); }
+/* Reference frame for the stacked cards */
+.lp-persona-deck {
+  position: relative;
+  width: clamp(300px, 42vw, 480px);
+  height: clamp(400px, 64vh, 660px);
+  flex-shrink: 0;
+}
 
-/* Persona name — large, uppercase, bold */
-.lp-persona-row-name {
+/* Base card — all 3 share this */
+.lp-persona-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 3.2vw, 40px);
+  border: none;
+  border-radius: clamp(22px, 2.2vw, 36px);
+  font-family: var(--font-avant);
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform 0.58s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.45s ease,
+    box-shadow 0.45s ease;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.lp-persona-card:focus-visible { outline: 3px solid rgba(0,0,0,0.6); outline-offset: 4px; }
+
+/* Per-persona backgrounds */
+.lp-persona-card--social      { background: #ccf847; color: #000; }
+.lp-persona-card--productivity { background: #111113; color: #fff; }
+.lp-persona-card--security    { background: #2e52d0; color: #fff; }
+
+/* Active card gets depth shadow */
+.lp-persona-card.is-active {
+  box-shadow: 0 28px 72px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* ── Card content layout ── */
+
+.lp-persona-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.lp-persona-card-name {
   display: block;
-  font-size: clamp(22px, 2.4vw, 38px);
+  font-size: clamp(30px, 4.2vw, 56px);
   font-weight: 900;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  color: #000;
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+}
+
+.lp-persona-card-badge {
+  flex-shrink: 0;
+  font-size: clamp(11px, 0.85vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  padding: clamp(5px, 0.6vh, 8px) clamp(12px, 1.1vw, 18px);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.22);
+  line-height: 1;
+  margin-top: 6px;
 }
 
-/* Tagline — medium weight, slightly dim */
-.lp-persona-row-tagline {
-  display: block;
-  font-size: clamp(12px, 1.1vw, 18px);
-  font-weight: 700;
-  line-height: 1.35;
-  color: rgba(0, 0, 0, 0.7);
-}
-
-/* Description — left-aligned, bold, natural line length */
-.lp-persona-row-focus {
-  margin: 0;
-  font-size: clamp(15px, 1.3vw, 22px);
-  font-weight: 700;
-  line-height: 1.55;
+.lp-persona-card--social .lp-persona-card-badge {
+  background: rgba(0, 0, 0, 0.13);
   color: #000;
-  /* No max-width — fills the column naturally */
+}
+
+.lp-persona-card-tagline {
+  display: block;
+  font-size: clamp(11px, 0.95vw, 15px);
+  font-weight: 600;
+  line-height: 1.45;
+  margin-top: clamp(8px, 1vh, 13px);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.lp-persona-card-focus {
+  margin: auto 0 0;
+  font-size: clamp(13px, 1.1vw, 17px);
+  font-weight: 600;
+  line-height: 1.6;
+  opacity: 0.85;
+  position: relative;
+  z-index: 1;
+}
+
+/* Oversized decorative initial — bleeds out of card bottom-right */
+.lp-persona-card-deco {
+  position: absolute;
+  bottom: clamp(-40px, -6vh, -20px);
+  right: clamp(-10px, -1vw, -4px);
+  font-size: clamp(180px, 30vw, 320px);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  opacity: 0.065;
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Dot indicators ── */
+.lp-persona-dots {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.lp-persona-dot {
+  appearance: none;
+  border: none;
+  padding: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: background 0.3s ease, width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.lp-persona-dot.is-active {
+  width: 28px;
+  background: #000;
 }
 
 /* ── PROFILE CARD SECTION ────────────────────────────────────────────────── */
@@ -973,35 +1051,14 @@
     margin-top: clamp(10px, 1.2vh, 16px);
   }
 
-  /* Keep horizontal rows at 1920px */
-  .lp-persona-list {
-    max-width: min(1300px, 100%);
+  /* Persona deck at 1920px */
+  .lp-persona-deck {
+    width: clamp(360px, 36vw, 540px);
+    height: clamp(460px, 66vh, 720px);
   }
 
-  .lp-persona-row {
-    grid-template-columns: clamp(260px, 38%, 520px) minmax(0, 1fr);
-    gap: clamp(48px, 7.5%, 110px);
-    padding: clamp(36px, 5.5vh, 68px) 0;
-  }
-
-  .lp-persona-row-badge {
-    padding: clamp(28px, 3.5vh, 48px) clamp(24px, 2.5vw, 40px);
-    min-height: clamp(100px, 15vh, 180px);
-  }
-
-  .lp-persona-row-name {
-    font-size: clamp(26px, 2vw, 44px);
-  }
-
-  .lp-persona-row-tagline {
-    font-size: clamp(14px, 1vw, 20px);
-    color: rgba(0, 0, 0, 0.72);
-  }
-
-  .lp-persona-row-focus {
-    font-size: clamp(17px, 1.2vw, 26px);
-    line-height: 1.55;
-  }
+  .lp-persona-card-name { font-size: clamp(36px, 3.2vw, 62px); }
+  .lp-persona-card-focus { font-size: clamp(14px, 1vw, 18px); }
 
   .lp-profile-card-wrap {
     max-width: 1200px;
@@ -1116,36 +1173,14 @@
     padding-top: clamp(96px, 11vh, 148px);
   }
 
-  /* Keep horizontal rows at 2560px */
-  .lp-persona-list {
-    max-width: min(1680px, 100%);
+  /* Persona deck at 2560px */
+  .lp-persona-deck {
+    width: clamp(400px, 32vw, 580px);
+    height: clamp(500px, 68vh, 780px);
   }
 
-  .lp-persona-row {
-    grid-template-columns: clamp(300px, 39%, 680px) minmax(0, 1fr);
-    gap: clamp(60px, 7.5%, 148px);
-    padding: clamp(44px, 6vh, 80px) 0;
-  }
-
-  .lp-persona-row-badge {
-    padding: clamp(36px, 4vh, 58px) clamp(28px, 2.8vw, 50px);
-    border-radius: 20px;
-    gap: clamp(12px, 1.3vh, 20px);
-    min-height: clamp(120px, 17vh, 210px);
-  }
-
-  .lp-persona-row-name {
-    font-size: clamp(32px, 1.8vw, 54px);
-  }
-
-  .lp-persona-row-tagline {
-    font-size: clamp(16px, 0.9vw, 26px);
-  }
-
-  .lp-persona-row-focus {
-    font-size: clamp(20px, 1.05vw, 32px);
-    line-height: 1.55;
-  }
+  .lp-persona-card-name { font-size: clamp(40px, 2.8vw, 68px); }
+  .lp-persona-card-focus { font-size: clamp(15px, 0.9vw, 20px); }
 
   .lp-profile-card-wrap {
     max-width: 1400px;
@@ -1221,19 +1256,11 @@
   .lp-app-showcase { grid-template-columns: 1fr; height: auto; align-items: start; }
   .lp-app-left h2 { white-space: normal; }
   .lp-mac-app-shell { height: min(86vh, 760px); max-width: min(84vw, 480px); margin: 0 auto; }
-  /* Collapse to single column below 900px */
-  .lp-persona-row {
-    grid-template-columns: 1fr;
-    gap: clamp(14px, 2.5vh, 24px);
-    padding: clamp(24px, 4vh, 44px) 0;
+  /* Persona deck on narrow screens */
+  .lp-persona-deck {
+    width: min(90vw, 340px);
+    height: clamp(380px, 72vw, 500px);
   }
-
-  .lp-persona-row-badge {
-    width: 100%;
-    min-height: unset;
-  }
-
-  .lp-persona-row-focus { max-width: 100%; }
   .lp-profile-card-wrap .profile-hero-main { min-height: clamp(240px, 32vh, 420px); }
 }
 

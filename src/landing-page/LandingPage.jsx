@@ -348,23 +348,80 @@ function AppCarousel() {
   );
 }
 
+function getPersonaOffset(i, active) {
+  const d = ((i - active) % 3 + 3) % 3;
+  return d > 1 ? d - 3 : d; // -1, 0, or 1
+}
+
+function personaCardStyle(offset) {
+  if (offset === 0) {
+    return {
+      transform: 'translateX(0) rotate(0deg) scale(1)',
+      zIndex: 10,
+      filter: 'none',
+      pointerEvents: 'auto',
+    };
+  }
+  const dir = offset > 0 ? 1 : -1;
+  return {
+    transform: `translateX(${dir * 62}%) rotate(${dir * 11}deg) scale(0.83)`,
+    zIndex: 5,
+    filter: 'brightness(0.68)',
+    pointerEvents: 'auto',
+  };
+}
+
 function PersonaSections() {
+  const [active, setActive] = useState(0);
+
+  function handleCardClick(i) {
+    if (i === active) {
+      setActive((active + 1) % PERSONAS.length);
+    } else {
+      setActive(i);
+    }
+  }
+
   return (
     <section className="lp-screen lp-personas" aria-labelledby="lp-personas-title" style={{ '--stagger-i': 2 }}>
       <div className="lp-personas-head">
         <h2 id="lp-personas-title">The Three Personas</h2>
         <p><strong>COMPLIANT</strong> will choose for you based on your information.</p>
       </div>
-      <div className="lp-persona-list">
-        {PERSONAS.map((persona) => (
-          <article key={persona.key} className={`lp-persona-row lp-persona-row--${persona.key}`}>
-            <div className="lp-persona-row-badge">
-              <span className="lp-persona-row-name">{persona.name.toUpperCase()}</span>
-              <span className="lp-persona-row-tagline">{persona.tagline}</span>
-            </div>
-            <p className="lp-persona-row-focus">{persona.focus}</p>
-          </article>
-        ))}
+      <div className="lp-persona-deck-overflow">
+        <div className="lp-persona-deck">
+          {PERSONAS.map((persona, i) => {
+            const offset = getPersonaOffset(i, active);
+            return (
+              <button
+                key={persona.key}
+                className={`lp-persona-card lp-persona-card--${persona.key}${offset === 0 ? ' is-active' : ''}`}
+                style={personaCardStyle(offset)}
+                onClick={() => handleCardClick(i)}
+                aria-label={`${persona.name} persona${offset === 0 ? ' (active)' : ', click to view'}`}
+                tabIndex={offset === 0 ? 0 : -1}
+              >
+                <div className="lp-persona-card-header">
+                  <span className="lp-persona-card-name">{persona.name.toUpperCase()}</span>
+                  <span className="lp-persona-card-badge">{persona.name}</span>
+                </div>
+                <span className="lp-persona-card-tagline">{persona.tagline}</span>
+                <p className="lp-persona-card-focus">{persona.focus}</p>
+                <span className="lp-persona-card-deco" aria-hidden="true">{persona.name[0]}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="lp-persona-dots" aria-label="Persona navigation">
+          {PERSONAS.map((p, i) => (
+            <button
+              key={p.key}
+              className={`lp-persona-dot${i === active ? ' is-active' : ''}`}
+              onClick={() => setActive(i)}
+              aria-label={`Go to ${p.name} persona`}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
