@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   GENERATION_PARTICLE_DURATION_MS,
   GENERATION_PARTICLE_EVENT,
+  GENERATION_PARTICLE_IMPACT_PROGRESS,
   GENERATION_PARTICLE_SIZE,
   computeGenerationParticleFrame,
   personaUiColorForParticle,
@@ -58,6 +59,7 @@ function GenerationParticle({ flight, onDone }) {
     }
 
     const startTime = performance.now();
+    let impacted = false;
 
     function step(ts) {
       const raw = (ts - startTime) / GENERATION_PARTICLE_DURATION_MS;
@@ -72,12 +74,19 @@ function GenerationParticle({ flight, onDone }) {
       el.style.top = `${y - size / 2}px`;
       el.style.opacity = String(opacity);
 
+      // Fire impact at the designated threshold — particle still fully visible here.
+      // Resolving the promise lets the post reveal begin while the burst plays out.
+      if (!impacted && progress >= GENERATION_PARTICLE_IMPACT_PROGRESS) {
+        impacted = true;
+        el.classList.add('lsc-particle--impacting');
+        pulseFeedRevealTarget(flight.targetRect, color);
+        flight.resolve?.();
+      }
+
       if (progress < 1) {
         requestAnimationFrame(step);
       } else {
         el.style.opacity = '0';
-        pulseFeedRevealTarget(flight.targetRect, color);
-        flight.resolve?.();
         onDone();
       }
     }

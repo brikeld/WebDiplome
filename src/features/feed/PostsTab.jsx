@@ -361,7 +361,9 @@ export default function PostsTab({
     });
   }, []);
 
-  const generatingAccent = personaUiColor(generatingPersona);
+  // When the plan hasn't arrived yet generatingPersona is null — fall back to the
+  // profile's dominant persona so the placeholder never flashes the wrong color.
+  const generatingAccent = personaUiColor(generatingPersona ?? resolveDominantPersonaKey(profile));
 
   const leaderboardDirectorySlugs = useMemo(() => {
     const sources = feedContext === 'home' && Array.isArray(feedProfiles) && feedProfiles.length > 0

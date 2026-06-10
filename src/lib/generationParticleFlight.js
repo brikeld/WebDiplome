@@ -13,10 +13,15 @@ const PERSONA_UI_COLORS = {
 
 export const GENERATION_PARTICLE_DURATION_MS = 920;
 export const GENERATION_PARTICLE_SIZE = 32;
+/** Progress fraction at which the particle "impacts" — resolve fires here, post reveal begins. */
+export const GENERATION_PARTICLE_IMPACT_PROGRESS = 0.88;
 
 function easeOutCubic(t) {
   return 1 - (1 - t) ** 3;
 }
+
+// easeOutCubic(0.5) ≈ 0.875 — used for arc-peak clamping below.
+const EASE_AT_HALF = easeOutCubic(0.5);
 
 export function personaToGeneratingRowKey(persona) {
   const k = String(persona ?? '').toLowerCase();
@@ -126,11 +131,25 @@ export function computeGenerationParticleFrame({
   const ty = targetRect.y + targetRect.height / 2;
   const dx = tx - sx;
   const dy = ty - sy;
-  const arcHeight = -Math.min(Math.abs(dx) * 0.58, 220) - 90;
+
+  // Moderate arc — less aggressive than before.
+  const uncapped = -Math.min(Math.abs(dx) * 0.45, 180) - 60;
+  // Arc peak occurs near progress=0.5 where y ≈ sy + dy*EASE_AT_HALF + arcHeight.
+  // Clamp so the peak stays at least 16px below the viewport top.
+  const TOP_MARGIN = 16;
+  const yAtPeak = sy + dy * EASE_AT_HALF;
+  const arcHeight = Math.max(uncapped, TOP_MARGIN - yAtPeak);
+
   const t = easeOutCubic(Math.max(0, Math.min(progress, 1)));
   const x = sx + dx * t;
   const arcY = arcHeight * Math.sin(Math.PI * progress);
   const y = sy + dy * t + arcY;
-  const opacity = progress > 0.75 ? 1 - (progress - 0.75) / 0.25 : 1;
+
+  // Hold full opacity until just before the impact point, then fade out sharply
+  // so the particle "arrives" at full brightness and disappears after the burst.
+  const fadeStart = GENERATION_PARTICLE_IMPACT_PROGRESS;
+  const opacity = progress > fadeStart
+    ? Math.max(0, 1 - (progress - fadeStart) / (1 - fadeStart))
+    : 1;
   return { x, y, opacity };
 }
