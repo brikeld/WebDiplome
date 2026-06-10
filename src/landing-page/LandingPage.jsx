@@ -211,9 +211,9 @@ const PERSONAS = [
 
 // Feed animation config
 const FEED_VISIBLE = 3;
-const FEED_HOLD_MS = 3000;
-const FEED_EXIT_MS = 360;
-const FEED_LOADER_LEAVE_MS = 320;
+const FEED_HOLD_MS = 2400;
+const FEED_EXIT_MS = 300;
+const FEED_LOADER_LEAVE_MS = 280;
 
 const FEED_PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -320,7 +320,7 @@ function AppCarousel() {
   return (
     <section className="lp-screen lp-app-showcase" aria-labelledby="lp-app-title" style={{ '--stagger-i': 1 }}>
       <div className="lp-app-left">
-        <h2 id="lp-app-title">Compliant app</h2>
+        <h2 id="lp-app-title">COMPLIANT app</h2>
         <div className="lp-app-step-list" aria-label="App screens">
           {APP_SCREENS.map((screen, index) => (
             <div key={screen.id} className="lp-app-step" style={{ '--step-i': index }}>
