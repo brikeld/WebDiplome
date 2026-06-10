@@ -628,10 +628,10 @@
 
 .lp-persona-card:focus-visible { outline: 3px solid rgba(0,0,0,0.6); outline-offset: 4px; }
 
-/* Per-persona backgrounds */
-.lp-persona-card--social      { background: #ccf847; color: #000; }
-.lp-persona-card--productivity { background: #111113; color: #fff; }
-.lp-persona-card--security    { background: #2e52d0; color: #fff; }
+/* Per-persona backgrounds — match site persona colors */
+.lp-persona-card--social { background: var(--lp-green, #ccf847); color: #000; }
+.lp-persona-card--productivity { background: var(--lp-gray, #d8d8d8); color: #000; }
+.lp-persona-card--security { background: var(--lp-blue, #759aef); color: #000; }
 
 /* Active card gets depth shadow */
 .lp-persona-card.is-active {
@@ -656,40 +656,22 @@
   letter-spacing: -0.025em;
 }
 
-.lp-persona-card-badge {
-  flex-shrink: 0;
-  font-size: clamp(11px, 0.85vw, 14px);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: clamp(5px, 0.6vh, 8px) clamp(12px, 1.1vw, 18px);
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.22);
-  line-height: 1;
-  margin-top: 6px;
-}
-
-.lp-persona-card--social .lp-persona-card-badge {
-  background: rgba(0, 0, 0, 0.13);
-  color: #000;
-}
-
 .lp-persona-card-tagline {
   display: block;
-  font-size: clamp(11px, 0.95vw, 15px);
-  font-weight: 600;
+  font-size: clamp(13px, 1.15vw, 18px);
+  font-weight: 700;
   line-height: 1.45;
-  margin-top: clamp(8px, 1vh, 13px);
-  opacity: 0.6;
+  margin-top: clamp(10px, 1.2vh, 16px);
+  opacity: 0.72;
   flex-shrink: 0;
 }
 
 .lp-persona-card-focus {
   margin: auto 0 0;
-  font-size: clamp(13px, 1.1vw, 17px);
+  font-size: clamp(15px, 1.35vw, 21px);
   font-weight: 600;
-  line-height: 1.6;
-  opacity: 0.85;
+  line-height: 1.55;
+  opacity: 0.92;
   position: relative;
   z-index: 1;
 }
@@ -1058,7 +1040,8 @@
   }
 
   .lp-persona-card-name { font-size: clamp(36px, 3.2vw, 62px); }
-  .lp-persona-card-focus { font-size: clamp(14px, 1vw, 18px); }
+  .lp-persona-card-tagline { font-size: clamp(14px, 1.1vw, 20px); }
+  .lp-persona-card-focus { font-size: clamp(17px, 1.25vw, 24px); }
 
   .lp-profile-card-wrap {
     max-width: 1200px;
@@ -1180,7 +1163,8 @@
   }
 
   .lp-persona-card-name { font-size: clamp(40px, 2.8vw, 68px); }
-  .lp-persona-card-focus { font-size: clamp(15px, 0.9vw, 20px); }
+  .lp-persona-card-tagline { font-size: clamp(16px, 1vw, 22px); }
+  .lp-persona-card-focus { font-size: clamp(19px, 1.15vw, 28px); }
 
   .lp-profile-card-wrap {
     max-width: 1400px;

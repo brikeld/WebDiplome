@@ -403,7 +403,6 @@ function PersonaSections() {
               >
                 <div className="lp-persona-card-header">
                   <span className="lp-persona-card-name">{persona.name.toUpperCase()}</span>
-                  <span className="lp-persona-card-badge">{persona.name}</span>
                 </div>
                 <span className="lp-persona-card-tagline">{persona.tagline}</span>
                 <p className="lp-persona-card-focus">{persona.focus}</p>
@@ -456,7 +455,7 @@ function ProfileCardSection() {
 const TRANSITION_LINES = [
   { text: 'Your habits become content.', color: '#ccf847' },
   { text: 'Your content defines your score.', color: '#759aef' },
-  { text: 'Your score determines your visibility.', color: '#d8d8d8' },
+  { text: 'Your score determines who you are.', color: '#d8d8d8' },
 ];
 
 function TransitionBanner() {
