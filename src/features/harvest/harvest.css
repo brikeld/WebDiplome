@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: clamp(8px, 1vh, 12px) clamp(12px, 1.5vw, 17px);
+  padding: clamp(10px, 1.1vh, 14px) clamp(14px, 1.6vw, 20px);
   box-sizing: border-box;
   color: #000;
   font-family: var(--font-avant);
@@ -130,7 +130,7 @@
 /* ── Screen 4: generating ── */
 
 .update-flow--generating {
-  gap: clamp(7px, 0.75vh, 10px);
+  gap: 0;
   justify-content: center;
   position: relative;
 }
@@ -200,31 +200,31 @@
 }
 
 .update-flow__generating-title {
-  margin: 0;
-  font-size: clamp(15px, 1.65vw, 20px);
+  margin: 0 0 clamp(8px, 0.9vh, 13px);
+  font-size: clamp(17px, 1.8vw, 22px);
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
-  text-align: center;
+  text-align: left;
 }
 
 .update-flow__gen-rows {
   display: flex;
   flex-direction: column;
-  gap: clamp(5px, 0.62vh, 8px);
+  gap: clamp(6px, 0.75vh, 10px);
   width: 100%;
 }
 
 .update-gen-row {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   min-width: 0;
 }
 
 .update-gen-row__phrase {
   margin: 0;
-  font-size: clamp(10px, 0.95vw, 12px);
+  font-size: clamp(12px, 1.1vw, 14px);
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: -0.01em;
@@ -233,7 +233,7 @@
 }
 
 .update-gen-row__track {
-  height: clamp(6px, 0.68vh, 8px);
+  height: clamp(7px, 0.78vh, 10px);
   border-radius: 999px;
   background: color-mix(in srgb, var(--gen-bar-color, #759aef) 22%, #fff);
   overflow: hidden;

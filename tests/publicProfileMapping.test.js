@@ -4,6 +4,7 @@ import {
   mapSyncPayloadToProfileRow,
   mapPostForInsert,
   mapPersonaBlurbsForApi,
+  mapProfileRowForApi,
   slimProfilePayloadForStorage,
 } from '../server/lib/publicProfileMapping.js';
 
@@ -54,6 +55,29 @@ describe('public profile mapping', () => {
     expect(slim.personaPosts).toBeUndefined();
     expect(slim.dataJson).toBeUndefined();
     expect(slim.data_json).toBeUndefined();
+  });
+
+  it('exposes cached hardware fields from raw_profile on API profile', () => {
+    const profile = mapProfileRowForApi({
+      slug: 'brikeld-hoxha',
+      id: 'uuid-1',
+      user_id: 'user-1',
+      firstname: 'Brikeld',
+      lastname: 'Hoxha',
+      display_name: 'Brikeld Hoxha',
+      machine_name: 'Brikeld’s MacBook Pro',
+      raw_profile: {
+        hardware_chip: 'Apple M3 Max',
+        ram: '36 GB',
+        machine_model: 'MacBook Pro',
+        battery_cycles: 266,
+      },
+    }, []);
+
+    expect(profile.hardwareChip).toBe('Apple M3 Max');
+    expect(profile.ram).toBe('36 GB');
+    expect(profile.machineModel).toBe('MacBook Pro');
+    expect(profile.batteryCycles).toBe(266);
   });
 
   it('maps stored persona blurbs for API', () => {

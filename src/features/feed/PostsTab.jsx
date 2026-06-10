@@ -361,9 +361,10 @@ export default function PostsTab({
     });
   }, []);
 
-  // When the plan hasn't arrived yet generatingPersona is null — fall back to the
-  // profile's dominant persona so the placeholder never flashes the wrong color.
-  const generatingAccent = personaUiColor(generatingPersona ?? resolveDominantPersonaKey(profile));
+  // The placeholder shows throughout the full generation phase. Always use the
+  // dominant persona colour so the bar is stable — generatingPersona updates in
+  // the same React batch as the particle appearing, causing a visible "jump".
+  const generatingAccent = personaUiColor(resolveDominantPersonaKey(profile));
 
   const leaderboardDirectorySlugs = useMemo(() => {
     const sources = feedContext === 'home' && Array.isArray(feedProfiles) && feedProfiles.length > 0
@@ -380,7 +381,7 @@ export default function PostsTab({
   const list = (
     <div
       className={`posts-tab${feedContext === 'profile' ? ' posts-tab--profile-inline' : ''}${
-        isGeneratingPosts ? ' posts-tab--generating' : ''
+        (isGeneratingPosts || (placeholderMounted && !placeholderLeaving)) ? ' posts-tab--generating' : ''
       }`}
     >
       {feedFlash ? (

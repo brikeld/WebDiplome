@@ -29,6 +29,23 @@ function displayNameFromPayload(payload) {
   return [first, last].filter(Boolean).join(' ') || 'Demo User';
 }
 
+/** Cached hardware / identity fields stored on raw_profile (survive delta harvests). */
+export function staticProfileFieldsFromRaw(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const out = {};
+  const chip = raw.hardwareChip ?? raw.hardware_chip;
+  if (chip != null && String(chip).trim()) out.hardwareChip = String(chip).trim();
+  const ram = raw.ram;
+  if (ram != null && String(ram).trim()) out.ram = String(ram).trim();
+  const machineModel = raw.machineModel ?? raw.machine_model;
+  if (machineModel != null && String(machineModel).trim()) out.machineModel = String(machineModel).trim();
+  const batteryCycles = raw.batteryCycles ?? raw.battery_cycles;
+  if (batteryCycles != null && batteryCycles !== '') out.batteryCycles = batteryCycles;
+  const langs = raw.systemLanguages ?? raw.system_languages;
+  if (Array.isArray(langs) && langs.length) out.systemLanguages = langs;
+  return out;
+}
+
 /** Drop huge/redundant fields before persisting raw_profile (wallpaper → wallpaper_url only). */
 export function slimProfilePayloadForStorage(payload) {
   if (!payload || typeof payload !== 'object') return {};
@@ -139,6 +156,7 @@ export function mapProfileRowForApi(row, posts = []) {
     raw.avatar_url ??
     null;
   const resolvedWallpaper = resolveHostedPublicUrl(wallpaperCandidate) ?? null;
+  const staticFields = staticProfileFieldsFromRaw(raw);
   return {
     id: row.slug,
     profileUuid: row.id,
@@ -148,6 +166,7 @@ export function mapProfileRowForApi(row, posts = []) {
     lastname: row.lastname,
     displayName: row.display_name,
     machineName: row.machine_name,
+    ...staticFields,
     globalScore: row.global_score,
     personaScores: row.persona_scores ?? {},
     dominantPersona: row.dominant_persona,

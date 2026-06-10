@@ -173,6 +173,32 @@ describe('Chart builders — smoke tests', () => {
     expect(result.svg).toContain('36 GB');
     expect(result.svg).not.toContain('>—<');
   });
+  it('buildBatteryHardwareChart reads collector harvest paths (total_ram + SCORING_DATA)', () => {
+    const result = buildBatteryHardwareChart(
+      {
+        MACHINE_IDENTITY: {
+          model: 'MacBook Pro',
+          hardware_snapshot: { total_ram: '36 GB' },
+          battery: { cycle_count: 266, condition: 'Normal' },
+        },
+        SCORING_DATA: {
+          axe_profil_consommation: {
+            consumption_profile: {
+              hardware_chip: 'Apple M3 Max',
+              ram_installed: '36 GB',
+            },
+          },
+        },
+      },
+      { machineName: 'Brikeld’s MacBook Pro' },
+      'productivite',
+    );
+
+    expectChart(result);
+    expect(result.svg).toContain('Apple M3 Max');
+    expect(result.svg).toContain('36 GB');
+    expect(result.svg).not.toContain('>—<');
+  });
   it('buildBrowserDomainsChart returns valid svg', () => {
     expectChart(buildBrowserDomainsChart(mockData, 'popularite'));
   });

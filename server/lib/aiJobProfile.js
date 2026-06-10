@@ -1,6 +1,15 @@
-import { slimProfilePayloadForStorage } from './publicProfileMapping.js';
+import { slimProfilePayloadForStorage, staticProfileFieldsFromRaw } from './publicProfileMapping.js';
 import { harvestPayloadHasContent } from './generationQueue.js';
 import { resolveProfileHarvestDataJson } from './resolveProfileHarvestData.js';
+
+function profileForWorkerFromRow(apiProfile, raw) {
+  const base = slimProfilePayloadForStorage(apiProfile ?? {});
+  const cached = staticProfileFieldsFromRaw(raw);
+  for (const [key, value] of Object.entries(cached)) {
+    if (base[key] == null || base[key] === '') base[key] = value;
+  }
+  return base;
+}
 
 export function profileSlugFromBody(body) {
   return String(
@@ -34,9 +43,9 @@ export async function resolveSubjectProfileContext(profileStore, body, { jobStor
   }
 
   const apiProfile = await profileStore.getProfileBySlug(slug);
-  const profileForWorker = slimProfilePayloadForStorage(apiProfile ?? {});
-
   const raw = row.raw_profile && typeof row.raw_profile === 'object' ? row.raw_profile : {};
+  const profileForWorker = profileForWorkerFromRow(apiProfile, raw);
+
   const dataJson = harvestPayloadHasContent(body?.dataJson)
     ? body.dataJson
     : await resolveProfileHarvestDataJson(raw, row.id, jobStore);
@@ -80,12 +89,11 @@ export async function resolveCommenterProfileContext(profileStore, body, { jobSt
   }
 
   const apiProfile = await profileStore.getProfileBySlug(slug);
-  const profileForWorker = slimProfilePayloadForStorage({
-    ...(apiProfile && typeof apiProfile === 'object' ? apiProfile : {}),
-    ...clientProfile,
-  });
-
   const raw = row.raw_profile && typeof row.raw_profile === 'object' ? row.raw_profile : {};
+  const profileForWorker = {
+    ...profileForWorkerFromRow(apiProfile, raw),
+    ...clientProfile,
+  };
   const dataJson = harvestPayloadHasContent(body?.dataJson)
     ? body.dataJson
     : await resolveProfileHarvestDataJson(raw, row.id, jobStore);

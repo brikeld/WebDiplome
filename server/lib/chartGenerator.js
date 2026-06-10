@@ -50,6 +50,40 @@ function firstValue(...values) {
   return null;
 }
 
+function consumptionProfile(data) {
+  const scoring = data?.SCORING_DATA ?? data?.scoring ?? {};
+  const axe = scoring?.axe_profil_consommation ?? {};
+  return axe?.consumption_profile && typeof axe.consumption_profile === 'object'
+    ? axe.consumption_profile
+    : {};
+}
+
+function resolveHardwareRam(data, profile) {
+  const snapshot = data?.MACHINE_IDENTITY?.hardware_snapshot ?? {};
+  const consumption = consumptionProfile(data);
+  return firstValue(
+    snapshot.ram,
+    snapshot.total_ram,
+    data?.MACHINE_IDENTITY?.ram,
+    consumption.ram_installed,
+    profile?.ram,
+    '—',
+  );
+}
+
+function resolveHardwareChip(data, profile) {
+  const snapshot = data?.MACHINE_IDENTITY?.hardware_snapshot ?? {};
+  const consumption = consumptionProfile(data);
+  return firstValue(
+    snapshot.chip,
+    data?.MACHINE_IDENTITY?.chip,
+    consumption.hardware_chip,
+    profile?.hardwareChip,
+    profile?.hardware_chip,
+    '—',
+  );
+}
+
 function svgWrap(W, H, title, body, palette) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
   <rect width="${W}" height="${H}" fill="${palette.bg}" rx="0"/>
@@ -275,19 +309,8 @@ export function buildStorageChart(data, profile, persona = 'productivite') {
 export function buildBatteryHardwareChart(data, profile, persona = 'productivite') {
   const palette = chartPalette(persona);
   const bat = extractBatterySlice(data);
-  const ram = firstValue(
-    data?.MACHINE_IDENTITY?.hardware_snapshot?.ram,
-    data?.MACHINE_IDENTITY?.ram,
-    profile?.ram,
-    '—',
-  );
-  const chip = firstValue(
-    data?.MACHINE_IDENTITY?.hardware_snapshot?.chip,
-    data?.MACHINE_IDENTITY?.chip,
-    profile?.hardwareChip,
-    profile?.hardware_chip,
-    '—',
-  );
+  const ram = resolveHardwareRam(data, profile);
+  const chip = resolveHardwareChip(data, profile);
   const model = firstValue(
     data?.MACHINE_IDENTITY?.model_name,
     data?.MACHINE_IDENTITY?.machine_model,
@@ -657,19 +680,8 @@ export function describeChartContext(chartType, data, profile) {
     }
     case 'battery_hardware': {
       const bat = extractBatterySlice(data);
-      const ram = firstValue(
-        data?.MACHINE_IDENTITY?.hardware_snapshot?.ram,
-        data?.MACHINE_IDENTITY?.ram,
-        profile?.ram,
-        '—',
-      );
-      const chip = firstValue(
-        data?.MACHINE_IDENTITY?.hardware_snapshot?.chip,
-        data?.MACHINE_IDENTITY?.chip,
-        profile?.hardwareChip,
-        profile?.hardware_chip,
-        '—',
-      );
+      const ram = resolveHardwareRam(data, profile);
+      const chip = resolveHardwareChip(data, profile);
       const model = firstValue(
         data?.MACHINE_IDENTITY?.model_name,
         data?.MACHINE_IDENTITY?.machine_model,
