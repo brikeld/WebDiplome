@@ -308,9 +308,11 @@ async function processPostsSingleJob(payload, jobId, ownerUserId) {
   const isFirstGeneration = existingPosts.length === 0;
   const userPayload = buildUserPayload(user, dataJson);
   const prompts = await loadPrompts(process.cwd());
+  const slotOffset = Number(payload.slotOffset || 0);
   const assetCandidate = pickRecencyFirstUnusedAssetCandidate(
     Array.isArray(payload.assetCandidates) ? payload.assetCandidates : [],
     existingPosts,
+    { recycle: true },
   );
   const assetAssignment = await fetchAssetAsAssignment(
     assetCandidate,
@@ -319,7 +321,7 @@ async function processPostsSingleJob(payload, jobId, ownerUserId) {
 
   await fs.mkdir(CHART_UPLOAD_DIR, { recursive: true });
 
-  const slotIndex = countAiGeneratedPosts(existingPosts) % 3;
+  const slotIndex = (countAiGeneratedPosts(existingPosts) + slotOffset) % 3;
   const revealBaseTimeMs = Date.now();
 
   const post = await generateSinglePersonaPost({
@@ -336,6 +338,7 @@ async function processPostsSingleJob(payload, jobId, ownerUserId) {
     chartUploadDir: CHART_UPLOAD_DIR,
     skipLeaderboard: isFirstGeneration,
     preferMetadataFallback: true,
+    slotOffset,
   });
 
   if (!post?.content) {

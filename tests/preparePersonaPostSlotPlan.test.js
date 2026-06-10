@@ -32,7 +32,7 @@ describe('preparePersonaPostSlotPlan', () => {
   });
 
   it('plans leaderboard for slot 2 after a chart post', async () => {
-    const priorTextPosts = Array.from({ length: 5 }, (_, i) => ({
+    const priorTextPosts = Array.from({ length: 8 }, (_, i) => ({
       content: `warmup ${i}`,
       persona: 'productivite',
       createdAt: `2026-05-20T${String(i).padStart(2, '0')}:00:00Z`,

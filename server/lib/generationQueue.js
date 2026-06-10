@@ -1,7 +1,7 @@
 import { slimProfilePayloadForStorage } from './publicProfileMapping.js';
 import { resolveSubjectProfileContext } from './aiJobProfile.js';
 import { isCompliantSystemPost } from './postsMerge.js';
-import { isDemoRotateTargetProfile } from './demoRotate.js';
+import { demoSlotOffsetForSlug, isDemoRotateTargetProfile } from './demoRotate.js';
 
 /** Persona posts from LM (excludes COMPLIANT system notices). */
 export const EXPECTED_AI_POST_COUNT = 3;
@@ -261,6 +261,10 @@ async function queuePostsJobFromHarvestSync({
         ...(hasAssetCandidates({ assetCandidates }) ? { assetCandidates, assetPersona } : {}),
       };
   requestPayload.jobType = jobType;
+  if (mode === 'single') {
+    const directory = await profileStore.listProfiles();
+    requestPayload.slotOffset = demoSlotOffsetForSlug(slug, directory);
+  }
 
   const job = await jobStore.createJob({
     userId: row.user_id,

@@ -80,8 +80,8 @@ export const ASSET_SLOT_INDEX = 1;
 /** Slot index for the alternating chart / leaderboard slot. */
 export const THIRD_SLOT_INDEX = 2;
 
-/** Min AI posts since the last leaderboard before slot 2 may be a leaderboard (~every 6th AI post). */
-export const MIN_AI_POSTS_BEFORE_LEADERBOARD = 5;
+/** Min AI posts since the last leaderboard before slot 2 may be a leaderboard (~every 9th AI post). */
+export const MIN_AI_POSTS_BEFORE_LEADERBOARD = 8;
 
 function countAiPostsSinceLastLeaderboard(existingPosts) {
   let count = 0;
@@ -1339,9 +1339,10 @@ export async function generateSinglePersonaPost({
   chartUploadDir,
   skipLeaderboard = false,
   preferMetadataFallback = false,
+  slotOffset = 0,
 }) {
   const aiCount = countAiGeneratedPosts(existingPosts);
-  const slotIndex = aiCount % 3;
+  const slotIndex = (aiCount + Math.max(0, Number(slotOffset) || 0)) % 3;
 
   const { slots, SP } = await buildPersonaGenerationSlots({
     userPayload,

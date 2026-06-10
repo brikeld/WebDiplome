@@ -9,9 +9,10 @@ const CHART_PLAN_TMP = path.join(os.tmpdir(), 'webdiplome-demo-plan');
 /**
  * Persona key for the next demo-rotate single post (matches worker slot cycling).
  */
-export async function resolveDemoSinglePostPersona({ profile, dataJson }) {
+export async function resolveDemoSinglePostPersona({ profile, dataJson, slotOffset = 0 }) {
   const existingPosts = Array.isArray(profile?.personaPosts) ? profile.personaPosts : [];
-  const slotIndex = countAiGeneratedPosts(existingPosts) % 3;
+  const aiCount = countAiGeneratedPosts(existingPosts);
+  const slotIndex = (aiCount + Math.max(0, Number(slotOffset) || 0)) % 3;
   const user = {
     first_name: profile?.firstname ?? profile?.first_name ?? '',
     last_name: profile?.lastname ?? profile?.last_name ?? '',

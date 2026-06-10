@@ -59,8 +59,14 @@ export function pickUnusedAssetCandidate(candidates, existingPosts) {
 /**
  * Pick the freshest unused visual asset (images/PDFs). Skips assets already posted;
  * next generation naturally takes the second-newest, and so on.
+ *
+ * @param {object[]} candidates
+ * @param {object[]} existingPosts
+ * @param {{ recycle?: boolean }} [opts]
+ *   When `recycle` is true and all candidates have been used, falls back to the
+ *   least-recently-used asset so the asset slot never produces an image-less post.
  */
-export function pickRecencyFirstUnusedAssetCandidate(candidates, existingPosts) {
+export function pickRecencyFirstUnusedAssetCandidate(candidates, existingPosts, { recycle = false } = {}) {
   const visualCandidates = filterVisualGenerationAssets(candidates);
   if (visualCandidates.length === 0) return null;
 
@@ -69,9 +75,26 @@ export function pickRecencyFirstUnusedAssetCandidate(candidates, existingPosts) 
     const fn = candidateContentFilename(c);
     return fn && !used.has(fn);
   });
-  if (available.length === 0) return null;
 
-  const ranked = available
+  const pool = available.length > 0 ? available : (recycle ? visualCandidates : []);
+  if (pool.length === 0) return null;
+
+  if (available.length === 0 && recycle) {
+    // All assets used — recycle by picking the oldest-modified candidate to
+    // maximise variety across consecutive recycle passes.
+    const recycleRanked = pool
+      .map((c) => ({
+        candidate: c,
+        mtimeMs: Number(c.mtimeMs ?? c.modifiedMs ?? parseHarvestTimestamp(c.modified) ?? 0),
+      }))
+      .sort((a, b) => a.mtimeMs - b.mtimeMs); // oldest first
+    const bottomMs = recycleRanked[0]?.mtimeMs ?? 0;
+    const bottomTier = recycleRanked.filter((r) => r.mtimeMs === bottomMs);
+    const pick = bottomTier[Math.floor(Math.random() * bottomTier.length)];
+    return pick?.candidate ?? recycleRanked[0].candidate;
+  }
+
+  const ranked = pool
     .map((c) => ({
       candidate: c,
       mtimeMs: Number(c.mtimeMs ?? c.modifiedMs ?? parseHarvestTimestamp(c.modified) ?? 0),

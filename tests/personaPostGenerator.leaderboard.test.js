@@ -60,13 +60,13 @@ describe('pickThirdSlotKind', () => {
   it('holds chart until enough AI posts have landed since the last leaderboard', () => {
     const chartOnly = [
       { chartType: 'browser_domains', createdAt: '2026-05-25T10:00:00Z' },
-      ...aiTextPosts(3),
+      ...aiTextPosts(6),
     ];
     expect(pickThirdSlotKind(chartOnly)).toBe('chart');
 
     const ready = [
       { chartType: 'browser_domains', createdAt: '2026-05-25T10:00:00Z' },
-      ...aiTextPosts(5),
+      ...aiTextPosts(8),
     ];
     expect(pickThirdSlotKind(ready)).toBe('leaderboard');
   });
@@ -74,7 +74,7 @@ describe('pickThirdSlotKind', () => {
   it('alternates back to chart after a leaderboard post', () => {
     expect(pickThirdSlotKind([
       { leaderboard: { boardId: 'most_productive' }, createdAt: '2026-05-25T10:00:00Z' },
-      ...aiTextPosts(6),
+      ...aiTextPosts(9),
     ])).toBe('chart');
   });
 
@@ -89,7 +89,7 @@ describe('pickThirdSlotKind', () => {
     const kind = pickThirdSlotKind(
       [
         { chartType: 'browser_domains', createdAt: '2026-05-25T11:00:00Z' },
-        ...aiTextPosts(5),
+        ...aiTextPosts(8),
         ...lockingPosts,
       ],
       { dataJson: fakeData, profile: fakeProfile, nowMs: NOW },
@@ -131,7 +131,7 @@ describe('generatePersonaPosts — third slot alternation', () => {
       profile: fakeProfile,
       existingPosts: [
         { chartType: 'browser_domains', createdAt: '2026-05-25T09:00:00Z' },
-        ...aiTextPosts(5),
+        ...aiTextPosts(8),
       ],
     });
 
@@ -188,7 +188,7 @@ describe('generatePersonaPosts — third slot alternation', () => {
       profile: fakeProfile,
       existingPosts: [
         { chartType: 'browser_domains', createdAt: '2026-05-25T09:00:00Z' },
-        ...aiTextPosts(5),
+        ...aiTextPosts(8),
       ],
     });
     expect(results[2].leaderboard.previousUserRank).toBeNull();

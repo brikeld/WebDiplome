@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  demoSlotOffsetForSlug,
   isDemoRotateOperator,
   isDemoRotateTargetProfile,
   profileDisplayName,
+  sortDemoRotateTargets,
 } from '../server/lib/demoRotate.js';
 import {
   canUseDemoRotateControl,
@@ -24,6 +26,27 @@ describe('demoRotate server helpers', () => {
 
   it('builds display name from parts', () => {
     expect(profileDisplayName({ firstname: 'Alex', lastname: 'Johnson' })).toBe('Alex Johnson');
+  });
+
+  it('staggers demo slot offsets by sorted target index', () => {
+    const profiles = [
+      { firstname: 'Brikeld', lastname: 'Hoxha', slug: 'brikeld-hoxha' },
+      { firstname: 'Daniel', lastname: 'Rocha', slug: 'daniel-rocha' },
+      { firstname: 'Jonathan', lastname: 'Vögele', slug: 'jonathan-vogele' },
+      { firstname: 'Léa', lastname: 'Verboux', slug: 'lea-verboux' },
+      { firstname: 'Nyria', lastname: 'Graber', slug: 'nyria-graber' },
+    ];
+    const ordered = sortDemoRotateTargets(profiles);
+    expect(ordered.map((p) => p.slug)).toEqual([
+      'daniel-rocha',
+      'jonathan-vogele',
+      'lea-verboux',
+      'nyria-graber',
+    ]);
+    expect(demoSlotOffsetForSlug('daniel-rocha', profiles)).toBe(0);
+    expect(demoSlotOffsetForSlug('jonathan-vogele', profiles)).toBe(1);
+    expect(demoSlotOffsetForSlug('lea-verboux', profiles)).toBe(2);
+    expect(demoSlotOffsetForSlug('nyria-graber', profiles)).toBe(3);
   });
 });
 

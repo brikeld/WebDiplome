@@ -259,7 +259,6 @@ export async function runDemoRotatePipeline({
 
       const persona = personaFromGenerationJob(job) ?? expectedPersona;
       const postKey = postKeyFromGenerationJob(job);
-      onGeneratingPersona?.(persona);
 
       try {
         await revealCompletedPost(

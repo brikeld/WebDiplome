@@ -13,7 +13,11 @@ import {
   queueSinglePostJob,
   shouldPatchQueuedGenerationPayload,
 } from '../lib/generationQueue.js';
-import { isDemoRotateOperator, isDemoRotateTargetProfile } from '../lib/demoRotate.js';
+import {
+  demoSlotOffsetForSlug,
+  isDemoRotateOperator,
+  isDemoRotateTargetProfile,
+} from '../lib/demoRotate.js';
 import { resolveDemoSinglePostPersona } from '../lib/demoRotatePersona.js';
 import { resolveProfileHarvestDataJson } from '../lib/resolveProfileHarvestData.js';
 
@@ -235,9 +239,12 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         return res.status(400).json({ error: 'No stored harvest data for profile', reason: 'no_harvest_data' });
       }
 
+      const demoDirectory = await profileStore.listProfiles();
+      const slotOffset = demoSlotOffsetForSlug(slug, demoDirectory);
       const generatingPersona = await resolveDemoSinglePostPersona({
         profile: target,
         dataJson,
+        slotOffset,
       });
 
       const storedPool = row.raw_profile?.generationAssetCandidates ?? [];
