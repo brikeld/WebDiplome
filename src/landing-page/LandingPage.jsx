@@ -275,11 +275,11 @@ function AppCarousel() {
   return (
     <section className="lp-screen lp-app-showcase" aria-labelledby="lp-app-title" style={{ '--stagger-i': 1 }}>
       <div className="lp-app-left">
-        <h2 id="lp-app-title">The compliant app</h2>
+        <h2 id="lp-app-title">Compliant app</h2>
         <div className="lp-app-step-list" aria-label="App screens">
           {APP_SCREENS.map((screen, index) => (
             <div key={screen.id} className="lp-app-step" style={{ '--step-i': index }}>
-              <span>{screen.number}</span>
+              <div className="lp-app-step-num">{screen.number}</div>
               <p>{screen.description}</p>
             </div>
           ))}
@@ -351,16 +351,23 @@ function ProfileCardSection() {
   );
 }
 
+const TRANSITION_LINES = [
+  { text: 'Your habits become content.', color: '#ccf847' },
+  { text: 'Your content defines your score.', color: '#759aef' },
+  { text: 'Your score determines your visibility.', color: '#d8d8d8' },
+];
+
 function TransitionBanner() {
   return (
-    <div className="lp-transition-banner" style={{ '--stagger-i': 4 }}>
-      <p>
-        Your habits become content.
-        <br />
-        Your content defines your score.
-        <br />
-        Your score determines your visibility.
-      </p>
+    <div className="lp-transition-banner">
+      <div className="lp-transition-lines">
+        {TRANSITION_LINES.map((line) => (
+          <div key={line.text} className="lp-transition-line">
+            <span className="lp-transition-dot" style={{ background: line.color }} aria-hidden="true" />
+            <p>{line.text}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
