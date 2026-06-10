@@ -2,7 +2,16 @@
 
 .lp-root {
   --lp-edge-pad: clamp(20px, 5vw, 80px);
-  --lp-hero-size: clamp(88px, 16vw, 520px);
+  --lp-hero-title-pad: clamp(6px, 0.5vw, 12px);
+  /* ~4.75em word width for "COMPLIANT" — max of width-fit, capped by remaining viewport height */
+  --lp-hero-size: clamp(
+    88px,
+    min(
+      calc((100vw - 2 * var(--lp-hero-title-pad)) / 4.75),
+      calc((100svh - 220px) / 0.86)
+    ),
+    999px
+  );
   --lp-display: clamp(60px, 8vw, 140px);
   --lp-green: #ccf847;
   --lp-blue: #759aef;
@@ -124,11 +133,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding-left: 0;
-  padding-right: 0;
-  padding-bottom: clamp(4px, 0.6vh, 10px);
-  padding-top: clamp(16px, 3vh, 40px);
+  justify-content: flex-start;
+  min-height: 0;
   background: none;
   opacity: 0;
   animation: lp-fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
@@ -181,16 +187,19 @@
 .lp-hero-title {
   font-size: var(--lp-hero-size);
   font-weight: 800;
-  line-height: 0.88;
+  line-height: 0.86;
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: #000;
   white-space: nowrap;
   display: block;
   width: 100%;
-  text-align: center;
-  margin: 0;
-  padding: 0;
+  box-sizing: border-box;
+  text-align: left;
+  margin: auto 0 0;
+  padding: 0 var(--lp-hero-title-pad);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .lp-hero-title-link {
@@ -209,6 +218,11 @@
 .lp-screen {
   box-sizing: border-box;
   padding: clamp(28px, 4vh, 56px) var(--lp-edge-pad);
+}
+
+/* Hero is full-bleed; .lp-screen padding would inset the title away from the edges */
+.lp-screen.lp-hero {
+  padding: clamp(16px, 3vh, 40px) var(--lp-hero-title-pad) var(--lp-hero-title-pad);
 }
 
 /* ── APP SHOWCASE ────────────────────────────────────────────────────────── */
@@ -897,7 +911,7 @@
   }
 
   .lp-personas-head {
-    max-width: 900px;
+    max-width: min(1300px, 100%);
     margin-bottom: clamp(56px, 7vh, 96px);
   }
 
@@ -912,8 +926,8 @@
   }
 
   .lp-persona-row {
-    grid-template-columns: clamp(260px, 34vw, 520px) minmax(0, 1fr);
-    gap: clamp(48px, 6.5vw, 110px);
+    grid-template-columns: clamp(260px, 38%, 520px) minmax(0, 1fr);
+    gap: clamp(48px, 7.5%, 110px);
     padding: clamp(36px, 5.5vh, 68px) 0;
   }
 
@@ -1018,7 +1032,7 @@
   }
 
   .lp-personas-head {
-    max-width: 1100px;
+    max-width: min(1680px, 100%);
     margin-bottom: clamp(64px, 8vh, 112px);
   }
 
@@ -1037,12 +1051,12 @@
 
   /* Keep horizontal rows at 2560px */
   .lp-persona-list {
-    max-width: min(1480px, 100%);
+    max-width: min(1680px, 100%);
   }
 
   .lp-persona-row {
-    grid-template-columns: clamp(300px, 32vw, 580px) minmax(0, 1fr);
-    gap: clamp(60px, 7vw, 128px);
+    grid-template-columns: clamp(300px, 39%, 680px) minmax(0, 1fr);
+    gap: clamp(60px, 7.5%, 148px);
     padding: clamp(44px, 6vh, 80px) 0;
   }
 
@@ -1116,7 +1130,10 @@
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
-  .lp-hero-title { white-space: normal; }
+  .lp-hero-title {
+    white-space: normal;
+    font-size: clamp(56px, 14vw, 120px);
+  }
   .lp-app-showcase { grid-template-columns: 1fr; height: auto; align-items: start; }
   .lp-app-left h2 { white-space: normal; }
   .lp-mac-app-shell { height: min(86vh, 760px); max-width: min(84vw, 480px); margin: 0 auto; }
