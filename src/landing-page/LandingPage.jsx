@@ -301,6 +301,11 @@ const APP_SCREENS = [
   },
 ];
 
+/** Keep "&" with the following phrase so wraps break before the ampersand. */
+function withAmpersandBreakBefore(text) {
+  return text.replace(/ & /g, ' &\u00A0');
+}
+
 const PERSONAS = [
   {
     name: 'Social',
@@ -321,7 +326,7 @@ const PERSONAS = [
     key: 'security',
     tagline: 'Digital Hygiene, Risk Surface & Conformity',
     focus:
-      'System defenses and posture. FileVault, Gatekeeper, SIP, firewall, updates, disk health, fewer sketchy downloads, fewer repeated errors and fewer neglect signals.',
+      'System defenses and posture. FileVault, Gatekeeper, SIP, firewall, updates, disk health, fewer sketchy downloads, fewer repeated errors and fewer neglect\u00A0signals.',
   },
 ];
 
@@ -518,7 +523,7 @@ function PersonaSections() {
                 <div className="lp-persona-card-header">
                   <span className="lp-persona-card-name">{persona.name.toUpperCase()}</span>
                 </div>
-                <span className="lp-persona-card-tagline">{persona.tagline}</span>
+                <span className="lp-persona-card-tagline">{withAmpersandBreakBefore(persona.tagline)}</span>
                 <p className="lp-persona-card-focus">{persona.focus}</p>
                 <span className="lp-persona-card-deco" aria-hidden="true">{persona.name[0]}</span>
               </button>
@@ -704,10 +709,6 @@ function LandingFooter() {
         <div className="lp-footer__brand">
           <h2>COMPLIANT</h2>
           <p>Operational identity infrastructure for turning local machine behavior into public-facing persona signals.</p>
-        </div>
-        <div className="lp-footer__status" aria-label="Platform status">
-          <span>System status</span>
-          <strong>Profile ingestion online</strong>
         </div>
       </div>
 
