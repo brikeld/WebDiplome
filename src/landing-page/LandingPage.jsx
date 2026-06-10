@@ -211,9 +211,8 @@ const PERSONAS = [
 
 // Feed animation config
 const FEED_VISIBLE = 3;
-const FEED_BAR_MS = 3000;
+const FEED_HOLD_MS = 3000;
 const FEED_EXIT_MS = 360;
-const FEED_PAUSE_MS = 650;
 
 const FEED_PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -270,8 +269,13 @@ const FEED_POOL = [
   },
 ];
 
-function feedBarColor(idx) {
-  return FEED_PERSONA_COLORS[FEED_POOL[idx % FEED_POOL.length].persona] ?? '#ccf847';
+function toFeedItem(post, { uid = post.id, anim = 'visible' } = {}) {
+  return {
+    ...post,
+    noteColor: FEED_PERSONA_COLORS[post.persona] ?? '#ccf847',
+    uid,
+    anim,
+  };
 }
 
 function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
@@ -410,45 +414,38 @@ function TransitionBanner() {
 
 function FeedSection() {
   const [items, setItems] = useState(() =>
-    FEED_POOL.slice(0, FEED_VISIBLE).map((p) => ({ ...p, uid: p.id, anim: 'visible' }))
+    FEED_POOL.slice(0, FEED_VISIBLE).map((p) => toFeedItem(p))
   );
-  const [barKey, setBarKey] = useState(0);
-  const [barColor, setBarColor] = useState(() => feedBarColor(FEED_VISIBLE));
+  const [cycle, setCycle] = useState(0);
   const nextRef = useRef(FEED_VISIBLE);
 
   useEffect(() => {
-    let t1, t2, t3;
-
-    // Wait for the bar to fill
-    t1 = setTimeout(() => {
-      // Mark bottom post as exiting
+    let exitTimer;
+    const holdTimer = setTimeout(() => {
       setItems((prev) => {
         const copy = [...prev];
         copy[copy.length - 1] = { ...copy[copy.length - 1], anim: 'exit' };
         return copy;
       });
 
-      // After exit animation: remove it, prepend new post at top
-      t2 = setTimeout(() => {
+      exitTimer = setTimeout(() => {
         const nextPost = FEED_POOL[nextRef.current % FEED_POOL.length];
         const uid = `${nextPost.id}-${nextRef.current}`;
         nextRef.current += 1;
 
         setItems((prev) => [
-          { ...nextPost, uid, anim: 'enter' },
+          toFeedItem(nextPost, { uid, anim: 'enter' }),
           ...prev.filter((x) => x.anim !== 'exit'),
         ]);
-
-        // Pause then restart bar for next cycle
-        t3 = setTimeout(() => {
-          setBarColor(feedBarColor(nextRef.current));
-          setBarKey((k) => k + 1);
-        }, FEED_PAUSE_MS);
+        setCycle((n) => n + 1);
       }, FEED_EXIT_MS);
-    }, FEED_BAR_MS);
+    }, FEED_HOLD_MS);
 
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [barKey]);
+    return () => {
+      clearTimeout(holdTimer);
+      clearTimeout(exitTimer);
+    };
+  }, [cycle]);
 
   return (
     <section className="lp-feed-section" style={{ '--stagger-i': 5 }}>
@@ -461,16 +458,6 @@ function FeedSection() {
       </div>
       <LiveScoringProvider profile={MOCK_PROFILE}>
         <div className="lp-feed-capsule">
-          <div className="lp-feed-gen-bar" aria-hidden="true">
-            <span className="lp-feed-gen-label">Generating</span>
-            <div className="lp-feed-gen-track">
-              <div
-                key={barKey}
-                className="lp-feed-gen-fill"
-                style={{ '--bar-color': barColor, '--bar-dur': `${FEED_BAR_MS}ms` }}
-              />
-            </div>
-          </div>
           <div className="lp-feed-posts">
             {items.map((item) => (
               <div key={item.uid} className={`lp-feed-post-wrap lp-feed-post-wrap--${item.anim}`}>
