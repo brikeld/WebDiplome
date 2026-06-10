@@ -8,10 +8,10 @@
   --lp-hero-word-em: 5.55;
   --lp-hero-reserved-h: clamp(200px, 28svh, 300px);
   --lp-section-title: clamp(60px, 8vw, 140px);
-  --lp-pill-btn-font: clamp(14px, 1.2vw, 18px);
-  --lp-pill-btn-pad-block: 14px;
-  --lp-pill-btn-pad-inline: 30px;
-  --lp-pill-btn-radius: 8px;
+  --lp-pill-btn-font: clamp(13px, 1.05vw, 16px);
+  --lp-pill-btn-pad-block: 6px;
+  --lp-pill-btn-pad-inline: 14px;
+  --lp-pill-btn-radius: 6px;
   --lp-cta-btn-font: clamp(16px, 1.4vw, 22px);
   --lp-cta-btn-pad-block: 20px;
   --lp-cta-btn-pad-inline: 64px;
@@ -687,8 +687,7 @@
 
 .lp-personas-head h2,
 .lp-section-center-head h2,
-.lp-app-showcase > #lp-app-title,
-.lp-cta-section h2 {
+.lp-app-showcase > #lp-app-title {
   font-size: var(--lp-section-title);
   font-weight: 800;
   line-height: 0.96;
@@ -1072,6 +1071,8 @@
 }
 
 .lp-cta-section h2 {
+  font-size: clamp(32px, 4.5vw, 76px);
+  font-weight: 700;
   line-height: 1.06;
   letter-spacing: -0.025em;
   margin: 0 0 clamp(32px, 4.5vh, 56px);
