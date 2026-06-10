@@ -130,7 +130,7 @@ describe('createPostFeedRevealQueue', () => {
       expect(nextPersonas).toEqual(['securite', 'popularite', null]);
     });
 
-    it('commits the post to UI before firing the revealed callback', () => {
+    it('commits the post to UI before firing the revealed callback', async () => {
       vi.useFakeTimers();
       const events = [];
       const queue = createPostFeedRevealQueue({
@@ -144,6 +144,27 @@ describe('createPostFeedRevealQueue', () => {
       queue.enqueue([{ content: 'a', createdAt: 1, persona: 'popularite' }]);
 
       expect(events).toEqual(['posts-change', 'post-revealed']);
+    });
+
+    it('awaits beforeRevealPost before committing the post', async () => {
+      vi.useFakeTimers();
+      const events = [];
+      const queue = createPostFeedRevealQueue({
+        gapMs: 10,
+        getBaseline: () => [],
+        beforeRevealPost: async () => {
+          events.push('before-reveal');
+          await Promise.resolve();
+        },
+        onPostsChange: () => events.push('posts-change'),
+        onPostRevealed: () => events.push('post-revealed'),
+      });
+      queue.markBaseline([]);
+
+      queue.enqueue([{ content: 'a', createdAt: 1, persona: 'popularite' }]);
+      await queue.waitUntilIdle({ waitForEnterAnimation: false });
+
+      expect(events).toEqual(['before-reveal', 'posts-change', 'post-revealed']);
     });
   });
 

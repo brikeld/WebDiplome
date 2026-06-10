@@ -376,7 +376,10 @@ export default function DashboardTimerRow({
           className={`${timerBaseClass} dashboard-timer-card--action-status dashboard-timer-card--generating`}
           aria-busy="true"
         >
-          <GeneratingContentLabel revealFlash={postRevealFlash} />
+          <GeneratingContentLabel
+            revealFlash={postRevealFlash}
+            activePersona={postGen?.phase === 'generating' ? postGen.generatingPersona : null}
+          />
         </div>
       );
     }

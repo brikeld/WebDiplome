@@ -31,7 +31,7 @@ export function GeneratingEllipsis() {
   );
 }
 
-function GeneratingBarRow({ persona, color, flashing }) {
+function GeneratingBarRow({ persona, color, flashing, rowKey, active = false }) {
   const phrases = useMemo(() => shuffledTextsForPersona(persona), [persona]);
   const [phraseIndex, setPhraseIndex] = useState(0);
 
@@ -47,7 +47,8 @@ function GeneratingBarRow({ persona, color, flashing }) {
 
   return (
     <div
-      className={`update-gen-row${flashing ? ' update-gen-row--posted' : ''}`}
+      className={`update-gen-row${flashing ? ' update-gen-row--posted' : ''}${active ? ' update-gen-row--active' : ''}`}
+      data-gen-persona={rowKey}
       style={{ '--gen-bar-color': color }}
     >
       <p key={phraseIndex} className="update-gen-row__phrase">
@@ -60,7 +61,7 @@ function GeneratingBarRow({ persona, color, flashing }) {
   );
 }
 
-export default function GeneratingContentLabel({ revealFlash = null }) {
+export default function GeneratingContentLabel({ revealFlash = null, activePersona = null }) {
   const nonce = revealFlash?.nonce ?? 0;
   // Latch the active flash (persona + color + key) on each nonce bump, then
   // clear after the animation so the accent pulse can retrigger cleanly.
@@ -87,6 +88,8 @@ export default function GeneratingContentLabel({ revealFlash = null }) {
     },
     [],
   );
+
+  const activeRowKey = personaToRowKey(activePersona);
 
   return (
     <div
@@ -115,6 +118,8 @@ export default function GeneratingContentLabel({ revealFlash = null }) {
             persona={persona}
             color={color}
             flashing={activeFlash?.key === key}
+            rowKey={key}
+            active={activeRowKey === key}
           />
         ))}
       </div>

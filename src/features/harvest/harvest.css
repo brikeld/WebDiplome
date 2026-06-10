@@ -257,6 +257,28 @@
   animation-delay: 0.4s;
 }
 
+.update-gen-row--active .update-gen-row__track {
+  background: color-mix(in srgb, var(--gen-bar-color, #759aef) 34%, #fff);
+}
+
+.update-gen-row--active .update-gen-row__shimmer {
+  width: 52%;
+}
+
+.posts-generating-placeholder.lsc-target-pulse {
+  animation: lsc-target-pulse 980ms ease-out both;
+}
+
+.generation-particle-target-ghost {
+  position: fixed;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+}
+
 @keyframes update-phrase-in {
   from {
     opacity: 0;
