@@ -7,7 +7,14 @@
   /* "COMPLIANT" at weight 800 ≈ 5.5em wide (+ small sidebearing buffer) */
   --lp-hero-word-em: 5.55;
   --lp-hero-reserved-h: clamp(200px, 28svh, 300px);
-  --lp-display: clamp(60px, 8vw, 140px);
+  --lp-section-title: clamp(60px, 8vw, 140px);
+  --lp-pill-btn-font: clamp(14px, 1.2vw, 18px);
+  --lp-pill-btn-pad-block: 14px;
+  --lp-pill-btn-pad-inline: 30px;
+  --lp-pill-btn-radius: 8px;
+  --lp-cta-btn-font: clamp(16px, 1.4vw, 22px);
+  --lp-cta-btn-pad-block: 20px;
+  --lp-cta-btn-pad-inline: 64px;
   --lp-green: #ccf847;
   --lp-blue: #759aef;
   --lp-gray: #d8d8d8;
@@ -84,22 +91,48 @@
   padding: 6px 10px;
 }
 
-.lp-navbar-register {
+.lp-navbar-register,
+.lp-hero-cta-btn,
+.lp-cta-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   appearance: none;
-  border: 1.5px solid #000;
+  border: none;
   background: #000;
   color: #fff;
   font-family: inherit;
-  font-size: clamp(14px, 1.2vw, 18px);
-  font-weight: 700;
   letter-spacing: 0.04em;
-  padding: 6px 14px;
-  border-radius: 6px;
+  line-height: 1;
+  border-radius: var(--lp-pill-btn-radius);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.lp-navbar-register:hover { background: #fff; color: #000; }
+.lp-navbar-register {
+  font-size: var(--lp-pill-btn-font);
+  font-weight: 600;
+  padding: var(--lp-pill-btn-pad-block) var(--lp-pill-btn-pad-inline);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lp-navbar-register:hover {
+  background: #fff;
+  color: #000;
+  box-shadow: inset 0 0 0 1.5px #000;
+}
+
+.lp-hero-cta-btn,
+.lp-cta-download {
+  font-size: var(--lp-cta-btn-font);
+  font-weight: 800;
+  padding: var(--lp-cta-btn-pad-block) var(--lp-cta-btn-pad-inline);
+  transition: background 0.15s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.lp-hero-cta-btn:hover { background: #222; }
 
 .lp-navbar-avatar {
   appearance: none;
@@ -165,21 +198,7 @@
 
 .lp-hero-cta-btn {
   margin-top: clamp(22px, 2.6vh, 32px);
-  appearance: none;
-  border: none;
-  background: #000;
-  color: #fff;
-  font-family: inherit;
-  font-size: clamp(14px, 1.2vw, 18px);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  padding: 14px 30px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s ease;
 }
-
-.lp-hero-cta-btn:hover { background: #222; }
 
 .lp-hero-title {
   container-type: inline-size;
@@ -258,15 +277,12 @@
   margin-bottom: clamp(48px, 7vh, 88px);
 }
 
-/* Title forced to single line — row 1, left column only */
+/* Title — full grid width, same scale as other section headings */
 .lp-app-showcase > #lp-app-title {
-  grid-column: 1;
+  grid-column: 1 / -1;
   grid-row: 1;
-  font-size: clamp(28px, 4.2vw, 80px);
   line-height: 0.94;
   letter-spacing: -0.025em;
-  margin: 0;
-  font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -655,19 +671,25 @@
 
 .lp-personas-head {
   width: 100%;
-  max-width: min(1200px, 100%);
+  max-width: min(1400px, 100%);
   margin-left: auto;
   margin-right: auto;
   margin-bottom: clamp(48px, 6.5vh, 84px);
 }
 
 .lp-section-center-head {
+  width: 100%;
+  max-width: min(1400px, 100%);
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: clamp(28px, 4vh, 52px);
 }
 
 .lp-personas-head h2,
-.lp-section-center-head h2 {
-  font-size: var(--lp-display);
+.lp-section-center-head h2,
+.lp-app-showcase > #lp-app-title,
+.lp-cta-section h2 {
+  font-size: var(--lp-section-title);
   font-weight: 800;
   line-height: 0.96;
   letter-spacing: -0.02em;
@@ -687,7 +709,6 @@
 .lp-section-center-head p strong { font-weight: 800; }
 
 .lp-personas-head h2 {
-  font-size: clamp(42px, 5.2vw, 118px);
   white-space: nowrap;
 }
 
@@ -1049,29 +1070,12 @@
 }
 
 .lp-cta-section h2 {
-  font-size: clamp(32px, 4.5vw, 76px);
-  font-weight: 700;
   line-height: 1.06;
   letter-spacing: -0.025em;
   margin: 0 0 clamp(32px, 4.5vh, 56px);
 }
 
 .lp-cta-section h2 strong { font-weight: 900; }
-
-.lp-cta-download {
-  appearance: none;
-  border: none;
-  background: #000;
-  color: #fff;
-  font-family: inherit;
-  font-size: clamp(16px, 1.4vw, 22px);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  padding: 20px 64px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.18s ease, box-shadow 0.18s ease;
-}
 
 .lp-cta-download:hover {
   background: #222;
@@ -1187,7 +1191,7 @@
   }
 
   .lp-personas-head {
-    max-width: min(1300px, 100%);
+    max-width: min(1400px, 100%);
     margin-left: auto;
     margin-right: auto;
     margin-bottom: clamp(56px, 7vh, 96px);
@@ -1278,10 +1282,6 @@
     gap: clamp(40px, 4.5vw, 88px);
   }
 
-  .lp-app-showcase > #lp-app-title {
-    font-size: clamp(48px, 3.6vw, 88px);
-  }
-
   .lp-app-step-list {
     gap: clamp(14px, 1.6vh, 24px);
   }
@@ -1300,7 +1300,7 @@
   }
 
   .lp-personas-head {
-    max-width: min(1680px, 100%);
+    max-width: min(1400px, 100%);
     margin-left: auto;
     margin-right: auto;
     margin-bottom: clamp(64px, 8vh, 112px);
@@ -1402,7 +1402,7 @@
     height: auto;
     align-items: start;
   }
-  .lp-app-showcase > #lp-app-title { grid-column: 1; grid-row: auto; white-space: normal; }
+  .lp-app-showcase > #lp-app-title { grid-column: 1 / -1; grid-row: auto; white-space: normal; }
   .lp-app-step-list {
     grid-column: 1;
     grid-row: auto;
