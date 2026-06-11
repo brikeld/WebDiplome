@@ -3756,3 +3756,129 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   font-size: clamp(11px, 0.92vw, 20px);
   color: color-mix(in srgb, var(--lbx-accent) 50%, #000);
 }
+
+/* ── Compact leaderboard analysis (profile leaderboard cards) ── */
+.lbx--compact {
+  --lbx-gap: 6px;
+  --lbx-sec-pad: 8px 10px;
+  --lbx-title-fs: 9px;
+  --lbx-body-fs: 11px;
+  --lbx-radius: 12px;
+  --lbx-chip-radius: 9px;
+
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
+.lbx--compact .lbx__screen {
+  position: absolute;
+  inset: 0;
+  gap: 6px;
+  padding: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.lbx--compact .lbx__rank {
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+}
+
+.lbx--compact .lbx__rank-num {
+  font-size: clamp(22px, 6vw, 34px);
+}
+
+.lbx--compact .lbx__rank-label {
+  font-size: clamp(9px, 2.4vw, 12px);
+}
+
+.lbx--compact .lbx__rank-of {
+  font-size: clamp(8px, 2vw, 10px);
+}
+
+.lbx--compact .lbx__sec {
+  padding: var(--lbx-sec-pad);
+  border-radius: var(--lbx-radius);
+}
+
+.lbx--compact .lbx__body {
+  font-size: var(--lbx-body-fs);
+  line-height: 1.25;
+}
+
+.lbx--compact .lbx__chips {
+  gap: 5px;
+}
+
+.lbx--compact .lbx__chip {
+  min-height: 24px;
+  padding: 4px 8px;
+  border-radius: var(--lbx-chip-radius);
+}
+
+.lbx--compact .lbx__chip-label {
+  font-size: 9px;
+}
+
+.lbx--compact .lbx__others-btn {
+  min-height: 28px;
+  padding: 6px 10px;
+  font-size: 9px;
+  border-radius: 999px;
+}
+
+.lbx--compact .lbx__others-head {
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.lbx--compact .lbx__others-title {
+  font-size: 10px;
+}
+
+.lbx--compact .lbx__detail-back,
+.lbx--compact .lbx__back {
+  width: 24px;
+  height: 24px;
+}
+
+.lbx--compact .lbx__detail-back::before,
+.lbx--compact .lbx__back::before {
+  font-size: 9px;
+}
+
+.lbx--compact .lbx__detail-name {
+  font-size: 10px;
+}
+
+.lbx--compact .lbx__detail-tag {
+  font-size: 8px;
+  padding: 2px 6px;
+}
+
+.lbx--compact .lbx__other {
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.lbx--compact .lbx__other-rank {
+  font-size: 10px;
+  min-width: 1.6rem;
+}
+
+.lbx--compact .lbx__other-avatar {
+  width: 28px;
+  height: 28px;
+}
+
+.lbx--compact .lbx__other-phrase {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.lbx--compact .lbx__other-name {
+  font-size: 9px;
+}

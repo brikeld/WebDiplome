@@ -30,6 +30,7 @@ export default function ProfileView({
   generateApiOrigin,
   isOwnProfile = true,
   ownedProfileSlug = null,
+  leaderboardDirectorySlugs = [],
 }) {
   const { displayProfile, phase: identityPhase } = useProfileIdentityTransition(profile);
   const resolvedProfile = displayProfile ?? profile;
@@ -78,7 +79,8 @@ export default function ProfileView({
                     <LeaderboardsTab
                       profile={resolvedProfile}
                       isOwnProfile={isOwnProfile}
-                      ownedProfileSlug={ownedProfileSlug}
+                      onOpenProfile={onOpenProfile}
+                      leaderboardDirectorySlugs={leaderboardDirectorySlugs}
                     />
                   )}
                 </div>

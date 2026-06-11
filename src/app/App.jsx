@@ -1297,6 +1297,7 @@ function AppInner({
             generateApiOrigin={GENERATE_API_ORIGIN}
             isOwnProfile={!viewedProfile}
             ownedProfileSlug={ownProfileSlug}
+            leaderboardDirectorySlugs={leaderboardDirectorySlugs}
           />
         )}
 

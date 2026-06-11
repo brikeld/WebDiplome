@@ -69,6 +69,7 @@ export default function LeaderboardRationaleView({
   authorSlug = null,
   onOpenProfile = null,
   leaderboardDirectorySlugs = [],
+  compact = false,
 }) {
   const [showOthers, setShowOthers] = useState(false);
   const [activeSignal, setActiveSignal] = useState(null);
@@ -129,7 +130,7 @@ export default function LeaderboardRationaleView({
   const openSignal = activeSignal !== null ? signals[activeSignal] : null;
 
   return (
-    <div className="lbx">
+    <div className={`lbx${compact ? ' lbx--compact' : ''}`}>
       {/* ── Main screen ─────────────────────────────────────── */}
       <div className={`lbx__screen lbx__screen--main${showOthers ? ' is-gone' : ''}`}>
         {/* Rank hero */}
