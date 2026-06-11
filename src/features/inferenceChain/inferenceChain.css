@@ -145,10 +145,12 @@
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .panel-a__head {
   margin-bottom: var(--dash-head-mb);
-  padding: var(--dash-head-pad);
+  padding: 0;
+  background: transparent;
+  color: var(--a-ink, #0c1018);
   font-size: var(--dash-head-fs);
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.13em;
   line-height: 1;
 }
 
@@ -195,25 +197,49 @@
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chips {
-  gap: 6px;
+  gap: clamp(10px, 1.1vh, 15px);
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip,
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__row {
-  min-height: 34px;
-  padding: 8px 10px;
-  border-radius: 12px;
+  min-height: clamp(48px, 6vh, 76px);
+  padding: clamp(10px, 1.1vh, 15px) clamp(7px, 0.6vw, 12px);
+  border-radius: clamp(14px, 1.3vw, 18px);
 }
 
+/* Chips: dedicated (slightly smaller than the quote) type that keeps whole
+   words intact — labels already break per word via <br>, so never split
+   mid-word. Keeps "CHECKED", "EMOTION", "PERSONA" readable in 3 columns. */
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .reason-chip {
+  font-size: clamp(12px, 0.86vw, 26px);
+  letter-spacing: 0;
   white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
   overflow: visible;
   text-overflow: clip;
 }
 
+/* ing-chip label/% must use the same compact chip scale as .reason-chip —
+   the dashboard --dash-tag-fs rule would otherwise inflate them to ~16px and
+   overflow 7-letter words ("PERSONA", "CAPTION") in the 3-column grid. */
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
+  font-size: clamp(12px, 0.86vw, 26px);
+  letter-spacing: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__pct {
+  font-size: clamp(11px, 0.78vw, 22px);
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip {
-  min-height: 34px;
-  padding: 8px 10px;
+  min-height: clamp(48px, 6vh, 76px);
+  padding: clamp(10px, 1.1vh, 15px) clamp(7px, 0.6vw, 12px);
   gap: 0;
 }
 
@@ -223,10 +249,17 @@
   overflow: visible;
 }
 
+.tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__label {
+  text-align: center;
+}
+
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip__pct {
-  display: inline;
-  margin-left: 0.2em;
-  opacity: 0.72;
+  display: block;
+  width: 100%;
+  margin-left: 0;
+  margin-top: 0.15em;
+  text-align: center;
+  opacity: 1;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__track {
@@ -2261,30 +2294,24 @@
   opacity: 0.72;
 }
 
-.tell-panel-a--alt-palette-2 .ing-chip {
-  background: #fff;
-  border: 2px solid #000;
-  color: #000;
-}
-
-.tell-panel-a--alt-palette-2 .ing-chip.is-open,
-.tell-panel-a--alt-palette-2 .ing-chip:hover {
-  background: #000;
-  color: var(--tell-pill-accent, #759aef);
-}
-
-.tell-panel-a--alt-palette-2 .ing-chip.is-open .ing-chip__pct,
-.tell-panel-a--alt-palette-2 .ing-chip:hover .ing-chip__pct {
+/* ing-chip inherits the shared "Soft Studio" tile look (.reason-chip rules).
+   Only the percentage figure is persona-coloured on the open tile. */
+.tell-panel-a--alt-palette-2 .ing-chip__pct {
+  color: color-mix(in srgb, var(--a-ink, #0c1018) 55%, #fff);
   opacity: 1;
+}
+
+.tell-panel-a--alt-palette-2 .ing-chip.is-open .ing-chip__pct {
   color: var(--tell-pill-accent, #759aef);
+  opacity: 1;
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chips {
-  gap: 6px;
+  gap: clamp(10px, 1.1vh, 15px);
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-chip {
-  border-radius: 12px;
+  border-radius: clamp(14px, 1.3vw, 18px);
 }
 
 .panel-a__detail {
@@ -2396,8 +2423,15 @@
 }
 
 .tell-panel-a--alt-palette-2 {
+  /* "Soft Studio" skin — light neutral surfaces, elevated white tiles,
+     persona accent kept as a sparing edge/detail (works even when the
+     accent is the washed productivity grey). */
+  --a-ink: #0c1018;
+  --a-surface: #f5f7fb;
+  --a-tile: #ffffff;
+  --a-line: #e4e8f0;
   background: transparent;
-  color: #000;
+  color: var(--a-ink);
   border-radius: 0;
   padding: 0;
 }
@@ -2406,20 +2440,17 @@
 .tell-panel-a--alt-palette-2 .tape-section,
 .tell-panel-a--alt-palette-2 .ing-section,
 .tell-panel-a--alt-palette-2 .reason-section {
-  background: var(--tell-pill-accent, #759aef);
+  background: var(--a-surface);
   border: none;
-  /* Seal subpixel gaps against the white tell panel at rounded corners */
-  box-shadow: 0 0 0 1px var(--tell-pill-accent, #759aef);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset, 0 0 0 1px var(--a-line);
 }
 
-.tell-panel-a--alt-palette-2 .panel-a__head {
-  background: #000;
-  color: var(--tell-pill-accent, #759aef);
-}
-
+/* Section titles: plain black text, full opacity — no black pill. */
+.tell-panel-a--alt-palette-2 .panel-a__head,
 .tell-panel-a--alt-palette-2 .post-quote-a .panel-a__head {
-  background: #000;
-  color: var(--tell-pill-accent, #759aef);
+  background: transparent;
+  color: var(--a-ink);
+  padding: 0;
 }
 
 .tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__post-text,
@@ -2459,39 +2490,51 @@
 .tell-panel-a--alt-palette-2 .tape__content,
 .tell-panel-a--alt-palette-2 .reason-chip,
 .tell-panel-a--alt-palette-2 .ing-bar__row {
-  background: #fff;
-  border: 2px solid #000;
-  color: #000;
+  background: var(--a-tile, #fff);
+  border: none;
+  color: var(--a-ink, #0c1018);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 2px 5px rgba(15, 23, 42, 0.10),
+    0 0 0 1px var(--a-line, #e4e8f0);
   transition:
+    transform 180ms var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow 180ms var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     background var(--panel-a-dur, 380ms) var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    border-color var(--panel-a-dur, 380ms) var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    color var(--panel-a-dur, 380ms) var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    transform 220ms var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1));
+    color var(--panel-a-dur, 380ms) var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
+/* Hover = lift, deeper shadow, accent-tinted edge. Text stays dark. */
 .tell-panel-a--alt-palette-2 .tape__content:hover,
 .tell-panel-a--alt-palette-2 .reason-chip:hover,
-.tell-panel-a--alt-palette-2 .ing-bar__row:hover,
-.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight:hover {
-  background: #000;
-  border-color: #000;
-  color: var(--tell-pill-accent, #759aef);
+.tell-panel-a--alt-palette-2 .ing-bar__row:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 12px 24px -6px rgba(15, 23, 42, 0.30),
+    0 0 0 1px color-mix(in srgb, var(--tell-pill-accent, #759aef) 70%, #c4ccda);
 }
 
+/* Open/active = pressed-in dark tile, white label, accent figures. */
 .tell-panel-a--alt-palette-2 .tape__content.is-open,
 .tell-panel-a--alt-palette-2 .reason-chip.is-open,
-.tell-panel-a--alt-palette-2 .ing-bar__row.is-open,
-.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight.is-open {
-  background: #000;
-  border-color: #000;
-  color: var(--tell-pill-accent, #759aef);
+.tell-panel-a--alt-palette-2 .ing-bar__row.is-open {
+  background: linear-gradient(180deg, #11151d, #0a0e16);
+  color: #fff;
+  box-shadow: 0 10px 24px -6px rgba(10, 14, 22, 0.7);
 }
 
 .tell-panel-a--alt-palette-2 .tape__content:active,
 .tell-panel-a--alt-palette-2 .reason-chip:active,
-.tell-panel-a--alt-palette-2 .ing-bar__row:active,
-.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight:active {
-  transform: scale(0.98);
+.tell-panel-a--alt-palette-2 .ing-bar__row:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18), 0 0 0 1px var(--a-line, #e4e8f0);
+}
+
+/* Highlight phrases inside the quote keep the simple accent treatment. */
+.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight:hover,
+.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight.is-open {
+  color: var(--tell-pill-accent, #759aef);
 }
 
 .tell-panel-a--alt-palette-2 .tape__row:has(.tape__content.is-open) .tape__badge {
@@ -2500,23 +2543,15 @@
   color: #000;
 }
 
-.tell-panel-a--alt-palette-2 .ing-bar__row.is-open .ing-bar__label,
-.tell-panel-a--alt-palette-2 .ing-bar__row.is-open .ing-bar__pct {
-  color: var(--tell-pill-accent, #759aef);
-}
-
-/* Child text must flip with the button — bulk #000 rules above would otherwise win on hover */
-.tell-panel-a--alt-palette-2 .tape__content:hover .tape__label,
+/* Open tile is dark ink — its text flips to white. Hover keeps dark text
+   (flipping to a pale accent like productivity grey would vanish on white). */
 .tell-panel-a--alt-palette-2 .tape__content.is-open .tape__label,
-.tell-panel-a--alt-palette-2 .tape__content:hover .tape__value,
 .tell-panel-a--alt-palette-2 .tape__content.is-open .tape__value,
-.tell-panel-a--alt-palette-2 .tape__content:hover .tape__detail,
 .tell-panel-a--alt-palette-2 .tape__content.is-open .tape__detail,
-.tell-panel-a--alt-palette-2 .ing-bar__row:hover .ing-bar__label,
-.tell-panel-a--alt-palette-2 .ing-bar__row:hover .ing-bar__pct,
-.tell-panel-a--alt-palette-2 .reason-chip:hover,
-.tell-panel-a--alt-palette-2 .reason-chip.is-open {
-  color: var(--tell-pill-accent, #759aef);
+.tell-panel-a--alt-palette-2 .ing-bar__row.is-open .ing-bar__label,
+.tell-panel-a--alt-palette-2 .reason-chip.is-open,
+.tell-panel-a--alt-palette-2 .reason-chip.is-open .ing-chip__label {
+  color: #fff;
 }
 
 .tell-panel-a--alt-palette-2 .panel-a__detail-label {

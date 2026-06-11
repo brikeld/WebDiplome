@@ -597,7 +597,7 @@
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel {
-  --tell-content-pad: clamp(10px, 1.1vh, 14px) clamp(7px, 0.75vw, 10px);
+  --tell-content-pad: clamp(14px, 1.6vh, 22px) clamp(14px, 1.4vw, 22px);
   --inference-redacted-clip-radius: max(
     12px,
     calc(var(--tell-morph-radius, 28px) - clamp(10px, 1.1vh, 14px))
@@ -615,13 +615,13 @@
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2 {
-  --dash-panel-gap: 0;
-  --dash-section-pad: clamp(10px, 1vh, 12px) clamp(7px, 0.75vw, 10px);
-  --dash-quote-section-pad: clamp(8px, 0.85vh, 10px) clamp(7px, 0.75vw, 10px);
-  --dash-head-mb: 8px;
-  --dash-head-pad: 6px 10px;
-  --dash-head-fs: clamp(10px, 0.74vw, 11px);
-  --dash-tag-fs: clamp(16px, 1.08vw, 20px);
+  --dash-panel-gap: clamp(10px, 1.2vh, 16px);
+  --dash-section-pad: clamp(14px, 1.5vh, 20px) clamp(13px, 1.2vw, 18px);
+  --dash-quote-section-pad: clamp(13px, 1.4vh, 18px) clamp(13px, 1.2vw, 18px);
+  --dash-head-mb: clamp(10px, 1.1vh, 14px);
+  --dash-head-pad: 0;
+  --dash-head-fs: clamp(11px, 0.82vw, 18px);
+  --dash-tag-fs: clamp(16px, 1.08vw, 30px);
   --dash-tag-fw: 800;
   --dash-tag-lh: 1.15;
   flex: 1 1 0;
@@ -722,9 +722,9 @@
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .reason-chip,
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .ing-bar__row,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .ing-bar__row {
-  min-height: 32px;
-  padding: 8px 10px;
-  border-radius: 12px;
+  min-height: clamp(48px, 6vh, 76px);
+  padding: clamp(10px, 1.1vh, 15px) clamp(7px, 0.6vw, 12px);
+  border-radius: clamp(14px, 1.3vw, 18px);
 }
 
 /* ── 5) Height-aware density (no internal scroll) ── */

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tell-Me-More · real-CSS harness</title>
+<link rel="stylesheet" href="src/styles/base.css" />
+<link rel="stylesheet" href="src/features/inferenceChain/inferenceChain.css" />
+<link rel="stylesheet" href="src/features/inferenceChain/tellTransition.css" />
+<style>
+  html,body{margin:0;height:100%;background:#0c0d10;font-family:'AvantGarde ITC BT',system-ui,sans-serif;overflow:hidden}
+  /* Page = one viewport. Capsule sized by the REAL side-panel formula so the
+     vw/vh clamps in the production CSS resolve exactly like in the app. */
+  .page{height:100vh;display:flex;align-items:center;justify-content:center;padding:clamp(20px,3vh,48px)}
+  .slot{
+    /* real side panel column width minus capsule padding (28/30) */
+    width:calc(clamp(420px,32vw,720px) - 60px);
+    height:calc(100vh - clamp(40px,6vh,96px));
+    border-radius:48px;
+    box-shadow:0 0 0 10px color-mix(in srgb, var(--persona-accent,#CCF847) 90%, #000), 0 40px 90px -30px #000;
+  }
+  .dashboard-capsule.dashboard-capsule--figma{
+    width:100% !important;height:100% !important;box-sizing:border-box;
+    display:grid !important;
+    grid-template-rows:var(--dash-timer-track,0fr) var(--dash-tell-track,1fr) !important;
+  }
+  .dashboard-capsule.dashboard-capsule--figma .dashboard-tell-row{min-height:0;height:100%}
+  .slot>.view-home,.slot .view-home>.persona-side-panel{height:100%;width:100%;display:block}
+</style>
+</head>
+<body>
+<div class="page" id="page"></div>
+
+<template id="panel-tpl">
+  <section class="post-quote-a" aria-label="Post">
+    <header class="panel-a__head">Post</header>
+    <div class="inference-panel__post-quote">
+      <p class="inference-panel__post-text"><span>__QUOTE__</span></p>
+    </div>
+  </section>
+  <section class="tape-section" aria-label="From data to post">
+    <header class="panel-a__head">From data to post</header>
+    <div class="reason-chips">
+      <button type="button" class="reason-chip">What we<br>checked</button>
+      <button type="button" class="reason-chip">What it<br>means</button>
+      <button type="button" class="reason-chip">Why this<br>post</button>
+    </div>
+  </section>
+  <section class="reason-section">
+    <header class="panel-a__head">How we framed it</header>
+    <div class="reason-chips">
+      <button type="button" class="reason-chip">Data<br>focus</button>
+      <button type="button" class="reason-chip">Emotion<br>picked</button>
+      <button type="button" class="reason-chip">Specific<br>ref</button>
+      <button type="button" class="reason-chip">Tone<br>check</button>
+    </div>
+  </section>
+  <section class="ing-section">
+    <header class="panel-a__head">Data used</header>
+    <div class="reason-chips ing-chips">
+      <button type="button" class="reason-chip ing-chip"><span class="ing-chip__label">Chart<br>signal<span class="ing-chip__pct">88%</span></span></button>
+      <button type="button" class="reason-chip ing-chip"><span class="ing-chip__label">Post<br>caption<span class="ing-chip__pct">72%</span></span></button>
+      <button type="button" class="reason-chip ing-chip"><span class="ing-chip__label">Persona<br>lens<span class="ing-chip__pct">42%</span></span></button>
+    </div>
+  </section>
+</template>
+
+<script>
+const QUOTES={
+  short:'17 apps this week — productive but a little overwhelmed. 😅💻',
+  long:'Trying to keep track of all these tools is a lot! I’ve got 17 apps tracked over the last week, especially with Figma and Cursor popping up constantly. Feeling productive but slightly overwhelmed by the setup, and honestly not sure if more tooling is helping or just adding noise. 😅💻',
+};
+const PERSONAS={
+  productivity:{acc:'#D8D8D8',pastel:'#EEEEEE'},
+  security:{acc:'#759AEF',pastel:'#BCCDF5'},
+  popularity:{acc:'#CCF847',pastel:'#EBF8B7'},
+};
+const qs=new URLSearchParams(location.search);
+const q=qs.get('q')||'long';
+const p=qs.get('p')||'productivity';
+const per=PERSONAS[p];
+const tpl=document.getElementById('panel-tpl').innerHTML;
+const page=document.getElementById('page');
+const slot=document.createElement('div');slot.className='slot';
+slot.style.setProperty('--persona-accent',per.acc);
+slot.innerHTML=`
+  <div class="view-home"><div class="persona-side-panel">
+    <div class="dashboard-capsule dashboard-capsule--figma" data-tell-step="content"
+         style="--capsule-radius:44px;--tell-pill-accent:${per.acc};--tell-pill-pastel:${per.pastel};--persona-accent:${per.acc};">
+      <div class="dashboard-actions-row"></div>
+      <div class="dashboard-tell-row"><div class="tell-morph">
+        <div class="tell-morph__layer tell-morph__layer--panel is-active">
+          <div class="tell-more-pill tell-more-pill--expanded">
+            <div class="tell-panel-a tell-panel-a--alt-palette-2 inference-panel is-ready" role="region" aria-label="Tell me more analysis">
+              <div class="inference-panel__redacted-content">
+                <div class="tell-panel-a__stack">${tpl.replace('__QUOTE__', QUOTES[q])}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div></div>`;
+page.append(slot);
+page.addEventListener('click',e=>{
+  const b=e.target.closest('.reason-chip');if(!b)return;
+  b.closest('.reason-chips').querySelectorAll('.reason-chip').forEach(c=>c.classList.remove('is-open'));
+  b.classList.add('is-open');
+});
+</script>
+</body>
+</html>
