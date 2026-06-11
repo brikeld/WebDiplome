@@ -1318,7 +1318,6 @@ function AppInner({
                   fallbackPersona={personaKey}
                   personaAccent={personaColor}
                   personaPastel={PERSONA_PASTEL_COLORS[personaKey] ?? PERSONA_PASTEL_COLORS.security}
-                  holdLoadingOverlay={postGen.loading && isFeedGenerationPhase(postGen.phase)}
                   isAnalysisRedacted={Boolean(tellDisplayPost && tellPostIsHidden)}
                   onRedactedUnhideConfirm={tellPostIsHidden ? handleTellRedactedUnhideConfirm : null}
                   onOpenProfile={handleOpenProfile}

@@ -16,8 +16,6 @@ import { useEffect, useState } from 'react';
 import PostTextHighlights from './PostTextHighlights.jsx';
 import LeaderboardRationaleView from './LeaderboardRationaleView.jsx';
 import RedactedAnalysisOverlay from './RedactedAnalysisOverlay.jsx';
-import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
-import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 import { freshPanelUi, nextPanelUi } from './panelState.js';
 import FocusDetail from './FocusDetail.jsx';
 import { chainChipLines, splitLabelTwoLines } from './chipLabelUtils.js';
@@ -150,8 +148,6 @@ function ChipInlineContent({ emoji, children }) {
 export default function InferenceChainPanel({
   post,
   personaLabel,
-  holdLoadingOverlay = false,
-  skipLoadingOverlay = false,
   redacted = false,
   onRedactedUnhideConfirm = null,
   onOpenProfile = null,
@@ -167,12 +163,6 @@ export default function InferenceChainPanel({
   const hasThinking = !!(thinking && thinking.length);
   const leaderboard = post?.leaderboard ?? null;
   const isLeaderboardPost = Boolean(leaderboard && Array.isArray(leaderboard.entries));
-
-  const { ready, loadingKey } = useTellMeMoreLoading(
-    skipLoadingOverlay ? [] : [post?.id],
-    { blocked: holdLoadingOverlay || skipLoadingOverlay },
-  );
-  const panelReady = skipLoadingOverlay || ready;
 
   const [panelUi, setPanelUi] = useState(() => freshPanelUi());
   const { activeThinking, activeIngredient, activeChainStep } = panelUi;
@@ -201,17 +191,13 @@ export default function InferenceChainPanel({
   if (isLeaderboardPost) {
     return (
       <div
-        className={`inference-panel inference-panel--leaderboard${panelReady ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}`}
+        className={`inference-panel inference-panel--leaderboard is-ready${redacted ? ' inference-panel--redacted' : ''}`}
         role="region"
         aria-label="Tell me more analysis"
       >
-        {!skipLoadingOverlay && !panelReady ? (
-          <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
-        ) : null}
         <div className="inference-panel__redacted-content">
           <LeaderboardRationaleView
             leaderboard={leaderboard}
-            holdLoadingOverlay={holdLoadingOverlay}
             authorSlug={authorSlug ?? post?.authorSlug ?? null}
             onOpenProfile={onOpenProfile}
             leaderboardDirectorySlugs={leaderboardDirectorySlugs}
@@ -266,14 +252,10 @@ export default function InferenceChainPanel({
 
   return (
     <div
-      className={`tell-panel-a tell-panel-a--alt-palette-2 inference-panel${panelReady ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}${hasFocusDetail ? ' tell-panel-a--has-focus' : ''}`}
+      className={`tell-panel-a tell-panel-a--alt-palette-2 inference-panel is-ready${redacted ? ' inference-panel--redacted' : ''}${hasFocusDetail ? ' tell-panel-a--has-focus' : ''}`}
       role="region"
       aria-label="Tell me more analysis"
     >
-      {!skipLoadingOverlay && !panelReady ? (
-        <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
-      ) : null}
-
       <div className="inference-panel__redacted-content">
       <div className={`tell-panel-a__stack${hasFocusDetail ? ' tell-panel-a__stack--has-focus' : ''}`}>
         {post?.content ? (

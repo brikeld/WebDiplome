@@ -67,7 +67,6 @@ export default function TellMeMorePill({
   fallbackPersona = 'security',
   personaAccent = null,
   personaPastel = null,
-  holdLoadingOverlay = false,
   isAnalysisRedacted = false,
   onRedactedUnhideConfirm = null,
   onOpenProfile = null,
@@ -177,8 +176,6 @@ export default function TellMeMorePill({
             <InferenceChainPanel
               post={highlightedPost}
               personaLabel={label}
-              holdLoadingOverlay={holdLoadingOverlay}
-              skipLoadingOverlay={false}
               redacted={isAnalysisRedacted}
               onRedactedUnhideConfirm={onRedactedUnhideConfirm}
               onOpenProfile={onOpenProfile}
