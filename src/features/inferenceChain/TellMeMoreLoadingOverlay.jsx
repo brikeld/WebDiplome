@@ -9,29 +9,18 @@ const DEFAULT_BARS = [
 
 const COMPACT_BARS = [{ solid: false }, { solid: false }, { solid: true }];
 
-export const LEADERBOARD_LOAD_BARS = [
-  { height: '16%' },
-  { height: '24%' },
-  { height: '24%' },
-  { height: '22%' },
-  { solid: true },
-];
-
 export default function TellMeMoreLoadingOverlay({
   loadingKey = 'idle',
   bars,
   loop = false,
   compact = false,
-  className = '',
-  style = undefined,
 }) {
   const resolvedBars = bars ?? (compact ? COMPACT_BARS : DEFAULT_BARS);
 
   return (
     <div
       key={loadingKey}
-      className={`tell-load${loop ? ' tell-load--loop' : ''}${compact ? ' tell-load--compact' : ''}${className ? ` ${className}` : ''}`}
-      style={style}
+      className={`tell-load${loop ? ' tell-load--loop' : ''}${compact ? ' tell-load--compact' : ''}`}
       aria-hidden="true"
     >
       {resolvedBars.map((bar, idx) => (

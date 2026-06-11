@@ -780,10 +780,23 @@ function AppInner({
     tellPhaseTimersRef.current = [];
   }, []);
 
-  const scheduleTellPhaseTimers = useCallback(() => {
+  const scheduleTellPhaseTimers = useCallback((skipRadar = false) => {
     const runId = tellRunIdRef.current + 1;
     tellRunIdRef.current = runId;
     tellPhaseTimersRef.current.forEach((id) => clearTimeout(id));
+    if (skipRadar) {
+      tellPhaseTimersRef.current = [
+        setTimeout(() => {
+          if (tellRunIdRef.current !== runId) return;
+          setTellPhase('revealing');
+        }, TELL_LAYOUT_MS),
+        setTimeout(() => {
+          if (tellRunIdRef.current !== runId) return;
+          setTellPhase('content');
+        }, TELL_LAYOUT_MS + TELL_REVEAL_MS),
+      ];
+      return;
+    }
     tellPhaseTimersRef.current = [
       setTimeout(() => {
         if (tellRunIdRef.current !== runId) return;
@@ -805,19 +818,11 @@ function AppInner({
     clearTellTimers();
     tellRunIdRef.current += 1;
 
-    if (post.leaderboard) {
-      flushSync(() => {
-        setHighlightedPost(post);
-        setTellPhase('content');
-      });
-      return;
-    }
-
     flushSync(() => {
       setHighlightedPost(post);
       setTellPhase('expanding');
     });
-    scheduleTellPhaseTimers();
+    scheduleTellPhaseTimers(Boolean(post.leaderboard));
   }, [clearTellTimers, scheduleTellPhaseTimers]);
 
   const closeTell = useCallback(({ preserveHighlight = false } = {}) => {

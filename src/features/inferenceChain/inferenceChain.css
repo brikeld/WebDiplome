@@ -496,10 +496,6 @@
   gap: clamp(6px, 0.65vh, 9px);
 }
 
-.inference-panel--leaderboard:not(.is-ready) .inference-panel__redacted-content > .lbx {
-  visibility: hidden;
-}
-
 .tell-more-pill--expanded .lb2 {
   --lb-fs-label: clamp(11px, 1.05vw, 13px);
   --lb-fs-value: clamp(15px, 1.6vw, 19px);
@@ -1141,7 +1137,7 @@
   flex-direction: column;
   gap: var(--lb-gap, 14px);
   background: var(--tell-pill-pastel, #bccdf5);
-  animation: tell-load-life var(--tell-load-life, 2.5s) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: tell-load-life 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   pointer-events: none;
   box-sizing: border-box;
 }
@@ -1194,14 +1190,8 @@
    covers the panel edge-to-edge, so apply matching padding here so the
    skeleton bars sit inside the same content rect the real UI lives in. */
 .tell-more-pill--expanded .tell-load,
-.inference-panel:not(.inference-panel--leaderboard) .tell-load {
+.inference-panel .tell-load {
   padding: clamp(28px, 3.2vh, 40px) clamp(16px, 1.8vw, 24px) clamp(14px, 1.6vh, 20px);
-  box-sizing: border-box;
-}
-
-.inference-panel--leaderboard .tell-load,
-.inference-panel--leaderboard .tell-load--leaderboard {
-  padding: clamp(10px, 1.2vh, 14px);
   box-sizing: border-box;
 }
 
@@ -3748,21 +3738,3 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   font-size: clamp(11px, 0.92vw, 20px);
   color: color-mix(in srgb, var(--lbx-accent) 50%, #000);
 }
-
-/* ── Staggered reveal after loading shimmer clears ── */
-.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > * {
-  animation: tell-panel-section-in 640ms var(--tell-ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
-}
-
-.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(1) { animation-delay: 0ms; }
-.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(2) { animation-delay: 90ms; }
-.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(3) { animation-delay: 170ms; }
-.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(4) { animation-delay: 250ms; }
-.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(5) { animation-delay: 330ms; }
-
-.inference-panel--leaderboard.is-ready .lbx__screen--others.is-active > * {
-  animation: tell-panel-section-in 560ms var(--tell-ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
-}
-
-.inference-panel--leaderboard.is-ready .lbx__screen--others.is-active > *:nth-child(1) { animation-delay: 0ms; }
-.inference-panel--leaderboard.is-ready .lbx__screen--others.is-active > *:nth-child(2) { animation-delay: 100ms; }

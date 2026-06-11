@@ -75,6 +75,7 @@ export default function TellMeMorePill({
   leaderboardDirectorySlugs = [],
 }) {
   const phase = expanded && tellPhase === 'idle' ? 'content' : tellPhase;
+  const isLeaderboardPost = Boolean(highlightedPost?.leaderboard);
   const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
   const postPersonaKey = String(highlightedPost?.persona ?? mainPersonaKey).toLowerCase();
   const postUiKey = PERSONA_ACCENT[postPersonaKey] ? postPersonaKey : mainPersonaKey;
@@ -93,11 +94,11 @@ export default function TellMeMorePill({
   const displayLabel = useMainTheme ? mainLabel : label;
 
   const idleActive = phase === 'idle' || phase === 'expanding';
-  const idleExit = phase === 'loading';
+  const idleExit = phase === 'loading' || (isLeaderboardPost && phase === 'revealing');
   const showIdle = idleActive || idleExit;
 
-  const loaderActive = phase === 'loading';
-  const loaderExit = phase === 'revealing';
+  const loaderActive = !isLeaderboardPost && phase === 'loading';
+  const loaderExit = !isLeaderboardPost && phase === 'revealing';
   const showLoader = loaderActive || loaderExit;
 
   const panelEnter = phase === 'revealing';
@@ -112,7 +113,7 @@ export default function TellMeMorePill({
 
   const morphClass = [
     'tell-morph',
-    phase === 'loading' || phase === 'revealing' ? 'tell-morph--radar-phase' : '',
+    !isLeaderboardPost && (phase === 'loading' || phase === 'revealing') ? 'tell-morph--radar-phase' : '',
     phase === 'content' || phase === 'revealing' || phase === 'closing' ? 'tell-morph--info-phase' : '',
     phase === 'closing' ? 'tell-morph--closing' : '',
   ]
