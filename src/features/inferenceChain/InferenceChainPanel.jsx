@@ -21,6 +21,7 @@ import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 import { freshPanelUi, nextPanelUi } from './panelState.js';
 import FocusDetail from './FocusDetail.jsx';
 import { chainChipLines, splitLabelTwoLines } from './chipLabelUtils.js';
+import { chipEmojiForLabel } from './chipEmojiUtils.js';
 import { synthesiseChartMetadata } from '@/lib/chartPostMetadata.js';
 
 const CHAIN_KEYS = ['data', 'classify', 'infer'];
@@ -126,6 +127,14 @@ function ChipTwoLineLabel({ line1, line2, suffix = null }) {
       )}
       {suffix}
     </>
+  );
+}
+
+function ChipEmoji({ emoji }) {
+  return (
+    <span className="reason-chip__emoji" aria-hidden="true">
+      {emoji}
+    </span>
   );
 }
 
@@ -272,7 +281,10 @@ export default function InferenceChainPanel({
                   className={`reason-chip${activeChainStep === i ? ' is-open' : ''}`}
                   onClick={() => setActiveDetail('chain', i)}
                 >
-                  <ChipTwoLineLabel {...chainChipLines(item.label)} />
+                  <ChipEmoji emoji={chipEmojiForLabel(item.label, 'chain', i)} />
+                  <span className="reason-chip__body">
+                    <ChipTwoLineLabel {...chainChipLines(item.label)} />
+                  </span>
                 </button>
               ))}
             </div>
@@ -300,7 +312,10 @@ export default function InferenceChainPanel({
                   className={`reason-chip${activeThinking === i ? ' is-open' : ''}`}
                   onClick={() => setActiveDetail('thinking', i)}
                 >
-                  <ChipTwoLineLabel {...splitLabelTwoLines(th.label)} />
+                  <ChipEmoji emoji={chipEmojiForLabel(th.label, 'thinking', i)} />
+                  <span className="reason-chip__body">
+                    <ChipTwoLineLabel {...splitLabelTwoLines(th.label)} />
+                  </span>
                 </button>
               ))}
             </div>
@@ -331,6 +346,7 @@ export default function InferenceChainPanel({
                     className={`reason-chip ing-chip${activeIngredient === i ? ' is-open' : ''}`}
                     onClick={() => setActiveDetail('ingredient', i)}
                   >
+                    <ChipEmoji emoji={chipEmojiForLabel(ing.label, 'ingredient', i)} />
                     <span className="ing-chip__label">
                       <ChipTwoLineLabel
                         line1={line1}

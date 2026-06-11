@@ -41,9 +41,13 @@ describe('tell-me-more expanded layout CSS contract', () => {
     expect(transitionCss).toContain('--tell-content-pad');
     expect(transitionCss).toContain('.tell-morph__layer--panel');
     expect(transitionCss).toContain('container-name: dash-tell');
-    expect(transitionCss).toContain('--dash-panel-gap: 0');
+    expect(inferenceCss).toContain('--dash-panel-gap');
     expect(transitionCss).toContain('--dashboard-tell-inset');
     expect(transitionCss).toContain('--dash-section-radius');
+    expect(transitionCss).toContain('--dash-chip-radius');
+    expect(transitionCss).toMatch(
+      /--tell-morph-radius:[\s\S]*calc\(var\(--dashboard-shell-radius/
+    );
     expect(transitionCss).toContain('tell-panel-a__stack:not(.tell-panel-a__stack--has-focus)');
     expect(inferenceCss).toContain("@import './tellTransition.css'");
   });

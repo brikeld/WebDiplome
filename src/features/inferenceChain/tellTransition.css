@@ -16,6 +16,16 @@
   --dash-timer-track: 0fr;
   --dash-tell-track: 1fr;
   gap: 0;
+  /* Concentric radii: shell → morph → section → chip (each minus its inset). */
+  --dashboard-tell-inset: clamp(16px, 1.75vh, 22px);
+  --tell-content-inset: clamp(14px, 1.6vh, 20px);
+  --tell-morph-radius: max(
+    10px,
+    calc(var(--dashboard-shell-radius, var(--capsule-radius, 44px)) - var(--dashboard-tell-inset))
+  );
+  --dash-section-radius: max(10px, calc(var(--tell-morph-radius) - var(--tell-content-inset)));
+  --dash-chip-radius: max(8px, calc(var(--dash-section-radius) - 12px));
+  padding: var(--dashboard-tell-inset);
 }
 
 .dashboard-capsule--figma[data-tell-step="expanding"] .dashboard-actions-row,
@@ -71,10 +81,6 @@
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="revealing"],
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="content"],
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule.dashboard-capsule--figma[data-tell-step="closing"] {
-  --dashboard-tell-inset: clamp(16px, 1.75vh, 22px);
-  --tell-morph-radius: calc(var(--capsule-radius, 44px) - var(--dashboard-tell-inset));
-  --dash-section-radius: max(20px, calc(var(--tell-morph-radius) * 0.82));
-  padding: var(--dashboard-tell-inset);
   gap: 0;
 }
 
@@ -597,11 +603,8 @@
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel {
-  --tell-content-pad: clamp(14px, 1.6vh, 22px) clamp(14px, 1.4vw, 22px);
-  --inference-redacted-clip-radius: max(
-    12px,
-    calc(var(--tell-morph-radius, 28px) - clamp(10px, 1.1vh, 14px))
-  );
+  --tell-content-pad: var(--tell-content-inset, clamp(14px, 1.6vh, 20px));
+  --inference-redacted-clip-radius: var(--tell-morph-radius, var(--capsule-radius, 44px));
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
@@ -668,6 +671,7 @@
   overflow: visible;
   display: flex;
   flex-direction: column;
+  border-radius: var(--dash-section-radius);
 }
 
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .tape-section,
@@ -684,6 +688,7 @@
   overflow: visible;
   display: flex;
   flex-direction: column;
+  border-radius: var(--dash-section-radius);
 }
 
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .reason-chips,
@@ -725,7 +730,7 @@
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .ing-bar__row {
   min-height: clamp(48px, 6vh, 76px);
   padding: clamp(10px, 1.1vh, 15px) clamp(7px, 0.6vw, 12px);
-  border-radius: clamp(14px, 1.3vw, 18px);
+  border-radius: var(--dash-chip-radius, clamp(14px, 1.3vw, 18px));
 }
 
 /* ── 5) Height-aware density (no internal scroll) ── */
@@ -752,9 +757,11 @@
 }
 
 @container dash-tell (max-height: 460px) {
-  .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel,
-  .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel {
-    --tell-content-pad: clamp(10px, 1.1vw, 14px);
+  .dashboard-capsule--figma[data-tell-step="content"],
+  .dashboard-capsule--figma[data-tell-step="closing"] {
+    --tell-content-inset: clamp(10px, 1.1vw, 14px);
+    --dash-section-radius: max(8px, calc(var(--tell-morph-radius) - var(--tell-content-inset)));
+    --dash-chip-radius: max(6px, calc(var(--dash-section-radius) - 10px));
   }
 
   .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a--alt-palette-2 {
@@ -768,7 +775,7 @@
   .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .ing-chip {
     min-height: 26px;
     padding: 5px 7px;
-    border-radius: 10px;
+    border-radius: var(--dash-chip-radius, 10px);
   }
 }
 

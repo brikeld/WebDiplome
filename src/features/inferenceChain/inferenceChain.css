@@ -203,7 +203,7 @@
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .ing-bar__row {
   min-height: clamp(48px, 6vh, 76px);
   padding: clamp(10px, 1.1vh, 15px) clamp(7px, 0.6vw, 12px);
-  border-radius: clamp(14px, 1.3vw, 18px);
+  border-radius: var(--dash-chip-radius, clamp(14px, 1.3vw, 18px));
 }
 
 /* Chips: dedicated (slightly smaller than the quote) type that keeps whole
@@ -2257,8 +2257,22 @@
   overflow-wrap: anywhere;
   min-height: clamp(46px, 5vh, 60px);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 4px;
+}
+
+.reason-chip__emoji {
+  display: block;
+  flex: 0 0 auto;
+  font-size: clamp(16px, 1.15vw, 22px);
+  line-height: 1;
+}
+
+.reason-chip__body {
+  display: block;
+  width: 100%;
 }
 
 .reason-chip.is-open {
