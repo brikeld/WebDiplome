@@ -20,7 +20,7 @@ import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
  *   1. main  → rank hero, why-this-rank, how-to-climb, what-counted (chips).
  *   2. others → what every other user "said" about their position.
  *
- * Content reveals immediately with a staggered fade (no skeleton loader).
+ * Content is covered by the parent panel loading shimmer, then staggers in.
  */
 
 function OtherUserRow({ entry, rationale, authorSlug, directorySlugs, onOpenProfile }) {

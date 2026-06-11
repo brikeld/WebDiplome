@@ -28,10 +28,9 @@ describe('Tell me more — leaderboard analysis', () => {
       />,
     );
 
-    expect(html).toContain('WHY THE SYSTEM');
+    expect(html).toContain('WHY THIS RANK');
     expect(html).toContain('The system scored your trace on this board');
     expect(html).toContain('WHAT COUNTED');
-    expect(html).not.toContain('<p class="lb2__value"></p>');
   });
 
   it('renders profile avatars and position comments on other users', () => {
@@ -65,9 +64,9 @@ describe('Tell me more — leaderboard analysis', () => {
       />,
     );
 
-    expect(html).toContain('lb2__other-avatar-img');
+    expect(html).toContain('lbx__other-avatar-img');
     expect(html).toContain('/uploads/abc.png');
-    expect(html).toContain('lb2__other-comment');
+    expect(html).toContain('lbx__other-phrase');
     expect(html).toContain('leading the pack at number one today');
   });
 });

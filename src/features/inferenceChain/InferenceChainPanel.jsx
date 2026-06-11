@@ -16,8 +16,11 @@ import { useEffect, useState } from 'react';
 import PostTextHighlights from './PostTextHighlights.jsx';
 import LeaderboardRationaleView from './LeaderboardRationaleView.jsx';
 import RedactedAnalysisOverlay from './RedactedAnalysisOverlay.jsx';
-import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
-import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
+import {
+  useTellMeMoreLoading,
+  TELL_ME_MORE_LEADERBOARD_LOADING_MS,
+} from './useTellMeMoreLoading.js';
+import TellMeMoreLoadingOverlay, { LEADERBOARD_LOAD_BARS } from './TellMeMoreLoadingOverlay.jsx';
 import { freshPanelUi, nextPanelUi } from './panelState.js';
 import FocusDetail from './FocusDetail.jsx';
 import { chainChipLines, splitLabelTwoLines } from './chipLabelUtils.js';
@@ -168,10 +171,13 @@ export default function InferenceChainPanel({
   const leaderboard = post?.leaderboard ?? null;
   const isLeaderboardPost = Boolean(leaderboard && Array.isArray(leaderboard.entries));
 
-  const { ready, loadingKey } = useTellMeMoreLoading(
-    isLeaderboardPost || skipLoadingOverlay ? [] : [post?.id],
-    { blocked: holdLoadingOverlay || skipLoadingOverlay },
-  );
+  const tellLoadDeps = skipLoadingOverlay
+    ? []
+    : [post?.id, isLeaderboardPost ? leaderboard?.boardId : null];
+  const { ready, loadingKey } = useTellMeMoreLoading(tellLoadDeps, {
+    blocked: holdLoadingOverlay || skipLoadingOverlay,
+    durationMs: isLeaderboardPost ? TELL_ME_MORE_LEADERBOARD_LOADING_MS : undefined,
+  });
   const panelReady = skipLoadingOverlay || ready;
 
   const [panelUi, setPanelUi] = useState(() => freshPanelUi());
@@ -201,10 +207,18 @@ export default function InferenceChainPanel({
   if (isLeaderboardPost) {
     return (
       <div
-        className={`inference-panel inference-panel--leaderboard${redacted ? ' inference-panel--redacted' : ''}`}
+        className={`inference-panel inference-panel--leaderboard${panelReady ? ' is-ready' : ''}${redacted ? ' inference-panel--redacted' : ''}`}
         role="region"
         aria-label="Tell me more analysis"
       >
+        {!skipLoadingOverlay && !panelReady ? (
+          <TellMeMoreLoadingOverlay
+            loadingKey={loadingKey}
+            className="tell-load--leaderboard"
+            bars={LEADERBOARD_LOAD_BARS}
+            style={{ '--tell-load-life': `${TELL_ME_MORE_LEADERBOARD_LOADING_MS}ms` }}
+          />
+        ) : null}
         <div className="inference-panel__redacted-content">
           <LeaderboardRationaleView
             leaderboard={leaderboard}

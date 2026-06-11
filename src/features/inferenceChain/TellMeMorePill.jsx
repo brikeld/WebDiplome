@@ -177,7 +177,7 @@ export default function TellMeMorePill({
               post={highlightedPost}
               personaLabel={label}
               holdLoadingOverlay={holdLoadingOverlay}
-              skipLoadingOverlay={!highlightedPost.leaderboard}
+              skipLoadingOverlay={false}
               redacted={isAnalysisRedacted}
               onRedactedUnhideConfirm={onRedactedUnhideConfirm}
               onOpenProfile={onOpenProfile}

@@ -490,9 +490,14 @@
 
 /* Leaderboard — pastel shell comes from open tell step on dashboard capsule */
 .inference-panel--leaderboard {
+  position: relative;
   background: transparent;
   padding: clamp(8px, 0.9vw, 11px);
   gap: clamp(6px, 0.65vh, 9px);
+}
+
+.inference-panel--leaderboard:not(.is-ready) .inference-panel__redacted-content > .lbx {
+  visibility: hidden;
 }
 
 .tell-more-pill--expanded .lb2 {
@@ -1136,7 +1141,7 @@
   flex-direction: column;
   gap: var(--lb-gap, 14px);
   background: var(--tell-pill-pastel, #bccdf5);
-  animation: tell-load-life 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: tell-load-life var(--tell-load-life, 2.5s) cubic-bezier(0.4, 0, 0.2, 1) forwards;
   pointer-events: none;
   box-sizing: border-box;
 }
@@ -1191,6 +1196,12 @@
 .tell-more-pill--expanded .tell-load,
 .inference-panel:not(.inference-panel--leaderboard) .tell-load {
   padding: clamp(28px, 3.2vh, 40px) clamp(16px, 1.8vw, 24px) clamp(14px, 1.6vh, 20px);
+  box-sizing: border-box;
+}
+
+.inference-panel--leaderboard .tell-load,
+.inference-panel--leaderboard .tell-load--leaderboard {
+  padding: clamp(10px, 1.2vh, 14px);
   box-sizing: border-box;
 }
 
@@ -3252,7 +3263,7 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
    Leaderboard "Tell Me More" — lbx
    Shares the normal panel's spacing / typography / fill model, but with its
    own identity: black header pills + the post's persona accent. Two sliding
-   screens (main / others). Content reveals immediately (no skeleton loader).
+   screens (main / others). Shimmer overlay, then staggered tile reveal.
    ════════════════════════════════════════════════════════════════════════ */
 
 .tell-more-pill--expanded .inference-panel--leaderboard {
@@ -3738,13 +3749,20 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   color: color-mix(in srgb, var(--lbx-accent) 50%, #000);
 }
 
-/* ── Staggered reveal on open (replaces the old skeleton) ── */
-.tell-morph__layer--panel.is-entering .lbx__screen--main > * {
-  animation: tell-panel-section-in 520ms var(--tell-ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
+/* ── Staggered reveal after loading shimmer clears ── */
+.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > * {
+  animation: tell-panel-section-in 640ms var(--tell-ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
 }
 
-.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(1) { animation-delay: 0ms; }
-.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(2) { animation-delay: 70ms; }
-.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(3) { animation-delay: 130ms; }
-.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(4) { animation-delay: 190ms; }
-.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(5) { animation-delay: 250ms; }
+.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(1) { animation-delay: 0ms; }
+.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(2) { animation-delay: 90ms; }
+.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(3) { animation-delay: 170ms; }
+.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(4) { animation-delay: 250ms; }
+.inference-panel--leaderboard.is-ready .lbx__screen--main:not(.is-gone) > *:nth-child(5) { animation-delay: 330ms; }
+
+.inference-panel--leaderboard.is-ready .lbx__screen--others.is-active > * {
+  animation: tell-panel-section-in 560ms var(--tell-ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
+}
+
+.inference-panel--leaderboard.is-ready .lbx__screen--others.is-active > *:nth-child(1) { animation-delay: 0ms; }
+.inference-panel--leaderboard.is-ready .lbx__screen--others.is-active > *:nth-child(2) { animation-delay: 100ms; }

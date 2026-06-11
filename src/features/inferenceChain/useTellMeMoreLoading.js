@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export const TELL_ME_MORE_LOADING_MS = 2500;
+export const TELL_ME_MORE_LEADERBOARD_LOADING_MS = 3200;
 
 /**
  * Brief skeleton phase when Tell-Me-More opens or its source post changes.
  * `resetDeps` should list values that should re-trigger the loader (e.g. post id).
  */
-export function useTellMeMoreLoading(resetDeps = [], { blocked = false } = {}) {
+export function useTellMeMoreLoading(
+  resetDeps = [],
+  { blocked = false, durationMs = TELL_ME_MORE_LOADING_MS } = {},
+) {
   const [loadingKey, setLoadingKey] = useState(0);
   const [ready, setReady] = useState(false);
   const timerRef = useRef(null);
@@ -16,8 +20,8 @@ export function useTellMeMoreLoading(resetDeps = [], { blocked = false } = {}) {
     setLoadingKey((k) => k + 1);
     clearTimeout(timerRef.current);
     if (blocked) return;
-    timerRef.current = setTimeout(() => setReady(true), TELL_ME_MORE_LOADING_MS);
-  }, [blocked]);
+    timerRef.current = setTimeout(() => setReady(true), durationMs);
+  }, [blocked, durationMs]);
 
   useEffect(() => {
     triggerLoad();
