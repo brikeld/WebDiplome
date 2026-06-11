@@ -10,14 +10,23 @@
  * they appear in the text. Overlapping/missing phrases are skipped silently.
  */
 
+function normalizePostContent(content) {
+  if (content == null) return '';
+  return String(content)
+    .replace(/^\s+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function buildSegments(content, highlights) {
-  if (!content) return [];
+  const normalized = normalizePostContent(content);
+  if (!normalized) return [];
   if (!Array.isArray(highlights) || highlights.length === 0) {
-    return [{ kind: 'text', text: content }];
+    return [{ kind: 'text', text: normalized }];
   }
 
   // Locate the first occurrence (case-insensitive) of each highlight phrase.
-  const lower = content.toLowerCase();
+  const lower = normalized.toLowerCase();
   const located = [];
   highlights.forEach((h, i) => {
     if (!h || typeof h.phrase !== 'string') return;
@@ -50,36 +59,44 @@ function buildSegments(content, highlights) {
   let pos = 0;
   for (const item of cleaned) {
     if (item.start > pos) {
-      out.push({ kind: 'text', text: content.slice(pos, item.start) });
+      out.push({ kind: 'text', text: normalized.slice(pos, item.start) });
     }
     out.push({
       kind: 'highlight',
-      text: content.slice(item.start, item.end),
+      text: normalized.slice(item.start, item.end),
       stepIndex: item.stepIndex,
       ingredientIndex: item.ingredientIndex,
       key: item.key,
     });
     pos = item.end;
   }
-  if (pos < content.length) {
-    out.push({ kind: 'text', text: content.slice(pos) });
+  if (pos < normalized.length) {
+    out.push({ kind: 'text', text: normalized.slice(pos) });
   }
   return out;
 }
 
 export default function PostTextHighlights({ content, highlights, onSelect, activeIngredientIndex = null }) {
   const segments = buildSegments(content, highlights);
+  const lastIndex = segments.length - 1;
 
   return (
     <div className="inference-panel__post-quote">
       <p className="inference-panel__post-text">
-        <span className="inference-panel__post-quote-mark inference-panel__post-quote-mark--open" aria-hidden="true">
-          {'\u201C'}
-        </span>
         {segments.map((seg, i) => {
+          const openQuote = i === 0 ? '\u201C' : '';
+          const closeQuote = i === lastIndex ? '\u201D' : '';
+
           if (seg.kind === 'text') {
-            return <span key={`t-${i}`}>{seg.text}</span>;
+            return (
+              <span key={`t-${i}`}>
+                {openQuote}
+                {seg.text}
+                {closeQuote}
+              </span>
+            );
           }
+
           return (
             <button
               key={`h-${seg.key}`}
@@ -93,13 +110,12 @@ export default function PostTextHighlights({ content, highlights, onSelect, acti
                 })
               }
             >
+              {openQuote}
               {seg.text}
+              {closeQuote}
             </button>
           );
         })}
-        <span className="inference-panel__post-quote-mark inference-panel__post-quote-mark--close" aria-hidden="true">
-          {'\u201D'}
-        </span>
       </p>
     </div>
   );

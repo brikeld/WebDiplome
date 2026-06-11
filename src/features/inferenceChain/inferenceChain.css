@@ -498,16 +498,12 @@
   letter-spacing: -0.005em;
   line-height: 1.45;
   color: #000;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.inference-panel__post-quote-mark {
-  font: inherit;
-  color: inherit;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .inference-panel__highlight {
+  display: inline;
   appearance: none;
   background: transparent;
   border: none;
@@ -517,6 +513,8 @@
   color: inherit;
   cursor: pointer;
   vertical-align: baseline;
+  white-space: normal;
+  max-width: 100%;
   text-decoration: underline;
   text-decoration-color: #000;
   text-decoration-thickness: 2px;
@@ -2045,8 +2043,8 @@
   font-weight: 600;
   font-style: oblique;
   line-height: 1.35;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .post-quote-a .inference-panel__highlight {

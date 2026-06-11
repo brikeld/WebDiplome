@@ -19,3 +19,4 @@ public/uploads/
 
 # Local environment secrets (never commit)
 .env
+.vercel
