@@ -131,9 +131,8 @@
   flex: 0 0 auto;
   min-height: auto;
   overflow: visible;
-  padding: var(--dash-quote-section-pad) var(--dash-section-pad);
+  padding: var(--dash-quote-section-pad);
   border-radius: var(--dash-section-radius, 16px);
-  box-shadow: 0 0 0 1px var(--tell-pill-accent, #759aef);
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape-section,
@@ -2294,15 +2293,11 @@
   opacity: 0.72;
 }
 
-/* ing-chip inherits the shared "Soft Studio" tile look (.reason-chip rules).
-   Only the percentage figure is persona-coloured on the open tile. */
+/* ing-chip inherits the shared chip look (.reason-chip rules). The % figure
+   is a muted ink on the resting white tile; on the accent-fill open state it
+   is handled by the black-text rule below. */
 .tell-panel-a--alt-palette-2 .ing-chip__pct {
   color: color-mix(in srgb, var(--a-ink, #0c1018) 55%, #fff);
-  opacity: 1;
-}
-
-.tell-panel-a--alt-palette-2 .ing-chip.is-open .ing-chip__pct {
-  color: var(--tell-pill-accent, #759aef);
   opacity: 1;
 }
 
@@ -2423,16 +2418,15 @@
 }
 
 .tell-panel-a--alt-palette-2 {
-  /* "Soft Studio" skin — light surfaces tinted with the SELECTED post's
-     persona accent (--tell-pill-accent, set per post in App.jsx), white
-     elevated tiles on top. The tint is what makes each post visibly its
-     own colour while staying clean (even the washed productivity grey). */
+  /* Persona-themed surfaces using the SELECTED post's actual colours
+     (--tell-pill-accent / --tell-pill-pastel, set per post in App.jsx).
+     Interaction language matches the app's .rail-btn: hover = accent tint,
+     active = solid accent fill. Strokes are real borders so they never clip. */
   --a-ink: #0c1018;
   --a-accent: var(--tell-pill-accent, #759aef);
-  --a-surface: color-mix(in srgb, var(--a-accent) 16%, #fafbfe);
-  --a-surface-strong: color-mix(in srgb, var(--a-accent) 30%, #ffffff);
+  --a-pastel: var(--tell-pill-pastel, #bccdf5);
   --a-tile: #ffffff;
-  --a-line: color-mix(in srgb, var(--a-accent) 30%, #e4e8f0);
+  --a-chip-line: color-mix(in srgb, var(--a-accent) 42%, #ffffff);
   background: transparent;
   color: var(--a-ink);
   border-radius: 0;
@@ -2443,14 +2437,18 @@
 .tell-panel-a--alt-palette-2 .tape-section,
 .tell-panel-a--alt-palette-2 .ing-section,
 .tell-panel-a--alt-palette-2 .reason-section {
-  background: var(--a-surface);
-  border: none;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--a-accent) 22%, #dfe4ee);
+  background: var(--a-pastel);
+  border: 1.5px solid var(--a-accent);
+  box-shadow: none;
+  /* Let chip hover-lift + shadow render past the section edge (no clipping). */
+  overflow: visible;
 }
 
-/* The POST quote is the hero — a touch more saturated than the analysis sections. */
+/* The POST quote is the hero — same pastel, emphasised with a thicker accent
+   border (keeps the long oblique quote readable, unlike a solid accent fill). */
 .tell-panel-a--alt-palette-2 .post-quote-a {
-  background: var(--a-surface-strong);
+  background: var(--a-pastel);
+  border-width: 2.5px;
 }
 
 /* Section titles: plain black text, full opacity — no black pill. */
@@ -2499,44 +2497,41 @@
 .tell-panel-a--alt-palette-2 .reason-chip,
 .tell-panel-a--alt-palette-2 .ing-bar__row {
   background: var(--a-tile, #fff);
-  border: none;
+  border: 2px solid var(--a-chip-line);
   color: var(--a-ink, #0c1018);
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.06),
-    0 0 0 1px var(--a-line, #e4e8f0);
-  /* Single easing/duration for transform + shadow keeps the lift smooth. */
+  box-shadow: none;
   transition:
-    transform 160ms ease-out,
-    box-shadow 160ms ease-out,
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
     background 200ms ease-out,
+    border-color 200ms ease-out,
+    box-shadow 200ms ease-out,
     color 200ms ease-out;
 }
 
-/* Hover = small lift, soft contained shadow, accent edge. Text stays dark. */
+/* Hover = noticeable lift + accent tint + accent border (matches .rail-btn). */
 .tell-panel-a--alt-palette-2 .tape__content:hover,
 .tell-panel-a--alt-palette-2 .reason-chip:hover,
 .tell-panel-a--alt-palette-2 .ing-bar__row:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 6px 14px -10px rgba(15, 23, 42, 0.40),
-    0 0 0 1px color-mix(in srgb, var(--a-accent, #759aef) 55%, var(--a-line, #e4e8f0));
+  transform: translateY(-5px) scale(1.025);
+  background: color-mix(in srgb, var(--a-accent, #759aef) 16%, #fff);
+  border-color: var(--a-accent, #759aef);
+  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--a-accent, #759aef) 80%, #000);
 }
 
-/* Open = pressed-in dark tile, white label, accent figures. */
+/* Open/selected = solid accent fill + black text (matches .rail-btn.is-active). */
 .tell-panel-a--alt-palette-2 .tape__content.is-open,
 .tell-panel-a--alt-palette-2 .reason-chip.is-open,
 .tell-panel-a--alt-palette-2 .ing-bar__row.is-open {
   transform: none;
-  background: linear-gradient(180deg, #11151d, #0a0e16);
-  color: #fff;
-  box-shadow: 0 6px 16px -10px rgba(10, 14, 22, 0.55), 0 0 0 1px #0a0e16;
+  background: var(--a-accent, #759aef);
+  border-color: var(--a-accent, #759aef);
+  color: #000;
 }
 
 .tell-panel-a--alt-palette-2 .tape__content:active,
 .tell-panel-a--alt-palette-2 .reason-chip:active,
 .tell-panel-a--alt-palette-2 .ing-bar__row:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10), 0 0 0 1px var(--a-line, #e4e8f0);
+  transform: translateY(-2px) scale(1.01);
 }
 
 /* Highlight phrases inside the quote keep the simple accent treatment. */
@@ -2551,15 +2546,16 @@
   color: #000;
 }
 
-/* Open tile is dark ink — its text flips to white. Hover keeps dark text
-   (flipping to a pale accent like productivity grey would vanish on white). */
+/* Open chip = solid accent fill — text and figures go black for contrast,
+   matching the app's accent-fill selected states. */
 .tell-panel-a--alt-palette-2 .tape__content.is-open .tape__label,
 .tell-panel-a--alt-palette-2 .tape__content.is-open .tape__value,
 .tell-panel-a--alt-palette-2 .tape__content.is-open .tape__detail,
 .tell-panel-a--alt-palette-2 .ing-bar__row.is-open .ing-bar__label,
 .tell-panel-a--alt-palette-2 .reason-chip.is-open,
-.tell-panel-a--alt-palette-2 .reason-chip.is-open .ing-chip__label {
-  color: #fff;
+.tell-panel-a--alt-palette-2 .reason-chip.is-open .ing-chip__label,
+.tell-panel-a--alt-palette-2 .reason-chip.is-open .ing-chip__pct {
+  color: #000;
 }
 
 .tell-panel-a--alt-palette-2 .panel-a__detail-label {
@@ -2848,13 +2844,14 @@
   border-top: 0;
 }
 
-/* Detail view (after a chip is clicked) — same "Soft Studio" system as the
-   panel: white card, soft shadow, plain black eyebrow, soft-tile back button. */
+/* Detail view (after a chip is clicked) — same language as the panel:
+   white card with an accent border, plain black eyebrow, and a back button
+   that uses the exact chip hover (lift + accent tint + accent border). */
 .tell-panel-a--alt-palette-2 .focus-detail {
   background: var(--a-tile, #fff);
-  border: none;
+  border: 2px solid var(--a-accent, #759aef);
   border-radius: clamp(14px, 1.3vw, 18px);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 0 0 1px var(--a-line, #e4e8f0);
+  box-shadow: none;
   color: var(--a-ink, #0c1018);
   padding: clamp(12px, 1.2vh, 16px) clamp(12px, 1.2vw, 16px);
 }
@@ -2875,26 +2872,33 @@
   letter-spacing: 0.13em;
 }
 
-/* Back button: soft white tile with the same lift-on-hover as the chips. */
+/* Back button: same chip language — white tile, accent border, lift + accent
+   tint on hover, accent fill when pressed. */
 .tell-panel-a--alt-palette-2 .focus-detail__back {
-  border: none;
+  border: 2px solid var(--a-chip-line);
   background: var(--a-tile, #fff);
   color: var(--a-ink, #0c1018);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10), 0 0 0 1px var(--a-line, #e4e8f0);
-  transition: transform 160ms ease-out, box-shadow 160ms ease-out;
+  box-shadow: none;
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 200ms ease-out,
+    border-color 200ms ease-out,
+    box-shadow 200ms ease-out;
 }
 
 .tell-panel-a--alt-palette-2 .focus-detail__back:hover {
-  transform: translateY(-2px);
-  background: var(--a-tile, #fff);
+  transform: translateY(-3px) scale(1.06);
+  background: color-mix(in srgb, var(--a-accent, #759aef) 16%, #fff);
+  border-color: var(--a-accent, #759aef);
   color: var(--a-ink, #0c1018);
-  box-shadow:
-    0 6px 14px -10px rgba(15, 23, 42, 0.40),
-    0 0 0 1px color-mix(in srgb, var(--a-accent, #759aef) 55%, var(--a-line, #e4e8f0));
+  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--a-accent, #759aef) 80%, #000);
 }
 
 .tell-panel-a--alt-palette-2 .focus-detail__back:active {
-  transform: translateY(0);
+  transform: translateY(-1px) scale(1.02);
+  background: var(--a-accent, #759aef);
+  border-color: var(--a-accent, #759aef);
+  color: #000;
 }
 
 @keyframes focus-detail-in {
