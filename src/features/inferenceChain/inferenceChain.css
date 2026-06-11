@@ -3504,7 +3504,7 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   background: #000;
   border-radius: var(--lbx-chip-radius);
   padding: clamp(11px, 1.2vh, 16px) clamp(12px, 1.2vw, 17px);
-  animation: tell-panel-section-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: tell-panel-section-in var(--tell-section-dur, 780ms) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .lbx__detail-head {

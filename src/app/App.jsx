@@ -117,11 +117,11 @@ const API_ORIGIN = resolveApiOrigin();
 const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
 const PUBLIC_DIRECTORY_POLL_MS = 30_000;
 const PUBLIC_FEED_POLL_MS = 30_000;
-const TELL_LAYOUT_MS = 1500;
-const TELL_CROSSFADE_MS = 520;
+const TELL_LAYOUT_MS = 2250;
+const TELL_CROSSFADE_MS = 780;
 const TELL_RADAR_HOLD_MS = 3400;
-const TELL_REVEAL_MS = 640;
-const TELL_CLOSE_FADE_MS = 480;
+const TELL_REVEAL_MS = 1300;
+const TELL_CLOSE_FADE_MS = 720;
 
 const PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 const PERSONA_ALIASES = {

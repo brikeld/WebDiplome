@@ -2735,7 +2735,7 @@ button.profile-name-link.leaderboard-row__name {
   --dashboard-timer-radius: 28px;
   --dashboard-timer-time-radius: 20px;
   --dashboard-shell-radius: var(--capsule-radius);
-  --tell-layout-dur: 1500ms;
+  --tell-layout-dur: 2250ms;
   --tell-layout-ease: cubic-bezier(0.32, 0.72, 0, 1);
   --dash-timer-track: 1fr;
   --dash-tell-track: 3fr;
