@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import LeaderboardRationaleView from '@/features/inferenceChain/LeaderboardRationaleView.jsx';
 import { useProfileLeaderboards, profileViewerSlug } from '@/features/profile/useProfileLeaderboards.js';
@@ -48,13 +49,95 @@ function directorySlugsFromBoards(boards) {
   return [...slugs];
 }
 
-// hiddenMode: 'none' | 'board' (whole card hidden — the owner hid this board).
-// Individual rows redact independently via each entry's global `selfHidden` flag.
+function LeaderboardAnalysisModal({
+  board,
+  persona,
+  authorSlug,
+  onOpenProfile,
+  leaderboardDirectorySlugs,
+  onClose,
+}) {
+  const rationaleLeaderboard = useMemo(
+    () => enrichProfileLeaderboardForRationale(board),
+    [board],
+  );
+  const accentColor = PERSONA_COLORS[persona] ?? '#759aef';
+  const rank = Number(board.userRank);
+  const hasRank = Number.isFinite(rank);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const handleOpenProfile = useCallback(
+    (...args) => { onClose(); onOpenProfile?.(...args); },
+    [onClose, onOpenProfile],
+  );
+
+  return createPortal(
+    <div
+      className="lb-analysis-modal-backdrop"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={board.title ?? 'Leaderboard analysis'}
+    >
+      <div
+        className="lb-analysis-modal"
+        style={{ '--lb-modal-accent': accentColor }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="lb-analysis-modal__head">
+          <button
+            type="button"
+            className="lb-analysis-modal__close"
+            onClick={onClose}
+            aria-label="Close analysis"
+          />
+          <div className="lb-analysis-modal__head-info">
+            <p className="lb-analysis-modal__eyebrow">leaderboards</p>
+            <h3 className="lb-analysis-modal__title">{board.title ?? 'Leaderboard'}</h3>
+          </div>
+          {hasRank && (
+            <span className="lb-analysis-modal__rank">
+              {Math.trunc(rank)}
+              <sup>{ordinalSuffix(rank)}</sup>
+            </span>
+          )}
+        </header>
+
+        <div
+          className="lb-analysis-modal__body"
+          style={{
+            '--lbx-accent': accentColor,
+            '--tell-pill-accent': accentColor,
+          }}
+        >
+          <LeaderboardRationaleView
+            leaderboard={rationaleLeaderboard}
+            authorSlug={authorSlug}
+            onOpenProfile={handleOpenProfile}
+            leaderboardDirectorySlugs={leaderboardDirectorySlugs}
+          />
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export function LeaderboardCard({
   board,
   hiddenMode = 'none',
-  expanded = false,
-  onToggleExpand,
+  onOpenAnalysis = null,
   authorSlug = null,
   onOpenProfile = null,
   leaderboardDirectorySlugs = [],
@@ -63,38 +146,38 @@ export function LeaderboardCard({
   const hasRank = Number.isFinite(rank);
   const boardHidden = hiddenMode === 'board';
   const title = String(board.title ?? 'Leaderboard');
-  const canExpand = !boardHidden && typeof onToggleExpand === 'function';
+  const canOpen = !boardHidden && typeof onOpenAnalysis === 'function';
+  const [tapping, setTapping] = useState(false);
 
-  const rationaleLeaderboard = useMemo(
-    () => enrichProfileLeaderboardForRationale(board),
-    [board],
-  );
-
-  const openAnalysis = () => {
-    if (!canExpand || expanded) return;
-    onToggleExpand();
+  const triggerTap = () => {
+    if (!canOpen || tapping) return;
+    setTapping(true);
+    setTimeout(() => {
+      setTapping(false);
+      onOpenAnalysis(board);
+    }, 160);
   };
 
-  const handleExpand = (event) => {
-    if (!canExpand || expanded) return;
+  const handleCardClick = (event) => {
+    if (!canOpen) return;
     const nested = event.target.closest('button, a, .profile-avatar-link');
     if (nested && nested !== event.currentTarget) return;
     event.preventDefault();
-    openAnalysis();
+    triggerTap();
   };
 
   return (
     <article
-      className={`profile-leaderboard-card${boardHidden ? ' profile-leaderboard-card--hidden' : ''}${expanded ? ' profile-leaderboard-card--analysis' : ''}${canExpand && !expanded ? ' profile-leaderboard-card--expandable' : ''}`}
-      {...(canExpand && !expanded
+      className={`profile-leaderboard-card${boardHidden ? ' profile-leaderboard-card--hidden' : ''}${canOpen ? ' profile-leaderboard-card--expandable' : ''}${tapping ? ' profile-leaderboard-card--tapping' : ''}`}
+      {...(canOpen
         ? {
             tabIndex: 0,
-            'aria-expanded': expanded,
-            onClick: handleExpand,
+            'aria-label': `Open analysis for ${title}`,
+            onClick: handleCardClick,
             onKeyDown: (event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                openAnalysis();
+                triggerTap();
               }
             },
           }
@@ -111,68 +194,42 @@ export function LeaderboardCard({
         </span>
       </header>
 
-      {!expanded ? (
-        <ol className="profile-leaderboard-card__rows" aria-label={`${title} standings`}>
-          {(board.entries || []).map((entry) => {
-            const isBot = entry.source === 'bot';
-            const rowHidden = !boardHidden && entry.source === 'real' && Boolean(entry.selfHidden);
-            return (
-              <li
-                key={`${board.boardId}-${entry.rank}-${entry.handle}-${entry.isUser ? 'self' : 'clone'}`}
-                className={`profile-leaderboard-row${entry.isUser ? ' is-self' : ''}${rowHidden ? ' profile-leaderboard-row--hidden' : ''}`}
-                aria-label={rowHidden ? `Hidden row for ${entry.name}` : undefined}
-              >
-                <span className="profile-leaderboard-row__rank">{entry.rank}</span>
-                <ProfileAvatarLink
-                  className="profile-leaderboard-row__avatar"
-                  imgClassName="profile-leaderboard-row__avatar-img"
-                  initialsClassName="profile-leaderboard-row__avatar-initials"
-                  avatarSrc={isBot ? null : (entry.avatarSrc || null)}
-                  avatarInitials={isBot ? entry.avatarInitials : null}
-                />
-                <span className="profile-leaderboard-row__name">{entry.name}</span>
-                {rowHidden ? (
-                  <div className="profile-leaderboard-row__hidden-notice" role="status">
-                    <span className="profile-leaderboard-row__hidden-notice-title">
-                      Position hidden
-                    </span>
-                  </div>
-                ) : null}
-              </li>
-            );
-          })}
-        </ol>
-      ) : (
-        <div className="profile-leaderboard-card__analysis">
-          <button
-            type="button"
-            className="profile-leaderboard-card__analysis-back"
-            onClick={(event) => {
-              event.stopPropagation();
-              onToggleExpand?.();
-            }}
-            aria-label="Back to standings"
-          />
-          <div className="profile-leaderboard-card__analysis-body">
-            <LeaderboardRationaleView
-              compact
-              leaderboard={rationaleLeaderboard}
-              authorSlug={authorSlug}
-              onOpenProfile={onOpenProfile}
-              leaderboardDirectorySlugs={leaderboardDirectorySlugs}
-            />
-          </div>
-        </div>
-      )}
+      <ol className="profile-leaderboard-card__rows" aria-label={`${title} standings`}>
+        {(board.entries || []).map((entry) => {
+          const isBot = entry.source === 'bot';
+          const rowHidden = !boardHidden && entry.source === 'real' && Boolean(entry.selfHidden);
+          return (
+            <li
+              key={`${board.boardId}-${entry.rank}-${entry.handle}-${entry.isUser ? 'self' : 'clone'}`}
+              className={`profile-leaderboard-row${entry.isUser ? ' is-self' : ''}${rowHidden ? ' profile-leaderboard-row--hidden' : ''}`}
+              aria-label={rowHidden ? `Hidden row for ${entry.name}` : undefined}
+            >
+              <span className="profile-leaderboard-row__rank">{entry.rank}</span>
+              <ProfileAvatarLink
+                className="profile-leaderboard-row__avatar"
+                imgClassName="profile-leaderboard-row__avatar-img"
+                initialsClassName="profile-leaderboard-row__avatar-initials"
+                avatarSrc={isBot ? null : (entry.avatarSrc || null)}
+                avatarInitials={isBot ? entry.avatarInitials : null}
+              />
+              <span className="profile-leaderboard-row__name">{entry.name}</span>
+              {rowHidden ? (
+                <div className="profile-leaderboard-row__hidden-notice" role="status">
+                  <span className="profile-leaderboard-row__hidden-notice-title">
+                    Position hidden
+                  </span>
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
 
-      {canExpand && !expanded ? (
+      {canOpen ? (
         <button
           type="button"
           className="profile-leaderboard-card__hint"
-          onClick={(event) => {
-            event.stopPropagation();
-            openAnalysis();
-          }}
+          onClick={(event) => { event.stopPropagation(); triggerTap(); }}
         >
           Tap for analysis
         </button>
@@ -198,7 +255,7 @@ export default function LeaderboardsTab({
 }) {
   const { leaderboards } = useProfileLeaderboards(profile);
   const { isLeaderboardSelfHidden } = useLiveScoring();
-  const [expandedBoardId, setExpandedBoardId] = useState(null);
+  const [analysisModal, setAnalysisModal] = useState(null);
 
   const visibleLeaderboards = useMemo(
     () => filterProfileLeaderboards(leaderboards),
@@ -223,43 +280,55 @@ export default function LeaderboardsTab({
   }, [visibleLeaderboards]);
 
   return (
-    <div className="profile-leaderboards-stack">
-      {PERSONA_SECTION_ORDER.map((personaKey) => {
-        const boards = grouped[personaKey];
-        if (!boards || boards.length === 0) return null;
-        return (
-          <section
-            key={personaKey}
-            className={`profile-leaderboards-section profile-leaderboards-section--${personaKey}`}
-            style={{ '--persona-accent': PERSONA_COLORS[personaKey] }}
-          >
-            <h2 className="profile-leaderboards-section__title">
-              {PERSONA_SECTION_LABEL[personaKey]}
-            </h2>
-            <div className="profile-leaderboards-grid">
-              {boards.map((board) => {
-                const ownerHidBoard =
-                  Boolean(board.entries?.find((e) => e.isUser)?.selfHidden)
-                  || (isOwnProfile && isLeaderboardSelfHidden(board.boardId));
-                return (
-                  <LeaderboardCard
-                    key={board.boardId}
-                    board={board}
-                    hiddenMode={ownerHidBoard ? 'board' : 'none'}
-                    expanded={expandedBoardId === board.boardId}
-                    onToggleExpand={() => {
-                      setExpandedBoardId((prev) => (prev === board.boardId ? null : board.boardId));
-                    }}
-                    authorSlug={authorSlug}
-                    onOpenProfile={onOpenProfile}
-                    leaderboardDirectorySlugs={directorySlugs}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
-    </div>
+    <>
+      <div className="profile-leaderboards-stack">
+        {PERSONA_SECTION_ORDER.map((personaKey) => {
+          const boards = grouped[personaKey];
+          if (!boards || boards.length === 0) return null;
+          return (
+            <section
+              key={personaKey}
+              className={`profile-leaderboards-section profile-leaderboards-section--${personaKey}`}
+              style={{ '--persona-accent': PERSONA_COLORS[personaKey] }}
+            >
+              <h2 className="profile-leaderboards-section__title">
+                {PERSONA_SECTION_LABEL[personaKey]}
+              </h2>
+              <div className="profile-leaderboards-grid">
+                {boards.map((board) => {
+                  const ownerHidBoard =
+                    Boolean(board.entries?.find((e) => e.isUser)?.selfHidden)
+                    || (isOwnProfile && isLeaderboardSelfHidden(board.boardId));
+                  return (
+                    <LeaderboardCard
+                      key={board.boardId}
+                      board={board}
+                      hiddenMode={ownerHidBoard ? 'board' : 'none'}
+                      onOpenAnalysis={(b) =>
+                        setAnalysisModal({ board: b, persona: personaKey })
+                      }
+                      authorSlug={authorSlug}
+                      onOpenProfile={onOpenProfile}
+                      leaderboardDirectorySlugs={directorySlugs}
+                    />
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      {analysisModal && (
+        <LeaderboardAnalysisModal
+          board={analysisModal.board}
+          persona={analysisModal.persona}
+          authorSlug={authorSlug}
+          onOpenProfile={onOpenProfile}
+          leaderboardDirectorySlugs={directorySlugs}
+          onClose={() => setAnalysisModal(null)}
+        />
+      )}
+    </>
   );
 }

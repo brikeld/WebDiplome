@@ -3189,14 +3189,9 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
   outline-offset: 3px;
 }
 
-.profile-leaderboard-card--analysis {
-  grid-column: 1 / -1;
-  min-height: 520px;
-}
-
 .profile-leaderboard-card__hint {
   margin: -6px 0 0;
-  padding: 0;
+  padding: 4px 0;
   border: none;
   background: transparent;
   appearance: none;
@@ -3210,6 +3205,7 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
   cursor: pointer;
   text-align: left;
   width: 100%;
+  transition: opacity 200ms ease;
 }
 
 .profile-leaderboard-card__hint:hover,
@@ -3223,167 +3219,219 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
   cursor: pointer;
 }
 
-.profile-leaderboard-card__analysis {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1 1 auto;
-  min-height: 0;
+/* Press animation when tapping */
+@keyframes lb-card-tap {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
 }
 
-.profile-leaderboard-card__analysis-back {
-  align-self: flex-start;
-  display: inline-flex;
+.profile-leaderboard-card--tapping {
+  animation: lb-card-tap 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+
+/* ── Leaderboard analysis modal ──────────────────────────────────────────── */
+
+@keyframes lb-modal-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes lb-modal-panel-in {
+  from { opacity: 0; transform: translateY(22px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.lb-analysis-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: rgba(0, 0, 0, 0.52);
+  display: flex;
   align-items: center;
   justify-content: center;
+  padding: clamp(16px, 3vw, 32px);
   box-sizing: border-box;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  margin: 0;
-  border: 2px solid #000;
-  border-radius: 999px;
-  background: transparent;
-  color: #000;
-  cursor: pointer;
-  line-height: 0;
+  animation: lb-modal-backdrop-in 220ms ease both;
+}
+
+.lb-analysis-modal {
+  position: relative;
+  width: min(94vw, 580px);
+  height: min(86vh, 780px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+  background: var(--lb-modal-accent, #759aef);
+  overflow: hidden;
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.18),
+    0 24px 64px rgba(0, 0, 0, 0.30);
+  animation: lb-modal-panel-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lb-analysis-modal__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: clamp(16px, 2vw, 22px) clamp(16px, 2vw, 22px) clamp(12px, 1.5vw, 16px);
   flex-shrink: 0;
 }
 
-.profile-leaderboard-card__analysis-back::before {
+.lb-analysis-modal__close {
+  flex-shrink: 0;
+  appearance: none;
+  border: 2px solid rgba(0, 0, 0, 0.5);
+  border-radius: 999px;
+  background: transparent;
+  width: clamp(30px, 2.4vw, 38px);
+  height: clamp(30px, 2.4vw, 38px);
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.lb-analysis-modal__close::before {
   content: '';
   display: block;
   width: 0.42em;
   height: 0.42em;
-  border-left: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
+  border-left: 2.5px solid #000;
+  border-bottom: 2.5px solid #000;
   transform: rotate(45deg) translateX(0.14em);
-  font-size: 11px;
-}
-
-.profile-leaderboard-card__analysis-back:hover,
-.profile-leaderboard-card__analysis-back:focus-visible {
-  background: #000;
-  color: var(--persona-accent, #759aef);
-  outline: none;
-}
-
-.profile-leaderboard-card__analysis-body {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 380px;
-  overflow: hidden;
-  border-radius: 16px;
-  background: color-mix(in srgb, #fff 88%, var(--persona-accent, #759aef));
-  --lbx-accent: var(--persona-accent, #759aef);
-  --tell-pill-accent: var(--persona-accent, #759aef);
-  --lbx-pastel: color-mix(in srgb, var(--persona-accent, #759aef) 22%, #fff);
-  --tell-pill-pastel: color-mix(in srgb, var(--persona-accent, #759aef) 22%, #fff);
-}
-
-/* Override compact micro-sizing for the larger profile card context */
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__screen {
-  gap: clamp(8px, 1vh, 14px);
-  padding: clamp(10px, 1.1vw, 16px);
-}
-
-.profile-leaderboard-card__analysis-body .lbx--compact {
-  --lbx-gap: clamp(8px, 1vh, 14px);
-  --lbx-sec-pad: clamp(10px, 1.1vh, 16px) clamp(12px, 1.2vw, 18px);
-  --lbx-title-fs: clamp(11px, 0.82vw, 14px);
-  --lbx-body-fs: clamp(13px, 1.05vw, 17px);
-  --lbx-radius: 14px;
-  --lbx-chip-radius: 11px;
-}
-
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__rank {
-  gap: clamp(10px, 1.2vw, 18px);
-  padding: clamp(10px, 1.1vh, 16px) clamp(13px, 1.4vw, 20px);
-  border-radius: 14px;
-}
-
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__rank-num {
-  font-size: clamp(28px, 3.8vw, 52px);
-}
-
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__rank-label {
   font-size: clamp(11px, 0.9vw, 15px);
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__rank-of {
-  font-size: clamp(10px, 0.72vw, 13px);
+.lb-analysis-modal__close:hover,
+.lb-analysis-modal__close:focus-visible {
+  background: #000;
+  border-color: #000;
+  outline: none;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__sec {
-  border-radius: 14px;
+.lb-analysis-modal__close:hover::before,
+.lb-analysis-modal__close:focus-visible::before {
+  border-color: var(--lb-modal-accent, #759aef);
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__chip {
-  min-height: clamp(30px, 3.2vh, 46px);
-  padding: clamp(7px, 0.8vh, 12px) clamp(10px, 1vw, 16px);
-  border-radius: 11px;
+.lb-analysis-modal__head-info {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__chip-label {
-  font-size: clamp(11px, 0.82vw, 14px);
+.lb-analysis-modal__eyebrow {
+  margin: 0 0 4px;
+  font-family: var(--font-avant);
+  font-size: clamp(10px, 0.8vw, 12px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #000;
+  opacity: 0.68;
+  line-height: 1;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__others-btn {
-  min-height: clamp(36px, 3.8vh, 52px);
-  padding: clamp(9px, 1vh, 14px) clamp(13px, 1.3vw, 20px);
-  font-size: clamp(11px, 0.82vw, 14px);
-  border-radius: 14px;
+.lb-analysis-modal__title {
+  margin: 0;
+  font-family: var(--font-avant);
+  font-size: clamp(18px, 2.2vw, 28px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: #000;
+  overflow-wrap: break-word;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__others-title {
-  font-size: clamp(11px, 0.82vw, 14px);
-  padding: clamp(6px, 0.7vh, 10px) clamp(10px, 1vw, 16px);
+.lb-analysis-modal__rank {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(48px, 4vw, 64px);
+  padding: clamp(6px, 0.7vw, 9px) clamp(8px, 0.8vw, 12px);
+  border-radius: 999px;
+  background: #000;
+  color: var(--lb-modal-accent, #759aef);
+  font-family: var(--font-avant);
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-align: center;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__detail-back,
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__back {
-  width: clamp(28px, 2.2vw, 38px);
-  height: clamp(28px, 2.2vw, 38px);
+.lb-analysis-modal__rank sup {
+  font-size: 0.46em;
+  vertical-align: super;
+  line-height: 0;
+  margin-left: 1px;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__detail-back::before,
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__back::before {
-  font-size: clamp(10px, 0.75vw, 14px);
+/* White/pastel body — holds the lbx rationale view */
+.lb-analysis-modal__body {
+  flex: 1 1 0;
+  min-height: 0;
+  position: relative;
+  background: color-mix(in srgb, #fff 90%, var(--lb-modal-accent, #759aef));
+  border-radius: 0 0 24px 24px;
+  overflow: hidden;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__detail-name {
-  font-size: clamp(11px, 0.82vw, 14px);
+/* lbx sizing calibrated for ~580px modal width */
+.lb-analysis-modal__body .lbx {
+  --lbx-gap: clamp(10px, 1.8vw, 16px);
+  --lbx-sec-pad: clamp(12px, 2vw, 18px) clamp(14px, 2.4vw, 20px);
+  --lbx-title-fs: clamp(11px, 1.6vw, 14px);
+  --lbx-body-fs: clamp(13px, 2vw, 17px);
+  --lbx-radius: 16px;
+  --lbx-chip-radius: 12px;
+  height: 100%;
+  position: relative;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__detail-tag {
-  font-size: clamp(10px, 0.72vw, 13px);
-  padding: clamp(4px, 0.5vh, 8px) clamp(8px, 0.8vw, 14px);
+.lb-analysis-modal__body .lbx__screen {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: clamp(14px, 2vw, 20px);
+  gap: clamp(10px, 1.8vw, 16px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--lbx-accent, #759aef) transparent;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other {
-  gap: clamp(10px, 1.2vw, 18px);
-  padding: clamp(8px, 0.9vh, 14px) clamp(10px, 1.1vw, 18px);
-  border-radius: 14px;
+.lb-analysis-modal__body .lbx__screen::-webkit-scrollbar {
+  width: 5px;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other-rank {
-  font-size: clamp(14px, 1.1vw, 20px);
-  min-width: clamp(36px, 3vw, 52px);
-  height: clamp(36px, 3vw, 52px);
+.lb-analysis-modal__body .lbx__screen::-webkit-scrollbar-thumb {
+  background: var(--lbx-accent, #759aef);
+  border-radius: 3px;
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other-avatar {
-  width: clamp(36px, 3.2vw, 52px);
-  height: clamp(36px, 3.2vw, 52px);
+.lb-analysis-modal__body .lbx__rank-num {
+  font-size: clamp(38px, 6.5vw, 64px);
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other-phrase {
-  font-size: clamp(12px, 0.95vw, 16px);
-  line-height: 1.3;
+.lb-analysis-modal__body .lbx__rank-label {
+  font-size: clamp(12px, 1.8vw, 16px);
 }
 
-.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other-name {
-  font-size: clamp(10px, 0.72vw, 13px);
+.lb-analysis-modal__body .lbx__rank-of {
+  font-size: clamp(10px, 1.4vw, 13px);
+}
+
+.lb-analysis-modal__body .lbx__others-btn {
+  font-size: clamp(12px, 1.8vw, 16px);
+  min-height: clamp(42px, 4.5vh, 58px);
+}
+
+.lb-analysis-modal__body .lbx__chip {
+  font-size: clamp(12px, 1.6vw, 15px);
+  min-height: clamp(34px, 3.8vh, 50px);
 }
 
 .profile-leaderboards-stack {
