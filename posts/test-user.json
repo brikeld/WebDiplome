@@ -1,0 +1,13 @@
+[
+  {
+    "id": "compliant-join-1781215736842",
+    "persona": "security",
+    "createdAt": 1781215736842,
+    "content": "COMPLIANT notice for Test User: this profile is now active on the platform. Machine data from their device has been linked to their public identity.",
+    "compliantJoin": {
+      "userDisplayName": "Test User"
+    },
+    "_feedKey": "compliant-join-1781215736842",
+    "_feedRevealSeq": 1781215736842
+  }
+]

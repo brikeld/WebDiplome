@@ -3191,7 +3191,7 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
 
 .profile-leaderboard-card--analysis {
   grid-column: 1 / -1;
-  min-height: 380px;
+  min-height: 520px;
 }
 
 .profile-leaderboard-card__hint {
@@ -3271,13 +3271,119 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
 .profile-leaderboard-card__analysis-body {
   position: relative;
   flex: 1 1 auto;
-  min-height: 280px;
-  max-height: 420px;
+  min-height: 380px;
   overflow: hidden;
   border-radius: 16px;
   background: color-mix(in srgb, #fff 88%, var(--persona-accent, #759aef));
   --lbx-accent: var(--persona-accent, #759aef);
   --tell-pill-accent: var(--persona-accent, #759aef);
+  --lbx-pastel: color-mix(in srgb, var(--persona-accent, #759aef) 22%, #fff);
+  --tell-pill-pastel: color-mix(in srgb, var(--persona-accent, #759aef) 22%, #fff);
+}
+
+/* Override compact micro-sizing for the larger profile card context */
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__screen {
+  gap: clamp(8px, 1vh, 14px);
+  padding: clamp(10px, 1.1vw, 16px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact {
+  --lbx-gap: clamp(8px, 1vh, 14px);
+  --lbx-sec-pad: clamp(10px, 1.1vh, 16px) clamp(12px, 1.2vw, 18px);
+  --lbx-title-fs: clamp(11px, 0.82vw, 14px);
+  --lbx-body-fs: clamp(13px, 1.05vw, 17px);
+  --lbx-radius: 14px;
+  --lbx-chip-radius: 11px;
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__rank {
+  gap: clamp(10px, 1.2vw, 18px);
+  padding: clamp(10px, 1.1vh, 16px) clamp(13px, 1.4vw, 20px);
+  border-radius: 14px;
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__rank-num {
+  font-size: clamp(28px, 3.8vw, 52px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__rank-label {
+  font-size: clamp(11px, 0.9vw, 15px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__rank-of {
+  font-size: clamp(10px, 0.72vw, 13px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__sec {
+  border-radius: 14px;
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__chip {
+  min-height: clamp(30px, 3.2vh, 46px);
+  padding: clamp(7px, 0.8vh, 12px) clamp(10px, 1vw, 16px);
+  border-radius: 11px;
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__chip-label {
+  font-size: clamp(11px, 0.82vw, 14px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__others-btn {
+  min-height: clamp(36px, 3.8vh, 52px);
+  padding: clamp(9px, 1vh, 14px) clamp(13px, 1.3vw, 20px);
+  font-size: clamp(11px, 0.82vw, 14px);
+  border-radius: 14px;
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__others-title {
+  font-size: clamp(11px, 0.82vw, 14px);
+  padding: clamp(6px, 0.7vh, 10px) clamp(10px, 1vw, 16px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__detail-back,
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__back {
+  width: clamp(28px, 2.2vw, 38px);
+  height: clamp(28px, 2.2vw, 38px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__detail-back::before,
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__back::before {
+  font-size: clamp(10px, 0.75vw, 14px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__detail-name {
+  font-size: clamp(11px, 0.82vw, 14px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__detail-tag {
+  font-size: clamp(10px, 0.72vw, 13px);
+  padding: clamp(4px, 0.5vh, 8px) clamp(8px, 0.8vw, 14px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other {
+  gap: clamp(10px, 1.2vw, 18px);
+  padding: clamp(8px, 0.9vh, 14px) clamp(10px, 1.1vw, 18px);
+  border-radius: 14px;
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other-rank {
+  font-size: clamp(14px, 1.1vw, 20px);
+  min-width: clamp(36px, 3vw, 52px);
+  height: clamp(36px, 3vw, 52px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other-avatar {
+  width: clamp(36px, 3.2vw, 52px);
+  height: clamp(36px, 3.2vw, 52px);
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other-phrase {
+  font-size: clamp(12px, 0.95vw, 16px);
+  line-height: 1.3;
+}
+
+.profile-leaderboard-card__analysis-body .lbx--compact .lbx__other-name {
+  font-size: clamp(10px, 0.72vw, 13px);
 }
 
 .profile-leaderboards-stack {
