@@ -647,23 +647,31 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 6px;
+  width: var(--shell-rail-width, 72px);
+  padding: 10px 8px;
   min-height: 9.5rem;
   border-radius: var(--radius-pill);
   border: 2px solid var(--persona-accent, #759aef);
-  background: transparent;
+  background: #fff;
   box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.icon-rail__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e8e8e4;
+  flex-shrink: 0;
 }
 
 .rail-btn {
+  position: relative;
+  overflow: hidden;
   appearance: none;
-  border: 2px solid transparent;
+  border: none;
   background: transparent;
-  font-family: var(--font-sans);
-  font-size: 34px;
-  line-height: 1;
-  color: rgba(0, 0, 0, 0.45);
-  opacity: 1;
+  color: #ccc;
   cursor: pointer;
   width: 2.75rem;
   height: 2.75rem;
@@ -675,56 +683,83 @@ body {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.2s,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.rail-btn__glyph {
+.rail-btn__icon {
   display: block;
-  line-height: 1;
-}
-
-.rail-btn__glyph-icon {
-  display: block;
-  width: 1.45rem;
-  height: 1.45rem;
-}
-
-.rail-btn--profile .rail-btn__glyph-icon {
-  transform: translateY(0.04em);
-}
-
-.rail-btn--profile .rail-btn__glyph {
-  /* Optical centering for the profile glyph inside the selected rect. */
-  transform: translate(-0.02em, -0.01em);
+  width: 1.35rem;
+  height: 1.35rem;
 }
 
 .rail-btn.is-active {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 11px;
-  border-color: var(--persona-accent, #759aef);
-  opacity: 1;
-  color: #fff;
   background: var(--persona-accent, #759aef);
+  color: #000;
   outline: none;
 }
+
 .rail-btn.is-active:hover {
-  opacity: 1;
-  color: #fff;
   background: var(--persona-accent, #759aef);
+  color: #000;
 }
+
 .rail-btn:hover:not(.is-active) {
-  opacity: 1;
-  background: color-mix(in srgb, var(--persona-accent, #759aef) 8%, transparent);
-  color: var(--persona-accent, #759aef);
+  color: color-mix(in srgb, var(--persona-accent, #759aef) 55%, #ccc);
 }
+
 .rail-btn:active {
-  transform: translateY(1px);
+  transform: scale(0.88);
 }
+
 .rail-btn:focus-visible {
   outline: 2px solid var(--persona-accent, #000);
   outline-offset: 2px;
-  opacity: 0.85;
+}
+
+@keyframes railPopIn {
+  0% {
+    transform: scale(0.7) rotate(-6deg);
+    opacity: 0.3;
+  }
+  60% {
+    transform: scale(1.18) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.rail-btn--pop {
+  animation: railPopIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes railRipple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
+
+.rail-btn__ripple {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  margin-left: -15px;
+  margin-top: -15px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--persona-accent, #759aef) 50%, transparent);
+  pointer-events: none;
+  animation: railRipple 0.5s linear forwards;
 }
 
 .main-col {

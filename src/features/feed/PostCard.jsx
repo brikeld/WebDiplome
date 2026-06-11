@@ -237,7 +237,9 @@ function PostCard({
       data-persona={post.persona}
       style={{ '--post-accent': noteColor }}
       onClick={isHighlightable ? (e) => {
-        if (e.target.closest('button, a, [role="button"], .post-card-meta-row')) return;
+        if (e.target.closest(
+          'button, a, [role="button"], .post-card-meta-row, .post-action-btn, .post-meta-pill',
+        )) return;
         onHighlight?.();
       } : undefined}
     >

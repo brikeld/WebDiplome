@@ -24,6 +24,19 @@ import {
 
 export const MIN_LEADERBOARD_ROWS = 5;
 
+/**
+ * Did this profile's owner hide their position on this board? Mirrors the client
+ * `isLeaderboardSelfHidden` (src/features/liveScoring/scoringLogic.js): a board is
+ * self-hidden while its `leaderboard-self|<boardId>` record still has restorable > 0.
+ * Global by construction — every viewer's build sees the same per-profile flag.
+ */
+function profileHidLeaderboard(profile, boardId) {
+  const recs = profile?.liveScoringRecords;
+  if (!recs || typeof recs !== 'object') return false;
+  const rec = recs[`leaderboard-self|${boardId}`];
+  return Boolean(rec) && (rec.restorable ?? 0) > 0;
+}
+
 function profileUpdatedAtMs(profile) {
   const raw =
     profile?.updatedAt ??
@@ -123,6 +136,7 @@ function realUserEntry(profile, board, nowMs, highlightSlug) {
     score: Number(score) || 0,
     isUser: Boolean(highlightSlug && slug && String(slug) === String(highlightSlug)),
     source: 'real',
+    selfHidden: profileHidLeaderboard(profile, board.id),
     hint,
   };
 }
@@ -161,6 +175,7 @@ function assembleBoard(board, profiles, { highlightSlug, minimumRows, nowMs }) {
     isUser: row.isUser,
     source: row.source,
     slug: row.slug,
+    selfHidden: Boolean(row.selfHidden),
   }));
 
   const userRank = entries.find((e) => e.isUser)?.rank ?? null;

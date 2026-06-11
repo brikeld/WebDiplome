@@ -3,7 +3,7 @@ import {
   normalizePostHideKey,
   resolveViewerHideStorageKey,
 } from '@/lib/postHideKey.js';
-import { isPostHidden } from '@/features/liveScoring/scoringLogic.js';
+import { isPostHidden, isLeaderboardSelfHidden } from '@/features/liveScoring/scoringLogic.js';
 
 /**
  * Author self-hide (author liveScoringRecords) is global; viewer curation of others' posts is local.
@@ -23,8 +23,18 @@ export function resolvePostHiddenState(
 
   const authorRecs = authorRecords && typeof authorRecords === 'object' ? authorRecords : {};
 
-  if (post?.leaderboard?.boardId) {
-    return false;
+  // Leaderboard posts: a board belongs to its author. When the author hid their
+  // position on that board, the whole post is hidden for everyone (the row-level
+  // redaction inside other people's posts is handled by entry visibility, not here).
+  const boardId = post?.leaderboard?.boardId;
+  if (boardId) {
+    if (isOwnAuthorPost(post, viewerSlug)) {
+      // Own post: viewer live scoring is authoritative (records can lag sync).
+      return typeof viewerIsLeaderboardSelfHidden === 'function'
+        ? Boolean(viewerIsLeaderboardSelfHidden(boardId))
+        : isLeaderboardSelfHidden(authorRecs, boardId);
+    }
+    return isLeaderboardSelfHidden(authorRecs, boardId);
   }
 
   const authorKey = normalizePostHideKey(post?.createdAt);
@@ -69,7 +79,12 @@ export function resolvePostRevealingState(
 
   const authorRecs = authorRecords && typeof authorRecords === 'object' ? authorRecords : {};
 
-  if (post?.leaderboard?.boardId) {
+  const boardId = post?.leaderboard?.boardId;
+  if (boardId) {
+    // Only the owner gets the reveal animation on their own leaderboard post.
+    if (isOwnAuthorPost(post, viewerSlug) && typeof viewerIsLeaderboardSelfRevealing === 'function') {
+      return Boolean(viewerIsLeaderboardSelfRevealing(boardId));
+    }
     return false;
   }
 

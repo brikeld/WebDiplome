@@ -4,7 +4,10 @@ import PostCard from '@/features/feed/PostCard.jsx';
 import ProfileHeader from '@/features/profile/ProfileHeader.jsx';
 import { LiveScoringProvider } from '@/features/liveScoring/LiveScoringContext.jsx';
 import { avatarSrcFromProfile, getPersonaBadgeModel } from '@/lib/profileUtils.js';
+import { getDmgDownloadUrl, openDmgDownload } from '@/lib/dmgDownloadUrl.js';
 import './landingPage.css';
+
+const DMG_DOWNLOAD_URL = getDmgDownloadUrl();
 
 const MOCK_AVATAR = '/imgs/AlexP.png';
 
@@ -408,6 +411,7 @@ function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
   const hasProfile = Boolean(profile);
   const avatarSrc = hasProfile ? avatarSrcFromProfile(profile) : null;
   const personaColor = hasProfile ? getPersonaBadgeModel(profile).color : '#ccf847';
+  const downloadReady = Boolean(DMG_DOWNLOAD_URL);
 
   return (
     <nav className="lp-navbar">
@@ -432,8 +436,9 @@ function LandingNavbar({ profile, onLoginClick, profileEntryLoading }) {
           <button
             type="button"
             className="lp-navbar-register"
-            onClick={onLoginClick}
-            disabled={profileEntryLoading}
+            onClick={() => openDmgDownload()}
+            disabled={!downloadReady}
+            title={downloadReady ? 'Download COMPLIANT for macOS' : 'Download coming soon'}
           >
             Register
           </button>
@@ -697,13 +702,23 @@ function FeedSection() {
 }
 
 function CtaSection() {
+  const downloadReady = Boolean(DMG_DOWNLOAD_URL);
+
   return (
     <section className="lp-cta-section" style={{ '--stagger-i': 6 }}>
       <h2>
         Start the experience now<br />
         &amp; become <strong>COMPLIANT</strong>
       </h2>
-      <button type="button" className="lp-cta-download">Download</button>
+      <button
+        type="button"
+        className="lp-cta-download"
+        onClick={() => openDmgDownload()}
+        disabled={!downloadReady}
+        title={downloadReady ? 'Download COMPLIANT for macOS' : 'Download coming soon'}
+      >
+        Download
+      </button>
     </section>
   );
 }
@@ -761,7 +776,15 @@ export default function LandingPage({ onBrowseFeed, onLoginClick, profile, profi
             <p className="lp-hero-answer">
               <em>Let our algorithm answer that for you.</em>
             </p>
-            <button type="button" className="lp-hero-cta-btn">Get Started</button>
+            <button
+              type="button"
+              className="lp-hero-cta-btn"
+              onClick={() => openDmgDownload()}
+              disabled={!DMG_DOWNLOAD_URL}
+              title={DMG_DOWNLOAD_URL ? 'Download COMPLIANT for macOS' : 'Download coming soon'}
+            >
+              Get Started
+            </button>
           </div>
           <h1 className="lp-hero-title">
             <button

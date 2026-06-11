@@ -30,6 +30,29 @@ describe('buildMultiUserLeaderboards', () => {
     expect(board.entries.some((e) => e.isUser && e.name.includes('Ada'))).toBe(true);
   });
 
+  it('marks an entry selfHidden when that profile hid its position on the board', () => {
+    const boardId = buildMultiUserLeaderboards([ada, grace])[0].boardId;
+    const adaHidden = {
+      ...ada,
+      liveScoringRecords: {
+        [`leaderboard-self|${boardId}`]: { restorable: 1, delta: -1 },
+      },
+    };
+    const board = buildMultiUserLeaderboards([adaHidden, grace], { viewerSlug: 'grace-demo' })
+      .find((b) => b.boardId === boardId);
+    expect(board.entries.find((e) => e.name.includes('Ada')).selfHidden).toBe(true);
+    expect(board.entries.find((e) => e.name.includes('Grace')).selfHidden).toBe(false);
+
+    // A revealed (restorable 0) record does not hide the row.
+    const adaRevealed = {
+      ...ada,
+      liveScoringRecords: { [`leaderboard-self|${boardId}`]: { restorable: 0 } },
+    };
+    const revealed = buildMultiUserLeaderboards([adaRevealed, grace], { viewerSlug: 'grace-demo' })
+      .find((b) => b.boardId === boardId);
+    expect(revealed.entries.find((e) => e.name.includes('Ada')).selfHidden).toBe(false);
+  });
+
   it('drops bots when five or more real users exist', () => {
     const extras = [3, 4, 5].map((n) => ({
       slug: `user-${n}`,

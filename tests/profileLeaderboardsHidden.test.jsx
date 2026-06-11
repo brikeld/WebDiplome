@@ -29,44 +29,34 @@ const board = {
 };
 
 describe('<LeaderboardCard> hidden ranking states', () => {
-  it('marks only the owned row hidden on the owner profile', () => {
-    const html = renderToStaticMarkup(
-      <LeaderboardCard
-        board={board}
-        hiddenMode="row"
-        ownedProfileSlug="brikeld-hoxha"
-      />,
-    );
+  it('redacts only the row whose user globally hid their position', () => {
+    // Ada hid her own position (selfHidden); the card stays visible, only her row blurs.
+    const withHiddenAda = {
+      ...board,
+      entries: [board.entries[0], { ...board.entries[1], selfHidden: true }],
+    };
+    const html = renderToStaticMarkup(<LeaderboardCard board={withHiddenAda} hiddenMode="none" />);
 
     expect(html).not.toContain('profile-leaderboard-card--hidden');
     const hiddenRows = html.match(/profile-leaderboard-row--hidden/g) || [];
     expect(hiddenRows).toHaveLength(1);
-    expect(html).toContain('aria-label="Hidden row for Brikeld Hoxha"');
-    expect(html).toContain('profile-leaderboard-row__hidden-notice');
-    expect(html).toContain('You chose to hide your place on this leaderboard.');
+    expect(html).toContain('aria-label="Hidden row for Ada Lovelace"');
+    expect(html).toContain('Position hidden');
   });
 
-  it('marks only the matching owned row hidden when viewing another profile board', () => {
-    const otherProfileBoard = {
-      ...board,
-      userRank: 2,
-      entries: [
-        { ...board.entries[0], isUser: false },
-        { ...board.entries[1], isUser: true },
-      ],
-    };
-    const html = renderToStaticMarkup(
-      <LeaderboardCard
-        board={otherProfileBoard}
-        hiddenMode="row"
-        ownedProfileSlug="brikeld-hoxha"
-      />,
-    );
-
+  it('does not redact any row when nobody hid their position', () => {
+    const html = renderToStaticMarkup(<LeaderboardCard board={board} hiddenMode="none" />);
     expect(html).not.toContain('profile-leaderboard-card--hidden');
-    const hiddenRows = html.match(/profile-leaderboard-row--hidden/g) || [];
-    expect(hiddenRows).toHaveLength(1);
-    expect(html).toContain('aria-label="Hidden row for Brikeld Hoxha"');
-    expect(html).toContain('profile-leaderboard-row__hidden-notice');
+    expect(html).not.toContain('profile-leaderboard-row--hidden');
+  });
+
+  it('hides the whole card in board mode (owner hid this board)', () => {
+    const html = renderToStaticMarkup(<LeaderboardCard board={board} hiddenMode="board" />);
+    expect(html).toContain('profile-leaderboard-card--hidden');
+    expect(html).toContain('profile-leaderboard-card__hidden-notice');
+    expect(html).toContain('Leaderboard hidden');
+    expect(html).toContain('You hid your place on this leaderboard.');
+    // No per-row redaction notice in whole-board mode.
+    expect(html).not.toContain('profile-leaderboard-row--hidden');
   });
 });

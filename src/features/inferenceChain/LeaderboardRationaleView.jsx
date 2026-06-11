@@ -115,12 +115,13 @@ export default function LeaderboardRationaleView({
       .filter(Boolean),
   );
 
-  // Others screen: real users always visible; only bots use cloneHidden[].
+  // Others screen: a real user is hidden only if they globally hid their own
+  // position (entry.selfHidden, from the server build); bots use cloneHidden[].
   let botIdx = -1;
   const cloneEntries = entries
     .filter((e) => !e.isUser)
     .map((entry) => {
-      if (!isLeaderboardBotEntry(entry)) return { ...entry, hidden: false };
+      if (!isLeaderboardBotEntry(entry)) return { ...entry, hidden: Boolean(entry.selfHidden) };
       botIdx += 1;
       return { ...entry, hidden: Boolean(cloneHidden[botIdx]) };
     });
@@ -165,9 +166,7 @@ export default function LeaderboardRationaleView({
                     className="lbx__detail-back"
                     onClick={() => setActiveSignal(null)}
                     aria-label="Back to signals"
-                  >
-                    ←
-                  </button>
+                  />
                   <span className="lbx__detail-name">{openSignal.label}</span>
                 </div>
                 <p className="lbx__body">{openSignal.detail}</p>
@@ -215,9 +214,7 @@ export default function LeaderboardRationaleView({
             className="lbx__back"
             onClick={() => setShowOthers(false)}
             aria-label="Back"
-          >
-            ←
-          </button>
+          />
           <span className="lbx__others-title">OTHER USERS</span>
         </header>
 

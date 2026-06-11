@@ -3,34 +3,120 @@
 import { parseHarvestTimestamp } from './recencyRanking.js';
 
 const WORK_APPS = new Set([
-  'Visual Studio Code','Cursor','Windsurf','Xcode','GitHub Desktop','Figma','Notion',
-  'Microsoft Teams','Keynote','Pages','Numbers','Arduino IDE','Godot','Blender',
-  'Blender 4.5.3 LTS','WebStorm','PyCharm','IntelliJ IDEA','Sublime Text',
+  'Visual Studio Code', 'Cursor', 'Windsurf', 'Xcode', 'GitHub Desktop', 'Figma', 'Notion',
+  'Microsoft Teams', 'Microsoft Word', 'Microsoft Excel', 'Microsoft PowerPoint', 'Microsoft Outlook',
+  'Microsoft OneNote', 'Microsoft To Do', 'Microsoft Remote Desktop', 'OneDrive',
+  'Keynote', 'Pages', 'Numbers', 'Arduino IDE', 'Godot', 'Blender', 'Blender 4.5.3 LTS',
+  'WebStorm', 'PyCharm', 'IntelliJ IDEA', 'Sublime Text', 'Nova', 'BBEdit', 'Coda',
+  'Docker', 'Docker Desktop', 'Postman', 'Insomnia', 'TablePlus', 'DBeaver', 'MongoDB Compass',
+  'Linear', 'Jira', 'Confluence', 'Obsidian', 'Bear', 'Evernote', 'Todoist', 'Things',
+  'Zoom', 'Webex', 'Google Drive', 'Google Docs', 'Google Sheets', 'Google Slides',
+  'Slack', 'Trello', 'Asana', 'Monday.com', 'Airtable', 'Miro', 'Excalidraw',
+  'Unity', 'Unreal Engine', 'Android Studio', 'DataGrip', 'Rider', 'Fleet',
+  'iTerm', 'iTerm2', 'Warp', 'Hyper', 'Kitty', 'Alacritty',
 ]);
 const CREATIVE_APPS = new Set([
-  'Adobe Photoshop 2025','Adobe Photoshop','Adobe Illustrator 2025','Adobe Illustrator',
-  'Adobe After Effects 2025','Adobe After Effects','Adobe Premiere Pro 2025','Adobe Premiere Pro',
-  'Adobe InDesign 2026','Adobe InDesign','Adobe Lightroom CC','Adobe Lightroom',
-  'Adobe Media Encoder 2025','Adobe Media Encoder','Adobe Acrobat DC','Adobe Acrobat',
-  'DiffusionBee','GoPro Player','HandBrake','ideaMaker','GIMP','Inkscape','Sketch',
+  'Adobe Photoshop 2025', 'Adobe Photoshop', 'Adobe Illustrator 2025', 'Adobe Illustrator',
+  'Adobe After Effects 2025', 'Adobe After Effects', 'Adobe Premiere Pro 2025', 'Adobe Premiere Pro',
+  'Adobe InDesign 2026', 'Adobe InDesign', 'Adobe Lightroom CC', 'Adobe Lightroom',
+  'Adobe Media Encoder 2025', 'Adobe Media Encoder', 'Adobe Acrobat DC', 'Adobe Acrobat',
+  'DiffusionBee', 'GoPro Player', 'HandBrake', 'ideaMaker', 'GIMP', 'Inkscape', 'Sketch',
+  'Final Cut Pro', 'Logic Pro', 'Motion', 'Compressor', 'DaVinci Resolve', 'CapCut',
+  'Autodesk Fusion', 'Autodesk Maya', 'Autodesk AutoCAD', 'Cinema 4D', 'Houdini',
+  'Affinity Photo', 'Affinity Designer', 'Affinity Publisher', 'Procreate', 'Canva',
 ]);
-const AI_APPS = new Set(['ChatGPT','Claude','Codex','LM Studio','Ollama','DiffusionBee','Perplexity']);
-const SOCIAL_APPS = new Set(['Discord','WhatsApp','Microsoft Teams','Slack','Telegram','Skype','Messenger']);
-const ENTERTAINMENT_APPS = new Set(['Spotify','VLC','DAZN','Stremio','Epic Games Launcher','Netflix','Plex','Twitch']);
-const PIRATE_APPS = new Set(['qbittorrent','uTorrent','Transmission','BitTorrent']);
-const SECURITY_APPS = new Set(['NordVPN','GlobalProtect','ProtonVPN','Little Snitch','Mullvad','ExpressVPN','Wireguard']);
-const BROWSER_APPS = new Set(['Google Chrome','Safari','Firefox','Brave','Arc','Opera','Microsoft Edge']);
+const AI_APPS = new Set([
+  'ChatGPT', 'Claude', 'Codex', 'LM Studio', 'Ollama', 'DiffusionBee', 'Perplexity',
+  'Copilot', 'Gemini', 'Poe', 'Jan', 'GPT4All', 'AnythingLLM', 'Open WebUI',
+]);
+const SOCIAL_APPS = new Set([
+  'Discord', 'WhatsApp', 'Microsoft Teams', 'Slack', 'Telegram', 'Skype', 'Messenger',
+  'Signal', 'Viber', 'Snapchat', 'Instagram', 'Facebook', 'X', 'Threads', 'LinkedIn',
+  'BeReal', 'WeChat', 'Line', 'iMessage', 'Messages',
+]);
+const ENTERTAINMENT_APPS = new Set([
+  'Spotify', 'VLC', 'DAZN', 'Stremio', 'Epic Games Launcher', 'Netflix', 'Plex', 'Twitch',
+  'Steam', 'Battle.net', 'GOG Galaxy', 'Origin', 'Ubisoft Connect', 'PlayStation',
+  'Apple TV', 'Disney+', 'YouTube', 'SoundCloud', 'Tidal', 'Deezer', 'IINA', 'MPV',
+]);
+const PIRATE_APPS = new Set(['qbittorrent', 'uTorrent', 'Transmission', 'BitTorrent', 'Deluge', 'Vuze']);
+const SECURITY_APPS = new Set([
+  'NordVPN', 'GlobalProtect', 'ProtonVPN', 'Little Snitch', 'Mullvad', 'ExpressVPN', 'Wireguard',
+  '1Password', 'Bitwarden', 'LastPass', 'Dashlane', 'KeePassXC', 'Malwarebytes', 'CleanMyMac X',
+]);
+const BROWSER_APPS = new Set([
+  'Google Chrome', 'Chrome', 'Safari', 'Firefox', 'Brave', 'Arc', 'Opera', 'Microsoft Edge',
+  'Vivaldi', 'Tor Browser', 'Orion', 'SigmaOS', 'Zen Browser', 'Chrome Apps.localized',
+]);
+const UTILITIES_APPS = new Set([
+  'AltTab', 'AppCleaner', 'BetterDisplay', 'Rectangle', 'LinearMouse', 'OmniDiskSweeper',
+  'The Unarchiver', 'LocalSend', 'LetsView', 'boringNotch', 'logioptionsplus', 'WattsConnected',
+  'TrackWeight', 'Android File Transfer', 'Alfred', 'Raycast', 'Bartender', 'Magnet', 'Hazel',
+  'CleanMyMac', 'DaisyDisk', 'GrandPerspective', 'iStat Menus', 'Stats', 'MonitorControl',
+  'Amphetamine', 'KeepingYouAwake', 'Caffeine', 'Flux', 'f.lux',
+  'Dropover', 'Yoink', 'Paste', 'Maccy', 'Flycut', 'Itsycal', 'Calendar 366',
+]);
+const SYSTEM_APPS = new Set([
+  'Utilities', 'System Settings', 'System Preferences', 'Activity Monitor', 'Console',
+  'Disk Utility', 'Terminal', 'Finder', 'Mail', 'Calendar', 'Contacts', 'Maps', 'Photos',
+  'Music', 'Podcasts', 'News', 'Stocks', 'Weather', 'Reminders', 'Notes', 'FaceTime',
+  'Preview', 'TextEdit', 'Font Book', 'Screenshot', 'Photo Booth', 'QuickTime Player',
+  'Time Machine', 'Migration Assistant', 'Boot Camp Assistant', 'AirPort Utility',
+  'Bluetooth File Exchange', 'ColorSync Utility', 'Digital Color Meter', 'Grapher',
+  'Keychain Access', 'Script Editor', 'Stickies', 'Voice Memos', 'Chess', 'Dictionary',
+  'Image Capture', 'Archive Utility', 'Automator', 'Books', 'Home', 'Shortcuts',
+  'iPhone Mirroring', 'TV', 'Freeform', 'Journal', 'Tips', 'App Store',
+]);
+const IT_ADMIN_APPS = new Set([
+  'FileWave', 'Kiosk ECAL', 'Jamf Connect', 'Jamf Self Service', 'Mosyle', 'Kandji',
+  'Intune Company Portal', 'Cisco AnyConnect', 'Citrix Workspace', 'VMware Horizon Client',
+]);
+
+function isCreativeVendor(name) {
+  return name.startsWith('Adobe')
+    || name.startsWith('Autodesk')
+    || name.startsWith('Maxon')
+    || name.startsWith('Affinity ');
+}
+
+function isWorkVendor(name) {
+  return name.startsWith('Microsoft ')
+    && !name.includes('Edge')
+    && !name.includes('Teams');
+}
+
+function isSystemArtifact(name) {
+  return name.startsWith('Remove ')
+    || name.endsWith(' URL Handler')
+    || name.endsWith(' Service Utility');
+}
+
+function isLikelyDevApp(name) {
+  const lower = name.toLowerCase();
+  return lower.includes('console')
+    || lower.includes('debug')
+    || lower.endsWith(' test')
+    || lower === 'test';
+}
 
 export function categorizeApp(name) {
-  const n = String(name || '');
-  if (AI_APPS.has(n)) return 'AI Tools';
-  if (PIRATE_APPS.has(n)) return 'Torrents';
+  const n = String(name || '').trim();
+  if (!n) return 'Other';
+
+  const lower = n.toLowerCase();
+
+  if (AI_APPS.has(n) || lower.startsWith('claude ') || lower.startsWith('openai ')) return 'AI Tools';
+  if (PIRATE_APPS.has(lower) || PIRATE_APPS.has(n)) return 'Torrents';
   if (SECURITY_APPS.has(n)) return 'Security/VPN';
-  if (n.startsWith('Adobe') || CREATIVE_APPS.has(n)) return 'Creative Suite';
-  if (WORK_APPS.has(n)) return 'Dev & Work';
+  if (BROWSER_APPS.has(n) || lower === 'chrome' || lower.startsWith('google chrome')) return 'Browsers';
+  if (SYSTEM_APPS.has(n) || isSystemArtifact(n) || n.startsWith('Apple ')) return 'System';
+  if (isCreativeVendor(n) || CREATIVE_APPS.has(n)) return 'Creative Suite';
+  if (WORK_APPS.has(n) || isWorkVendor(n) || isLikelyDevApp(n)) return 'Dev & Work';
   if (SOCIAL_APPS.has(n)) return 'Social';
   if (ENTERTAINMENT_APPS.has(n)) return 'Entertainment';
-  if (BROWSER_APPS.has(n)) return 'Browsers';
+  if (UTILITIES_APPS.has(n)) return 'Utilities';
+  if (IT_ADMIN_APPS.has(n)) return 'IT & Admin';
+
   return 'Other';
 }
 

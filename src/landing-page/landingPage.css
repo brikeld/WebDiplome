@@ -115,6 +115,15 @@
   box-shadow: inset 0 0 0 1.5px #000;
 }
 
+.lp-navbar-register:disabled,
+.lp-hero-cta-btn:disabled,
+.lp-cta-download:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .lp-hero-cta-btn,
 .lp-cta-download {
   font-size: var(--lp-cta-btn-font);

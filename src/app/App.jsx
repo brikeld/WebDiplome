@@ -352,6 +352,7 @@ function AppInner({
   const tellPhaseTimersRef = useRef([]);
   const tellRunIdRef = useRef(0);
   const tellThemePostRef = useRef(null);
+  const blockTellOpenRef = useRef(false);
   const [hideBlocked, setHideBlocked] = useState(false);
   const [personaRingWiggle, setPersonaRingWiggle] = useState({ key: null, nonce: 0 });
   const [personaChangeBanner, setPersonaChangeBanner] = useState(null);
@@ -840,6 +841,25 @@ function AppInner({
     }, TELL_CLOSE_FADE_MS);
   }, [clearTellTimers, tellPhase]);
 
+  /** Hide flow must never animate or leave tell open — only the timer confirm UI. */
+  const resetTellImmediate = useCallback(() => {
+    clearTellTimers();
+    tellRunIdRef.current += 1;
+    if (tellCloseTimerRef.current) {
+      clearTimeout(tellCloseTimerRef.current);
+      tellCloseTimerRef.current = null;
+    }
+    setTellPhase('idle');
+    setHighlightedPost(null);
+  }, [clearTellTimers]);
+
+  const blockTellOpenBriefly = useCallback(() => {
+    blockTellOpenRef.current = true;
+    window.setTimeout(() => {
+      blockTellOpenRef.current = false;
+    }, 0);
+  }, []);
+
   useEffect(() => () => {
     clearTellTimers();
   }, [clearTellTimers]);
@@ -873,6 +893,8 @@ function AppInner({
   }, [tellDisplayPost, tellPhase, personaColor, personaKey]);
 
   const handleHighlightPost = useCallback((post) => {
+    if (blockTellOpenRef.current) return;
+
     const isDeselect = highlightedPost?.id === post.id && tellActive;
     if (isDeselect) {
       setHighlightedPost(null);
@@ -952,7 +974,7 @@ function AppInner({
     }
     setConfirmingHide(false);
     setHideTargetPost(null);
-    closeTell();
+    resetTellImmediate();
   };
 
   const handleConfirmUnhide = () => {
@@ -965,7 +987,7 @@ function AppInner({
     }
     setConfirmingUnhide(false);
     setHideTargetPost(null);
-    closeTell();
+    resetTellImmediate();
   };
 
   const handleTellRedactedUnhideConfirm = useCallback(() => {
@@ -999,7 +1021,8 @@ function AppInner({
         ? isLeaderboardSelfHidden(post.leaderboard.boardId)
         : isPostHiddenFor(post);
 
-      closeTell();
+      blockTellOpenBriefly();
+      resetTellImmediate();
       setHideTargetPost(post);
 
       if (postIsHidden) {
@@ -1030,7 +1053,8 @@ function AppInner({
     [
       profile,
       adjustedScores,
-      closeTell,
+      blockTellOpenBriefly,
+      resetTellImmediate,
       isPostHiddenFor,
       isLeaderboardSelfHidden,
     ],

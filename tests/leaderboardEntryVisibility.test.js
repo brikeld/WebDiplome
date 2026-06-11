@@ -34,6 +34,21 @@ describe('leaderboardEntryVisibility', () => {
     expect(hidden).toEqual([false, true]);
   });
 
+  it('redacts a real user globally when their entry is selfHidden', () => {
+    const mixed = [
+      { rank: 1, isUser: true, source: 'real', slug: 'alice', name: 'Alice' },
+      { rank: 2, isUser: false, source: 'real', slug: 'bob', name: 'Bob', selfHidden: true },
+      { rank: 3, isUser: false, source: 'real', slug: 'carol', name: 'Carol' },
+    ];
+    // No viewer-local hide, no bots — only Bob's own global self-hide applies.
+    const hidden = mapLeaderboardEntryHiddenFlags(mixed, {
+      viewerSlug: 'zoe',
+      viewerRowHidden: false,
+      cloneHidden: [],
+    });
+    expect(hidden).toEqual([false, true, false]);
+  });
+
   it('classifies bots and legacy demo slugs', () => {
     expect(isLeaderboardBotEntry({ source: 'bot' })).toBe(true);
     expect(isLeaderboardBotEntry({ source: 'real' })).toBe(false);

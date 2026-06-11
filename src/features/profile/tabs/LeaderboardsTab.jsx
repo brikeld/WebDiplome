@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import { useProfileLeaderboards } from '@/features/profile/useProfileLeaderboards.js';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
-import { slugsReferToSameAccount } from '@/lib/accountDeletionClient.js';
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -35,27 +34,19 @@ function ordinalSuffix(rank) {
   }
 }
 
-function slugsMatch(a, b) {
-  const left = String(a ?? '').trim();
-  const right = String(b ?? '').trim();
-  if (!left || !right) return false;
-  return left === right || slugsReferToSameAccount(left, right);
-}
 
-export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug = null }) {
+// hiddenMode: 'none' | 'board' (whole card hidden — the owner hid this board).
+// Individual rows redact independently via each entry's global `selfHidden` flag.
+export function LeaderboardCard({ board, hiddenMode = 'none' }) {
   const rank = Number(board.userRank);
   const hasRank = Number.isFinite(rank);
-  const rowHidden = hiddenMode === 'row';
+  const boardHidden = hiddenMode === 'board';
   const title = String(board.title ?? 'Leaderboard');
-  const hiddenNoticeCopy = rowHidden
-    ? {
-        title: 'Position hidden',
-        body: 'You chose to hide your place on this leaderboard.',
-      }
-    : null;
 
   return (
-    <article className="profile-leaderboard-card">
+    <article
+      className={`profile-leaderboard-card${boardHidden ? ' profile-leaderboard-card--hidden' : ''}`}
+    >
       <header className="profile-leaderboard-card__head">
         <div>
           <p className="profile-leaderboard-card__eyebrow">leaderboards</p>
@@ -70,12 +61,12 @@ export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug =
       <ol className="profile-leaderboard-card__rows" aria-label={`${title} standings`}>
         {(board.entries || []).map((entry) => {
           const isBot = entry.source === 'bot';
-          const hideOwnedRow = rowHidden && entry.source === 'real' && slugsMatch(entry.slug, ownedProfileSlug);
+          const rowHidden = !boardHidden && entry.source === 'real' && Boolean(entry.selfHidden);
           return (
           <li
             key={`${board.boardId}-${entry.rank}-${entry.handle}-${entry.isUser ? 'self' : 'clone'}`}
-            className={`profile-leaderboard-row${entry.isUser ? ' is-self' : ''}${hideOwnedRow ? ' profile-leaderboard-row--hidden' : ''}`}
-            aria-label={hideOwnedRow ? `Hidden row for ${entry.name}` : undefined}
+            className={`profile-leaderboard-row${entry.isUser ? ' is-self' : ''}${rowHidden ? ' profile-leaderboard-row--hidden' : ''}`}
+            aria-label={rowHidden ? `Hidden row for ${entry.name}` : undefined}
           >
             <span className="profile-leaderboard-row__rank">{entry.rank}</span>
             <ProfileAvatarLink
@@ -86,12 +77,11 @@ export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug =
               avatarInitials={isBot ? entry.avatarInitials : null}
             />
             <span className="profile-leaderboard-row__name">{entry.name}</span>
-            {hideOwnedRow ? (
+            {rowHidden ? (
               <div className="profile-leaderboard-row__hidden-notice" role="status">
                 <span className="profile-leaderboard-row__hidden-notice-title">
-                  {hiddenNoticeCopy?.title}
+                  Position hidden
                 </span>
-                <p>{hiddenNoticeCopy?.body}</p>
               </div>
             ) : null}
           </li>
@@ -99,15 +89,21 @@ export function LeaderboardCard({ board, hiddenMode = 'none', ownedProfileSlug =
         })}
       </ol>
 
+      {boardHidden ? (
+        <div className="profile-leaderboard-card__hidden-notice" role="status">
+          <span className="profile-leaderboard-card__hidden-notice-title">
+            Leaderboard hidden
+          </span>
+          <p>You hid your place on this leaderboard.</p>
+        </div>
+      ) : null}
     </article>
   );
 }
 
-export default function LeaderboardsTab({ profile, isOwnProfile = true, ownedProfileSlug = null }) {
+export default function LeaderboardsTab({ profile, isOwnProfile = true }) {
   const { leaderboards } = useProfileLeaderboards(profile);
   const { isLeaderboardSelfHidden } = useLiveScoring();
-  const resolvedOwnedProfileSlug =
-    ownedProfileSlug ?? (isOwnProfile ? (profile?.slug ?? profile?.id ?? null) : null);
 
   const grouped = useMemo(() => {
     const out = { productivite: [], securite: [], popularite: [] };
@@ -133,16 +129,21 @@ export default function LeaderboardsTab({ profile, isOwnProfile = true, ownedPro
               {PERSONA_SECTION_LABEL[personaKey]}
             </h2>
             <div className="profile-leaderboards-grid">
-              {boards.map((board) => (
-                <LeaderboardCard
-                  key={board.boardId}
-                  board={board}
-                  hiddenMode={
-                    isLeaderboardSelfHidden(board.boardId) ? 'row' : 'none'
-                  }
-                  ownedProfileSlug={resolvedOwnedProfileSlug}
-                />
-              ))}
+              {boards.map((board) => {
+                // Whole card hidden when the profile OWNER hid this board: their
+                // row (isUser) carries the global selfHidden flag. On your own
+                // profile also honour the viewer-local flag for instant feedback.
+                const ownerHidBoard =
+                  Boolean(board.entries?.find((e) => e.isUser)?.selfHidden)
+                  || (isOwnProfile && isLeaderboardSelfHidden(board.boardId));
+                return (
+                  <LeaderboardCard
+                    key={board.boardId}
+                    board={board}
+                    hiddenMode={ownerHidBoard ? 'board' : 'none'}
+                  />
+                );
+              })}
             </div>
           </section>
         );

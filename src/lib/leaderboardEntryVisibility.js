@@ -30,7 +30,12 @@ function entryMatchesViewerSlug(entry, viewerSlug) {
 }
 
 /**
- * Viewer-local hide: blur only the logged-in user's row (by slug), never the post author via isUser.
+ * Row hidden when:
+ *   - `entry.selfHidden` — that real user globally hid their position (set by the
+ *     server leaderboard builder from each profile's liveScoringRecords), OR
+ *   - `viewerRowHidden` — viewer-local blur of their own row (by slug), OR
+ *   - the entry is a bot whose `cloneHidden[]` slot is set.
+ * Never blurs the post author via `isUser`.
  */
 export function mapLeaderboardEntryHiddenFlags(
   entries,
@@ -38,6 +43,7 @@ export function mapLeaderboardEntryHiddenFlags(
 ) {
   const botIdx = { n: -1 };
   return (Array.isArray(entries) ? entries : []).map((entry) => {
+    if (entry?.selfHidden) return true;
     if (viewerRowHidden && entryMatchesViewerSlug(entry, viewerSlug)) return true;
     return isLeaderboardEntryPositionHidden(entry, { cloneHidden, botIdx });
   });

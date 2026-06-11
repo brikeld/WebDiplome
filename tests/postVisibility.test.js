@@ -92,17 +92,50 @@ describe('resolvePostHiddenState', () => {
     expect(hidden).toBe(false);
   });
 
-  it('never hides leaderboard posts at the card level', () => {
-    const leaderboardPost = {
-      createdAt,
-      authorSlug: 'alice-abc',
-      leaderboard: { boardId: 'most_secure' },
-    };
+  const leaderboardPost = {
+    createdAt,
+    authorSlug: 'alice-abc',
+    leaderboard: { boardId: 'most_secure' },
+  };
+
+  it('hides my own leaderboard post when I hid my position (viewer-authoritative)', () => {
     const hidden = resolvePostHiddenState(leaderboardPost, {
-      authorRecords: { 'leaderboard-self|most_secure': { persona: 'security', delta: -1 } },
+      authorRecords: {},
+      viewerSlug: 'alice-abc',
+      viewerIsHidden: () => false,
+      viewerIsLeaderboardSelfHidden: (boardId) => boardId === 'most_secure',
+    });
+    expect(hidden).toBe(true);
+  });
+
+  it('shows my own leaderboard post while my position is visible', () => {
+    const hidden = resolvePostHiddenState(leaderboardPost, {
+      authorRecords: {},
+      viewerSlug: 'alice-abc',
+      viewerIsHidden: () => false,
+      viewerIsLeaderboardSelfHidden: () => false,
+    });
+    expect(hidden).toBe(false);
+  });
+
+  it("hides someone else's leaderboard post globally when its author hid that board", () => {
+    const hidden = resolvePostHiddenState(leaderboardPost, {
+      authorRecords: {
+        'leaderboard-self|most_secure': { persona: 'security', delta: -1, restorable: 1 },
+      },
       viewerSlug: 'bob',
       viewerIsHidden: () => false,
-      viewerIsLeaderboardSelfHidden: () => true,
+      viewerIsLeaderboardSelfHidden: () => false,
+    });
+    expect(hidden).toBe(true);
+  });
+
+  it("keeps someone else's leaderboard post visible when its author has not hidden the board", () => {
+    const hidden = resolvePostHiddenState(leaderboardPost, {
+      authorRecords: {},
+      viewerSlug: 'bob',
+      viewerIsHidden: () => false,
+      viewerIsLeaderboardSelfHidden: () => true, // a viewer flag must NOT hide the author's post
     });
     expect(hidden).toBe(false);
   });
