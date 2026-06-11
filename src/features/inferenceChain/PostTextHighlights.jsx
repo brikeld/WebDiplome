@@ -1,6 +1,6 @@
 /**
- * Renders the post content in Demi Oblique with quote marks; important phrases
- * are underlined in black and clickable.
+ * Renders the post content in Demi Oblique (italic) with inline quote marks;
+ * important phrases are underlined in black and clickable.
  *
  * Each highlight links a literal substring to a chain step + ingredient.
  * Clicking a phrase calls onSelect({stepIndex, ingredientIndex, phrase}) so
@@ -73,6 +73,9 @@ export default function PostTextHighlights({ content, highlights, onSelect, acti
   return (
     <div className="inference-panel__post-quote">
       <p className="inference-panel__post-text">
+        <span className="inference-panel__post-quote-mark inference-panel__post-quote-mark--open" aria-hidden="true">
+          {'\u201C'}
+        </span>
         {segments.map((seg, i) => {
           if (seg.kind === 'text') {
             return <span key={`t-${i}`}>{seg.text}</span>;
@@ -94,6 +97,9 @@ export default function PostTextHighlights({ content, highlights, onSelect, acti
             </button>
           );
         })}
+        <span className="inference-panel__post-quote-mark inference-panel__post-quote-mark--close" aria-hidden="true">
+          {'\u201D'}
+        </span>
       </p>
     </div>
   );

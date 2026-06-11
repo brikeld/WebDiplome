@@ -660,14 +660,21 @@
 }
 
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .post-quote-a,
+.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .post-quote-a,
+.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .post-quote-a {
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .tape-section,
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .reason-section,
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .ing-section,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .post-quote-a,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape-section,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .reason-section,
 .dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .ing-section,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .post-quote-a,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .tape-section,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .reason-section,
 .dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .ing-section {
@@ -676,25 +683,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .post-quote-a .inference-panel__post-quote,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .post-quote-a .inference-panel__post-quote,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .post-quote-a .inference-panel__post-quote {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .post-quote-a .inference-panel__post-text,
-.dashboard-capsule--figma[data-tell-step="content"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .post-quote-a .inference-panel__post-text,
-.dashboard-capsule--figma[data-tell-step="closing"] .tell-morph__layer--panel .tell-panel-a__stack:not(.tell-panel-a__stack--has-focus) .post-quote-a .inference-panel__post-text {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-  line-height: 1.22;
 }
 
 .dashboard-capsule--figma[data-tell-step="revealing"] .tell-morph__layer--panel .tell-panel-a__stack .reason-chips,
