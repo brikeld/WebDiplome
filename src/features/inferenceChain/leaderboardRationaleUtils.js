@@ -180,6 +180,30 @@ const BOARD_BASELINE = {
   least_sleep: 36,
 };
 
+/** Short, plain board titles for the rank-hero label. */
+export const BOARD_TITLES = {
+  most_productive: 'MOST PRODUCTIVE',
+  closest_to_burnout: 'CLOSEST TO BURNOUT',
+  most_likely_change_jobs: 'MOST LIKELY TO QUIT',
+  ignoring_health: 'IGNORING HEALTH',
+  most_secure: 'MOST SECURE',
+  most_socially_isolated: 'MOST ISOLATED',
+  most_likely_ghost: 'MOST LIKELY TO GHOST',
+  most_likely_miss_deadline: 'MOST LIKELY TO MISS A DEADLINE',
+  replaced_by_ai_90_days: 'FIRST REPLACED BY AI',
+  least_with_expensive_setup: 'WORST VALUE SETUP',
+  procrastinate_right_now: 'PROCRASTINATING NOW',
+  quit_to_countryside: 'MOST LIKELY TO MOVE AWAY',
+  get_hacked_this_month: 'MOST LIKELY TO GET HACKED',
+  tracked_by_third_parties: 'MOST TRACKED',
+  ignoring_system_warnings: 'IGNORING WARNINGS',
+  leak_confidential_accident: 'MOST LIKELY TO LEAK A FILE',
+  messiest_digital_life: 'MESSIEST SETUP',
+  havent_left_house: 'LEAST LIKELY TO GO OUT',
+  talking_to_ais_not_people: 'TALKS TO AI, NOT PEOPLE',
+  least_sleep: 'LEAST SLEEP',
+};
+
 export const BOARD_DESCRIPTIONS = {
   most_productive: 'Ranks recent work-app activity against time spent in entertainment apps.',
   closest_to_burnout: 'Combines late-night file activity, daytime work load, and absent social breaks.',

@@ -3247,3 +3247,470 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
 
 /* The skeleton overlay during loading already covers the panel; once ready,
    reveal np2 with the same fade as lb2. */
+
+/* ════════════════════════════════════════════════════════════════════════
+   Leaderboard "Tell Me More" — lbx
+   Shares the normal panel's spacing / typography / fill model, but with its
+   own identity: black header pills + the post's persona accent. Two sliding
+   screens (main / others). Content reveals immediately (no skeleton loader).
+   ════════════════════════════════════════════════════════════════════════ */
+
+.tell-more-pill--expanded .inference-panel--leaderboard {
+  padding: 0;
+}
+
+.inference-panel--leaderboard .inference-panel__redacted-content > .lbx {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.lbx {
+  --lbx-accent: var(--tell-pill-accent, #759aef);
+  --lbx-pastel: var(--tell-pill-pastel, #bccdf5);
+  --lbx-ink: #0c1018;
+  --lbx-gap: clamp(9px, 1.1vh, 15px);
+  --lbx-sec-pad: clamp(13px, 1.4vh, 19px) clamp(13px, 1.2vw, 18px);
+  --lbx-radius: var(--dash-section-radius, 16px);
+  --lbx-chip-radius: var(--dash-chip-radius, 12px);
+  /* Typography mirrors the normal panel's clamps so both scale identically. */
+  --lbx-title-fs: clamp(11px, 0.82vw, 18px);
+  --lbx-body-fs: clamp(13px, 1vw, 24px);
+
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-avant);
+  color: var(--lbx-ink);
+}
+
+.lbx--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lbx__empty {
+  margin: 0;
+  font-weight: 700;
+  font-size: var(--lbx-body-fs);
+  color: var(--lbx-ink);
+}
+
+/* ── Sliding screens ── */
+.lbx__screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--lbx-gap);
+  box-sizing: border-box;
+  transition:
+    transform 460ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 320ms ease;
+}
+
+.lbx__screen--main {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.lbx__screen--main.is-gone {
+  transform: translateX(-7%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lbx__screen--others {
+  transform: translateX(6%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lbx__screen--others.is-active {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Rank hero (black, accent number) ── */
+.lbx__rank {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.4vw, 22px);
+  background: #000;
+  border-radius: var(--lbx-radius);
+  padding: clamp(12px, 1.4vh, 20px) clamp(15px, 1.6vw, 24px);
+  min-width: 0;
+}
+
+.lbx__rank-num {
+  flex: 0 0 auto;
+  font-weight: 900;
+  font-size: clamp(36px, 4.6vw, 104px);
+  line-height: 0.85;
+  letter-spacing: -0.02em;
+  color: var(--lbx-accent);
+}
+
+.lbx__rank-side {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3px, 0.4vh, 7px);
+  min-width: 0;
+}
+
+.lbx__rank-label {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: clamp(13px, 1.15vw, 26px);
+  line-height: 1.04;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.lbx__rank-of {
+  font-weight: 700;
+  font-size: clamp(10px, 0.74vw, 16px);
+  line-height: 1.28;
+  color: color-mix(in srgb, var(--lbx-accent) 78%, #fff);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Analysis sections (pastel + accent border, BLACK title pill) ── */
+.lbx__sec {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(8px, 1vh, 13px);
+  background: var(--lbx-pastel);
+  border: 1.5px solid var(--lbx-accent);
+  border-radius: var(--lbx-radius);
+  padding: var(--lbx-sec-pad);
+  overflow: visible;
+}
+
+.lbx__title {
+  align-self: flex-start;
+  flex: 0 0 auto;
+  background: #000;
+  color: var(--lbx-accent);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: var(--lbx-title-fs);
+  line-height: 1;
+  padding: clamp(5px, 0.6vh, 9px) clamp(9px, 0.95vw, 15px);
+  border-radius: 999px;
+}
+
+.lbx__body {
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--lbx-body-fs);
+  line-height: 1.36;
+  color: var(--lbx-ink);
+  overflow-wrap: anywhere;
+}
+
+/* ── Signal chips ── */
+.lbx__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(7px, 0.85vh, 12px);
+  min-height: 0;
+}
+
+.lbx__chip {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
+  border: 2px solid color-mix(in srgb, var(--lbx-accent) 42%, #fff);
+  border-radius: var(--lbx-chip-radius);
+  padding: clamp(8px, 0.9vh, 13px) clamp(11px, 1.1vw, 17px);
+  color: var(--lbx-ink);
+  font-weight: 800;
+  font-size: clamp(12px, 0.86vw, 20px);
+  line-height: 1.12;
+  text-align: left;
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 200ms ease-out,
+    border-color 200ms ease-out,
+    color 200ms ease-out;
+}
+
+/* Distinct from the normal panel: leaderboard chips flip to BLACK on hover. */
+.lbx__chip:hover {
+  transform: translateY(-4px) scale(1.03);
+  background: #000;
+  border-color: #000;
+  color: var(--lbx-accent);
+}
+
+.lbx__chip:active {
+  transform: translateY(-1px) scale(1.01);
+}
+
+/* ── Signal detail (replaces the grid — black card, accent eyebrow) ── */
+.lbx__detail {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(7px, 0.85vh, 12px);
+  background: #000;
+  border-radius: var(--lbx-chip-radius);
+  padding: clamp(11px, 1.2vh, 16px) clamp(12px, 1.2vw, 17px);
+  animation: tell-panel-section-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lbx__detail-head {
+  display: flex;
+  align-items: center;
+  gap: clamp(9px, 1vw, 14px);
+}
+
+.lbx__detail-back,
+.lbx__back {
+  appearance: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(28px, 2.2vw, 40px);
+  height: clamp(28px, 2.2vw, 40px);
+  border-radius: 999px;
+  border: 2px solid var(--lbx-accent);
+  background: transparent;
+  color: var(--lbx-accent);
+  font-size: clamp(15px, 1.1vw, 22px);
+  font-weight: 900;
+  line-height: 1;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), background 200ms, color 200ms;
+}
+
+.lbx__detail-back:hover,
+.lbx__back:hover {
+  transform: translateY(-2px) scale(1.07);
+  background: var(--lbx-accent);
+  color: #000;
+}
+
+.lbx__detail-name {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: clamp(12px, 0.92vw, 20px);
+  color: var(--lbx-accent);
+  overflow-wrap: anywhere;
+}
+
+.lbx__detail .lbx__body {
+  color: #fff;
+}
+
+.lbx__detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(5px, 0.6vh, 9px);
+  margin-top: auto;
+}
+
+.lbx__detail-tag {
+  background: var(--lbx-accent);
+  color: #000;
+  border-radius: 999px;
+  padding: clamp(4px, 0.45vh, 7px) clamp(8px, 0.85vw, 13px);
+  font-weight: 800;
+  font-size: clamp(10px, 0.74vw, 16px);
+  line-height: 1;
+}
+
+/* ── Others CTA (black bar) ── */
+.lbx__others-btn {
+  flex: 0 0 auto;
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #000;
+  border: none;
+  border-radius: var(--lbx-radius);
+  padding: clamp(12px, 1.3vh, 18px) clamp(15px, 1.6vw, 24px);
+  color: var(--lbx-accent);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: clamp(13px, 1vw, 22px);
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms;
+}
+
+.lbx__others-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -14px #000;
+}
+
+.lbx__others-arrow {
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lbx__others-btn:hover .lbx__others-arrow {
+  transform: translateX(5px);
+}
+
+/* ── Others screen ── */
+.lbx__others-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.2vw, 16px);
+}
+
+.lbx__others-title {
+  background: #000;
+  color: var(--lbx-accent);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: clamp(12px, 0.95vw, 20px);
+  line-height: 1;
+  padding: clamp(7px, 0.8vh, 11px) clamp(11px, 1.1vw, 17px);
+  border-radius: 999px;
+}
+
+.lbx__others-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--lbx-gap);
+}
+
+.lbx__other {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.2vw, 18px);
+  background: var(--lbx-pastel);
+  border: 1.5px solid var(--lbx-accent);
+  border-radius: var(--lbx-radius);
+  padding: clamp(9px, 1vh, 14px) clamp(11px, 1.2vw, 18px);
+}
+
+.lbx__other.is-hidden {
+  opacity: 0.55;
+}
+
+.lbx__other-rank {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(34px, 2.8vw, 54px);
+  height: clamp(34px, 2.8vw, 54px);
+  padding: 0 clamp(2px, 0.4vw, 6px);
+  background: #000;
+  color: var(--lbx-accent);
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: clamp(14px, 1.05vw, 24px);
+  line-height: 1;
+}
+
+.lbx__other-avatar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, 3.2vw, 62px);
+  height: clamp(40px, 3.2vw, 62px);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid #000;
+  background: #fff;
+  padding: 0;
+  cursor: pointer;
+}
+
+.lbx__other-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lbx__other-avatar-initials {
+  width: 62%;
+  height: 62%;
+  color: #000;
+}
+
+.lbx__other-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.3vh, 5px);
+}
+
+.lbx__other-phrase {
+  margin: 0;
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(12px, 0.92vw, 21px);
+  line-height: 1.3;
+  color: var(--lbx-ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lbx__other-phrase--hidden {
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.lbx__other-name {
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: clamp(10px, 0.74vw, 15px);
+  color: color-mix(in srgb, var(--lbx-accent) 50%, #000);
+}
+
+/* ── Staggered reveal on open (replaces the old skeleton) ── */
+.tell-morph__layer--panel.is-entering .lbx__screen--main > * {
+  animation: tell-panel-section-in 520ms var(--tell-ease, cubic-bezier(0.32, 0.72, 0, 1)) both;
+}
+
+.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(1) { animation-delay: 0ms; }
+.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(2) { animation-delay: 70ms; }
+.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(3) { animation-delay: 130ms; }
+.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(4) { animation-delay: 190ms; }
+.tell-morph__layer--panel.is-entering .lbx__screen--main > *:nth-child(5) { animation-delay: 250ms; }

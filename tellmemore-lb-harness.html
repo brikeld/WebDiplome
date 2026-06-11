@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Leaderboard Tell-Me-More · harness</title>
+<link rel="stylesheet" href="src/styles/base.css" />
+<link rel="stylesheet" href="src/features/inferenceChain/inferenceChain.css" />
+<link rel="stylesheet" href="src/features/inferenceChain/tellTransition.css" />
+<style>
+  html,body{margin:0;height:100%;background:#0c0d10;font-family:'AvantGarde ITC BT',system-ui,sans-serif;overflow:hidden}
+  .page{height:100vh;display:flex;align-items:center;justify-content:center;padding:clamp(20px,3vh,48px)}
+  .slot{
+    width:calc(clamp(420px,32vw,720px) - 60px);
+    height:calc(100vh - clamp(40px,6vh,96px));
+    border-radius:48px;
+    box-shadow:0 0 0 10px color-mix(in srgb, var(--persona-accent,#CCF847) 90%, #000), 0 40px 90px -30px #000;
+  }
+  .dashboard-capsule.dashboard-capsule--figma{
+    width:100% !important;height:100% !important;box-sizing:border-box;
+    display:grid !important;
+    grid-template-rows:var(--dash-timer-track,0fr) var(--dash-tell-track,1fr) !important;
+  }
+  .dashboard-capsule.dashboard-capsule--figma .dashboard-tell-row{min-height:0;height:100%}
+  .slot>.view-home,.slot .view-home>.persona-side-panel{height:100%;width:100%;display:block}
+</style>
+</head>
+<body>
+<div class="page" id="page"></div>
+
+<script>
+const PERSONAS={
+  productivity:{acc:'#D8D8D8',pastel:'#EEEEEE'},
+  security:{acc:'#759AEF',pastel:'#BCCDF5'},
+  popularity:{acc:'#CCF847',pastel:'#EBF8B7'},
+};
+const qs=new URLSearchParams(location.search);
+const p=qs.get('p')||'popularity';
+const screen=qs.get('s')||'main';   // main | others | detail
+const per=PERSONAS[p];
+
+const SIGNALS=[
+  {label:'12 work apps', detail:'Work-classified app sessions are the main positive signal. Each one moves you up.', shown:['Visual Studio Code','Figma','Notion']},
+  {label:'5 creative apps', detail:'Creative tools count as work-adjacent — a smaller bonus per session.', shown:['Blender','Photoshop']},
+  {label:'3 entertainment apps', detail:'Entertainment time subtracts. The system doesn’t care that it’s how you relax.', shown:['Spotify','Netflix']},
+];
+const OTHERS=[
+  {rank:1, name:'Maya R.', phrase:'Honestly earned it, I never stop working'},
+  {rank:2, name:'Tom B.', phrase:'Close but the late nights got me'},
+  {rank:4, name:'Hidden', hidden:true},
+  {rank:5, name:'Sora K.', phrase:'I just open a lot of tabs, not proud'},
+];
+
+const verdict = "Productive and idle patterns balanced out — the system doesn’t reward balance.";
+const tip = "To climb, spend more time in work apps and less in entertainment.";
+
+function chipsHTML(){
+  return `<div class="lbx__chips">${SIGNALS.map(s=>`<button type="button" class="lbx__chip"><span class="lbx__chip-label">${s.label}</span></button>`).join('')}</div>`;
+}
+function detailHTML(){
+  const s=SIGNALS[0];
+  return `<div class="lbx__detail">
+    <div class="lbx__detail-head">
+      <button type="button" class="lbx__detail-back" aria-label="Back">←</button>
+      <span class="lbx__detail-name">${s.label}</span>
+    </div>
+    <p class="lbx__body">${s.detail}</p>
+    <div class="lbx__detail-tags">${s.shown.map(n=>`<span class="lbx__detail-tag">${n}</span>`).join('')}</div>
+  </div>`;
+}
+function othersHTML(){
+  return OTHERS.map(o=>`
+    <li class="lbx__other${o.hidden?' is-hidden':''}">
+      <span class="lbx__other-rank">#${o.rank}</span>
+      <div class="lbx__other-avatar"><svg class="lbx__other-avatar-initials" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="currentColor"/></svg></div>
+      <div class="lbx__other-text">
+        ${o.hidden
+          ? `<p class="lbx__other-phrase lbx__other-phrase--hidden">Position hidden</p>`
+          : `<p class="lbx__other-phrase">“${o.phrase}”</p><cite class="lbx__other-name">${o.name}</cite>`}
+      </div>
+    </li>`).join('');
+}
+
+const lbx = `
+<div class="lbx">
+  <div class="lbx__screen lbx__screen--main${screen==='others'?' is-gone':''}">
+    <div class="lbx__rank">
+      <span class="lbx__rank-num">#3</span>
+      <span class="lbx__rank-side">
+        <span class="lbx__rank-label">MOST PRODUCTIVE</span>
+        <span class="lbx__rank-of">out of 24 · Ranks recent work-app activity against time spent in entertainment apps.</span>
+      </span>
+    </div>
+    <section class="lbx__sec"><header class="lbx__title">WHY THIS RANK</header><p class="lbx__body">${verdict}</p></section>
+    <section class="lbx__sec"><header class="lbx__title">HOW TO CLIMB</header><p class="lbx__body">${tip}</p></section>
+    <section class="lbx__sec lbx__sec--signals${screen==='detail'?' is-detail':''}">
+      <header class="lbx__title">WHAT COUNTED</header>
+      ${screen==='detail'?detailHTML():chipsHTML()}
+    </section>
+    <button type="button" class="lbx__others-btn"><span>OTHER USERS</span><span class="lbx__others-arrow">→</span></button>
+  </div>
+  <div class="lbx__screen lbx__screen--others${screen==='others'?' is-active':''}">
+    <header class="lbx__others-head">
+      <button type="button" class="lbx__back" aria-label="Back">←</button>
+      <span class="lbx__others-title">OTHER USERS</span>
+    </header>
+    <ol class="lbx__others-list">${othersHTML()}</ol>
+  </div>
+</div>`;
+
+document.getElementById('page').innerHTML = `
+  <div class="slot" style="--persona-accent:${per.acc}">
+   <div class="view-home"><div class="persona-side-panel">
+    <div class="dashboard-capsule dashboard-capsule--figma" data-tell-step="content"
+         style="--capsule-radius:44px;--tell-pill-accent:${per.acc};--tell-pill-pastel:${per.pastel};--persona-accent:${per.acc};">
+      <div class="dashboard-actions-row"></div>
+      <div class="dashboard-tell-row"><div class="tell-morph">
+        <div class="tell-morph__layer tell-morph__layer--panel is-active">
+          <div class="tell-more-pill tell-more-pill--expanded">
+            <div class="inference-panel inference-panel--leaderboard" role="region" aria-label="Tell me more analysis">
+              <div class="inference-panel__redacted-content">${lbx}</div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+   </div></div>
+  </div>`;
+</script>
+</body>
+</html>

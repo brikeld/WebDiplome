@@ -1,65 +1,62 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   atmosphericVerdict,
   parseUserSignals,
   fallbackClimbTip,
   BOARD_DESCRIPTIONS,
+  BOARD_TITLES,
   positionCommentFromPhrase,
 } from './leaderboardRationaleUtils.js';
 import { isLeaderboardBotEntry } from '@/lib/leaderboardEntryVisibility.js';
 import { leaderboardEntryProfileSlug } from '@/lib/leaderboardProfileSlug.js';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
-import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
-import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 
-function OtherUserCard({
-  entry,
-  rationale,
-  authorSlug,
-  directorySlugs,
-  onOpenProfile,
-}) {
+/**
+ * Leaderboard "Tell Me More".
+ *
+ * Shares the spacing / typography / fill model of the normal-post panel, but
+ * carries its own identity: black header pills + the post's persona accent
+ * (the normal panel uses plain-black titles + pastel tiles). Two screens:
+ *   1. main  → rank hero, why-this-rank, how-to-climb, what-counted (chips).
+ *   2. others → what every other user "said" about their position.
+ *
+ * Content reveals immediately with a staggered fade (no skeleton loader).
+ */
+
+function OtherUserRow({ entry, rationale, authorSlug, directorySlugs, onOpenProfile }) {
   const isBot = isLeaderboardBotEntry(entry);
   const entrySlug = leaderboardEntryProfileSlug(entry, authorSlug, directorySlugs);
   const openLeaderboards = !entry.hidden && entrySlug && onOpenProfile
     ? () => onOpenProfile('leaderboards', entrySlug)
     : undefined;
-  const positionComment = positionCommentFromPhrase(rationale?.phrase);
+  const comment = positionCommentFromPhrase(rationale?.phrase);
   const displayName = entry.name ? String(entry.name).trim() : '';
 
   return (
-    <li className={`lb2__other${entry.hidden ? ' is-hidden' : ''}`}>
-      <div className="lb2__other-meta">
-        <span className="lb2__other-rank">#{entry.rank}</span>
-      </div>
-      <div className="lb2__other-body">
-        <div className="lb2__other-portrait">
-          <ProfileAvatarLink
-            className="lb2__other-avatar"
-            imgClassName="lb2__other-avatar-img"
-            initialsClassName="lb2__other-avatar-initials"
-            onOpenProfile={openLeaderboards}
-            ariaLabel={
-              entry.hidden
-                ? 'Position hidden'
-                : displayName
-                  ? `View ${displayName}'s leaderboards`
-                  : 'View leaderboards'
-            }
-            avatarSrc={isBot ? null : (entry.avatarSrc || null)}
-            avatarInitials={isBot ? entry.avatarInitials : null}
-          />
-        </div>
+    <li className={`lbx__other${entry.hidden ? ' is-hidden' : ''}`}>
+      <span className="lbx__other-rank">#{entry.rank}</span>
+      <ProfileAvatarLink
+        className="lbx__other-avatar"
+        imgClassName="lbx__other-avatar-img"
+        initialsClassName="lbx__other-avatar-initials"
+        onOpenProfile={openLeaderboards}
+        ariaLabel={
+          entry.hidden
+            ? 'Position hidden'
+            : displayName
+              ? `View ${displayName}'s leaderboards`
+              : 'View leaderboards'
+        }
+        avatarSrc={isBot ? null : (entry.avatarSrc || null)}
+        avatarInitials={isBot ? entry.avatarInitials : null}
+      />
+      <div className="lbx__other-text">
         {entry.hidden ? (
-          <p className="lb2__other-phrase">position hidden</p>
+          <p className="lbx__other-phrase lbx__other-phrase--hidden">Position hidden</p>
         ) : (
           <>
-            {positionComment ? (
-              <p className="lb2__other-comment">{positionComment}</p>
-            ) : null}
-            {displayName ? (
-              <cite className="lb2__other-cite">{displayName}</cite>
-            ) : null}
+            <p className="lbx__other-phrase">{comment ? `“${comment}”` : '—'}</p>
+            {displayName ? <cite className="lbx__other-name">{displayName}</cite> : null}
           </>
         )}
       </div>
@@ -69,7 +66,6 @@ function OtherUserCard({
 
 export default function LeaderboardRationaleView({
   leaderboard,
-  holdLoadingOverlay = false,
   authorSlug = null,
   onOpenProfile = null,
   leaderboardDirectorySlugs = [],
@@ -78,16 +74,6 @@ export default function LeaderboardRationaleView({
   const [activeSignal, setActiveSignal] = useState(null);
 
   const boardId = leaderboard?.boardId;
-  const { ready, loadingKey } = useTellMeMoreLoading([boardId], { blocked: holdLoadingOverlay });
-
-  const directorySlugs = useMemo(
-    () => new Set(
-      (Array.isArray(leaderboardDirectorySlugs) ? leaderboardDirectorySlugs : [])
-        .map((s) => String(s ?? '').trim())
-        .filter(Boolean),
-    ),
-    [leaderboardDirectorySlugs],
-  );
 
   useEffect(() => {
     setShowOthers(false);
@@ -96,8 +82,8 @@ export default function LeaderboardRationaleView({
 
   if (!leaderboard || !Array.isArray(leaderboard.entries) || leaderboard.entries.length === 0) {
     return (
-      <div className="lb2 lb2--empty is-ready">
-        <p className="lb2__value">Leaderboard data is unavailable for this post.</p>
+      <div className="lbx lbx--empty">
+        <p className="lbx__empty">Leaderboard data is unavailable for this post.</p>
       </div>
     );
   }
@@ -120,141 +106,128 @@ export default function LeaderboardRationaleView({
   const signals = parseUserSignals(signalSource, boardId);
   const tip = climbTip || fallbackClimbTip(boardId, resolvedUserRank);
   const verdict = atmosphericVerdict(resolvedUserRank, boardId);
+  const boardTitle = BOARD_TITLES[boardId] ?? null;
   const boardDesc = BOARD_DESCRIPTIONS[boardId] ?? null;
+
+  const directorySlugs = new Set(
+    (Array.isArray(leaderboardDirectorySlugs) ? leaderboardDirectorySlugs : [])
+      .map((s) => String(s ?? '').trim())
+      .filter(Boolean),
+  );
 
   // Others screen: real users always visible; only bots use cloneHidden[].
   let botIdx = -1;
   const cloneEntries = entries
     .filter((e) => !e.isUser)
     .map((entry) => {
-      if (!isLeaderboardBotEntry(entry)) {
-        return { ...entry, hidden: false };
-      }
+      if (!isLeaderboardBotEntry(entry)) return { ...entry, hidden: false };
       botIdx += 1;
       return { ...entry, hidden: Boolean(cloneHidden[botIdx]) };
     });
 
-  const handleSignalClick = (i) => {
-    setActiveSignal((prev) => (prev === i ? null : i));
-  };
+  const openSignal = activeSignal !== null ? signals[activeSignal] : null;
 
   return (
-    <div className={`lb2${ready ? ' is-ready' : ''}`}>
-      <TellMeMoreLoadingOverlay loadingKey={loadingKey} />
-
+    <div className="lbx">
       {/* ── Main screen ─────────────────────────────────────── */}
-      <div
-        className={`lb2__screen lb2__screen--main${showOthers ? ' is-gone' : ''}${signals.length === 0 ? ' lb2__screen--no-signals' : ''}`}
-      >
-
-        {/* Rank tile */}
-        <div className="lb2__tile lb2__tile--rank">
-          <span className="lb2__rank-label">RANK</span>
-          <span className="lb2__rank-value">#{resolvedUserRank ?? '—'}</span>
-          <span className="lb2__rank-of">of {entries.length}</span>
+      <div className={`lbx__screen lbx__screen--main${showOthers ? ' is-gone' : ''}`}>
+        {/* Rank hero */}
+        <div className="lbx__rank">
+          <span className="lbx__rank-num">#{resolvedUserRank ?? '—'}</span>
+          <span className="lbx__rank-side">
+            <span className="lbx__rank-label">{boardTitle ? boardTitle : 'YOUR RANK'}</span>
+            <span className="lbx__rank-of">out of {entries.length}{boardDesc ? ` · ${boardDesc}` : ''}</span>
+          </span>
         </div>
 
-        {/* Verdict tile */}
-        <div className="lb2__tile lb2__tile--verdict">
-          <div className="lb2__head">
-            <span className="lb2__label">WHY THE SYSTEM</span>
-          </div>
-          <p className="lb2__value">{verdict}</p>
-          {boardDesc ? (
-            <p className="lb2__value lb2__value--small">{boardDesc}</p>
-          ) : null}
-        </div>
+        {/* Why this rank */}
+        <section className="lbx__sec">
+          <header className="lbx__title">WHY THIS RANK</header>
+          <p className="lbx__body">{verdict}</p>
+        </section>
 
-        {/* Improve tile */}
-        <div className="lb2__tile lb2__tile--improve">
-          <div className="lb2__head">
-            <span className="lb2__label">HOW CAN YOU IMPROVE</span>
-          </div>
-          <p className="lb2__value lb2__value--climb">{tip}</p>
-        </div>
+        {/* How to climb */}
+        <section className="lbx__sec">
+          <header className="lbx__title">HOW TO CLIMB</header>
+          <p className="lbx__body">{tip}</p>
+        </section>
 
-        {/* Signals tile */}
+        {/* What counted → chips; clicking one swaps the grid for its detail */}
         {signals.length > 0 ? (
-          <div className="lb2__tile lb2__tile--signals">
-            <div className="lb2__head">
-              <span className="lb2__label">WHAT COUNTED</span>
-            </div>
-            <div className="lb2__sig-wrap">
-              <div className="lb2__sig-grid">
+          <section className={`lbx__sec lbx__sec--signals${openSignal ? ' is-detail' : ''}`}>
+            <header className="lbx__title">WHAT COUNTED</header>
+
+            {openSignal ? (
+              <div className="lbx__detail">
+                <div className="lbx__detail-head">
+                  <button
+                    type="button"
+                    className="lbx__detail-back"
+                    onClick={() => setActiveSignal(null)}
+                    aria-label="Back to signals"
+                  >
+                    ←
+                  </button>
+                  <span className="lbx__detail-name">{openSignal.label}</span>
+                </div>
+                <p className="lbx__body">{openSignal.detail}</p>
+                {openSignal.shown?.length > 0 ? (
+                  <div className="lbx__detail-tags">
+                    {openSignal.shown.map((name, idx) => (
+                      <span key={idx} className="lbx__detail-tag">{name}</span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="lbx__chips">
                 {signals.map((sig, i) => (
                   <button
                     key={i}
                     type="button"
-                    className={`lb2__sig${sig.shown?.length ? ' lb2__sig--named' : ''}${activeSignal === i ? ' is-active' : ''}`}
-                    onClick={() => handleSignalClick(i)}
+                    className="lbx__chip"
+                    onClick={() => setActiveSignal(i)}
                   >
-                    <span className="lb2__sig-copy">
-                      <span className="lb2__sig-text">{sig.label}</span>
-                      {sig.shown?.length > 0 ? (
-                        <span className="lb2__sig-examples">
-                          {sig.shown.join(' · ')}
-                        </span>
-                      ) : null}
-                    </span>
+                    <span className="lbx__chip-label">{sig.label}</span>
                   </button>
                 ))}
               </div>
-
-              {activeSignal !== null && signals[activeSignal] ? (
-                <div className="lb2__sig-detail">
-                  <div className="lb2__sig-detail-block">
-                    <span className="lb2__label">WHY IT COUNTED</span>
-                    <p className="lb2__value lb2__value--reason">
-                      {signals[activeSignal].detail}
-                    </p>
-                  </div>
-                  {signals[activeSignal].shown?.length > 0 ? (
-                    <div className="lb2__sig-detail-block">
-                      <span className="lb2__label">DETECTED</span>
-                      <ul className="lb2__sig-example-list">
-                        {signals[activeSignal].shown.map((name, idx) => (
-                          <li key={idx} className="lb2__sig-example-item">{name}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </div>
+            )}
+          </section>
         ) : null}
 
-        {/* CTA → others */}
+        {/* Others CTA */}
         <button
           type="button"
-          className="lb2__cta"
+          className="lbx__others-btn"
           onClick={() => setShowOthers(true)}
         >
           <span>OTHER USERS</span>
-          <span className="lb2__cta-arrow">→</span>
+          <span className="lbx__others-arrow" aria-hidden="true">→</span>
         </button>
       </div>
 
       {/* ── Others screen ───────────────────────────────────── */}
-      <div className={`lb2__screen lb2__screen--others${showOthers ? ' is-active' : ''}`}>
-        <div className="lb2__others-head">
+      <div className={`lbx__screen lbx__screen--others${showOthers ? ' is-active' : ''}`}>
+        <header className="lbx__others-head">
           <button
             type="button"
-            className="lb2__back"
+            className="lbx__back"
             onClick={() => setShowOthers(false)}
+            aria-label="Back"
           >
-            ← BACK
+            ←
           </button>
-          <span className="lb2__label lb2__label--head">OTHER USERS</span>
-        </div>
+          <span className="lbx__others-title">OTHER USERS</span>
+        </header>
 
-        <ol className="lb2__others-list">
+        <ol className="lbx__others-list">
           {cloneEntries.map((entry) => {
             const rat = Array.isArray(rationales)
               ? rationales.find((r) => r.rank === entry.rank)
               : null;
             return (
-              <OtherUserCard
+              <OtherUserRow
                 key={entry.rank}
                 entry={entry}
                 rationale={rat}
