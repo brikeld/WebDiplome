@@ -14,6 +14,18 @@ describe('chipEmojiForLabel', () => {
     expect(chipEmojiForLabel('WHERE I CHEATED', 'thinking')).toBe('🃏');
   });
 
+  it('maps framing chips with distinct emojis', () => {
+    expect(chipEmojiForLabel('FOCUS SETTINGS', 'thinking', 0)).toBe('⚙️');
+    expect(chipEmojiForLabel('PICK STAT', 'thinking', 1)).toBe('📊');
+    expect(chipEmojiForLabel('TONE ADJUST', 'thinking', 2)).toBe('🎚️');
+    expect(chipEmojiForLabel('EMOJIS ADDED', 'thinking', 3)).toBe('✨');
+  });
+
+  it('falls back to index-based emojis for unknown thinking labels', () => {
+    expect(chipEmojiForLabel('MYSTERY STEP', 'thinking', 0)).toBe('👀');
+    expect(chipEmojiForLabel('MYSTERY STEP', 'thinking', 3)).toBe('✏️');
+  });
+
   it('maps ingredient categories by keyword', () => {
     expect(chipEmojiForLabel('Wi‑Fi signals', 'ingredient')).toBe('📶');
     expect(chipEmojiForLabel('Recent files', 'ingredient')).toBe('📁');

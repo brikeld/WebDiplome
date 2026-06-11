@@ -2257,22 +2257,29 @@
   overflow-wrap: anywhere;
   min-height: clamp(46px, 5vh, 60px);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+}
+
+.reason-chip__content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 0.45vw, 7px);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .reason-chip__emoji {
-  display: block;
   flex: 0 0 auto;
-  font-size: clamp(16px, 1.15vw, 22px);
+  font-size: clamp(14px, 1vw, 18px);
   line-height: 1;
 }
 
 .reason-chip__body {
-  display: block;
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
 }
 
 .reason-chip.is-open {
@@ -2281,10 +2288,12 @@
 }
 
 .ing-chip {
-  flex-direction: column;
-  gap: 4px;
   padding: 8px 10px;
   min-height: clamp(40px, 4.8vh, 52px);
+}
+
+.ing-chip .reason-chip__content {
+  width: 100%;
 }
 
 .ing-chip__label {

@@ -23,9 +23,21 @@ const THINKING_EMOJI = {
   'DATA HOOK': '🪝',
   'EMOTION': '😶',
   'CHECKED': '✅',
+  'FOCUS SETTINGS': '⚙️',
+  'PICK STAT': '📊',
+  'TONE ADJUST': '🎚️',
+  'EMOJIS ADDED': '✨',
 };
 
+const THINKING_EMOJI_BY_INDEX = ['👀', '⚖️', '🎯', '✏️', '💭', '🃏', '🧭', '✨'];
+
 const THINKING_KEYWORDS = [
+  ['EMOJI', '✨'],
+  ['FOCUS', '⚙️'],
+  ['ADJUST', '🎚️'],
+  ['TONE', '🔊'],
+  ['STAT', '📊'],
+  ['PICK', '🎲'],
   ['IGNORE', '🙈'],
   ['WEIGH', '⚖️'],
   ['CHEAT', '🃏'],
@@ -40,6 +52,7 @@ const THINKING_KEYWORDS = [
   ['SAW', '👀'],
   ['EMOTION', '😶'],
   ['CHECK', '✅'],
+  ['SETTING', '⚙️'],
 ];
 
 const INGREDIENT_EMOJI = {
@@ -88,10 +101,10 @@ function normalizeThinkingKey(text) {
   return String(text ?? '').trim().toUpperCase();
 }
 
-function matchKeywordEmoji(text, pairs, fallback) {
+function matchKeywordEmoji(text, pairs, fallback = null) {
   const hay = String(text ?? '').toLowerCase();
   for (const [needle, emoji] of pairs) {
-    if (hay.includes(needle)) return emoji;
+    if (hay.includes(needle.toLowerCase())) return emoji;
   }
   return fallback;
 }
@@ -110,5 +123,7 @@ export function chipEmojiForLabel(label, kind = 'thinking', index = 0) {
 
   const thinkingKey = normalizeThinkingKey(label);
   if (THINKING_EMOJI[thinkingKey]) return THINKING_EMOJI[thinkingKey];
-  return matchKeywordEmoji(thinkingKey, THINKING_KEYWORDS, '💡');
+  const keywordEmoji = matchKeywordEmoji(thinkingKey, THINKING_KEYWORDS, null);
+  if (keywordEmoji) return keywordEmoji;
+  return THINKING_EMOJI_BY_INDEX[index % THINKING_EMOJI_BY_INDEX.length] ?? '💡';
 }

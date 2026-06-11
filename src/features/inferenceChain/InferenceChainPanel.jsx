@@ -138,6 +138,15 @@ function ChipEmoji({ emoji }) {
   );
 }
 
+function ChipInlineContent({ emoji, children }) {
+  return (
+    <span className="reason-chip__content">
+      <ChipEmoji emoji={emoji} />
+      <span className="reason-chip__body">{children}</span>
+    </span>
+  );
+}
+
 export default function InferenceChainPanel({
   post,
   personaLabel,
@@ -281,10 +290,9 @@ export default function InferenceChainPanel({
                   className={`reason-chip${activeChainStep === i ? ' is-open' : ''}`}
                   onClick={() => setActiveDetail('chain', i)}
                 >
-                  <ChipEmoji emoji={chipEmojiForLabel(item.label, 'chain', i)} />
-                  <span className="reason-chip__body">
+                  <ChipInlineContent emoji={chipEmojiForLabel(item.label, 'chain', i)}>
                     <ChipTwoLineLabel {...chainChipLines(item.label)} />
-                  </span>
+                  </ChipInlineContent>
                 </button>
               ))}
             </div>
@@ -312,10 +320,9 @@ export default function InferenceChainPanel({
                   className={`reason-chip${activeThinking === i ? ' is-open' : ''}`}
                   onClick={() => setActiveDetail('thinking', i)}
                 >
-                  <ChipEmoji emoji={chipEmojiForLabel(th.label, 'thinking', i)} />
-                  <span className="reason-chip__body">
+                  <ChipInlineContent emoji={chipEmojiForLabel(th.label, 'thinking', i)}>
                     <ChipTwoLineLabel {...splitLabelTwoLines(th.label)} />
-                  </span>
+                  </ChipInlineContent>
                 </button>
               ))}
             </div>
@@ -346,14 +353,15 @@ export default function InferenceChainPanel({
                     className={`reason-chip ing-chip${activeIngredient === i ? ' is-open' : ''}`}
                     onClick={() => setActiveDetail('ingredient', i)}
                   >
-                    <ChipEmoji emoji={chipEmojiForLabel(ing.label, 'ingredient', i)} />
-                    <span className="ing-chip__label">
-                      <ChipTwoLineLabel
-                        line1={line1}
-                        line2={line2}
-                        suffix={<span className="ing-chip__pct">{weight}%</span>}
-                      />
-                    </span>
+                    <ChipInlineContent emoji={chipEmojiForLabel(ing.label, 'ingredient', i)}>
+                      <span className="ing-chip__label">
+                        <ChipTwoLineLabel
+                          line1={line1}
+                          line2={line2}
+                          suffix={<span className="ing-chip__pct">{weight}%</span>}
+                        />
+                      </span>
+                    </ChipInlineContent>
                   </button>
                 );
               })}
