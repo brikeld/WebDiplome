@@ -7,20 +7,39 @@
 import { RATIONALE_TEMPLATES } from './rationaleTemplates.js';
 import { isLeaderboardBotEntry } from '../../src/lib/leaderboardEntryVisibility.js';
 
-const PHRASE_MAX = 90;
+const PHRASE_MAX_WORDS = 10;
 const CLIMB_TIP_MAX = 110;
 const RATIONALE_COUNT = 5;
 
-function truncate(s) {
-  if (typeof s !== 'string') return null;
-  return s.length > PHRASE_MAX ? s.slice(0, PHRASE_MAX) : s;
+const POSITION_COMMENT_FALLBACK = {
+  1: 'leading the board at number one',
+  2: 'close behind in second place',
+  3: 'sitting mid-table at third',
+  4: 'slipping toward the bottom half',
+  5: 'anchored at the bottom today',
+};
+
+export function truncatePhraseToWords(text, maxWords = PHRASE_MAX_WORDS) {
+  const words = String(text ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!words.length) return null;
+  return words.slice(0, maxWords).join(' ');
+}
+
+export function fallbackPositionPhrase(rank) {
+  const n = Number(rank);
+  if (POSITION_COMMENT_FALLBACK[n]) return POSITION_COMMENT_FALLBACK[n];
+  if (Number.isFinite(n) && n > 0) return `holding rank ${n} for now`;
+  return 'on this board somewhere';
 }
 
 function normalizeOne(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const rank = Number(raw.rank);
   if (!Number.isInteger(rank) || rank < 1 || rank > RATIONALE_COUNT) return null;
-  const phrase = raw.phrase == null ? null : truncate(String(raw.phrase));
+  const phrase = raw.phrase == null ? null : truncatePhraseToWords(raw.phrase);
   const signal = raw.signal == null ? null : String(raw.signal);
   return { rank, phrase, signal };
 }
@@ -58,10 +77,22 @@ export function buildRationalesPayload(board, standing, cloneHidden) {
   let botIdx = -1;
   const rows = standing.entries.map((e) => {
     if (e.isUser) {
-      return { rank: e.rank, score: Math.round(e.score), isUser: true, hidden: false };
+      return {
+        rank: e.rank,
+        score: Math.round(e.score),
+        isUser: true,
+        hidden: false,
+        name: e.name ?? undefined,
+      };
     }
     if (!isLeaderboardBotEntry(e)) {
-      return { rank: e.rank, score: Math.round(e.score), isUser: false, hidden: false };
+      return {
+        rank: e.rank,
+        score: Math.round(e.score),
+        isUser: false,
+        hidden: false,
+        name: e.name ?? undefined,
+      };
     }
     botIdx += 1;
     return {
@@ -154,16 +185,23 @@ export function fallbackRationales(board, standing, cloneHidden) {
   let botIdx = -1;
   return standing.entries.map((e) => {
     if (e.isUser) {
-      return { rank: e.rank, phrase: tpl.selfPhrase, signal: standing.hint };
+      return {
+        rank: e.rank,
+        phrase: truncatePhraseToWords(tpl.selfPhrase) ?? tpl.selfPhrase,
+        signal: standing.hint,
+      };
     }
     if (!isLeaderboardBotEntry(e)) {
-      return { rank: e.rank, phrase: 'in your zone', signal: `score ${Math.round(e.score)}` };
+      return { rank: e.rank, phrase: fallbackPositionPhrase(e.rank), signal: null };
     }
     botIdx += 1;
     if (cloneHidden[botIdx]) {
       return { rank: e.rank, phrase: null, signal: null };
     }
-    const phrase = tpl.clonePhrases[botIdx % tpl.clonePhrases.length] || 'in your zone';
-    return { rank: e.rank, phrase, signal: `score ${Math.round(e.score)}` };
+    return {
+      rank: e.rank,
+      phrase: fallbackPositionPhrase(e.rank),
+      signal: `score ${Math.round(e.score)}`,
+    };
   });
 }

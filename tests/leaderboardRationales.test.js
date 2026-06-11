@@ -59,8 +59,8 @@ describe('parseRationalesResponse', () => {
     expect(out.map((r) => r.phrase)).toEqual(['a', 'b', 'c', 'd', 'e']);
   });
 
-  it('truncates phrases over 90 chars', () => {
-    const longPhrase = 'x'.repeat(200);
+  it('truncates phrases to 10 words', () => {
+    const longPhrase = 'one two three four five six seven eight nine ten eleven twelve';
     const raw = JSON.stringify({
       rationales: [
         { rank: 1, phrase: longPhrase, signal: 's' },
@@ -71,7 +71,7 @@ describe('parseRationalesResponse', () => {
       ],
     });
     const out = parseRationalesResponse(raw);
-    expect(out[0].phrase.length).toBeLessThanOrEqual(90);
+    expect(out[0].phrase).toBe('one two three four five six seven eight nine ten');
   });
 });
 
@@ -82,10 +82,16 @@ describe('fallbackRationales', () => {
     expect(out.map((r) => r.rank)).toEqual([1, 2, 3, 4, 5]);
   });
 
-  it('uses selfPhrase for the user entry', () => {
+  it('uses selfPhrase for the user entry (capped at 10 words)', () => {
     const out = fallbackRationales(BOARD, STANDING, CLONE_HIDDEN);
     expect(out[2].phrase).toBe('shipping more than you sleep'); // rank 3 = user
     expect(out[2].signal).toBe(STANDING.hint);
+  });
+
+  it('uses rank-based position comments for visible clones', () => {
+    const out = fallbackRationales(BOARD, STANDING, CLONE_HIDDEN);
+    expect(out[0].phrase).toBe('leading the board at number one');
+    expect(out[3].phrase).toBe('slipping toward the bottom half');
   });
 
   it('emits null phrase + null signal for hidden clones', () => {

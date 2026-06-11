@@ -1041,6 +1041,12 @@ function AppInner({
   }, [beginTellForPost]);
 
   const ownProfileSlug = profile?.slug ?? profile?.id ?? null;
+  const leaderboardDirectorySlugs = useMemo(
+    () => (Array.isArray(allProfiles) ? allProfiles : [])
+      .map((p) => String(p?.slug ?? p?.id ?? '').trim())
+      .filter(Boolean),
+    [allProfiles],
+  );
   const displayProfile = viewedProfile ?? profile;
   const displayPersonaKey = viewedProfile
     ? resolveDominantPersonaKey(viewedProfile)
@@ -1310,6 +1316,9 @@ function AppInner({
                   holdLoadingOverlay={postGen.loading && isFeedGenerationPhase(postGen.phase)}
                   isAnalysisRedacted={Boolean(tellDisplayPost && tellPostIsHidden)}
                   onRedactedUnhideConfirm={tellPostIsHidden ? handleTellRedactedUnhideConfirm : null}
+                  onOpenProfile={handleOpenProfile}
+                  authorSlug={tellDisplayPost?.authorSlug ?? ownProfileSlug}
+                  leaderboardDirectorySlugs={leaderboardDirectorySlugs}
                 />
               </div>
             </div>

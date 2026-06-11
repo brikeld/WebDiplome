@@ -690,6 +690,16 @@ export function composeVerdict({ rank, title }) {
  * Other-users screen: show only the clone's score chip, not "score N · yours M".
  * Leaves descriptive user-row signals (e.g. app counts) unchanged when reused.
  */
+/** Other-users grid: cap stored rationale copy at 10 words (legacy posts may be longer). */
+export function positionCommentFromPhrase(phrase, maxWords = 10) {
+  const words = String(phrase ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!words.length) return null;
+  return words.slice(0, maxWords).join(' ');
+}
+
 export function cloneRationaleSignal(signal) {
   if (signal == null || signal === '') return null;
   const s = String(signal).trim();

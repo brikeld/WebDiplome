@@ -1,32 +1,93 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   atmosphericVerdict,
   parseUserSignals,
   fallbackClimbTip,
   BOARD_DESCRIPTIONS,
-  cloneRationaleSignal,
+  positionCommentFromPhrase,
 } from './leaderboardRationaleUtils.js';
 import { isLeaderboardBotEntry } from '@/lib/leaderboardEntryVisibility.js';
+import { leaderboardEntryProfileSlug } from '@/lib/leaderboardProfileSlug.js';
+import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import { useTellMeMoreLoading } from './useTellMeMoreLoading.js';
 import TellMeMoreLoadingOverlay from './TellMeMoreLoadingOverlay.jsx';
 
-function OtherUserAvatar({ entry }) {
+function OtherUserCard({
+  entry,
+  rationale,
+  authorSlug,
+  directorySlugs,
+  onOpenProfile,
+}) {
+  const isBot = isLeaderboardBotEntry(entry);
+  const entrySlug = leaderboardEntryProfileSlug(entry, authorSlug, directorySlugs);
+  const openLeaderboards = !entry.hidden && entrySlug && onOpenProfile
+    ? () => onOpenProfile('leaderboards', entrySlug)
+    : undefined;
+  const positionComment = positionCommentFromPhrase(rationale?.phrase);
+  const displayName = entry.name ? String(entry.name).trim() : '';
+
   return (
-    <span
-      className={`lb2__other-avatar${entry.hidden ? ' lb2__other-avatar--hidden' : ''}`}
-      aria-hidden
-    >
-      <span className="lb2__other-avatar-mock" />
-    </span>
+    <li className={`lb2__other${entry.hidden ? ' is-hidden' : ''}`}>
+      <div className="lb2__other-meta">
+        <span className="lb2__other-rank">#{entry.rank}</span>
+      </div>
+      <div className="lb2__other-body">
+        <div className="lb2__other-portrait">
+          <ProfileAvatarLink
+            className="lb2__other-avatar"
+            imgClassName="lb2__other-avatar-img"
+            initialsClassName="lb2__other-avatar-initials"
+            onOpenProfile={openLeaderboards}
+            ariaLabel={
+              entry.hidden
+                ? 'Position hidden'
+                : displayName
+                  ? `View ${displayName}'s leaderboards`
+                  : 'View leaderboards'
+            }
+            avatarSrc={isBot ? null : (entry.avatarSrc || null)}
+            avatarInitials={isBot ? entry.avatarInitials : null}
+          />
+        </div>
+        {entry.hidden ? (
+          <p className="lb2__other-phrase">position hidden</p>
+        ) : (
+          <>
+            {positionComment ? (
+              <p className="lb2__other-comment">{positionComment}</p>
+            ) : null}
+            {displayName ? (
+              <cite className="lb2__other-cite">{displayName}</cite>
+            ) : null}
+          </>
+        )}
+      </div>
+    </li>
   );
 }
 
-export default function LeaderboardRationaleView({ leaderboard, holdLoadingOverlay = false }) {
+export default function LeaderboardRationaleView({
+  leaderboard,
+  holdLoadingOverlay = false,
+  authorSlug = null,
+  onOpenProfile = null,
+  leaderboardDirectorySlugs = [],
+}) {
   const [showOthers, setShowOthers] = useState(false);
   const [activeSignal, setActiveSignal] = useState(null);
 
   const boardId = leaderboard?.boardId;
   const { ready, loadingKey } = useTellMeMoreLoading([boardId], { blocked: holdLoadingOverlay });
+
+  const directorySlugs = useMemo(
+    () => new Set(
+      (Array.isArray(leaderboardDirectorySlugs) ? leaderboardDirectorySlugs : [])
+        .map((s) => String(s ?? '').trim())
+        .filter(Boolean),
+    ),
+    [leaderboardDirectorySlugs],
+  );
 
   useEffect(() => {
     setShowOthers(false);
@@ -192,38 +253,15 @@ export default function LeaderboardRationaleView({ leaderboard, holdLoadingOverl
             const rat = Array.isArray(rationales)
               ? rationales.find((r) => r.rank === entry.rank)
               : null;
-            const cloneSignal = cloneRationaleSignal(rat?.signal);
             return (
-              <li
+              <OtherUserCard
                 key={entry.rank}
-                className={`lb2__other${entry.hidden ? ' is-hidden' : ''}`}
-              >
-                <div className="lb2__other-meta">
-                  <span className="lb2__other-rank">#{entry.rank}</span>
-                  {!entry.hidden && cloneSignal ? (
-                    <span className="lb2__other-score">{cloneSignal}</span>
-                  ) : null}
-                </div>
-                <div className="lb2__other-body">
-                  <div className="lb2__other-portrait">
-                    <OtherUserAvatar entry={entry} />
-                  </div>
-                  {entry.hidden ? (
-                    <p className="lb2__other-phrase">position hidden</p>
-                  ) : (
-                    <>
-                      {rat?.phrase ? (
-                        <blockquote className="lb2__other-quote">
-                          <p className="lb2__other-quote-text">{rat.phrase}</p>
-                        </blockquote>
-                      ) : null}
-                      {entry.name ? (
-                        <cite className="lb2__other-cite">{entry.name}</cite>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-              </li>
+                entry={entry}
+                rationale={rat}
+                authorSlug={authorSlug}
+                directorySlugs={directorySlugs}
+                onOpenProfile={onOpenProfile}
+              />
             );
           })}
         </ol>

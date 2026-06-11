@@ -70,6 +70,9 @@ export default function TellMeMorePill({
   holdLoadingOverlay = false,
   isAnalysisRedacted = false,
   onRedactedUnhideConfirm = null,
+  onOpenProfile = null,
+  authorSlug = null,
+  leaderboardDirectorySlugs = [],
 }) {
   const phase = expanded && tellPhase === 'idle' ? 'content' : tellPhase;
   const mainPersonaKey = String(fallbackPersona ?? 'security').toLowerCase();
@@ -177,6 +180,9 @@ export default function TellMeMorePill({
               skipLoadingOverlay={!highlightedPost.leaderboard}
               redacted={isAnalysisRedacted}
               onRedactedUnhideConfirm={onRedactedUnhideConfirm}
+              onOpenProfile={onOpenProfile}
+              authorSlug={authorSlug ?? highlightedPost?.authorSlug ?? null}
+              leaderboardDirectorySlugs={leaderboardDirectorySlugs}
             />
           </div>
         </div>

@@ -1739,7 +1739,7 @@
 }
 
 .lb2__other {
-  --lb-other-avatar-size: min(100%, clamp(112px, 94%, 172px));
+  --lb-other-avatar-size: min(100%, clamp(64px, 72%, 96px));
   background: var(--lb-acc);
   border-radius: var(--lb-radius);
   padding: var(--lb-tile-pad-y) var(--lb-tile-pad-x);
@@ -1764,7 +1764,7 @@
   justify-content: center;
   width: 100%;
   min-height: 0;
-  gap: clamp(6px, 0.75vh, 10px);
+  gap: clamp(4px, 0.5vh, 6px);
 }
 
 .lb2__other.is-hidden {
@@ -1790,35 +1790,40 @@
   margin-inline: auto;
 }
 
-.lb2__other-portrait .lb2__other-avatar {
+.lb2__other-portrait .lb2__other-avatar,
+button.profile-avatar-link.lb2__other-avatar {
   width: 100%;
   height: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: clamp(12px, 1.4vw, 18px);
-}
-
-.lb2__other-avatar {
-  flex: 0 0 auto;
-  box-sizing: border-box;
-  border-radius: clamp(12px, 1.4vw, 18px);
-  overflow: hidden;
+  border-radius: clamp(10px, 1.1vw, 14px);
+  padding: 0;
+  border: none;
   background: color-mix(in srgb, #000 14%, var(--lb-acc));
-  display: block;
+  overflow: hidden;
+  cursor: pointer;
 }
 
-/* Generic profile mock (dashboard ghost avatar language) */
-.lb2__other-avatar-mock {
+.lb2__other-avatar-img {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: cover;
   border-radius: inherit;
-  background: color-mix(in srgb, var(--lb-acc) 52%, #000);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #000 18%, transparent);
 }
 
-.lb2__other-avatar--hidden .lb2__other-avatar-mock {
-  background: color-mix(in srgb, var(--lb-acc) 38%, #000);
-  opacity: 0.55;
+.lb2__other-avatar-initials.user-silhouette-icon {
+  width: 100%;
+  height: 100%;
+  color: #000;
+}
+
+button.profile-avatar-link.lb2__other-avatar:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
+  box-shadow: 0 0 0 2px #000;
 }
 
 .lb2__other.is-hidden .lb2__other-avatar {
@@ -1859,13 +1864,15 @@
   text-overflow: ellipsis;
 }
 
-.lb2__other-phrase {
+.lb2__other-phrase,
+.lb2__other-comment {
   margin: 0;
-  flex: 1 1 0;
+  flex: 0 1 auto;
   font-family: var(--font-avant);
-  font-weight: 800;
-  font-size: var(--lb-fs-value);
-  line-height: 1.2;
+  font-weight: 600;
+  font-style: oblique;
+  font-size: clamp(10px, 0.95vw, 13px);
+  line-height: 1.25;
   letter-spacing: -0.01em;
   color: #000;
   display: -webkit-box;
@@ -1873,36 +1880,17 @@
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  max-width: 100%;
+}
+
+.lb2__other-phrase {
+  font-weight: 800;
+  font-style: normal;
+  font-size: clamp(11px, 1vw, 14px);
 }
 
 .lb2__other.is-hidden .lb2__other-phrase {
   color: var(--lb-acc);
-}
-
-/* Direct quote — portrait above, phrase below (Demi Oblique) */
-.lb2__other-quote {
-  margin: 0;
-  padding: 0;
-  border: none;
-  width: 100%;
-  flex: 0 1 auto;
-  min-height: 0;
-}
-
-.lb2__other-quote-text {
-  margin: 0;
-  font-family: var(--font-avant);
-  font-style: oblique;
-  font-weight: 600;
-  font-size: clamp(15px, 1.65vw, 20px);
-  line-height: 1.38;
-  letter-spacing: -0.012em;
-  color: #000;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .lb2__other-cite {
@@ -1911,7 +1899,7 @@
   padding: 0;
   font-family: var(--font-avant);
   font-weight: 800;
-  font-size: var(--lb-fs-label);
+  font-size: clamp(9px, 0.78vw, 11px);
   font-style: normal;
   letter-spacing: 0.04em;
   text-transform: uppercase;

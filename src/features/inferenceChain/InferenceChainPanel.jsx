@@ -154,6 +154,9 @@ export default function InferenceChainPanel({
   skipLoadingOverlay = false,
   redacted = false,
   onRedactedUnhideConfirm = null,
+  onOpenProfile = null,
+  authorSlug = null,
+  leaderboardDirectorySlugs = [],
 }) {
   const { chain, ingredients, highlights, rawThinking } = resolvePostAnalysis(post);
   const validChain = isValidChain(chain);
@@ -206,6 +209,9 @@ export default function InferenceChainPanel({
           <LeaderboardRationaleView
             leaderboard={leaderboard}
             holdLoadingOverlay={holdLoadingOverlay}
+            authorSlug={authorSlug ?? post?.authorSlug ?? null}
+            onOpenProfile={onOpenProfile}
+            leaderboardDirectorySlugs={leaderboardDirectorySlugs}
           />
         </div>
         {redacted ? (
