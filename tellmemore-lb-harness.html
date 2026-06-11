@@ -12,7 +12,7 @@
   .page{height:100vh;display:flex;align-items:center;justify-content:center;padding:clamp(20px,3vh,48px)}
   .slot{
     width:calc(clamp(420px,32vw,720px) - 60px);
-    height:calc(100vh - clamp(40px,6vh,96px));
+    height:var(--slot-h, calc(100vh - clamp(40px,6vh,96px)));
     border-radius:48px;
     box-shadow:0 0 0 10px color-mix(in srgb, var(--persona-accent,#CCF847) 90%, #000), 0 40px 90px -30px #000;
   }
@@ -108,8 +108,9 @@ const lbx = `
   </div>
 </div>`;
 
+const shortStyle = qs.get('short')==='1' ? '--slot-h:min(86vh, calc((clamp(420px,32vw,720px) - 60px) * 1.35));' : '';
 document.getElementById('page').innerHTML = `
-  <div class="slot" style="--persona-accent:${per.acc}">
+  <div class="slot" style="--persona-accent:${per.acc};${shortStyle}">
    <div class="view-home"><div class="persona-side-panel">
     <div class="dashboard-capsule dashboard-capsule--figma" data-tell-step="content"
          style="--capsule-radius:44px;--tell-pill-accent:${per.acc};--tell-pill-pastel:${per.pastel};--persona-accent:${per.acc};">

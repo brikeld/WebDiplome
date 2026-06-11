@@ -3272,10 +3272,10 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   --lbx-sec-pad: clamp(13px, 1.4vh, 20px) clamp(13px, 1.2vw, 19px);
   --lbx-radius: var(--dash-section-radius, 16px);
   --lbx-chip-radius: var(--dash-chip-radius, 12px);
-  /* Larger than the normal panel — these capsules carry less text, so the
-     copy is sized up to fill them. */
-  --lbx-title-fs: clamp(12px, 0.95vw, 22px);
-  --lbx-body-fs: clamp(16px, 1.5vw, 36px);
+  /* A touch larger than the normal panel — these capsules carry less text —
+     but capped so it never outgrows a short capsule and overlaps the title. */
+  --lbx-title-fs: clamp(12px, 0.92vw, 20px);
+  --lbx-body-fs: clamp(15px, 1vw, 24px);
 
   position: relative;
   flex: 1 1 0;
@@ -3387,13 +3387,14 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
 
 /* ── Analysis sections (pastel + accent border, BLACK title pill) ── */
 .lbx__sec {
-  flex: 1 1 auto;
+  /* Equal thirds so the chip section can't steal height from the text ones. */
+  flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  /* Title pinned to the top; body fills the rest. */
+  /* Title pinned to the top; body flows below it. */
   justify-content: flex-start;
-  gap: clamp(10px, 1.2vh, 18px);
+  gap: clamp(9px, 1.1vh, 15px);
   background: var(--lbx-pastel);
   border: 1.5px solid var(--lbx-accent);
   border-radius: var(--lbx-radius);
@@ -3401,12 +3402,15 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   overflow: visible;
 }
 
-/* Body grows to fill the capsule under the title and centres its (large) text. */
+/* Body flows directly under the title (never overlaps it). Line-clamp is a
+   safety net so an unusually long verdict can't spill into the next capsule. */
 .lbx__sec > .lbx__body {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
-  display: flex;
-  align-items: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .lbx__title {
@@ -3427,7 +3431,7 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   margin: 0;
   font-weight: 600;
   font-size: var(--lbx-body-fs);
-  line-height: 1.36;
+  line-height: 1.22;
   color: var(--lbx-ink);
   overflow-wrap: anywhere;
 }
@@ -3438,7 +3442,7 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1vh, 14px);
+  gap: clamp(6px, 0.7vh, 12px);
 }
 
 .lbx__chip {
@@ -3446,7 +3450,7 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   cursor: pointer;
   font: inherit;
   flex: 1 1 0;
-  min-height: clamp(40px, 4.4vh, 78px);
+  min-height: clamp(28px, 2.6vh, 54px);
   width: 100%;
   display: flex;
   align-items: center;
@@ -3454,10 +3458,10 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   background: #fff;
   border: 2px solid color-mix(in srgb, var(--lbx-accent) 42%, #fff);
   border-radius: var(--lbx-chip-radius);
-  padding: clamp(10px, 1.1vh, 16px) clamp(13px, 1.2vw, 20px);
+  padding: clamp(8px, 0.9vh, 14px) clamp(12px, 1.1vw, 18px);
   color: var(--lbx-ink);
   font-weight: 800;
-  font-size: clamp(14px, 1.05vw, 26px);
+  font-size: clamp(13px, 0.95vw, 22px);
   line-height: 1.12;
   text-align: center;
   transition:
@@ -3479,9 +3483,14 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   transform: translateY(-1px) scale(1.01);
 }
 
+/* The chip section holds more rows than the text ones — give it a bit more. */
+.lbx__sec--signals:not(.is-detail) {
+  flex: 1.35 1 0;
+}
+
 /* When a detail is open the section needs more room than an equal third. */
 .lbx__sec--signals.is-detail {
-  flex: 2.4 1 auto;
+  flex: 2.6 1 0;
 }
 
 /* ── Signal detail (replaces the grid — black card, accent eyebrow) ── */
@@ -3542,7 +3551,8 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
 .lbx__detail .lbx__body {
   flex: 0 1 auto;
   color: #fff;
-  font-size: clamp(14px, 1.2vw, 28px);
+  font-size: clamp(14px, 1vw, 23px);
+  -webkit-line-clamp: 6;
 }
 
 .lbx__detail-tags {
