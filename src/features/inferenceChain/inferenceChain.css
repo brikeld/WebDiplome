@@ -2423,13 +2423,16 @@
 }
 
 .tell-panel-a--alt-palette-2 {
-  /* "Soft Studio" skin — light neutral surfaces, elevated white tiles,
-     persona accent kept as a sparing edge/detail (works even when the
-     accent is the washed productivity grey). */
+  /* "Soft Studio" skin — light surfaces tinted with the SELECTED post's
+     persona accent (--tell-pill-accent, set per post in App.jsx), white
+     elevated tiles on top. The tint is what makes each post visibly its
+     own colour while staying clean (even the washed productivity grey). */
   --a-ink: #0c1018;
-  --a-surface: #f5f7fb;
+  --a-accent: var(--tell-pill-accent, #759aef);
+  --a-surface: color-mix(in srgb, var(--a-accent) 16%, #fafbfe);
+  --a-surface-strong: color-mix(in srgb, var(--a-accent) 30%, #ffffff);
   --a-tile: #ffffff;
-  --a-line: #e4e8f0;
+  --a-line: color-mix(in srgb, var(--a-accent) 30%, #e4e8f0);
   background: transparent;
   color: var(--a-ink);
   border-radius: 0;
@@ -2442,7 +2445,12 @@
 .tell-panel-a--alt-palette-2 .reason-section {
   background: var(--a-surface);
   border: none;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset, 0 0 0 1px var(--a-line);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--a-accent) 22%, #dfe4ee);
+}
+
+/* The POST quote is the hero — a touch more saturated than the analysis sections. */
+.tell-panel-a--alt-palette-2 .post-quote-a {
+  background: var(--a-surface-strong);
 }
 
 /* Section titles: plain black text, full opacity — no black pill. */
@@ -2494,41 +2502,41 @@
   border: none;
   color: var(--a-ink, #0c1018);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9) inset,
-    0 2px 5px rgba(15, 23, 42, 0.10),
+    0 1px 2px rgba(15, 23, 42, 0.06),
     0 0 0 1px var(--a-line, #e4e8f0);
+  /* Single easing/duration for transform + shadow keeps the lift smooth. */
   transition:
-    transform 180ms var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    box-shadow 180ms var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    background var(--panel-a-dur, 380ms) var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    color var(--panel-a-dur, 380ms) var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1));
+    transform 160ms ease-out,
+    box-shadow 160ms ease-out,
+    background 200ms ease-out,
+    color 200ms ease-out;
 }
 
-/* Hover = lift, deeper shadow, accent-tinted edge. Text stays dark. */
+/* Hover = small lift, soft contained shadow, accent edge. Text stays dark. */
 .tell-panel-a--alt-palette-2 .tape__content:hover,
 .tell-panel-a--alt-palette-2 .reason-chip:hover,
 .tell-panel-a--alt-palette-2 .ing-bar__row:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9) inset,
-    0 12px 24px -6px rgba(15, 23, 42, 0.30),
-    0 0 0 1px color-mix(in srgb, var(--tell-pill-accent, #759aef) 70%, #c4ccda);
+    0 6px 14px -10px rgba(15, 23, 42, 0.40),
+    0 0 0 1px color-mix(in srgb, var(--a-accent, #759aef) 55%, var(--a-line, #e4e8f0));
 }
 
-/* Open/active = pressed-in dark tile, white label, accent figures. */
+/* Open = pressed-in dark tile, white label, accent figures. */
 .tell-panel-a--alt-palette-2 .tape__content.is-open,
 .tell-panel-a--alt-palette-2 .reason-chip.is-open,
 .tell-panel-a--alt-palette-2 .ing-bar__row.is-open {
+  transform: none;
   background: linear-gradient(180deg, #11151d, #0a0e16);
   color: #fff;
-  box-shadow: 0 10px 24px -6px rgba(10, 14, 22, 0.7);
+  box-shadow: 0 6px 16px -10px rgba(10, 14, 22, 0.55), 0 0 0 1px #0a0e16;
 }
 
 .tell-panel-a--alt-palette-2 .tape__content:active,
 .tell-panel-a--alt-palette-2 .reason-chip:active,
 .tell-panel-a--alt-palette-2 .ing-bar__row:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18), 0 0 0 1px var(--a-line, #e4e8f0);
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10), 0 0 0 1px var(--a-line, #e4e8f0);
 }
 
 /* Highlight phrases inside the quote keep the simple accent treatment. */
@@ -2840,11 +2848,53 @@
   border-top: 0;
 }
 
+/* Detail view (after a chip is clicked) — same "Soft Studio" system as the
+   panel: white card, soft shadow, plain black eyebrow, soft-tile back button. */
 .tell-panel-a--alt-palette-2 .focus-detail {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 34%, #fff));
-  border-color: #000;
-  color: #07101f;
+  background: var(--a-tile, #fff);
+  border: none;
+  border-radius: clamp(14px, 1.3vw, 18px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 0 0 1px var(--a-line, #e4e8f0);
+  color: var(--a-ink, #0c1018);
+  padding: clamp(12px, 1.2vh, 16px) clamp(12px, 1.2vw, 16px);
+}
+
+.tell-panel-a--alt-palette-2 .focus-detail__prose,
+.tell-panel-a--alt-palette-2 .focus-detail__text,
+.tell-panel-a--alt-palette-2 .focus-detail__text p,
+.tell-panel-a--alt-palette-2 .focus-detail__text li,
+.tell-panel-a--alt-palette-2 .focus-detail__text b {
+  color: var(--a-ink, #0c1018);
+}
+
+/* Eyebrow: plain black uppercase label, matching the section titles. */
+.tell-panel-a--alt-palette-2 .focus-detail__eyebrow {
+  padding: 0;
+  background: transparent;
+  color: var(--a-ink, #0c1018);
+  letter-spacing: 0.13em;
+}
+
+/* Back button: soft white tile with the same lift-on-hover as the chips. */
+.tell-panel-a--alt-palette-2 .focus-detail__back {
+  border: none;
+  background: var(--a-tile, #fff);
+  color: var(--a-ink, #0c1018);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10), 0 0 0 1px var(--a-line, #e4e8f0);
+  transition: transform 160ms ease-out, box-shadow 160ms ease-out;
+}
+
+.tell-panel-a--alt-palette-2 .focus-detail__back:hover {
+  transform: translateY(-2px);
+  background: var(--a-tile, #fff);
+  color: var(--a-ink, #0c1018);
+  box-shadow:
+    0 6px 14px -10px rgba(15, 23, 42, 0.40),
+    0 0 0 1px color-mix(in srgb, var(--a-accent, #759aef) 55%, var(--a-line, #e4e8f0));
+}
+
+.tell-panel-a--alt-palette-2 .focus-detail__back:active {
+  transform: translateY(0);
 }
 
 @keyframes focus-detail-in {
