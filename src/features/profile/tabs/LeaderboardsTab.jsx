@@ -69,34 +69,32 @@ export function LeaderboardCard({
     [board],
   );
 
-  const handleHeaderActivate = (event) => {
+  const handleExpand = (event) => {
     if (!canExpand || expanded) return;
-    if (event.target.closest('button, a, [role="button"]')) return;
+    if (event.target.closest('button, a, [role="button"], .profile-avatar-link')) return;
     onToggleExpand();
   };
 
   return (
     <article
       className={`profile-leaderboard-card${boardHidden ? ' profile-leaderboard-card--hidden' : ''}${expanded ? ' profile-leaderboard-card--analysis' : ''}${canExpand && !expanded ? ' profile-leaderboard-card--expandable' : ''}`}
+      {...(canExpand && !expanded
+        ? {
+            role: 'button',
+            tabIndex: 0,
+            'aria-expanded': expanded,
+            'aria-label': `Open analysis for ${title}`,
+            onClick: handleExpand,
+            onKeyDown: (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleExpand(event);
+              }
+            },
+          }
+        : {})}
     >
-      <header
-        className="profile-leaderboard-card__head"
-        {...(canExpand && !expanded
-          ? {
-              role: 'button',
-              tabIndex: 0,
-              'aria-expanded': expanded,
-              'aria-label': `Open analysis for ${title}`,
-              onClick: handleHeaderActivate,
-              onKeyDown: (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  handleHeaderActivate(event);
-                }
-              },
-            }
-          : {})}
-      >
+      <header className="profile-leaderboard-card__head">
         <div>
           <p className="profile-leaderboard-card__eyebrow">leaderboards</p>
           <h3 className="profile-leaderboard-card__title">{title}</h3>
@@ -143,7 +141,10 @@ export function LeaderboardCard({
           <button
             type="button"
             className="profile-leaderboard-card__analysis-back"
-            onClick={() => onToggleExpand?.()}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleExpand?.();
+            }}
             aria-label="Back to standings"
           />
           <div className="profile-leaderboard-card__analysis-body">

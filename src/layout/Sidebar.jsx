@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
-import { RailFeedIcon, RailProfileIcon } from '@/layout/RailNavIcons.jsx';
+import { RailFeedIcon } from '@/layout/RailNavIcons.jsx';
+import UserSilhouetteIcon from '@/features/identity/UserSilhouetteIcon.jsx';
 
 function spawnRipple(buttonEl, event) {
   if (!buttonEl) return;
@@ -76,7 +77,7 @@ export default function Sidebar({ mainView = 'profile', onSelectView }) {
           label="Profile"
           onSelectView={onSelectView}
         >
-          <RailProfileIcon className="rail-btn__icon" />
+          <UserSilhouetteIcon className="rail-btn__icon rail-btn__icon--profile" />
         </RailButton>
       </nav>
     </aside>

@@ -696,6 +696,10 @@ body {
   height: 1.35rem;
 }
 
+.rail-btn__icon--profile {
+  transform: translateY(0.04em);
+}
+
 .rail-btn.is-active {
   background: var(--persona-accent, #759aef);
   color: #000;
@@ -3174,6 +3178,10 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
     transform: translateX(9%) scaleX(1.03);
     filter: blur(8px);
   }
+}
+
+.profile-leaderboard-card--expandable {
+  cursor: pointer;
 }
 
 .profile-leaderboard-card--expandable .profile-leaderboard-card__head {
