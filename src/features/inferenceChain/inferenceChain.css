@@ -145,12 +145,12 @@
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .panel-a__head {
   margin-bottom: var(--dash-head-mb);
-  padding: 0;
-  background: transparent;
-  color: var(--a-ink, #0c1018);
+  padding: var(--dash-head-pad);
+  background: #000;
+  color: var(--tell-pill-accent, #759aef);
   font-size: var(--dash-head-fs);
   font-weight: 800;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.08em;
   line-height: 1;
 }
 
@@ -2423,11 +2423,8 @@
 }
 
 .tell-panel-a--alt-palette-2 {
-  /* "Soft Studio" skin — light neutral surfaces, elevated white tiles,
-     persona accent kept as a sparing edge/detail (works even when the
-     accent is the washed productivity grey). */
+  /* Persona-tinted section shells + white action tiles inside. */
   --a-ink: #0c1018;
-  --a-surface: #f5f7fb;
   --a-tile: #ffffff;
   --a-line: #e4e8f0;
   background: transparent;
@@ -2440,17 +2437,15 @@
 .tell-panel-a--alt-palette-2 .tape-section,
 .tell-panel-a--alt-palette-2 .ing-section,
 .tell-panel-a--alt-palette-2 .reason-section {
-  background: var(--a-surface);
+  background: var(--tell-pill-accent, #759aef);
   border: none;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset, 0 0 0 1px var(--a-line);
+  box-shadow: 0 0 0 1px var(--tell-pill-accent, #759aef);
 }
 
-/* Section titles: plain black text, full opacity — no black pill. */
 .tell-panel-a--alt-palette-2 .panel-a__head,
 .tell-panel-a--alt-palette-2 .post-quote-a .panel-a__head {
-  background: transparent;
-  color: var(--a-ink);
-  padding: 0;
+  background: #000;
+  color: var(--tell-pill-accent, #759aef);
 }
 
 .tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__post-text,
