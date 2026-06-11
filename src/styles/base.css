@@ -3184,27 +3184,43 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
   cursor: pointer;
 }
 
-.profile-leaderboard-card--expandable .profile-leaderboard-card__head {
-  cursor: pointer;
-}
-
-.profile-leaderboard-card--expandable .profile-leaderboard-card__head:focus-visible {
+.profile-leaderboard-card--expandable:focus-visible {
   outline: 2px solid #000;
   outline-offset: 3px;
-  border-radius: 12px;
+}
+
+.profile-leaderboard-card--analysis {
+  grid-column: 1 / -1;
+  min-height: 380px;
 }
 
 .profile-leaderboard-card__hint {
   margin: -6px 0 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  appearance: none;
+  font: inherit;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: inherit;
   opacity: 0.55;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
 }
 
-.profile-leaderboard-card--analysis {
-  min-height: 360px;
+.profile-leaderboard-card__hint:hover,
+.profile-leaderboard-card__hint:focus-visible {
+  opacity: 1;
+  outline: none;
+  text-decoration: underline;
+}
+
+.profile-leaderboard-card--expandable .profile-leaderboard-card__head {
+  cursor: pointer;
 }
 
 .profile-leaderboard-card__analysis {

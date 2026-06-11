@@ -69,10 +69,17 @@ export function LeaderboardCard({
     [board],
   );
 
+  const openAnalysis = () => {
+    if (!canExpand || expanded) return;
+    onToggleExpand();
+  };
+
   const handleExpand = (event) => {
     if (!canExpand || expanded) return;
-    if (event.target.closest('button, a, [role="button"], .profile-avatar-link')) return;
-    onToggleExpand();
+    const nested = event.target.closest('button, a, .profile-avatar-link');
+    if (nested && nested !== event.currentTarget) return;
+    event.preventDefault();
+    openAnalysis();
   };
 
   return (
@@ -80,15 +87,13 @@ export function LeaderboardCard({
       className={`profile-leaderboard-card${boardHidden ? ' profile-leaderboard-card--hidden' : ''}${expanded ? ' profile-leaderboard-card--analysis' : ''}${canExpand && !expanded ? ' profile-leaderboard-card--expandable' : ''}`}
       {...(canExpand && !expanded
         ? {
-            role: 'button',
             tabIndex: 0,
             'aria-expanded': expanded,
-            'aria-label': `Open analysis for ${title}`,
             onClick: handleExpand,
             onKeyDown: (event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                handleExpand(event);
+                openAnalysis();
               }
             },
           }
@@ -160,7 +165,16 @@ export function LeaderboardCard({
       )}
 
       {canExpand && !expanded ? (
-        <p className="profile-leaderboard-card__hint">Tap for analysis</p>
+        <button
+          type="button"
+          className="profile-leaderboard-card__hint"
+          onClick={(event) => {
+            event.stopPropagation();
+            openAnalysis();
+          }}
+        >
+          Tap for analysis
+        </button>
       ) : null}
 
       {boardHidden ? (
