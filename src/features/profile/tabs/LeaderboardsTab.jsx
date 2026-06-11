@@ -1,5 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { useMemo, useState, useCallback } from 'react';
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import LeaderboardRationaleView from '@/features/inferenceChain/LeaderboardRationaleView.jsx';
 import { useProfileLeaderboards, profileViewerSlug } from '@/features/profile/useProfileLeaderboards.js';
@@ -47,91 +46,6 @@ function directorySlugsFromBoards(boards) {
     }
   }
   return [...slugs];
-}
-
-function LeaderboardAnalysisModal({
-  board,
-  persona,
-  authorSlug,
-  onOpenProfile,
-  leaderboardDirectorySlugs,
-  onClose,
-}) {
-  const rationaleLeaderboard = useMemo(
-    () => enrichProfileLeaderboardForRationale(board),
-    [board],
-  );
-  const accentColor = PERSONA_COLORS[persona] ?? '#759aef';
-  const rank = Number(board.userRank);
-  const hasRank = Number.isFinite(rank);
-
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [onClose]);
-
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-
-  const handleOpenProfile = useCallback(
-    (...args) => { onClose(); onOpenProfile?.(...args); },
-    [onClose, onOpenProfile],
-  );
-
-  return createPortal(
-    <div
-      className="lb-analysis-modal-backdrop"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={board.title ?? 'Leaderboard analysis'}
-    >
-      <div
-        className="lb-analysis-modal"
-        style={{ '--lb-modal-accent': accentColor }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <header className="lb-analysis-modal__head">
-          <button
-            type="button"
-            className="lb-analysis-modal__close"
-            onClick={onClose}
-            aria-label="Close analysis"
-          />
-          <div className="lb-analysis-modal__head-info">
-            <p className="lb-analysis-modal__eyebrow">leaderboards</p>
-            <h3 className="lb-analysis-modal__title">{board.title ?? 'Leaderboard'}</h3>
-          </div>
-          {hasRank && (
-            <span className="lb-analysis-modal__rank">
-              {Math.trunc(rank)}
-              <sup>{ordinalSuffix(rank)}</sup>
-            </span>
-          )}
-        </header>
-
-        <div
-          className="lb-analysis-modal__body"
-          style={{
-            '--lbx-accent': accentColor,
-            '--tell-pill-accent': accentColor,
-          }}
-        >
-          <LeaderboardRationaleView
-            leaderboard={rationaleLeaderboard}
-            authorSlug={authorSlug}
-            onOpenProfile={handleOpenProfile}
-            leaderboardDirectorySlugs={leaderboardDirectorySlugs}
-          />
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
 }
 
 export function LeaderboardCard({
@@ -255,7 +169,7 @@ export default function LeaderboardsTab({
 }) {
   const { leaderboards } = useProfileLeaderboards(profile);
   const { isLeaderboardSelfHidden } = useLiveScoring();
-  const [analysisModal, setAnalysisModal] = useState(null);
+  const [selectedBoard, setSelectedBoard] = useState(null);
 
   const visibleLeaderboards = useMemo(
     () => filterProfileLeaderboards(leaderboards),
@@ -279,56 +193,101 @@ export default function LeaderboardsTab({
     return out;
   }, [visibleLeaderboards]);
 
+  const openAnalysis = useCallback((board, persona) => {
+    setSelectedBoard({ board, persona });
+  }, []);
+
+  const closeAnalysis = useCallback(() => {
+    setSelectedBoard(null);
+  }, []);
+
+  const rationaleLeaderboard = useMemo(
+    () => selectedBoard ? enrichProfileLeaderboardForRationale(selectedBoard.board) : null,
+    [selectedBoard],
+  );
+
+  const accentColor = selectedBoard ? (PERSONA_COLORS[selectedBoard.persona] ?? '#759aef') : null;
+  const selRank = selectedBoard ? Number(selectedBoard.board.userRank) : null;
+  const hasSelRank = Number.isFinite(selRank);
+
   return (
-    <>
-      <div className="profile-leaderboards-stack">
-        {PERSONA_SECTION_ORDER.map((personaKey) => {
-          const boards = grouped[personaKey];
-          if (!boards || boards.length === 0) return null;
-          return (
-            <section
-              key={personaKey}
-              className={`profile-leaderboards-section profile-leaderboards-section--${personaKey}`}
-              style={{ '--persona-accent': PERSONA_COLORS[personaKey] }}
-            >
-              <h2 className="profile-leaderboards-section__title">
-                {PERSONA_SECTION_LABEL[personaKey]}
-              </h2>
-              <div className="profile-leaderboards-grid">
-                {boards.map((board) => {
-                  const ownerHidBoard =
-                    Boolean(board.entries?.find((e) => e.isUser)?.selfHidden)
-                    || (isOwnProfile && isLeaderboardSelfHidden(board.boardId));
-                  return (
-                    <LeaderboardCard
-                      key={board.boardId}
-                      board={board}
-                      hiddenMode={ownerHidBoard ? 'board' : 'none'}
-                      onOpenAnalysis={(b) =>
-                        setAnalysisModal({ board: b, persona: personaKey })
-                      }
-                      authorSlug={authorSlug}
-                      onOpenProfile={onOpenProfile}
-                      leaderboardDirectorySlugs={directorySlugs}
-                    />
-                  );
-                })}
-              </div>
-            </section>
-          );
-        })}
+    <div className="profile-leaderboards-tab">
+      {/* ── Grid screen ───────────────────────────────────── */}
+      <div className={`profile-lb-screen profile-lb-screen--grid${selectedBoard ? ' is-gone' : ''}`}>
+        <div className="profile-leaderboards-stack">
+          {PERSONA_SECTION_ORDER.map((personaKey) => {
+            const boards = grouped[personaKey];
+            if (!boards || boards.length === 0) return null;
+            return (
+              <section
+                key={personaKey}
+                className={`profile-leaderboards-section profile-leaderboards-section--${personaKey}`}
+                style={{ '--persona-accent': PERSONA_COLORS[personaKey] }}
+              >
+                <h2 className="profile-leaderboards-section__title">
+                  {PERSONA_SECTION_LABEL[personaKey]}
+                </h2>
+                <div className="profile-leaderboards-grid">
+                  {boards.map((board) => {
+                    const ownerHidBoard =
+                      Boolean(board.entries?.find((e) => e.isUser)?.selfHidden)
+                      || (isOwnProfile && isLeaderboardSelfHidden(board.boardId));
+                    return (
+                      <LeaderboardCard
+                        key={board.boardId}
+                        board={board}
+                        hiddenMode={ownerHidBoard ? 'board' : 'none'}
+                        onOpenAnalysis={(b) => openAnalysis(b, personaKey)}
+                        authorSlug={authorSlug}
+                        onOpenProfile={onOpenProfile}
+                        leaderboardDirectorySlugs={directorySlugs}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
       </div>
 
-      {analysisModal && (
-        <LeaderboardAnalysisModal
-          board={analysisModal.board}
-          persona={analysisModal.persona}
-          authorSlug={authorSlug}
-          onOpenProfile={onOpenProfile}
-          leaderboardDirectorySlugs={directorySlugs}
-          onClose={() => setAnalysisModal(null)}
-        />
+      {/* ── Analysis screen ───────────────────────────────── */}
+      {selectedBoard && (
+        <div className="profile-lb-screen profile-lb-screen--analysis">
+          <header className="profile-lb-analysis-head" style={{ '--plb-accent': accentColor }}>
+            <button
+              type="button"
+              className="profile-lb-back"
+              onClick={closeAnalysis}
+              aria-label="Back to leaderboards"
+            />
+            <div className="profile-lb-analysis-head__info">
+              <p className="profile-lb-analysis-head__eyebrow">leaderboards</p>
+              <h2 className="profile-lb-analysis-head__title">
+                {selectedBoard.board.title ?? 'Leaderboard'}
+              </h2>
+            </div>
+            {hasSelRank && (
+              <span className="profile-lb-analysis-head__rank">
+                {Math.trunc(selRank)}
+                <sup>{ordinalSuffix(selRank)}</sup>
+              </span>
+            )}
+          </header>
+
+          <div
+            className="profile-lb-analysis-body"
+            style={{ '--lbx-accent': accentColor, '--tell-pill-accent': accentColor }}
+          >
+            <LeaderboardRationaleView
+              leaderboard={rationaleLeaderboard}
+              authorSlug={authorSlug}
+              onOpenProfile={onOpenProfile}
+              leaderboardDirectorySlugs={directorySlugs}
+            />
+          </div>
+        </div>
       )}
-    </>
+    </div>
   );
 }
