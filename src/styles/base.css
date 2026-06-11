@@ -1179,7 +1179,8 @@ body {
 
 .post-card:not(.post-card--has-attachment) .post-unified-capsule {
   border: none;
-  background: transparent;
+  /* Match bubble fill so white feed shell does not bleed through rounded corners */
+  background: var(--post-accent, var(--persona-accent, #759aef));
 }
 
 /* Text-only posts: persona stroke when comments are open */
@@ -1676,7 +1677,8 @@ body {
   box-sizing: border-box;
   background: var(--post-accent);
   border: none;
-  border-radius: var(--radius-post-surface);
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px var(--post-accent);
   padding: 12px 12px 10px 12px;
   /* Header band fits square avatar at current scale */
   min-height: calc(var(--post-avatar-size) + 1.75rem);

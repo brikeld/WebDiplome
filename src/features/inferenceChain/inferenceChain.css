@@ -133,6 +133,7 @@
   overflow: visible;
   padding: var(--dash-quote-section-pad) var(--dash-section-pad);
   border-radius: var(--dash-section-radius, 16px);
+  box-shadow: 0 0 0 1px var(--tell-pill-accent, #759aef);
 }
 
 .tell-more-pill--expanded .tell-panel-a--alt-palette-2 .tape-section,
@@ -2407,6 +2408,8 @@
 .tell-panel-a--alt-palette-2 .reason-section {
   background: var(--tell-pill-accent, #759aef);
   border: none;
+  /* Seal subpixel gaps against the white tell panel at rounded corners */
+  box-shadow: 0 0 0 1px var(--tell-pill-accent, #759aef);
 }
 
 .tell-panel-a--alt-palette-2 .panel-a__head {
