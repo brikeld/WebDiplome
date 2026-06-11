@@ -198,8 +198,11 @@ export function profileRankingCountFromPosts(profile) {
     if (!board || typeof board !== 'object') return;
 
     const rank = Number(board.userRank ?? board.user_rank);
-    const hasUserRank = Number.isFinite(rank);
-    const hasUserEntry = Array.isArray(board.entries) && board.entries.some((entry) => entry?.isUser);
+    const hasUserRank = profileHasLeaderboardStanding({ userRank: rank });
+    const hasUserEntry =
+      !hasUserRank
+      && Array.isArray(board.entries)
+      && board.entries.some((entry) => entry?.isUser && profileHasLeaderboardStanding({ userRank: entry?.rank }));
     if (!hasUserRank && !hasUserEntry) return;
 
     boardIds.add(String(board.boardId ?? board.board_id ?? `leaderboard-${index}`));
@@ -208,16 +211,21 @@ export function profileRankingCountFromPosts(profile) {
   return boardIds.size;
 }
 
-function boardHasUserRank(board) {
-  const rank = board?.userRank ?? board?.user_rank;
-  if (rank == null || rank === '') return false;
-  return Number.isFinite(Number(rank));
+/** Profile appears in the visible top five on this board. */
+export function profileHasLeaderboardStanding(board) {
+  const rank = Number(board?.userRank ?? board?.user_rank);
+  return Number.isFinite(rank) && rank >= 1 && rank <= 5;
+}
+
+/** Leaderboards where the profile is ranked in the top five. */
+export function filterProfileLeaderboards(leaderboards) {
+  if (!Array.isArray(leaderboards)) return [];
+  return leaderboards.filter((board) => profileHasLeaderboardStanding(board));
 }
 
 /** Boards where the profile has a live standing (matches Leaderboards tab). */
 export function leaderboardPresenceCount(leaderboards) {
-  if (!Array.isArray(leaderboards)) return 0;
-  return leaderboards.filter((board) => boardHasUserRank(board)).length;
+  return filterProfileLeaderboards(leaderboards).length;
 }
 
 export function profileRankingCount(profile, { leaderboards = null, leaderboardsReady = false } = {}) {

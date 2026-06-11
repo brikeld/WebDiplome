@@ -1,43 +1,15 @@
 import { BOARDS } from '../../server/lib/leaderboards.js';
 import {
+  buildLeaderboardPostCaption,
+  shortLeaderboardTitle,
+} from '../../server/lib/leaderboardCaption.js';
+import {
   fallbackClimbTip,
   fallbackRationales,
 } from '../../server/lib/leaderboardRationales.js';
 import { resolveLeaderboardForFeed } from '@/lib/resolveLeaderboardForFeed.js';
 
-const ORDINALS = ['1st', '2nd', '3rd', '4th', '5th'];
-
-function ordinalRank(rank) {
-  const n = Number(rank);
-  if (!Number.isFinite(n) || n < 1 || n > 5) return `#${rank ?? '—'}`;
-  return ORDINALS[n - 1];
-}
-
-/** Short board label for captions — mirrors LeaderboardBlock title formatting. */
-export function shortLeaderboardTitle(title) {
-  const text = String(title ?? '').trim();
-  const match = text.match(/^top\s+5\s+(.+)$/i);
-  return match ? match[1] : text;
-}
-
-/**
- * Deterministic first-person caption aligned with the live leaderboard block.
- * Uses the same rank + previousUserRank contract as DeltaChip.
- */
-export function buildLeaderboardPostCaption({ userRank, previousUserRank, title }) {
-  const board = shortLeaderboardTitle(title);
-  const rank = ordinalRank(userRank);
-  if (previousUserRank == null) {
-    return `${rank} on ${board}. New to this board.`;
-  }
-  if (previousUserRank === userRank) {
-    return `${rank} on ${board} — same spot as last time.`;
-  }
-  if (userRank < previousUserRank) {
-    return `${rank} on ${board} — climbed from ${ordinalRank(previousUserRank)}.`;
-  }
-  return `${rank} on ${board} — down from ${ordinalRank(previousUserRank)}.`;
-}
+export { shortLeaderboardTitle, buildLeaderboardPostCaption } from '../../server/lib/leaderboardCaption.js';
 
 function boardForId(boardId) {
   return BOARDS.find((b) => b.id === boardId) ?? null;
@@ -105,9 +77,9 @@ export function enrichLeaderboardPostForFeed({
 
   if (rankDrifted) {
     content = buildLeaderboardPostCaption({
-      userRank: liveUserRank,
-      previousUserRank: base.previousUserRank,
+      boardId: base.boardId,
       title: base.title,
+      hint: remixed.hint ?? base.hint,
     });
     const board = boardForId(base.boardId);
     if (board) {

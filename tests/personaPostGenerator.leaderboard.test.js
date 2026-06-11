@@ -29,7 +29,7 @@ beforeEach(() => {
       typeof m.content === 'string' && m.content.includes('[Leaderboard slot]'),
     );
     const content = isLeaderboardSlot
-      ? '{"content":"Climbed to #1 in Most Productive — algorithm calls it a high signal.","sentiment":"positive"}'
+      ? '{"content":"Productivity board has me dead to rights — tabs don\'t lie.","sentiment":"positive"}'
       : '{"content":"generic post","sentiment":"positive"}';
     return {
       ok: true,

@@ -5,20 +5,23 @@ import {
 } from '../src/lib/leaderboardPostSync.js';
 
 describe('buildLeaderboardPostCaption', () => {
-  it('describes a climb from a previous post rank', () => {
-    expect(buildLeaderboardPostCaption({
-      userRank: 2,
-      previousUserRank: 4,
+  it('comments on the productivity board without rank', () => {
+    const caption = buildLeaderboardPostCaption({
+      boardId: 'most_productive',
       title: 'Top 5 Most Productive',
-    })).toBe('2nd on Most Productive — climbed from 4th.');
+    });
+    expect(caption).toMatch(/productivity board/i);
+    expect(caption).not.toMatch(/\d(st|nd|rd|th)/i);
+    expect(caption).not.toMatch(/climbed|dropped|new to/i);
   });
 
-  it('describes a first appearance on a board', () => {
-    expect(buildLeaderboardPostCaption({
-      userRank: 3,
-      previousUserRank: null,
+  it('comments on the secure board without rank', () => {
+    const caption = buildLeaderboardPostCaption({
+      boardId: 'most_secure',
       title: 'Top 5 Most Secure',
-    })).toBe('3rd on Most Secure. New to this board.');
+    });
+    expect(caption).toMatch(/secure board/i);
+    expect(caption).not.toMatch(/\d(st|nd|rd|th)/i);
   });
 });
 
@@ -40,7 +43,7 @@ describe('enrichLeaderboardPostForFeed', () => {
     },
   ];
 
-  it('replaces stale caption when live rank drifted since the post was written', () => {
+  it('replaces stale rank-focused caption when live rank drifted', () => {
     const stored = {
       boardId: 'most_productive',
       title: 'Top 5 Most Productive',
@@ -66,7 +69,8 @@ describe('enrichLeaderboardPostForFeed', () => {
     });
 
     expect(result.leaderboard.userRank).toBe(2);
-    expect(result.content).toBe('2nd on Most Productive — climbed from 4th.');
+    expect(result.content).toMatch(/productivity board/i);
+    expect(result.content).not.toMatch(/\d(st|nd|rd|th)/i);
     expect(result.content).not.toContain('3rd');
   });
 
@@ -89,12 +93,12 @@ describe('enrichLeaderboardPostForFeed', () => {
 
     const result = enrichLeaderboardPostForFeed({
       storedLeaderboard: stored,
-      storedContent: 'Algorithm says I am crushing it at #2.',
+      storedContent: 'Productivity board has me dead to rights — tabs don’t lie.',
       directory,
       authorSlug: 'brikeld-hoxha',
     });
 
     expect(result.leaderboard.userRank).toBe(2);
-    expect(result.content).toBe('Algorithm says I am crushing it at #2.');
+    expect(result.content).toBe('Productivity board has me dead to rights — tabs don’t lie.');
   });
 });

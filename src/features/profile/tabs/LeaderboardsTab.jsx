@@ -4,6 +4,7 @@ import LeaderboardRationaleView from '@/features/inferenceChain/LeaderboardRatio
 import { useProfileLeaderboards, profileViewerSlug } from '@/features/profile/useProfileLeaderboards.js';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { enrichProfileLeaderboardForRationale } from '@/lib/enrichProfileLeaderboard.js';
+import { filterProfileLeaderboards } from '@/lib/profileUtils.js';
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -199,22 +200,27 @@ export default function LeaderboardsTab({
   const { isLeaderboardSelfHidden } = useLiveScoring();
   const [expandedBoardId, setExpandedBoardId] = useState(null);
 
+  const visibleLeaderboards = useMemo(
+    () => filterProfileLeaderboards(leaderboards),
+    [leaderboards],
+  );
+
   const authorSlug = profileViewerSlug(profile);
   const directorySlugs = useMemo(() => {
     if (Array.isArray(leaderboardDirectorySlugs) && leaderboardDirectorySlugs.length) {
       return leaderboardDirectorySlugs;
     }
-    return directorySlugsFromBoards(leaderboards);
-  }, [leaderboardDirectorySlugs, leaderboards]);
+    return directorySlugsFromBoards(visibleLeaderboards);
+  }, [leaderboardDirectorySlugs, visibleLeaderboards]);
 
   const grouped = useMemo(() => {
     const out = { productivite: [], securite: [], popularite: [] };
-    for (const b of leaderboards) {
+    for (const b of visibleLeaderboards) {
       const key = out[b.persona] ? b.persona : 'productivite';
       out[key].push(b);
     }
     return out;
-  }, [leaderboards]);
+  }, [visibleLeaderboards]);
 
   return (
     <div className="profile-leaderboards-stack">

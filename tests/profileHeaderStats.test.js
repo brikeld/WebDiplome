@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  filterProfileLeaderboards,
   leaderboardPresenceCount,
   profilePostCount,
   profileRankingCount,
@@ -43,8 +44,10 @@ describe('profile header stats', () => {
       { boardId: 'most_productive', userRank: 2 },
       { boardId: 'most_secure', userRank: 1 },
       { boardId: 'most_likely_ghost', userRank: null },
+      { boardId: 'outside_top_five', userRank: 6 },
     ];
 
+    expect(filterProfileLeaderboards(leaderboards)).toHaveLength(2);
     expect(leaderboardPresenceCount(leaderboards)).toBe(2);
     expect(profileRankingCount({ personaPosts: [] }, { leaderboards, leaderboardsReady: true })).toBe(2);
   });

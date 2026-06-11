@@ -64,6 +64,7 @@ import {
   buildClimbTipPayload,
   fallbackClimbTip,
 } from './leaderboardRationales.js';
+import { buildLeaderboardSlotContext } from './leaderboardCaption.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
 import { synthesiseChartMetadata, synthesiseTextSliceMetadata } from '../../src/lib/chartPostMetadata.js';
 import { prepareVisionImageData, truncateUserPayloadString } from './lmContextBudget.js';
@@ -974,13 +975,7 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
 
   const { board, standing, prevRank } = pick;
   const cloneHidden = cloneHiddenForBoard(board.id);
-  const ctxLines = [
-    '[Leaderboard slot]',
-    `Board: ${board.title}`,
-    `Your rank: ${standing.userRank}${prevRank != null ? ` (was ${prevRank})` : ' (new appearance)'}`,
-    `Score signal hint: ${standing.hint}`,
-  ];
-  const ctx = ctxLines.join('\n');
+  const ctx = buildLeaderboardSlotContext({ board, standing });
 
   return {
     id: 'leaderboard',

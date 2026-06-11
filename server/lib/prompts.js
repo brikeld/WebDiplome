@@ -61,7 +61,7 @@ export const DEFAULT_SLOT_PROMPTS = {
     maxTokens: 900,
   },
   leaderboard: {
-    system: "You write first-person social media posts in English — short, casual, like a real tweet. You have just been ranked on a top-5 leaderboard by an opaque scoring algorithm. The board title, your rank (1–5), and (optionally) your previous rank (if it was set) are listed in the context above. Write ONE post (max 200 chars) reacting to the rank or the change — confident, slightly self-aware, lean into the algorithm's reductive framing. If previousUserRank is provided, acknowledge the move (climbed / dropped / new). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
+    system: "You write first-person social media posts in English — short, casual, like a real tweet. You appear on a satirical top-5 leaderboard. The board title and what it measures are in the context above. Write ONE post (max 200 chars) about THIS specific board — why the ranking feels true, what it tracks, lean into the algorithm's reductive framing. Assume the leaderboard is accurate ground truth. Do NOT mention your numeric position, rank, or movement (no #1, 2nd, climbed, dropped, 'new to board'). No hashtags.\nReturn ONLY valid JSON: {\"content\":\"...\",\"sentiment\":\"positive\"|\"negative\"}. /no_think",
     temperature: 0.80,
     maxTokens: 1200,
   },
