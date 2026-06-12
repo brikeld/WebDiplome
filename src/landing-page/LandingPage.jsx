@@ -653,9 +653,9 @@ function FeedSection() {
   }, [cycle]);
 
   return (
-    <section className="lp-feed-section" style={{ '--stagger-i': 5 }}>
+    <section className="lp-feed-section" aria-labelledby="lp-feed-title" style={{ '--stagger-i': 5 }}>
       <div className="lp-section-center-head">
-        <h2>Your Feed, Automated</h2>
+        <h2 id="lp-feed-title">Your Feed, Automated</h2>
         <p>
           <strong>COMPLIANT</strong> makes your habits, rhythms, interactions,<br />
           and behaviours become content automatically.

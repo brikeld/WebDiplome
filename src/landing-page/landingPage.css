@@ -967,6 +967,20 @@
   padding: clamp(48px, 7vh, 88px) var(--lp-edge-pad);
 }
 
+.lp-feed-section .lp-section-center-head {
+  container-type: inline-size;
+}
+
+.lp-feed-section .lp-section-center-head h2 {
+  white-space: nowrap;
+  max-width: 100%;
+  font-size: clamp(
+    22px,
+    min(var(--lp-section-title), calc(100cqi / 13.5)),
+    140px
+  );
+}
+
 .lp-feed-section .lp-section-center-head p {
   line-height: 1.1;
 }
