@@ -707,7 +707,8 @@
 .lp-personas-head p strong,
 .lp-section-center-head p strong { font-weight: 800; }
 
-.lp-personas-head h2 {
+.lp-personas-head h2,
+.lp-feed-section .lp-section-center-head h2 {
   white-space: nowrap;
 }
 
@@ -965,20 +966,6 @@
 
 .lp-feed-section {
   padding: clamp(48px, 7vh, 88px) var(--lp-edge-pad);
-}
-
-.lp-feed-section .lp-section-center-head {
-  container-type: inline-size;
-}
-
-.lp-feed-section .lp-section-center-head h2 {
-  white-space: nowrap;
-  max-width: 100%;
-  font-size: clamp(
-    22px,
-    min(var(--lp-section-title), calc(100cqi / 13.5)),
-    140px
-  );
 }
 
 .lp-feed-section .lp-section-center-head p {
@@ -1445,6 +1432,17 @@
 
 @media (max-width: 560px) {
   .lp-personas-head h2 { white-space: normal; }
+  .lp-feed-section .lp-section-center-head {
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding-inline: clamp(8px, 2.5vw, 16px);
+    box-sizing: border-box;
+  }
+  .lp-feed-section .lp-section-center-head h2 {
+    letter-spacing: -0.03em;
+  }
   .lp-screen { padding: 28px 20px; }
   .lp-app-showcase { margin-left: 12px; margin-right: 12px; border-radius: 20px; padding-left: 18px; padding-right: 18px; }
   .lp-transition-banner { max-width: calc(100% - 24px); border-radius: 20px; }
