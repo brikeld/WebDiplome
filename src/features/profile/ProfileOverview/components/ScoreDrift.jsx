@@ -1,5 +1,3 @@
-import { PoFold } from './PoCard.jsx';
-import PersonaPill from './PersonaPill.jsx';
 import { PERSONA_UI_COLORS, PERSONA_UI_LABELS } from '@/lib/personaColors.js';
 
 const AXES = [
@@ -42,7 +40,7 @@ function DriftBar({ label, baseline, live, delta, color }) {
   );
 }
 
-export default function ScoreDrift({ scoreDrift, expanded = false }) {
+export default function ScoreDrift({ scoreDrift }) {
   const { baseline, live, deltas } = scoreDrift ?? {};
   const hasDrift = AXES.some(({ key }) => deltas?.[key] !== 0);
   const topDelta = AXES.reduce(
@@ -74,18 +72,10 @@ export default function ScoreDrift({ scoreDrift, expanded = false }) {
           <>Scores match the last harvest baseline</>
         )}
       </p>
-
-      <PoFold open={expanded}>
-        <div className="po-chip-row">
-          <PersonaPill>Baseline from harvest</PersonaPill>
-          <PersonaPill dot personaKey="productivity">
-            Adjusted by feed activity
-          </PersonaPill>
-        </div>
-        <p className="po-secondary po-foot-note">
-          Hiding posts, comments, and leaderboard visibility nudge persona percentages in real time.
-        </p>
-      </PoFold>
+      <p className="po-secondary po-foot-note">
+        Baseline comes from the last harvest. Hiding posts, comments, and leaderboard visibility
+        nudge persona percentages in real time.
+      </p>
     </>
   );
 }

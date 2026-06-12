@@ -10,6 +10,7 @@ import {
   mapSyncPayloadToProfileRow,
 } from './publicProfileMapping.js';
 import { harvestPayloadHasContent } from './generationQueue.js';
+import { buildHarvestOverview } from './harvestOverview.js';
 import { mergeAssetCandidatePool } from './pickGenerationAsset.js';
 import { resolveHostedPublicUrl } from './publicMediaUrls.js';
 import { repairProfileWallpaperIfNeeded } from './repairProfileWallpaper.js';
@@ -87,6 +88,15 @@ const PUBLIC_PROFILE_SELECT = [
 const DEFAULT_FEED_LIMIT = 20;
 const MAX_FEED_LIMIT = 50;
 
+/**
+ * harvestOverview is derived from raw_profile, which is too heavy (~66KB of
+ * harvest JSON per profile) for the recurring directory poll. The egress
+ * guard keeps raw_profile out of PUBLIC_PROFILE_SELECT, so we fetch it once
+ * per profile here and cache the compact overview keyed by updated_at.
+ */
+const HARVEST_OVERVIEW_CACHE_MAX = 100;
+const harvestOverviewCache = new Map();
+
 function normalizeFeedLimit(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return DEFAULT_FEED_LIMIT;
@@ -124,10 +134,33 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
     return Promise.all((rows ?? []).map((row) => ensureWebSafeWallpaper(row)));
   }
 
+  async function harvestOverviewForRow(row) {
+    if (!row?.id) return null;
+    if (row.raw_profile && typeof row.raw_profile === 'object') {
+      return buildHarvestOverview(row.raw_profile);
+    }
+    const key = `${row.id}@${row.updated_at ?? ''}`;
+    if (harvestOverviewCache.has(key)) return harvestOverviewCache.get(key);
+
+    const data = throwIfError(
+      await supabase.from('profiles').select('raw_profile').eq('id', row.id).maybeSingle(),
+      'read raw_profile for overview',
+    );
+    const overview = buildHarvestOverview(data?.raw_profile ?? null);
+    if (harvestOverviewCache.size >= HARVEST_OVERVIEW_CACHE_MAX) {
+      harvestOverviewCache.delete(harvestOverviewCache.keys().next().value);
+    }
+    harvestOverviewCache.set(key, overview);
+    return overview;
+  }
+
   async function listAllProfilesWithPosts() {
     const safeRows = await listPublicProfileRows();
     return Promise.all(
-      safeRows.map(async (row) => mapProfileRowForApi(row, await readPosts(row.id))),
+      safeRows.map(async (row) => ({
+        ...mapProfileRowForApi(row, await readPosts(row.id)),
+        harvestOverview: await harvestOverviewForRow(row),
+      })),
     );
   }
 

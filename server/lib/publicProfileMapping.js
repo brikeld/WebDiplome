@@ -1,4 +1,5 @@
 import { normalizeAttachedAssetForApi, resolveHostedPublicUrl } from './publicMediaUrls.js';
+import { buildHarvestOverview } from './harvestOverview.js';
 
 function cleanPart(value) {
   return String(value || '')
@@ -175,6 +176,7 @@ export function mapProfileRowForApi(row, posts = []) {
     wallpaperUrl: resolvedWallpaper,
     avatarUrl: resolvedWallpaper,
     collectedAt: row.collected_at,
+    harvestOverview: buildHarvestOverview(raw),
     personaBlurbs: mapPersonaBlurbsForApi(row.persona_blurbs),
     liveScoringRecords:
       row.live_scoring_records && typeof row.live_scoring_records === 'object'

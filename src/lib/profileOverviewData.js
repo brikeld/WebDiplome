@@ -8,17 +8,31 @@ import {
   profileBioText,
   resolveDominantPersonaKey,
 } from './profileUtils.js';
-import { PERSONA_UI_LABELS, personaUiColor } from './personaColors.js';
+import { personaUiColor } from './personaColors.js';
 
 const APP_CATEGORY = {
   safari: 'browser',
   chrome: 'browser',
+  arc: 'browser',
+  firefox: 'browser',
   cursor: 'development',
   code: 'development',
+  terminal: 'development',
   figma: 'design',
   photoshop: 'design',
+  illustrator: 'design',
   premiere: 'video',
+  'after effects': 'video',
   blender: '3d',
+  discord: 'social',
+  whatsapp: 'social',
+  telegram: 'social',
+  slack: 'social',
+  spotify: 'media',
+  music: 'media',
+  notion: 'productivity',
+  notes: 'productivity',
+  mail: 'productivity',
 };
 
 function guessAppCategory(name) {
@@ -26,24 +40,7 @@ function guessAppCategory(name) {
   for (const [needle, cat] of Object.entries(APP_CATEGORY)) {
     if (n.includes(needle)) return cat;
   }
-  return 'development';
-}
-
-function formatAccountAge(collectedAt) {
-  if (!collectedAt) return '—';
-  try {
-    const created = new Date(collectedAt);
-    if (Number.isNaN(created.getTime())) return '—';
-    const months =
-      (new Date().getFullYear() - created.getFullYear()) * 12 +
-      (new Date().getMonth() - created.getMonth());
-    if (months < 1) return 'Less than a month';
-    if (months < 12) return `${months} month${months !== 1 ? 's' : ''}`;
-    const years = Math.floor(months / 12);
-    return `${years} year${years !== 1 ? 's' : ''}`;
-  } catch {
-    return '—';
-  }
+  return 'app';
 }
 
 function postFootprintFromProfile(p) {
@@ -75,36 +72,77 @@ function postFootprintFromProfile(p) {
   };
 }
 
-function storageFromProfile(p) {
-  const used = p?.storageUsed ?? p?.storage_used;
-  const total = p?.storageTotal ?? p?.storage_total;
-  const parseGb = (v) => {
-    if (v == null) return null;
-    const m = String(v).match(/([\d.]+)/);
-    return m ? parseFloat(m[1]) : null;
-  };
-  const usedGb = parseGb(used);
-  const totalGb = parseGb(total);
+function parseGb(value) {
+  if (value == null) return null;
+  const m = String(value).match(/([\d.]+)/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+/** Country name inferred from a locale like "en_CH" / "fr-FR". */
+function regionFromLocale(locale) {
+  const m = String(locale ?? '').match(/[_-]([A-Z]{2})$/i);
+  if (!m) return null;
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(m[1].toUpperCase()) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function storageSection(p, ov) {
+  const fromOverview = ov?.storage ?? null;
+  if (fromOverview) {
+    const total = fromOverview.totalGb ?? null;
+    const used = fromOverview.usedGb ?? null;
+    return {
+      totalGb: total,
+      usedGb: used,
+      freeGb:
+        fromOverview.freeGb ?? (used != null && total != null ? Math.max(0, Math.round((total - used) * 10) / 10) : null),
+      usePercent:
+        fromOverview.usePercent ?? (used != null && total > 0 ? Math.round((used / total) * 1000) / 10 : null),
+      smartStatus: fromOverview.smartStatus ?? null,
+    };
+  }
+
+  const used = parseGb(p?.storageUsed ?? p?.storage_used);
+  const total = parseGb(p?.storageTotal ?? p?.storage_total);
+  if (used == null && total == null) return null;
   return {
-    total_gb: totalGb ?? 0,
-    used_gb: usedGb ?? 0,
-    free_gb: usedGb != null && totalGb != null ? Math.max(0, totalGb - usedGb) : 0,
-    usage_percent:
-      usedGb != null && totalGb != null && totalGb > 0
-        ? Math.round((usedGb / totalGb) * 1000) / 10
-        : 0,
-    battery_percent: p?.batteryPercent ?? p?.battery_percent ?? null,
-    battery_condition: p?.batteryCondition ?? '—',
-    battery_health_percent: p?.batteryHealthPercent ?? null,
-    battery_cycles: p?.batteryCycles ?? p?.battery_cycles ?? null,
+    totalGb: total,
+    usedGb: used,
+    freeGb: used != null && total != null ? Math.max(0, Math.round((total - used) * 10) / 10) : null,
+    usePercent: used != null && total > 0 ? Math.round((used / total) * 1000) / 10 : null,
+    smartStatus: null,
+  };
+}
+
+function batterySection(p, ov) {
+  if (ov?.battery) return ov.battery;
+  const percent = p?.batteryPercent ?? p?.battery_percent ?? null;
+  const cycles = p?.batteryCycles ?? p?.battery_cycles ?? null;
+  if (percent == null && cycles == null) return null;
+  return {
+    percent,
+    charging: null,
+    powerSource: null,
+    cycles,
+    condition: p?.batteryCondition ?? null,
+    healthPercent: p?.batteryHealthPercent ?? null,
   };
 }
 
 /**
- * Map live WebDiplome profile + adjusted persona scores → ProfileOverview shape.
+ * Map live WebDiplome profile (+ server harvestOverview + adjusted persona
+ * scores) → ProfileOverview view model. Sections are null when the harvest
+ * has nothing to show so the UI can skip them entirely.
  */
 export function buildProfileOverviewData(profile, { adjustedScores, dominantPersona } = {}) {
   if (!profile) return null;
+
+  const ov = profile.harvestOverview && typeof profile.harvestOverview === 'object'
+    ? profile.harvestOverview
+    : null;
 
   const baselineScores = getPersonaScoresNormalized(profile);
   const scores = {
@@ -136,135 +174,117 @@ export function buildProfileOverviewData(profile, { adjustedScores, dominantPers
   const name = displayNameFromProfile(profile);
   const collectedAt = profile.collectedAt ?? profile.collected_at;
   const lastAt = profile.lastAnalysisAt ?? profile.last_analysis_at ?? collectedAt;
-  const apps = Array.isArray(profile.mostUsedApps)
-    ? profile.mostUsedApps
-    : Array.isArray(profile.most_used_apps)
-      ? profile.most_used_apps
-      : [];
 
-  const primaryApps = apps.slice(0, 6).map((name) => ({
-    name: String(name),
-    category: guessAppCategory(name),
+  const machine = ov?.machine ?? {};
+  const languages = Array.isArray(machine.languages)
+    ? machine.languages
+    : Array.isArray(profile.systemLanguages)
+      ? profile.systemLanguages
+      : Array.isArray(profile.system_languages)
+        ? profile.system_languages
+        : [];
+
+  const mostUsed = Array.isArray(ov?.apps?.mostUsed) && ov.apps.mostUsed.length > 0
+    ? ov.apps.mostUsed
+    : Array.isArray(profile.mostUsedApps)
+      ? profile.mostUsedApps
+      : Array.isArray(profile.most_used_apps)
+        ? profile.most_used_apps
+        : [];
+  const primaryApps = mostUsed.slice(0, 8).map((appName) => ({
+    name: String(appName),
+    category: guessAppCategory(appName),
   }));
 
-  const languages = Array.isArray(profile.systemLanguages)
-    ? profile.systemLanguages
-    : Array.isArray(profile.system_languages)
-      ? profile.system_languages
-      : [];
-
-  const bio = profileBioText(profile);
-  const roleGuess = bio
-    ? bio.split(/[.!?]/)[0]?.slice(0, 80) || '—'
-    : 'Creative developer';
-  const postFootprint = postFootprintFromProfile(profile);
-  const globalScore =
-    profile.globalScore != null
-      ? Math.round(Number(profile.globalScore))
-      : profile.global_score != null
-        ? Math.round(Number(profile.global_score))
-        : null;
+  const locale = machine.locale ?? null;
+  const locationInferred =
+    profile.locationInferred ?? profile.location_inferred ?? regionFromLocale(locale);
 
   return {
     dominantPersona: dom,
+    personaAccent: personaUiColor(dom),
     profile: {
       user_id: machineHandleFromProfile(profile).replace('@', ''),
       username: name,
       avatarSrc: avatarSrcFromProfile(profile),
       dominantPersona: dom,
-      status: 'online',
       last_activity: lastAt ? formatRelativeTimeAgo(lastAt) : '—',
-      account_created: collectedAt ?? '',
-      device_name: profile.machineName ?? profile.machine_name ?? '—',
+      device_name: machine.name ?? profile.machineName ?? profile.machine_name ?? '—',
     },
     scores,
     scoreDrift,
-    globalScore,
-    bio: {
-      text: bio,
-      preview: bio ? (bio.length > 140 ? `${bio.slice(0, 137)}…` : bio) : '',
-    },
+    bio: { text: profileBioText(profile) },
+
     environment: {
-      wallpaperSrc: avatarSrcFromProfile(profile),
-      appearance: profile.appearance ?? '—',
-      osVersion: profile.osVersion ?? profile.os_version ?? '—',
-      hardwareChip: profile.hardwareChip ?? profile.hardware_chip ?? '—',
-      ram: profile.ram ?? '—',
-      machineName: profile.machineName ?? profile.machine_name ?? '—',
-      machineModel: profile.machineModel ?? profile.machine_model ?? '—',
-      screenResolution: profile.screenResolution ?? profile.screen_resolution ?? '—',
+      machineName: machine.name ?? profile.machineName ?? profile.machine_name ?? null,
+      machineModel: machine.model ?? profile.machineModel ?? profile.machine_model ?? null,
+      hardwareChip: machine.chip ?? profile.hardwareChip ?? profile.hardware_chip ?? null,
+      ram: machine.ram ?? profile.ram ?? null,
+      osVersion: machine.osVersion ?? profile.osVersion ?? profile.os_version ?? null,
+      appearance: machine.appearance ?? profile.appearance ?? null,
+      screenResolution:
+        machine.screenResolution ?? profile.screenResolution ?? profile.screen_resolution ?? null,
+      locale,
+      displays: Array.isArray(ov?.displays) ? ov.displays : [],
     },
+    storage: storageSection(profile, ov),
+    battery: batterySection(profile, ov),
+    memory: ov?.memory ?? null,
+
+    security: ov?.security
+      ? {
+          sip: ov.security.sip ?? null,
+          filevault: ov.security.filevault ?? null,
+          gatekeeper: ov.security.gatekeeper ?? null,
+          crashCount7d: ov?.diagnostics?.crashCount7d ?? null,
+          errorCount24h: ov?.diagnostics?.errorCount24h ?? null,
+          smartStatus: ov?.storage?.smartStatus ?? null,
+        }
+      : null,
+
     harvest: {
       collectedAt: collectedAt ?? '',
       lastAnalysisAt: lastAt ?? '',
       collectedAgo: collectedAt ? formatRelativeTimeAgo(collectedAt) : '—',
       analysisAgo: lastAt ? formatRelativeTimeAgo(lastAt) : '—',
-      uptimeDays: profile.uptimeDays ?? profile.uptime_days ?? '—',
-      applications: profile.applications ?? profile.apps_count ?? null,
+      uptimeDays: ov?.usage?.uptimeDays ?? profile.uptimeDays ?? profile.uptime_days ?? null,
+      applications:
+        ov?.apps?.installedCount ?? profile.applications ?? profile.apps_count ?? null,
     },
-    postFootprint,
-    identity: {
-      device: {
-        model: profile.hardwareChip ?? profile.hardware_chip ?? profile.machineModel ?? 'Mac',
-        macos_version: profile.osVersion ?? profile.os_version ?? '—',
-        hostname: profile.machineName ?? profile.machine_name ?? '—',
-      },
-      location_inferred: profile.locationInferred ?? profile.location_inferred ?? '—',
-      languages,
-      ui_theme: profile.appearance ?? '—',
-      screen_resolution: profile.screenResolution ?? '—',
-    },
+
+    postFootprint: postFootprintFromProfile(profile),
+
     activity: {
-      peak_hours: {
-        primary: profile.peakHoursPrimary ?? '10 PM - 2 AM',
-        secondary: profile.peakHoursSecondary ?? '2 PM - 4 PM',
-      },
-      most_active_day: profile.mostActiveDay ?? 'Thursday',
-      days_order: ['Thursday', 'Tuesday', 'Wednesday', 'Friday', 'Monday', 'Saturday', 'Sunday'],
-      sleep_pattern: profile.sleepPattern ?? 'Observed from system activity',
-      uptime: profile.uptimeDays ? `${profile.uptimeDays} day(s)` : '—',
-      current_status: profile.uptimeDays ? `Machine uptime ${profile.uptimeDays}d` : 'Active',
+      appUsage7d: Array.isArray(ov?.usage?.appUsage7d) ? ov.usage.appUsage7d : [],
+      recentFilesCount: ov?.usage?.recentFilesCount ?? null,
+      downloadsCount: ov?.usage?.downloadsCount ?? null,
+      uptimeDays: ov?.usage?.uptimeDays ?? profile.uptimeDays ?? null,
     },
-    tech_stack: {
-      primary_apps: primaryApps.length > 0 ? primaryApps : [{ name: '—', category: 'development' }],
-      ai_tools: profile.aiTools ?? ['Cursor'],
-      design_tools_count: profile.designToolsCount ?? apps.length,
-      total_apps_installed: profile.applications ?? profile.apps_count ?? '—',
-      languages_detected: profile.languagesDetected ?? ['JavaScript', 'Python'],
-      vcs: profile.vcs ?? 'Git',
+
+    techStack: {
+      primaryApps,
+      dockApps: Array.isArray(ov?.apps?.dock) ? ov.apps.dock : [],
+      installedCount:
+        ov?.apps?.installedCount ?? profile.applications ?? profile.apps_count ?? null,
+      fileExtensions: Array.isArray(ov?.files?.extensions) ? ov.files.extensions : [],
     },
+
     network: {
-      wifi_networks_recent: profile.wifiNetworks ?? ['—'],
-      vpn_detected: profile.vpnDetected ?? '—',
-      open_ports: profile.openPorts ?? [],
-      connectivity_status: 'Active',
+      wifiNetworks: Array.isArray(ov?.network?.wifiNetworks) ? ov.network.wifiNetworks : [],
+      wifiCount: ov?.network?.wifiCount ?? null,
+      browserDomains: Array.isArray(ov?.browser?.topDomains) ? ov.browser.topDomains : [],
+      browserVisits: ov?.browser?.totalVisits ?? null,
     },
-    storage: storageFromProfile(profile),
-    security: {
-      sip: { status: profile.sipStatus ?? '—' },
-      filevault: { status: profile.filevaultStatus ?? '—' },
-      gatekeeper: { status: profile.gatekeeperStatus ?? '—' },
-      pending_updates: profile.pendingUpdates ?? '—',
-      crash_reports_7days: profile.crashReports7d ?? 0,
-      disk_smart_status: profile.diskSmartStatus ?? '—',
+
+    location: {
+      place: locationInferred ?? null,
+      source: profile.locationInferred || profile.location_inferred
+        ? 'Inferred from network patterns'
+        : locationInferred
+          ? 'Inferred from system locale'
+          : null,
+      locale,
+      languages,
     },
-    behavioral: {
-      profile_type: PERSONA_UI_LABELS[dom] ?? 'Profile',
-      badges: [
-        `${PERSONA_UI_LABELS[dom] ?? 'Persona'} focus`,
-        profile.hardwareChip ? String(profile.hardwareChip) : null,
-        profile.ram ? String(profile.ram) : null,
-      ].filter(Boolean),
-      inferred_role: roleGuess,
-      school_detected: profile.schoolDetected ?? '—',
-      work_context: profile.workContext ?? 'Personal machine',
-    },
-    lifestyle: {
-      entertainment_apps: profile.entertainmentApps ?? [],
-      health_tracking: profile.healthApps ?? [],
-      gaming: profile.gamingApps ?? [],
-      last_music_activity: profile.lastMusicActivity ?? '—',
-    },
-    personaAccent: personaUiColor(dom),
   };
 }

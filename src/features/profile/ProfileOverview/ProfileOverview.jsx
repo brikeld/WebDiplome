@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import './profileOverview.css';
 import { buildProfileOverviewData } from '@/lib/profileOverviewData.js';
 import { normalizePostHideKey } from '@/lib/postHideKey.js';
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import PoCard from './components/PoCard.jsx';
 import ScoreDrift from './components/ScoreDrift.jsx';
-import ActivityPatterns from './components/ActivityPatterns.jsx';
+import RecentActivity from './components/RecentActivity.jsx';
 import TechStack from './components/TechStack.jsx';
 import NetworkTrace from './components/NetworkTrace.jsx';
 import SecurityStatus from './components/SecurityStatus.jsx';
@@ -13,6 +13,12 @@ import LocationInference from './components/LocationInference.jsx';
 import DigitalEnvironment from './components/DigitalEnvironment.jsx';
 import HarvestFreshness from './components/HarvestFreshness.jsx';
 import PostFootprint from './components/PostFootprint.jsx';
+
+function hasValues(obj) {
+  return Object.values(obj ?? {}).some(
+    (v) => v != null && v !== '' && (!Array.isArray(v) || v.length > 0),
+  );
+}
 
 export default function ProfileOverview({ profile }) {
   const { adjustedScores, dominantPersona, isHidden, isLeaderboardSelfHidden } = useLiveScoring();
@@ -59,125 +65,96 @@ export default function ProfileOverview({ profile }) {
     };
   }, [profileData?.postFootprint, profile, isHidden, isLeaderboardSelfHidden]);
 
-  const [open, setOpen] = useState({ activity: true, tech: true, drift: true });
-
   if (!profileData) {
     return <p className="po-empty">No profile loaded.</p>;
   }
 
-  const dom = profileData.dominantPersona;
-  const toggle = (key) => setOpen((prev) => ({ ...prev, [key]: !prev[key] }));
+  const { environment, storage, battery, memory, security, activity, techStack, network, location, harvest } =
+    profileData;
+  const showEnvironment = hasValues(environment) || storage || battery || memory;
+  const showActivity = hasValues(activity);
+  const showTech = hasValues(techStack);
+  const showNetwork = hasValues(network);
+  const showLocation = hasValues(location);
+  const showHarvest = hasValues(harvest);
 
   return (
     <div className="po-stack" style={{ '--persona-accent': profileData.personaAccent }}>
-      <PoCard
-        eyebrow="Live vs harvest"
-        title="Score drift"
-        persona="security"
-        mode="expand"
-        expanded={!!open.drift}
-        onToggle={() => toggle('drift')}
-      >
-        <ScoreDrift scoreDrift={profileData.scoreDrift} expanded={!!open.drift} />
+      <PoCard eyebrow="Live vs harvest" title="Score drift" persona="security">
+        <ScoreDrift scoreDrift={profileData.scoreDrift} />
       </PoCard>
 
-      <PoCard
-        eyebrow="When"
-        title="Activity patterns"
-        persona="productivity"
-        mode="expand"
-        expanded={!!open.activity}
-        onToggle={() => toggle('activity')}
-      >
-        <ActivityPatterns
-          activity={profileData.activity}
-          lastActivity={profileData.profile.last_activity}
-          dominantPersona={dom}
-          expanded={!!open.activity}
-        />
-      </PoCard>
+      {showEnvironment ? (
+        <PoCard
+          eyebrow="Desktop"
+          title="Digital environment"
+          persona="productivity"
+          meta={environment.machineModel ?? undefined}
+        >
+          <DigitalEnvironment
+            environment={environment}
+            storage={storage}
+            battery={battery}
+            memory={memory}
+          />
+        </PoCard>
+      ) : null}
 
       <PoCard
         eyebrow="Feed"
         title="Post footprint"
         persona="popularity"
-        mode="static"
-        className="po-card--footprint"
+        meta={postFootprint.total ? `${postFootprint.total} posts` : undefined}
       >
         <PostFootprint postFootprint={postFootprint} />
       </PoCard>
 
-      <PoCard
-        eyebrow="Desktop"
-        title="Digital environment"
-        persona="productivity"
-        mode="static"
-        className="po-card--env"
-      >
-        <DigitalEnvironment
-          environment={profileData.environment}
-          storage={profileData.storage}
-        />
-      </PoCard>
+      <div className="po-columns">
+        {showActivity ? (
+          <PoCard eyebrow="When" title="Recent activity" persona="productivity">
+            <RecentActivity activity={activity} lastActivity={profileData.profile.last_activity} />
+          </PoCard>
+        ) : null}
 
-      <div className="po-grid">
-        <PoCard
-          eyebrow="What you run"
-          title="Tech stack"
-          persona="productivity"
-          mode="expand"
-          expanded={!!open.tech}
-          onToggle={() => toggle('tech')}
-        >
-          <TechStack techStack={profileData.tech_stack} dominantPersona={dom} expanded={!!open.tech} />
-        </PoCard>
+        {showTech ? (
+          <PoCard
+            eyebrow="What you run"
+            title="Tech stack"
+            persona="productivity"
+            meta={techStack.installedCount != null ? `${techStack.installedCount} apps` : undefined}
+          >
+            <TechStack techStack={techStack} />
+          </PoCard>
+        ) : null}
 
-        <PoCard
-          eyebrow="Sync"
-          title="Harvest freshness"
-          persona="security"
-          mode="expand"
-          expanded={!!open.harvest}
-          onToggle={() => toggle('harvest')}
-        >
-          <HarvestFreshness harvest={profileData.harvest} expanded={!!open.harvest} />
-        </PoCard>
+        {showNetwork ? (
+          <PoCard
+            eyebrow="Connectivity"
+            title="Network trace"
+            persona="security"
+            meta={network.wifiCount != null ? `${network.wifiCount} networks` : undefined}
+          >
+            <NetworkTrace network={network} />
+          </PoCard>
+        ) : null}
 
-        <PoCard
-          eyebrow="Connectivity"
-          title="Network trace"
-          persona="security"
-          mode="expand"
-          expanded={!!open.network}
-          onToggle={() => toggle('network')}
-        >
-          <NetworkTrace network={profileData.network} dominantPersona="security" expanded={!!open.network} />
-        </PoCard>
+        {security ? (
+          <PoCard eyebrow="Protection" title="Security status" persona="security">
+            <SecurityStatus security={security} />
+          </PoCard>
+        ) : null}
 
-        <PoCard
-          eyebrow="Protection"
-          title="Security status"
-          persona="security"
-          mode="static"
-        >
-          <SecurityStatus security={profileData.security} variant="detail" />
-        </PoCard>
+        {showLocation ? (
+          <PoCard eyebrow="Where" title="Location inference" persona="security">
+            <LocationInference location={location} />
+          </PoCard>
+        ) : null}
 
-        <PoCard
-          eyebrow="Where"
-          title="Location inference"
-          persona="security"
-          mode="expand"
-          expanded={!!open.location}
-          onToggle={() => toggle('location')}
-        >
-          <LocationInference
-            identity={profileData.identity}
-            behavioral={profileData.behavioral}
-            dominantPersona="security"
-            expanded={!!open.location}
-          />
-        </PoCard>
+        {showHarvest ? (
+          <PoCard eyebrow="Sync" title="Harvest freshness" persona="security">
+            <HarvestFreshness harvest={harvest} />
+          </PoCard>
+        ) : null}
       </div>
     </div>
   );

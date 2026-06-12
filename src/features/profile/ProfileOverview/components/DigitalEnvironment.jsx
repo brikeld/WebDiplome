@@ -15,59 +15,114 @@ function UsageBar({ label, percent, sublabel }) {
   );
 }
 
-export default function DigitalEnvironment({ environment, storage }) {
-  const hasBattery =
-    storage &&
-    (storage.battery_percent != null ||
-      storage.battery_cycles != null ||
-      storage.battery_health_percent != null);
+function kvRows(pairs) {
+  return pairs.filter(([, value]) => value != null && value !== '');
+}
+
+export default function DigitalEnvironment({ environment, storage, battery, memory }) {
+  const env = environment ?? {};
+  const machineRows = kvRows([
+    ['Computer', env.machineName],
+    ['Model', env.machineModel],
+    ['Chip', env.hardwareChip],
+    ['Memory', env.ram],
+    ['macOS', env.osVersion],
+    ['Appearance', env.appearance],
+    ['Display', env.screenResolution],
+    ['Locale', env.locale],
+  ]);
+  const displays = (env.displays ?? []).filter((d) => d?.name);
+
+  const batteryRows = battery
+    ? kvRows([
+        ['Health', battery.healthPercent != null ? `${battery.healthPercent}%` : null],
+        ['Cycles', battery.cycles],
+        ['Condition', battery.condition],
+        ['Power', battery.charging != null ? (battery.charging ? 'Charging' : 'On battery') : battery.powerSource],
+      ])
+    : [];
+
+  const memoryRows = memory
+    ? kvRows([
+        ['Pressure', memory.pressureLevel],
+        ['Swap used', memory.swapUsed],
+      ])
+    : [];
 
   return (
-    <div
-      className={`po-env-full${hasBattery ? ' po-env-full--3' : storage ? ' po-env-full--2' : ' po-env-full--1'}`}
-    >
-      <div className="po-panel po-env-panel">
-        <span className="po-block-label">Machine</span>
-        <div className="po-kv-grid po-kv-grid--flush">
-          <KeyValue label="Computer" value={environment?.machineName} />
-          <KeyValue label="Model" value={environment?.machineModel} />
-          <KeyValue label="Chip" value={environment?.hardwareChip} />
-          <KeyValue label="Memory" value={environment?.ram} />
-          <KeyValue label="macOS" value={environment?.osVersion} />
-          <KeyValue label="Appearance" value={environment?.appearance} />
-          <KeyValue label="Display" value={environment?.screenResolution} />
+    <div className="po-env-grid">
+      {machineRows.length > 0 ? (
+        <div className="po-panel po-env-panel po-env-panel--machine">
+          <span className="po-block-label">Machine</span>
+          <div className="po-kv-grid po-kv-grid--flush">
+            {machineRows.map(([label, value]) => (
+              <KeyValue key={label} label={label} value={value} />
+            ))}
+          </div>
+          {displays.length > 0 ? (
+            <div className="po-env-displays">
+              {displays.map((d) => (
+                <p key={d.name} className="po-secondary po-env-display-row">
+                  <strong>{d.name}</strong>
+                  {d.resolution ? <> · {d.resolution}</> : null}
+                </p>
+              ))}
+            </div>
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
       {storage ? (
         <div className="po-panel po-env-panel">
           <span className="po-block-label">Storage</span>
           <UsageBar
             label="Disk use"
-            percent={storage.usage_percent}
-            sublabel={`${storage.usage_percent}% used`}
+            percent={storage.usePercent}
+            sublabel={storage.usePercent != null ? `${storage.usePercent}% used` : ''}
           />
           <p className="po-secondary po-env-storage-note">
-            {storage.used_gb} GB of {storage.total_gb} GB used · {storage.free_gb} GB free
+            {storage.usedGb != null && storage.totalGb != null ? (
+              <>
+                <strong>{storage.usedGb} GB</strong> of {storage.totalGb} GB used
+                {storage.freeGb != null ? <> · {storage.freeGb} GB free</> : null}
+              </>
+            ) : (
+              'Capacity unknown'
+            )}
           </p>
+          {storage.smartStatus ? (
+            <div className="po-kv-grid po-kv-grid--flush po-kv-grid--compact">
+              <KeyValue label="SMART status" value={storage.smartStatus} />
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      {hasBattery ? (
+      {battery ? (
         <div className="po-panel po-env-panel">
           <span className="po-block-label">Battery</span>
           <UsageBar
             label="Charge"
-            percent={storage.battery_percent ?? 0}
-            sublabel={`${storage.battery_percent ?? '—'}%`}
+            percent={battery.percent ?? 0}
+            sublabel={battery.percent != null ? `${battery.percent}%` : ''}
           />
-          <div className="po-kv-grid po-kv-grid--flush po-kv-grid--compact">
-            <KeyValue
-              label="Health"
-              value={storage.battery_health_percent != null ? `${storage.battery_health_percent}%` : '—'}
-            />
-            <KeyValue label="Cycles" value={storage.battery_cycles ?? '—'} />
-            <KeyValue label="Condition" value={storage.battery_condition ?? '—'} />
+          {batteryRows.length > 0 ? (
+            <div className="po-kv-grid po-kv-grid--flush po-kv-grid--compact">
+              {batteryRows.map(([label, value]) => (
+                <KeyValue key={label} label={label} value={value} />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {memoryRows.length > 0 ? (
+        <div className="po-panel po-env-panel">
+          <span className="po-block-label">Memory pressure</span>
+          <div className="po-kv-grid po-kv-grid--flush">
+            {memoryRows.map(([label, value]) => (
+              <KeyValue key={label} label={label} value={value} />
+            ))}
           </div>
         </div>
       ) : null}
