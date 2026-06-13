@@ -65,6 +65,11 @@ export function enrichLeaderboardPostForFeed({
     deletedProfileIds,
   );
 
+  // The remixed entries are the live top rows; the author keeps an `isUser` row
+  // only while they are actually in the top 5 of the current directory.
+  const authorInTopRows = Array.isArray(remixed.entries)
+    && remixed.entries.some((e) => e?.isUser);
+
   const liveUserRank = remixed.userRank ?? postedUserRank;
   const rankDrifted =
     liveUserRank != null
@@ -91,6 +96,8 @@ export function enrichLeaderboardPostForFeed({
 
   return {
     content,
+    // A leaderboard post is only valid while its author is still in the top 5.
+    authorInTopRows,
     leaderboard: {
       ...base,
       postedUserRank,

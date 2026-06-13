@@ -153,6 +153,9 @@ function buildEnrichedPosts(
         deletedProfileIds,
       })
       : null;
+    // Never show a leaderboard post whose author has dropped out of the live
+    // top 5 — a user can't "post" a board they are no longer ranked in.
+    if (leaderboardSync && !leaderboardSync.authorInTopRows) return null;
     const resolvedContent = leaderboardSync?.content ?? p.content;
 
     return {
@@ -193,7 +196,7 @@ function buildEnrichedPosts(
       _feedKey: p._feedKey ?? null,
       _feedRevealSeq: typeof p._feedRevealSeq === 'number' ? p._feedRevealSeq : 0,
     };
-  });
+  }).filter(Boolean);
 }
 
 export default function PostsTab({

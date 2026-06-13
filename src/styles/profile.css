@@ -628,16 +628,16 @@ button.profile-last-analysis-pill:disabled {
    body size keeps the rail's type scale homogeneous). */
 @media (min-width: 1920px) {
   .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-name-size: clamp(48px, 8.6cqw, 96px);
+    --profile-rail-name-size: clamp(56px, 10cqw, 120px);
     --profile-rail-bio-size: clamp(18px, min(2.7cqw, 2cqh), 30px);
-    --profile-rail-bio-label-size: clamp(16px, 2.3cqw, 26px);
-    --profile-rail-badge-size: clamp(28px, 4.6cqw, 46px);
-    --profile-rail-stat-icon: clamp(20px, 2.9cqw, 32px);
-    --profile-rail-stat-num: clamp(18px, 2.7cqw, 30px);
+    --profile-rail-bio-label-size: clamp(18px, 3cqw, 34px);
+    --profile-rail-badge-size: clamp(30px, 5cqw, 52px);
+    --profile-rail-stat-icon: clamp(24px, 3.6cqw, 44px);
+    --profile-rail-stat-num: clamp(22px, 3.4cqw, 40px);
     --profile-rail-tab-h: clamp(40px, 5cqw, 58px);
     --profile-rail-tab-font: clamp(15px, 2.4cqw, 26px);
-    --profile-rail-ring-footprint: clamp(6rem, 16cqw, 9rem);
-    --profile-rail-ring-size: clamp(11rem, 30cqw, 17rem);
+    --profile-rail-ring-footprint: clamp(7rem, 20cqw, 12rem);
+    --profile-rail-ring-size: clamp(13rem, 36cqw, 22rem);
   }
 }
 
@@ -712,6 +712,8 @@ button.profile-last-analysis-pill:disabled {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* Center the content block in the (taller) capsule on big screens. */
+  justify-content: center;
   /* Let the score ring draw past the card edge (it is intentionally larger). */
   overflow: visible;
 }
@@ -725,9 +727,9 @@ button.profile-last-analysis-pill:disabled {
   --profile-score-size: var(--profile-rail-ring-size);
   --profile-score-size-max: var(--profile-rail-ring-size);
   --profile-rail-text-gap: var(--profile-rail-card-gap);
-  flex: 1 1 auto;
-  min-height: 0;
-  height: 100%;
+  /* Content-sized (never forced to 100%, which used to push the bio past the
+     card on shorter screens); the header-stack centers it in a taller capsule. */
+  flex: 0 1 auto;
   width: 100%;
   margin-top: 0;
   /* The header-stack is the capsule now; the hero fills it transparently. */
@@ -747,9 +749,7 @@ button.profile-last-analysis-pill:disabled {
   row-gap: var(--profile-rail-card-gap);
   box-sizing: border-box;
   width: 100%;
-  height: 100%;
-  /* Center the name/stats/bio block within the (taller) profile capsule. */
-  align-content: center;
+  height: auto;
   padding: var(--profile-rail-inner-pad-y) var(--profile-rail-inner-pad-right, var(--profile-rail-card-pad-right))
     var(--profile-rail-inner-pad-bottom, var(--profile-rail-card-pad-bottom)) var(--profile-rail-inner-pad-x);
 }

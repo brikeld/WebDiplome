@@ -2271,29 +2271,33 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   text-align: left;
 }
 
-/* Tell-me-more cards: stack a larger emoji centered ABOVE the label, with the
-   label text centered beneath it (instead of emoji inline to the left). */
+/* Tell-me-more cards: a larger emoji sits inline next to the centered label.
+   (Inline rather than stacked-on-top so it can never overflow a short card on
+   height-constrained panels — the label wraps beside the emoji instead.) */
 .tell-panel-a .reason-chip {
   align-items: center;
 }
 
 .tell-panel-a .reason-chip__content {
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: clamp(6px, 0.9vh, 12px);
-  width: 100%;
+  gap: clamp(5px, 0.6vw, 11px);
+  max-width: 100%;
+  min-width: 0;
   text-align: center;
 }
 
 .tell-panel-a .reason-chip__emoji {
-  font-size: clamp(24px, 2.1vw, 40px);
+  flex: 0 0 auto;
+  font-size: clamp(20px, 1.7vw, 34px);
   line-height: 1;
 }
 
 .tell-panel-a .reason-chip__body {
   flex: 0 1 auto;
-  width: 100%;
+  min-width: 0;
   text-align: center;
 }
 
@@ -3288,6 +3292,37 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
 
 .tell-more-pill--expanded .inference-panel--leaderboard {
   padding: 0;
+}
+
+/* Dashboard "tell me more" leaderboard: prose sections hug their text and the
+   chips section fills, so nothing is stranded in a tall panel. */
+.tell-more-pill--expanded .inference-panel--leaderboard .lbx__sec {
+  flex: 0 0 auto;
+  justify-content: flex-start;
+}
+
+.tell-more-pill--expanded .inference-panel--leaderboard .lbx__sec--signals,
+.tell-more-pill--expanded .inference-panel--leaderboard .lbx__sec--signals:not(.is-detail) {
+  flex: 1 1 0;
+}
+
+/* …and bigger type on large screens so it doesn't read tiny on a 6K panel. */
+@media (min-width: 1920px) {
+  .tell-more-pill--expanded .inference-panel--leaderboard .lbx {
+    --lbx-title-fs: clamp(14px, 1.1vw, 26px);
+    --lbx-body-fs: clamp(16px, 1.4vw, 36px);
+    --lbx-gap: clamp(12px, 1.4vh, 22px);
+    --lbx-sec-pad: clamp(16px, 1.7vh, 30px) clamp(18px, 1.5vw, 32px);
+  }
+
+  .tell-more-pill--expanded .inference-panel--leaderboard .lbx__chip {
+    font-size: clamp(14px, 1.3vw, 28px);
+    min-height: clamp(40px, 3.6vh, 60px);
+  }
+
+  .tell-more-pill--expanded .inference-panel--leaderboard .lbx__rank-label {
+    font-size: clamp(14px, 1.4vw, 30px);
+  }
 }
 
 .inference-panel--leaderboard .inference-panel__redacted-content > .lbx {
