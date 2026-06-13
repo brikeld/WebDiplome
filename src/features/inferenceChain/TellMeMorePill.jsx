@@ -6,13 +6,13 @@ import InferenceChainPanel from './InferenceChainPanel.jsx';
 import TellAnalysisLoader from './TellAnalysisLoader.jsx';
 
 const PERSONA_PASTEL = {
-  productivity: '#EEEEEE',
-  productivite: '#EEEEEE',
-  security: '#BCCDF5',
-  securite: '#BCCDF5',
-  popularity: '#EBF8B7',
-  popularite: '#EBF8B7',
-  social: '#EBF8B7',
+  productivity: '#D8D8D8',
+  productivite: '#D8D8D8',
+  security: '#759AEF',
+  securite: '#759AEF',
+  popularity: '#CCF847',
+  popularite: '#CCF847',
+  social: '#CCF847',
 };
 
 const PERSONA_ACCENT = {

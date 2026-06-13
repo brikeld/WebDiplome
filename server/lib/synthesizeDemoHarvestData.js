@@ -63,7 +63,6 @@ export function synthesizeHarvestDataFromProfile(profileRow, apiProfile) {
     : {};
   const api = apiProfile && typeof apiProfile === 'object' ? apiProfile : {};
   const posts = Array.isArray(api.personaPosts) ? api.personaPosts : [];
-  if (countAiGeneratedPosts(posts) === 0) return null;
 
   const slug = String(api.slug ?? api.id ?? profileRow?.slug ?? '').trim();
   const displayName = String(
@@ -71,6 +70,9 @@ export function synthesizeHarvestDataFromProfile(profileRow, apiProfile) {
     ?? profileRow?.display_name
     ?? `${api.firstname ?? profileRow?.firstname ?? ''} ${api.lastname ?? profileRow?.lastname ?? ''}`.trim(),
   ).trim() || 'User';
+
+  // Require either existing AI posts or at least a real identity to synthesize from.
+  if (countAiGeneratedPosts(posts) === 0 && displayName === 'User' && !slug) return null;
   const machineName = String(
     api.machineName
     ?? api.machine_name

@@ -2436,7 +2436,7 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
      active = solid accent fill. Strokes are real borders so they never clip. */
   --a-ink: #0c1018;
   --a-accent: var(--tell-pill-accent, #759aef);
-  --a-pastel: var(--tell-pill-pastel, #bccdf5);
+  --a-pastel: var(--tell-pill-accent, #759aef);
   --a-tile: #ffffff;
   --a-chip-line: color-mix(in srgb, var(--a-accent) 42%, #ffffff);
   background: transparent;
@@ -2530,14 +2530,14 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--a-accent, #759aef) 80%, #000);
 }
 
-/* Open/selected = solid accent fill + black text (matches .rail-btn.is-active). */
+/* Open/selected = inverted chip on the persona-colored section surface. */
 .tell-panel-a--alt-palette-2 .tape__content.is-open,
 .tell-panel-a--alt-palette-2 .reason-chip.is-open,
 .tell-panel-a--alt-palette-2 .ing-bar__row.is-open {
   transform: none;
-  background: var(--a-accent, #759aef);
-  border-color: var(--a-accent, #759aef);
-  color: #000;
+  background: #000;
+  border-color: #000;
+  color: var(--a-accent, #759aef);
 }
 
 .tell-panel-a--alt-palette-2 .tape__content:active,
@@ -2553,9 +2553,9 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
 }
 
 .tell-panel-a--alt-palette-2 .tape__row:has(.tape__content.is-open) .tape__badge {
-  background: var(--tell-pill-accent, #759aef);
+  background: #000;
   border-color: #000;
-  color: #000;
+  color: var(--a-accent, #759aef);
 }
 
 /* Open chip = solid accent fill — text and figures go black for contrast,
@@ -2567,7 +2567,7 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
 .tell-panel-a--alt-palette-2 .reason-chip.is-open,
 .tell-panel-a--alt-palette-2 .reason-chip.is-open .ing-chip__label,
 .tell-panel-a--alt-palette-2 .reason-chip.is-open .ing-chip__pct {
-  color: #000;
+  color: var(--a-accent, #759aef);
 }
 
 .tell-panel-a--alt-palette-2 .panel-a__detail-label {
@@ -2709,8 +2709,7 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   padding: 8px 7px;
   border: 1px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
   border-radius: 11px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 34%, #fff));
+  background: color-mix(in srgb, var(--tell-pill-accent, #759aef) 14%, #fff);
   color: #07101f;
   overflow: hidden;
   animation: focus-detail-in 360ms var(--panel-a-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;

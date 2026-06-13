@@ -99,12 +99,7 @@
   flex-direction: column;
   border-radius: var(--tell-morph-radius, var(--capsule-radius, var(--tell-pill-radius)));
   border: 2px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 28%, rgba(0, 0, 0, 0.08));
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.98),
-      color-mix(in srgb, var(--tell-pill-pastel, #bccdf5) 72%, #fff)
-    );
+  background: var(--tell-pill-accent, #759aef);
   overflow: hidden;
   --inference-redacted-clip-radius: var(--tell-morph-radius, var(--capsule-radius, 44px));
   transition:

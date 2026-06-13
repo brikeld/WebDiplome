@@ -79,7 +79,7 @@
 .lp-navbar-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: clamp(8px, 1vw, 12px);
 }
 
 .lp-navbar-register,
@@ -137,9 +137,9 @@
 .lp-navbar-avatar {
   appearance: none;
   padding: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   background: var(--nav-persona, #ccf847);
@@ -147,6 +147,7 @@
   align-items: center;
   justify-content: center;
   border: 2px solid #000;
+  flex-shrink: 0;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 

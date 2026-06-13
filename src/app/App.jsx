@@ -138,15 +138,15 @@ const PERSONA_COLORS = {
   security: '#759AEF',
   popularity: '#CCF847',
 };
-// Pastel companion colors for tell-me-more expanded panel backgrounds.
+// Tell-me-more surfaces use the same persona colors as rails, posts, and badges.
 const PERSONA_PASTEL_COLORS = {
-  productivity: '#EEEEEE',
-  productivite: '#EEEEEE',
-  security: '#BCCDF5',
-  securite: '#BCCDF5',
-  popularity: '#EBF8B7',
-  popularite: '#EBF8B7',
-  social: '#EBF8B7',
+  productivity: PERSONA_COLORS.productivity,
+  productivite: PERSONA_COLORS.productivity,
+  security: PERSONA_COLORS.security,
+  securite: PERSONA_COLORS.security,
+  popularity: PERSONA_COLORS.popularity,
+  popularite: PERSONA_COLORS.popularity,
+  social: PERSONA_COLORS.popularity,
 };
 const PERSONA_LABELS = {
   productivity: 'Productivity',

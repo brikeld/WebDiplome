@@ -2616,12 +2616,7 @@ button.profile-name-link.leaderboard-row__name {
 /* Idle countdown — white outer shell + persona time capsule (compact) */
 .dashboard-timer-card--idle-countdown.dashboard-timer-card--action-update {
   padding: clamp(10px, 1.1vh, 13px) clamp(13px, 1.45vw, 18px);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.98),
-      color-mix(in srgb, var(--tell-pill-pastel, var(--persona-accent, #759aef)) 72%, #fff)
-    );
+  background: var(--tell-pill-accent, var(--persona-accent, #759aef));
   border: none;
 }
 
