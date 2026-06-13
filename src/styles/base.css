@@ -1017,6 +1017,19 @@ body {
     --shell-left-col-max: clamp(1180px, 56vw, 1560px);
     --shell-right-col-width: clamp(720px, 34vw, 940px);
   }
+
+  /* Wider content column → step the post type up so it reads at a comfortable
+     size instead of looking small inside the now-larger capsule. */
+  .view-home .main-col,
+  .view-profile .main-col {
+    --post-body-size: 29px;
+    --post-avatar-size: 11.5rem;
+    --post-name-size: 15px;
+    --post-handle-size: 12px;
+    --post-meta-pill-size: 17px;
+    --post-meta-pill-icon-size: 24px;
+    --post-meta-comment-icon-size: 30px;
+  }
 }
 
 @media (min-width: 2560px) {
@@ -1024,6 +1037,17 @@ body {
   .view-profile .page {
     --shell-left-col-max: clamp(1560px, 58vw, 1880px);
     --shell-right-col-width: clamp(940px, 36vw, 1140px);
+  }
+
+  .view-home .main-col,
+  .view-profile .main-col {
+    --post-body-size: 32px;
+    --post-avatar-size: 12.5rem;
+    --post-name-size: 16px;
+    --post-handle-size: 13px;
+    --post-meta-pill-size: 18px;
+    --post-meta-pill-icon-size: 26px;
+    --post-meta-comment-icon-size: 32px;
   }
 }
 
@@ -3387,13 +3411,23 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
 }
 
 .profile-lb-analysis-body .lbx {
-  --lbx-gap: clamp(10px, 1.4vh, 16px);
-  --lbx-sec-pad: clamp(12px, 1.6vh, 18px) clamp(14px, 1.4vw, 20px);
-  --lbx-title-fs: clamp(11px, 1.2vw, 14px);
-  --lbx-body-fs: clamp(14px, 1.5vw, 18px);
+  --lbx-gap: clamp(10px, 1.4vh, 20px);
+  --lbx-sec-pad: clamp(14px, 1.8vh, 28px) clamp(16px, 1.5vw, 30px);
+  --lbx-title-fs: clamp(12px, 1.05vw, 22px);
+  --lbx-body-fs: clamp(15px, 1.35vw, 30px);
   --lbx-radius: 16px;
   --lbx-chip-radius: 12px;
   height: 100%;
+}
+
+/* Big analysis panel: center each section's title+body block so the text isn't
+   stranded at the top of a tall capsule with empty space below. */
+.profile-lb-analysis-body .lbx__sec {
+  justify-content: center;
+}
+
+.profile-lb-analysis-body .lbx__sec > .lbx__body {
+  -webkit-line-clamp: 9;
 }
 
 .profile-lb-analysis-body .lbx__screen {
@@ -3419,21 +3453,21 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
 }
 
 .profile-lb-analysis-body .lbx__rank-label {
-  font-size: clamp(12px, 1.4vw, 16px);
+  font-size: clamp(12px, 1.4vw, 26px);
 }
 
 .profile-lb-analysis-body .lbx__rank-of {
-  font-size: clamp(10px, 1.1vw, 13px);
+  font-size: clamp(10px, 1.1vw, 18px);
 }
 
 .profile-lb-analysis-body .lbx__others-btn {
-  font-size: clamp(12px, 1.4vw, 16px);
-  min-height: clamp(42px, 4.5vh, 58px);
+  font-size: clamp(12px, 1.4vw, 22px);
+  min-height: clamp(42px, 4.5vh, 64px);
 }
 
 .profile-lb-analysis-body .lbx__chip {
-  font-size: clamp(12px, 1.2vw, 15px);
-  min-height: clamp(34px, 3.8vh, 50px);
+  font-size: clamp(12px, 1.2vw, 24px);
+  min-height: clamp(34px, 3.8vh, 56px);
 }
 
 /* Others screen — scale with vh so rows fill their height as the panel grows */

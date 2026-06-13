@@ -2271,6 +2271,37 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   text-align: left;
 }
 
+/* Tell-me-more cards: stack a larger emoji centered ABOVE the label, with the
+   label text centered beneath it (instead of emoji inline to the left). */
+.tell-panel-a .reason-chip {
+  align-items: center;
+}
+
+.tell-panel-a .reason-chip__content {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 0.9vh, 12px);
+  width: 100%;
+  text-align: center;
+}
+
+.tell-panel-a .reason-chip__emoji {
+  font-size: clamp(24px, 2.1vw, 40px);
+  line-height: 1;
+}
+
+.tell-panel-a .reason-chip__body {
+  flex: 0 1 auto;
+  width: 100%;
+  text-align: center;
+}
+
+.tell-panel-a .ing-chip__label,
+.tell-panel-a .ing-chip__pct {
+  text-align: center;
+}
+
 .reason-chip.is-open {
   background: #fff;
   border-color: var(--tell-pill-accent, #759aef);

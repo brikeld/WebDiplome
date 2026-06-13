@@ -913,21 +913,23 @@ button.profile-last-analysis-pill:disabled {
 }
 
 /* Persona scores — no inner scroll; blurbs capped at 200 chars (see railBlurb.js) */
+/* Persona blurbs are laid out as equal-height cards that always fill the rail's
+   middle row. Each card stretches to an equal share of the available height and
+   centers its own content, so there is never a cluster of text floating in a
+   sea of empty space — the layout reads identically on a laptop and on a 6K
+   display. (Replaces the old JS height-fit hack.) */
 .profile-rail-capsule .profile-rail-persona-scores {
   grid-row: 2;
   min-height: 0;
   height: 100%;
   margin: 0;
-  padding: var(--profile-rail-card-pad-top) var(--profile-rail-card-pad-right)
-    var(--profile-rail-card-pad-bottom) var(--profile-rail-card-pad-left);
-  background: var(--card, #fff);
-  border-radius: var(--radius-post-surface);
+  padding: 0;
+  background: transparent;
   color: #000;
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
 .profile-rail-capsule .profile-rail-persona-scores__list {
@@ -935,21 +937,34 @@ button.profile-last-analysis-pill:disabled {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-content: flex-start;
-  gap: var(--profile-rail-scores-row-gap-fit, var(--profile-rail-scores-row-gap, 12px));
+  gap: var(--profile-rail-scores-row-gap, clamp(10px, 1.4cqh, 18px));
   overflow: hidden;
 }
 
 .profile-rail-capsule .profile-rail-persona-row {
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-height: 0;
+  /* Each card is its own size container, so the label/score/blurb scale to the
+     card's real dimensions — large on a 6K rail, shrinking to fit on a laptop —
+     without any JS measurement. */
+  container-type: size;
+  container-name: persona-card;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--profile-rail-scores-row-inner-gap-fit, clamp(5px, 1.1cqw, 8px));
-  padding: 0;
+  justify-content: center;
+  gap: clamp(6px, 1.1cqh, 14px);
+  padding: clamp(14px, 2.4cqh, 30px) clamp(16px, 3.4cqw, 28px);
   box-sizing: border-box;
-  min-height: 0;
+  background: var(--card, #fff);
+  border: 1.5px solid color-mix(in srgb, #000 7%, transparent);
+  border-radius: var(--radius-post-surface);
+  overflow: hidden;
+}
+
+.profile-rail-capsule .profile-rail-persona-row--dominant {
+  background: color-mix(in srgb, var(--persona-accent, #759aef) 14%, #fff);
+  border-color: color-mix(in srgb, var(--persona-accent, #759aef) 42%, transparent);
 }
 
 .profile-rail-capsule .profile-rail-persona-row__head {
@@ -965,10 +980,7 @@ button.profile-last-analysis-pill:disabled {
   align-items: center;
   gap: clamp(5px, 1.3cqw, 8px);
   min-width: 0;
-  font-size: var(
-    --profile-rail-scores-label-size-fit,
-    var(--profile-rail-scores-row-label-size, var(--profile-rail-bio-label-size))
-  );
+  font-size: clamp(14px, min(13cqh, 6.8cqw), 34px);
   font-weight: 700;
   line-height: 1.1;
   color: #000;
@@ -986,30 +998,32 @@ button.profile-last-analysis-pill:disabled {
   display: inline-flex;
   align-items: baseline;
   gap: clamp(4px, 1cqw, 6px);
-  font-size: var(--profile-rail-scores-score-size-fit, var(--profile-rail-stat-num));
+  font-size: clamp(14px, min(13cqh, 6.8cqw), 34px);
   font-weight: 700;
   line-height: 1;
   color: #000;
 }
 
 .profile-rail-capsule .profile-rail-persona-row__delta {
-  font-size: var(--profile-rail-scores-delta-size-fit, var(--profile-rail-tab-font));
+  font-size: clamp(10px, min(9cqh, 4.6cqw), 24px);
   font-weight: 700;
   line-height: 1;
 }
 
 .profile-rail-capsule .profile-rail-persona-row__copy {
   margin: 0;
-  font-size: var(
-    --profile-rail-scores-copy-size-fit,
-    var(--profile-rail-scores-copy-size, var(--profile-rail-bio-size))
-  );
+  font-size: clamp(12px, min(11cqh, 4.6cqw), 30px);
   font-weight: 600;
-  line-height: var(--profile-rail-scores-line-height-fit, 1.24);
+  line-height: 1.28;
   color: #000;
   overflow-wrap: break-word;
   word-break: normal;
   min-height: 0;
+  /* Safety net: never let an unusually long blurb spill past the card. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
 }
 
 .profile-rail-capsule .profile-rail-persona-scores--tight .profile-rail-persona-row__head {
