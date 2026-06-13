@@ -428,7 +428,16 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
   }
 
   async function appendPostsToProfile({ profileId, userId, posts, source = 'generated' }) {
-    const incoming = (Array.isArray(posts) ? posts : []).filter((p) => p && p.content);
+    let incoming = (Array.isArray(posts) ? posts : []).filter((p) => p && p.content);
+    // Idempotency: a profile may have at most one COMPLIANT join notice. Both the
+    // harvest sync and the client join-ensure effect try to create one, so drop an
+    // incoming join post when the profile already has one (prevents duplicate rows).
+    if (incoming.some((p) => p?.compliantJoin)) {
+      const existingPosts = await readPosts(profileId);
+      if (hasCompliantJoinPost(existingPosts)) {
+        incoming = incoming.filter((p) => !p?.compliantJoin);
+      }
+    }
     const boardIds = collectLeaderboardBoardIds(incoming);
     if (boardIds.size > 0) {
       await deleteLeaderboardPostsByBoardIds(boardIds);

@@ -2190,7 +2190,12 @@ export default function App() {
             return;
           }
           const jobId = triggerBody?.jobId ?? null;
-          streamPostsBaselineRef.current = stripFeedRevealMetaFromPosts(owned.personaPosts ?? []);
+          // Collapse any duplicate COMPLIANT/system posts (mirrors the manual
+          // generate path) so an already-duplicated row never renders twice.
+          streamPostsBaselineRef.current = mergePostsPrepend(
+            stripFeedRevealMetaFromPosts(owned.personaPosts ?? []),
+            [],
+          );
           await runHostedPostGenerationWithReveal({
             jobId,
             reloadProfileFromApi,

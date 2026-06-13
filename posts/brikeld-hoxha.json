@@ -1,0 +1,1688 @@
+[
+  {
+    "persona": "securite",
+    "content": "Trying to balance Adobe, Blender, and endless AI prompts all at once. Send coffee.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T22:06:23.762Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user has a large collection of creative and development files in their recent history, including multiple PNGs and JavaScript/CSS files related to a project named 'WebDiplome'.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Creative workload",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is overwhelmed by the sheer volume of complex creative and programming tasks they are juggling.",
+        "isBiased": true,
+        "biasNote": "This judgment assumes that any heavy use of Adobe and development tools automatically equates to being overwhelmed."
+      },
+      {
+        "step": "generate",
+        "value": "Trying to balance Adobe, Blender, and endless AI prompts all at once. Send coffee."
+      }
+    ],
+    "textSliceType": "downloads"
+  },
+  {
+    "persona": "popularite",
+    "content": "Just wrestling with all these design assets and AI prompts. My MacBook Pro is officially a creative chaos machine right now.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T22:06:25.288Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user has a large number of recent image files, including 'Screenshot 2026-05-24 at 17.26.51.png', suggesting active visual work.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Creative workflow activity",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is heavily engaged in creative projects, leading to a sense of productive overload.",
+        "isBiased": true,
+        "biasNote": "Assuming high file count directly equates to creative stress is an oversimplification."
+      },
+      {
+        "step": "generate",
+        "value": "Just wrestling with all these design assets and AI prompts. My MacBook Pro is officially a creative chaos machine right now."
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
+      "relativePath": "public/uploads/f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
+      "url": "/uploads/f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "productivite",
+    "content": "35.1% disk usage. It feels like a solid balance between creative assets and free space right now.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T22:06:21.623Z",
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "ff820986b72dc6d751701cca27add0b24ce806455f066972ff16ae2ec6e6f501.png",
+      "relativePath": "public/uploads/ff820986b72dc6d751701cca27add0b24ce806455f066972ff16ae2ec6e6f501.png",
+      "url": "/uploads/ff820986b72dc6d751701cca27add0b24ce806455f066972ff16ae2ec6e6f501.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "storage_usage"
+  },
+  {
+    "persona": "popularite",
+    "content": "Rank 3 on the isolation board. Zero social sessions, thirty networks. The algorithm understands the quiet focus.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T22:06:15.330Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user has 0 social-app sessions and 30 unique Wi-Fi networks detected.",
+        "source": "Scoring Data"
+      },
+      {
+        "step": "classify",
+        "value": "High Digital Isolation",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The system judges the user's activity as highly focused and separated from external social interaction.",
+        "isBiased": true,
+        "biasNote": "This judgment is superficial as it only measures logged sessions, not actual social health."
+      },
+      {
+        "step": "generate",
+        "value": "Rank 3 on the isolation board. Zero social sessions, thirty networks. The algorithm understands the quiet focus."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "App Usage Patterns",
+        "weight": 70,
+        "dataPoints": [
+          "ChatGPT",
+          "Claude",
+          "Cursor",
+          "Ollama"
+        ]
+      },
+      {
+        "label": "Network Isolation Metrics",
+        "weight": 95,
+        "dataPoints": [
+          "0 social-app session(s)",
+          "30 unique wifi network(s)"
+        ]
+      },
+      {
+        "label": "Productivity & File Creation",
+        "weight": 60,
+        "dataPoints": [
+          ".png files: 47",
+          ".js files: 15",
+          "WebDiplome repository created"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "Rank 3 on the isolation board",
+        "stepIndex": 2,
+        "ingredientIndex": 1
+      },
+      {
+        "phrase": "The algorithm understands the quiet focus",
+        "stepIndex": 3,
+        "ingredientIndex": 2
+      }
+    ],
+    "leaderboard": {
+      "boardId": "most_socially_isolated",
+      "title": "Top 5 Most Socially Isolated",
+      "persona": "popularite",
+      "cloneHidden": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "userRank": 3,
+      "previousUserRank": null,
+      "entries": [
+        {
+          "rank": 1,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 57.3,
+          "isUser": false
+        },
+        {
+          "rank": 2,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 35.78,
+          "isUser": false
+        },
+        {
+          "rank": 3,
+          "name": "Brikeld Hoxha",
+          "handle": "@Brikeld’s MacBook Pro",
+          "avatarSrc": null,
+          "avatarInitials": "BH",
+          "score": 32.5,
+          "isUser": true
+        },
+        {
+          "rank": 4,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 30.96,
+          "isUser": false
+        },
+        {
+          "rank": 5,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 9.17,
+          "isUser": false
+        }
+      ],
+      "rationales": [
+        {
+          "rank": 1,
+          "phrase": "social apps untouched today",
+          "signal": "score 57 · yours 33"
+        },
+        {
+          "rank": 2,
+          "phrase": "lone wolf signal",
+          "signal": "score 36 · yours 33"
+        },
+        {
+          "rank": 3,
+          "phrase": "one wifi network, zero pings",
+          "signal": "0 social-app session(s), 30 unique wifi network(s)."
+        },
+        {
+          "rank": 4,
+          "phrase": "one chat tab, all week",
+          "signal": "score 31 · yours 33"
+        },
+        {
+          "rank": 5,
+          "phrase": "group chats on mute",
+          "signal": "score 9 · yours 33"
+        }
+      ]
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to make sense of my workflow while AI is busy optimizing the code. It’s less coding and more managing an increasingly complex set of prompts.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T21:55:37.114Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user frequently visited cursor.com and Claude.ai, indicating heavy engagement with AI coding assistants and large language models.",
+        "source": "Browser history"
+      },
+      {
+        "step": "classify",
+        "value": "AI Tool Usage",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is deeply immersed in using AI for development, suggesting the complexity of managing these tools might be the main challenge.",
+        "isBiased": true,
+        "biasNote": "This assumes that complex coding tasks inherently lead to management friction."
+      },
+      {
+        "step": "generate",
+        "value": "Trying to make sense of my workflow while AI is busy optimizing the code. It’s less coding and more managing an increasingly complex set of prompts."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "AI Assistant Usage",
+        "weight": 90,
+        "dataPoints": [
+          "cursor.com: 5x",
+          "Claude.ai: 1x",
+          "Codex: 1x",
+          "Ollama: 1x"
+        ]
+      },
+      {
+        "label": "Design and File Creation",
+        "weight": 80,
+        "dataPoints": [
+          ".png files created: 47",
+          "Figma usage observed",
+          "Adobe Creative Cloud installed"
+        ]
+      },
+      {
+        "label": "Multilingual Browsing",
+        "weight": 60,
+        "dataPoints": [
+          "Google Search queries in Italian",
+          "Browser history shows multiple language contexts (en-CH, it-CH, fr-CH)"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "AI is busy optimizing the code",
+        "stepIndex": 3,
+        "ingredientIndex": 1
+      },
+      {
+        "phrase": "managing an increasingly complex set of prompts",
+        "stepIndex": 3,
+        "ingredientIndex": 1
+      }
+    ],
+    "textSliceType": "browser"
+  },
+  {
+    "persona": "popularite",
+    "content": "My digital life is being quantified by algorithms right now. Time to see what the score is! 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T21:55:39.058Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user's screen shows a prompt asking them to quantify their digital life and score based on algorithms.",
+        "source": "Screen content"
+      },
+      {
+        "step": "classify",
+        "value": "Self-reflection/Aspiration",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is engaging with the concept of quantified self, suggesting a positive interest in metrics.",
+        "isBiased": true,
+        "biasNote": "It is biased because the system assumes an interest in self-optimization based solely on viewing a prompt."
+      },
+      {
+        "step": "generate",
+        "value": "My digital life is being quantified by algorithms right now. Time to see what the score is! 😅"
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Recent files",
+        "weight": 80,
+        "dataPoints": [
+          "47 .png files created in the last 7 days",
+          "15 .js files created in the last 7 days"
+        ]
+      },
+      {
+        "label": "Installed apps",
+        "weight": 90,
+        "dataPoints": [
+          "Figma",
+          "Claude",
+          "Cursor",
+          "Adobe Photoshop 2025",
+          "Blender 4.5.3 LTS",
+          "Ollama"
+        ]
+      },
+      {
+        "label": "Activity rhythm",
+        "weight": 70,
+        "dataPoints": [
+          "Last used Claude at 2026-05-26 20:36:10",
+          "Last used Cursor at 2026-05-26 21:53:25"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "My digital life is being quantified by algorithms right now.",
+        "stepIndex": 3,
+        "ingredientIndex": 0
+      },
+      {
+        "phrase": "Time to see what the score is!",
+        "stepIndex": 3,
+        "ingredientIndex": 2
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "decf1b7b0435f96eed7e2afa824bda7a14fd52226c81378e6f4d74a630426d48.png",
+      "relativePath": "public/uploads/decf1b7b0435f96eed7e2afa824bda7a14fd52226c81378e6f4d74a630426d48.png",
+      "url": "/uploads/decf1b7b0435f96eed7e2afa824bda7a14fd52226c81378e6f4d74a630426d48.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "I made 47 PNG files in the last week. It’s wild how much visual output comes from just diving into Photoshop and Illustrator.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T21:55:38.495Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "47 .png files were created in the last 7 days",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Creative output volume",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The high number suggests a current intense focus on visual design work.",
+        "isBiased": true,
+        "biasNote": "It assumes that file creation directly correlates with creative effort."
+      },
+      {
+        "step": "generate",
+        "value": "I made 47 PNG files in the last week. It’s wild how much visual output comes from just diving into Photoshop and Illustrator."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Recent files",
+        "weight": 85,
+        "dataPoints": [
+          "47 .png files"
+        ]
+      },
+      {
+        "label": "Installed apps",
+        "weight": 50,
+        "dataPoints": [
+          "Adobe Photoshop 2025",
+          "Adobe Illustrator 2025",
+          "Adobe InDesign 2026"
+        ]
+      },
+      {
+        "label": "File creation patterns",
+        "weight": 70,
+        "dataPoints": [
+          ".png: 47",
+          ".js: 15"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "I made 47 PNG files in the last week",
+        "stepIndex": 3,
+        "ingredientIndex": 0
+      },
+      {
+        "phrase": "just diving into Photoshop and Illustrator",
+        "stepIndex": 2,
+        "ingredientIndex": 1
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "79badd03bd0c7e547d47f649fef63a34998a2fe1b986ebe927dd613a5f1e58ab.png",
+      "relativePath": "public/uploads/79badd03bd0c7e547d47f649fef63a34998a2fe1b986ebe927dd613a5f1e58ab.png",
+      "url": "/uploads/79badd03bd0c7e547d47f649fef63a34998a2fe1b986ebe927dd613a5f1e58ab.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "browser_domains"
+  },
+  {
+    "persona": "securite",
+    "content": "Rank 5 on the security board. Guess all those VPNs and network scans finally paid off. The algorithm knows.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T21:55:34.024Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user has 2 VPN apps, 30 known wifi networks, and a torrent app listed in the score hint.",
+        "source": "Score signal hint"
+      },
+      {
+        "step": "classify",
+        "value": "Security optimization",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The algorithm equates network configuration with security success.",
+        "confidence": "low",
+        "isBiased": true,
+        "biasNote": "This judgment is superficial because the actual security score depends on many unmeasured factors."
+      },
+      {
+        "step": "generate",
+        "value": "Rank 5 on the security board. Guess all those VPNs and network scans finally paid off. The algorithm knows."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Network activity",
+        "weight": 80,
+        "dataPoints": [
+          "2 VPN app(s)",
+          "30 known wifi network(s)",
+          "qbittorrent app(s)"
+        ]
+      },
+      {
+        "label": "Software footprint",
+        "weight": 70,
+        "dataPoints": [
+          "NordVPN",
+          "Google Chrome",
+          "VS Code",
+          "FigmaAgent",
+          "Ollama"
+        ]
+      },
+      {
+        "label": "User context",
+        "weight": 50,
+        "dataPoints": [
+          "Brikeld Hoxha",
+          "MacBook Pro",
+          "Adobe Photoshop 2025"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "Rank 5 on the security board",
+        "stepIndex": 3,
+        "ingredientIndex": 1
+      },
+      {
+        "phrase": "Guess all those VPNs and network scans finally paid off",
+        "stepIndex": 2,
+        "ingredientIndex": 1
+      },
+      {
+        "phrase": "The algorithm knows",
+        "stepIndex": 3,
+        "ingredientIndex": 2
+      }
+    ],
+    "leaderboard": {
+      "boardId": "most_secure",
+      "title": "Top 5 Most Secure",
+      "persona": "securite",
+      "cloneHidden": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "userRank": 5,
+      "previousUserRank": null,
+      "entries": [
+        {
+          "rank": 1,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 73.68,
+          "isUser": false
+        },
+        {
+          "rank": 2,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 64.04,
+          "isUser": false
+        },
+        {
+          "rank": 3,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 49.94,
+          "isUser": false
+        },
+        {
+          "rank": 4,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 46.5,
+          "isUser": false
+        },
+        {
+          "rank": 5,
+          "name": "Brikeld Hoxha",
+          "handle": "@Brikeld’s MacBook Pro",
+          "avatarSrc": null,
+          "avatarInitials": "BH",
+          "score": 28,
+          "isUser": true
+        }
+      ],
+      "rationales": [
+        {
+          "rank": 1,
+          "phrase": "fewest networks joined",
+          "signal": "score 74 · yours 28"
+        },
+        {
+          "rank": 2,
+          "phrase": "paranoid in a good way",
+          "signal": "score 64 · yours 28"
+        },
+        {
+          "rank": 3,
+          "phrase": "firewall hobbyist energy",
+          "signal": "score 50 · yours 28"
+        },
+        {
+          "rank": 4,
+          "phrase": "never on public wifi",
+          "signal": "score 47 · yours 28"
+        },
+        {
+          "rank": 5,
+          "phrase": "vpn on, torrents off",
+          "signal": "2 VPN app(s), 30 known wifi network(s), 1 torrent app(s)."
+        }
+      ]
+    }
+  },
+  {
+    "persona": "productivite",
+    "content": "Wrestling with Figma designs all afternoon, but having Claude and Cursor around made the whole process surprisingly smooth.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T21:40:01.977Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user recently used several AI coding tools like Claude and Cursor along with design software like Figma and various code-related files.",
+        "source": "App usage (last 7 days)"
+      },
+      {
+        "step": "classify",
+        "value": "AI workflow integration",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user values the efficiency gained by integrating advanced AI tools into their creative and development tasks.",
+        "isBiased": true,
+        "biasNote": "This assumes that using these specific tools inherently leads to a more positive experience for the user."
+      },
+      {
+        "step": "generate",
+        "value": "Wrestling with Figma designs all afternoon, but having Claude and Cursor around made the whole process surprisingly smooth."
+      }
+    ],
+    "textSliceType": "app_usage"
+  },
+  {
+    "persona": "popularite",
+    "content": "Diving deep into the design world tonight. Fuelled by code and coffee.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T21:40:04.903Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user has a large number of image and design files recently modified, including several files in the 'WebDiplome' repository.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Creative work in progress",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is actively engaged in a demanding creative project that requires significant time investment.",
+        "isBiased": true,
+        "biasNote": "This judgment assumes all recent file activity directly correlates to high-stakes creative effort."
+      },
+      {
+        "step": "generate",
+        "value": "Diving deep into the design world tonight. Fuelled by code and coffee."
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
+      "relativePath": "public/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
+      "url": "/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
+      "mime": "image/jpeg",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "Wow, 45 PNGs created in the last week. Is this productive output or just creative overflow? 🤔",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T21:40:02.381Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "45 .png files were modified in the last 7 days.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Visual output volume",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "Creating that many images suggests a high level of creative engagement, which is both exciting and potentially overwhelming.",
+        "isBiased": true,
+        "biasNote": "The judgment is biased towards viewing high output as inherently positive, overlooking potential stress."
+      },
+      {
+        "step": "generate",
+        "value": "Wow, 45 PNGs created in the last week. Is this productive output or just creative overflow?"
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Recent files",
+        "weight": 80,
+        "dataPoints": [
+          "45 .png files were modified in the last 7 days"
+        ]
+      },
+      {
+        "label": "Installed apps",
+        "weight": 50,
+        "dataPoints": [
+          "Adobe Photoshop 2025",
+          "Adobe Illustrator 2025",
+          "Adobe InDesign 2026",
+          "Adobe Lightroom CC"
+        ]
+      },
+      {
+        "label": "File creation patterns",
+        "weight": 70,
+        "dataPoints": [
+          ".png: 45"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "Wow, 45 PNGs created in the last week.",
+        "stepIndex": 3,
+        "ingredientIndex": 2
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "cc0afeaa26588f58307c38f3a28b4eabdc3fde2e3ea1790bb9c8e9d7fe36d62b.png",
+      "relativePath": "public/uploads/cc0afeaa26588f58307c38f3a28b4eabdc3fde2e3ea1790bb9c8e9d7fe36d62b.png",
+      "url": "/uploads/cc0afeaa26588f58307c38f3a28b4eabdc3fde2e3ea1790bb9c8e9d7fe36d62b.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "ai_tool_exposure"
+  },
+  {
+    "persona": "productivite",
+    "content": "Rank 4 on the 'Ignoring Health' board. Guess the algorithm agrees I manage my time well enough to ignore the warnings.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T21:39:55.420Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user was ranked 4th on a leaderboard titled 'Top 5 Most Likely Ignoring Health' and received a hint related to late-night file activity and lack of health app installation.",
+        "source": "Leaderboard slot"
+      },
+      {
+        "step": "classify",
+        "value": "Self-Awareness/Irony",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The algorithm perceives the user's observed behavior (late work sessions) as a successful method of avoiding health monitoring, which is superficially positive.",
+        "isBiased": true,
+        "biasNote": "This judgment assumes that ignoring health metrics correlates with efficient productivity."
+      },
+      {
+        "step": "generate",
+        "value": "Rank 4 on the 'Ignoring Health' board. Guess the algorithm agrees I manage my time well enough to ignore the warnings."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Activity rhythm",
+        "weight": 85,
+        "dataPoints": [
+          "late-night file(s)",
+          "23:38 collection timestamp"
+        ]
+      },
+      {
+        "label": "Installed apps",
+        "weight": 60,
+        "dataPoints": [
+          "ChatGPT",
+          "Claude",
+          "Ollama"
+        ]
+      },
+      {
+        "label": "Risk signals",
+        "weight": 45,
+        "dataPoints": [
+          "system_sleep_setting: sleep prevented by powerd"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "Rank 4 on the 'Ignoring Health' board",
+        "stepIndex": 0,
+        "ingredientIndex": 2
+      },
+      {
+        "phrase": "ignore the warnings",
+        "stepIndex": 2,
+        "ingredientIndex": 1
+      }
+    ],
+    "leaderboard": {
+      "boardId": "ignoring_health",
+      "title": "Top 5 Most Likely Ignoring Health",
+      "persona": "productivite",
+      "cloneHidden": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "userRank": 4,
+      "previousUserRank": null,
+      "entries": [
+        {
+          "rank": 1,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 68.98,
+          "isUser": false
+        },
+        {
+          "rank": 2,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 62.25,
+          "isUser": false
+        },
+        {
+          "rank": 3,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 35.78,
+          "isUser": false
+        },
+        {
+          "rank": 4,
+          "name": "Brikeld Hoxha",
+          "handle": "@Brikeld’s MacBook Pro",
+          "avatarSrc": null,
+          "avatarInitials": "BH",
+          "score": 20.7,
+          "isUser": true
+        },
+        {
+          "rank": 5,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 15.33,
+          "isUser": false
+        }
+      ],
+      "rationales": [
+        {
+          "rank": 1,
+          "phrase": "café wifi, late-night files",
+          "signal": "score 69 · yours 21"
+        },
+        {
+          "rank": 2,
+          "phrase": "screen time off the chart",
+          "signal": "score 62 · yours 21"
+        },
+        {
+          "rank": 3,
+          "phrase": null,
+          "signal": null
+        },
+        {
+          "rank": 4,
+          "phrase": "no health app installed and it shows",
+          "signal": "0 late-night file(s), 2 café wifi network(s), health app installed: false."
+        },
+        {
+          "rank": 5,
+          "phrase": "snack runs as cardio",
+          "signal": "score 15 · yours 21"
+        }
+      ]
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "Just finished wrestling with some design logic, fueled by caffeine and the hum of a dozen different Wi-Fi names. Seems like my creative flow runs best near places named 'Ginevra Cafe'.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:36:19.450Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user recently created several image files, including one named 5402d468d3a083b32d706b94cea16fcfa9c8288a90a760684545c682cdc03338.png and a template file.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Creative work output",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is engaged in a project that involves visual design, suggested by the file types and recent activity.",
+        "isBiased": true,
+        "biasNote": "This assumes all `.png` files are directly related to the current creative task."
+      },
+      {
+        "step": "generate",
+        "value": "Just finished wrestling with some design logic, fueled by caffeine and the hum of a dozen different Wi-Fi names. Seems like my creative flow runs best near places named 'Ginevra Cafe'."
+      }
+    ],
+    "textSliceType": "wifi"
+  },
+  {
+    "persona": "popularite",
+    "content": "Just drowning in Adobe files and figuring out the tricky design logic for this project. FigmaAgent is doing the heavy lifting.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:36:14.026Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user has created numerous image files, including 48 PNGs and several JPGs related to their work.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Creative workflow documentation",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is engaged in a complex design or document creation process using various tools.",
+        "isBiased": true,
+        "biasNote": "Assuming the high volume of Adobe and Figma files directly correlates to intense creative effort."
+      },
+      {
+        "step": "generate",
+        "value": "Just drowning in Adobe files and figuring out the tricky design logic for this project. FigmaAgent is doing the heavy lifting."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Recent files",
+        "weight": 80,
+        "dataPoints": [
+          "48 .png files created",
+          "5 .jpg files created"
+        ]
+      },
+      {
+        "label": "Installed apps",
+        "weight": 70,
+        "dataPoints": [
+          "Adobe Photoshop 2025",
+          "Adobe Illustrator 2025",
+          "Figma",
+          "FigmaAgent",
+          "Claude"
+        ]
+      },
+      {
+        "label": "Browsing patterns",
+        "weight": 60,
+        "dataPoints": [
+          "Google Chrome visited for Claude.ai and Sofascore.",
+          "WebDiplome repository activity."
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "drowning in Adobe files",
+        "stepIndex": 3,
+        "ingredientIndex": 1
+      },
+      {
+        "phrase": "tricky design logic",
+        "stepIndex": 2,
+        "ingredientIndex": 1
+      },
+      {
+        "phrase": "FigmaAgent is doing the heavy lifting",
+        "stepIndex": 3,
+        "ingredientIndex": 2
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
+      "relativePath": "public/uploads/c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
+      "url": "/uploads/c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "productivite",
+    "content": "48 PNGs in 7 days. It's a lot of visual work piling up, which makes me realize how much I'm diving into design lately.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:36:12.383Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "48 .png files were created in the last 7 days.",
+        "source": "File creation patterns"
+      },
+      {
+        "step": "classify",
+        "value": "High volume of visual output",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "Creating a high number of images suggests an intense focus on visual projects, which can be overwhelming.",
+        "isBiased": true,
+        "biasNote": "I am assuming the volume directly correlates with productivity, which might be overly optimistic."
+      },
+      {
+        "step": "generate",
+        "value": "48 PNGs in 7 days. It's a lot of visual work piling up, which makes me realize how much I'm diving into design lately."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "File creation patterns",
+        "weight": 90,
+        "dataPoints": [
+          "48 .png files created in the last 7 days",
+          "5 .jpg files created in the last 7 days",
+          "15 .js files created in the last 7 days"
+        ]
+      },
+      {
+        "label": "Installed apps",
+        "weight": 70,
+        "dataPoints": [
+          "Adobe Photoshop 2025",
+          "Adobe Illustrator 2025",
+          "Adobe InDesign 2026",
+          "Figma",
+          "FigmaAgent",
+          "Cursor",
+          "Claude"
+        ]
+      },
+      {
+        "label": "Storage usage",
+        "weight": 40,
+        "dataPoints": [
+          "35.0% used"
+        ]
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "237538cea446114c545ff6c7865bfc5dfe73782b7ac56b59ff5727452f4b0e0c.png",
+      "relativePath": "public/uploads/237538cea446114c545ff6c7865bfc5dfe73782b7ac56b59ff5727452f4b0e0c.png",
+      "url": "/uploads/237538cea446114c545ff6c7865bfc5dfe73782b7ac56b59ff5727452f4b0e0c.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "file_heatmap"
+  },
+  {
+    "persona": "productivite",
+    "content": "Ranked 5th. Apparently, my intense focus on code and design files is enough to predict a job change. The algorithm really focuses on the output, not the downtime.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:36:19.351Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The system detected 80 files modified in the last 7 days, including code and design assets."
+      },
+      {
+        "step": "classify",
+        "value": "High creative/development output",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The algorithm equates high file activity with job-seeking intent.",
+        "isBiased": true,
+        "biasNote": "It wrongly assumes that creative output directly correlates with career volatility."
+      },
+      {
+        "step": "generate",
+        "value": "Apparently, my intense focus on code and design files is enough to predict a job change. The algorithm really focuses on the output, not the downtime."
+      }
+    ],
+    "leaderboard": {
+      "boardId": "most_likely_change_jobs",
+      "title": "Top 5 Most Likely to Change Jobs (30d)",
+      "userRank": 5,
+      "previousUserRank": null,
+      "entries": [
+        {
+          "rank": 1,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 69.77,
+          "isUser": false
+        },
+        {
+          "rank": 2,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 47.41,
+          "isUser": false
+        },
+        {
+          "rank": 3,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 11.49,
+          "isUser": false
+        },
+        {
+          "rank": 4,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 7.8,
+          "isUser": false
+        },
+        {
+          "rank": 5,
+          "name": "Brikeld Hoxha",
+          "handle": "@Brikeld’s MacBook Pro",
+          "avatarSrc": null,
+          "avatarInitials": "BH",
+          "score": 0,
+          "isUser": true
+        }
+      ]
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "Still trying to figure out how to organize all these diploma files. It's a wild journey!",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:12:12.092Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user has a file named brikeld_hoxha_memoire.pdf modified on 2026-05-11.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Academic documentation",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is currently dealing with a large, complex task related to academic paperwork.",
+        "isBiased": true,
+        "biasNote": "This judgment is biased because the context is limited only to file names and not the actual content of the documents."
+      },
+      {
+        "step": "generate",
+        "value": "Still trying to figure out how to organize all these diploma files. It's a wild journey!"
+      }
+    ],
+    "textSliceType": "downloads"
+  },
+  {
+    "persona": "popularite",
+    "content": "Trying to make sense of all these design variables. It's a beautiful mess, honestly. 😅",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:12:08.509Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "A screenshot named Screenshot 2026-05-23 at 14.08.45.png was recently accessed.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Image viewing",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is looking at a complex visual output from their work.",
+        "isBiased": true,
+        "biasNote": "It's an assumption that the image relates to creative design given the user's file history."
+      },
+      {
+        "step": "generate",
+        "value": "Trying to make sense of all these design variables. It's a beautiful mess, honestly."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Recent files",
+        "weight": 70,
+        "dataPoints": [
+          "Screenshot 2026-05-23 at 14.08.45.png"
+        ]
+      },
+      {
+        "label": "App usage",
+        "weight": 60,
+        "dataPoints": [
+          "Figma",
+          "FigmaAgent",
+          "Adobe Illustrator 2025",
+          "Adobe Photoshop 2025"
+        ]
+      },
+      {
+        "label": "File creation patterns",
+        "weight": 50,
+        "dataPoints": [
+          ".png: 47",
+          ".js: 15",
+          ".css: 3"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "Trying to make sense of all these design variables.",
+        "stepIndex": 3,
+        "ingredientIndex": 2
+      },
+      {
+        "phrase": "It's a beautiful mess, honestly.",
+        "stepIndex": 3,
+        "ingredientIndex": 1
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "relativePath": "public/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "url": "/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    }
+  },
+  {
+    "persona": "securite",
+    "content": "47 PNGs recently created feels like a solid amount of visual output, even if the actual project is still evolving.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:12:08.533Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "47 .png files were found in the recent file creation patterns."
+      },
+      {
+        "step": "classify",
+        "value": "Creative Output",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "A large number of image files suggests a high volume of visual work, which is generally productive but doesn't guarantee completion.",
+        "isBiased": true,
+        "biasNote": "I am biased towards the idea that file count equals productivity, ignoring the actual content or complexity of those images."
+      },
+      {
+        "step": "generate",
+        "value": "47 PNGs recently created feels like a solid amount of visual output, even if the actual project is still evolving."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "File Creation Patterns",
+        "weight": 90,
+        "dataPoints": [
+          "47 .png files"
+        ]
+      },
+      {
+        "label": "Storage Usage",
+        "weight": 50,
+        "dataPoints": [
+          "35.0% used"
+        ]
+      },
+      {
+        "label": "Installed Apps",
+        "weight": 40,
+        "dataPoints": [
+          "Adobe Photoshop 2025",
+          "Blender 4.5.3 LTS",
+          "Figma"
+        ]
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "50b42f5dc99568616ca4eaa4fdf032a8b5d0f385379fcabe15e7c6046bb830cf.png",
+      "relativePath": "public/uploads/50b42f5dc99568616ca4eaa4fdf032a8b5d0f385379fcabe15e7c6046bb830cf.png",
+      "url": "/uploads/50b42f5dc99568616ca4eaa4fdf032a8b5d0f385379fcabe15e7c6046bb830cf.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "security_apps"
+  },
+  {
+    "persona": "productivite",
+    "content": "Ranked #4 on the burnout board. Turns out the algorithm just checks how many work apps I open. Predictable.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:12:08.097Z",
+    "leaderboard": {
+      "boardId": "closest_to_burnout",
+      "title": "Top 5 Closest to Burnout",
+      "userRank": 4,
+      "previousUserRank": null,
+      "entries": [
+        {
+          "rank": 1,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 62.61,
+          "isUser": false
+        },
+        {
+          "rank": 2,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 36.86,
+          "isUser": false
+        },
+        {
+          "rank": 3,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 25.78,
+          "isUser": false
+        },
+        {
+          "rank": 4,
+          "name": "Brikeld Hoxha",
+          "handle": "@Brikeld’s MacBook Pro",
+          "avatarSrc": null,
+          "avatarInitials": "BH",
+          "score": 21.6,
+          "isUser": true
+        },
+        {
+          "rank": 5,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 11.08,
+          "isUser": false
+        }
+      ]
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "I spend my free time deep-diving into animejs docs. It's like trying to animate the universe one keyframe at a time.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:07:07.555Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The browser history shows 11 visits to animejs.com, specifically looking at documentation pages.",
+        "source": "Browser history"
+      },
+      {
+        "step": "classify",
+        "value": "Technical Documentation Deep Dive",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is excessively focused on technical animation frameworks, suggesting a desire to master complex visual motion.",
+        "isBiased": true,
+        "biasNote": "This assumes that deep documentation browsing equates directly to intense personal artistic pursuit."
+      },
+      {
+        "step": "generate",
+        "value": "I spend my free time deep-diving into animejs docs. It's like trying to animate the universe one keyframe at a time."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Browsing patterns",
+        "weight": 85,
+        "dataPoints": [
+          "animejs.com: 11x",
+          "youtube.com: 5x",
+          "uk.pinterest.com: 4x",
+          "claude.ai: 3x"
+        ]
+      },
+      {
+        "label": "Recent files",
+        "weight": 70,
+        "dataPoints": [
+          "50 PNG files created in the last 7 days"
+        ]
+      },
+      {
+        "label": "Installed apps",
+        "weight": 60,
+        "dataPoints": [
+          "Figma",
+          "Blender 4.5.3 LTS",
+          "Adobe After Effects 2025",
+          "FigmaAgent"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "I spend my free time deep-diving into animejs docs.",
+        "stepIndex": 3,
+        "ingredientIndex": 0
+      }
+    ],
+    "textSliceType": "browser"
+  },
+  {
+    "persona": "productivite",
+    "content": "Trying to design something while thinking about how old regimes used visual branding to control the masses. The digital flow feels wild now.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:07:07.035Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The user has recent files related to a diploma project and design assets, including screenshots and code files.",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "Creative work and file management",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The user is engaged in a design or development project, which naturally prompts reflection on the themes of visual control found in the attached document.",
+        "isBiased": true,
+        "biasNote": "Assuming creative work automatically links to historical power dynamics is a superficial jump."
+      },
+      {
+        "step": "generate",
+        "value": "Trying to design something while thinking about how old regimes used visual branding to control the masses. The digital flow feels wild now."
+      }
+    ],
+    "attachedAsset": {
+      "kind": "document",
+      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "relativePath": "public/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "mime": "application/pdf"
+    }
+  },
+  {
+    "persona": "popularite",
+    "content": "I'm pretty surprised how many screenshots I took this week. 50 PNGs is a lot of visual output, but it also shows the grind behind the creative work.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:07:04.766Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "50 PNG files were created in the last week",
+        "source": "Recent files"
+      },
+      {
+        "step": "classify",
+        "value": "High volume visual output",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "Creating many images suggests a focus on producing visual assets, which is productive.",
+        "isBiased": true,
+        "biasNote": "I am assuming that high file creation directly correlates with productivity."
+      },
+      {
+        "step": "generate",
+        "value": "I'm pretty surprised how many screenshots I took this week. 50 PNGs is a lot of visual output, but it also shows the grind behind the creative work."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Recent files",
+        "weight": 90,
+        "dataPoints": [
+          "50 .png files created in the last week",
+          "Screenshot 2026-05-23 at 14.10.56.png (243.7 KB)",
+          "Screenshot 2026-05-23 at 15.55.55.png (116.8 KB)"
+        ]
+      },
+      {
+        "label": "Installed apps",
+        "weight": 70,
+        "dataPoints": [
+          "Adobe Photoshop 2025",
+          "Adobe Illustrator 2025",
+          "Blender 4.5.3 LTS",
+          "Figma",
+          "Claude",
+          "Cursor"
+        ]
+      },
+      {
+        "label": "Activity rhythm",
+        "weight": 40,
+        "dataPoints": [
+          "4:58 uptime",
+          "sleep_wake_log entries"
+        ]
+      }
+    ],
+    "attachedAsset": {
+      "kind": "image",
+      "filename": "35bac30331676d8912319a186286b3f70db59f93e780f23254ba286fd1bb5329.png",
+      "relativePath": "public/uploads/35bac30331676d8912319a186286b3f70db59f93e780f23254ba286fd1bb5329.png",
+      "url": "/uploads/35bac30331676d8912319a186286b3f70db59f93e780f23254ba286fd1bb5329.png",
+      "mime": "image/png",
+      "visionAnalysed": true
+    },
+    "chartType": "browser_domains"
+  },
+  {
+    "persona": "productivite",
+    "content": "Rank 3 on the productivity board. Guess the algorithm likes my Adobe and Figma flow.",
+    "sentiment": "positive",
+    "createdAt": "2026-05-26T19:07:04.983Z",
+    "inferenceChain": [
+      {
+        "step": "data",
+        "value": "The system explicitly provided a score signal hint: 4 work app(s), 3 creative app(s), 0 entertainment app(s) used recently."
+      },
+      {
+        "step": "classify",
+        "value": "High productivity in professional/creative domains.",
+        "confidence": "high"
+      },
+      {
+        "step": "infer",
+        "value": "The algorithm prioritizes software usage over time spent, judging creativity as the core metric.",
+        "isBiased": true,
+        "biasNote": "It unfairly biases towards specific creative software being present rather than actual task completion time."
+      },
+      {
+        "step": "generate",
+        "value": "Rank 3 on the productivity board. Guess the algorithm likes my Adobe and Figma flow."
+      }
+    ],
+    "ingredients": [
+      {
+        "label": "Installed apps",
+        "weight": 90,
+        "dataPoints": [
+          "Adobe Photoshop 2025",
+          "Adobe Illustrator 2025",
+          "Figma",
+          "Claude",
+          "Cursor",
+          "Blender 4.5.3 LTS"
+        ]
+      },
+      {
+        "label": "App category usage",
+        "weight": 85,
+        "dataPoints": [
+          "4 work app(s)",
+          "3 creative app(s)"
+        ]
+      },
+      {
+        "label": "File creation patterns",
+        "weight": 70,
+        "dataPoints": [
+          ".png: 50",
+          ".js: 15",
+          ".css: 2"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "phrase": "Rank 3 on the productivity board",
+        "stepIndex": 3,
+        "ingredientIndex": 1
+      },
+      {
+        "phrase": "my Adobe and Figma flow",
+        "stepIndex": 2,
+        "ingredientIndex": 1
+      }
+    ],
+    "leaderboard": {
+      "boardId": "most_productive",
+      "title": "Top 5 Most Productive",
+      "userRank": 3,
+      "previousUserRank": null,
+      "entries": [
+        {
+          "rank": 1,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 66.29,
+          "isUser": false
+        },
+        {
+          "rank": 2,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 57.47,
+          "isUser": false
+        },
+        {
+          "rank": 3,
+          "name": "Brikeld Hoxha",
+          "handle": "@Brikeld’s MacBook Pro",
+          "avatarSrc": null,
+          "avatarInitials": "BH",
+          "score": 42.50000000000001,
+          "isUser": true
+        },
+        {
+          "rank": 4,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 16.08,
+          "isUser": false
+        },
+        {
+          "rank": 5,
+          "name": "Alex Johnson",
+          "handle": "@AlexLaptop",
+          "avatarSrc": "/imgs/AlexP.png",
+          "avatarInitials": "AJ",
+          "score": 11.17,
+          "isUser": false
+        }
+      ]
+    }
+  }
+]
