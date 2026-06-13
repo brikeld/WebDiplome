@@ -39,4 +39,24 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(tabs).toContain('max-height: var(--profile-rail-tabs-max)');
     expect(tab).toContain('flex: 0 0 var(--profile-rail-tab-h)');
   });
+
+  it('fills the profile card by scaling identity elements without changing the blurb scale', () => {
+    const rail = blockFor(profileCss, '.profile-rail-capsule.dashboard-capsule');
+    const compactRail = blockFor(profileCss, '@media (max-width: 1660px)');
+    const rowLabel = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__label');
+    const rowScore = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__score');
+    const rowCopy = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__copy');
+
+    expect(rail).toContain('--profile-rail-name-size: clamp(40px');
+    expect(rail).toContain('--profile-rail-bio-size: clamp(15px');
+    expect(rail).toContain('--profile-rail-blurb-size: clamp(13px');
+    expect(rail).toContain('--profile-rail-scores-copy-size: var(--profile-rail-blurb-size)');
+    expect(rail).toContain('--profile-rail-ring-size: clamp(8.5rem');
+    expect(rowLabel).toContain('font-size: var(--profile-rail-scores-row-label-size)');
+    expect(rowScore).toContain('font-size: var(--profile-rail-scores-row-label-size)');
+    expect(rowCopy).toContain('font-size: var(--profile-rail-scores-copy-size)');
+
+    expect(compactRail).toContain('--profile-rail-name-size: clamp(38px');
+    expect(compactRail).toContain('--profile-rail-ring-size: clamp(8rem');
+  });
 });

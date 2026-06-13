@@ -552,10 +552,11 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-inner-pad-right: var(--profile-rail-card-pad-right);
   --profile-rail-inner-pad-bottom: var(--profile-rail-card-pad-bottom);
 
-  --profile-rail-name-size: clamp(34px, min(7.2cqw, 4.6cqh), 78px);
-  --profile-rail-bio-label-size: clamp(14px, min(2.2cqw, 1.7cqh), 21px);
-  --profile-rail-bio-size: clamp(13px, min(2.18cqw, 1.65cqh), 21px);
-  --profile-rail-badge-size: clamp(20px, min(4.1cqw, 2.5cqh), 34px);
+  --profile-rail-name-size: clamp(40px, min(8.2cqw, 5.2cqh), 92px);
+  --profile-rail-bio-label-size: clamp(15px, min(2.3cqw, 1.85cqh), 24px);
+  --profile-rail-bio-size: clamp(15px, min(2.5cqw, 1.9cqh), 24px);
+  --profile-rail-blurb-size: clamp(13px, min(2.18cqw, 1.65cqh), 21px);
+  --profile-rail-badge-size: clamp(24px, min(4.5cqw, 2.9cqh), 42px);
   --profile-rail-stat-icon: clamp(14px, min(2.3cqw, 1.7cqh), 22px);
   --profile-rail-stat-num: clamp(14px, min(2.25cqw, 1.65cqh), 22px);
   --profile-rail-stat-h: clamp(30px, 4.1cqh, 38px);
@@ -575,11 +576,11 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-profile-min: clamp(300px, min(37cqh, 52cqw), 460px);
   --profile-rail-profile-max: clamp(390px, 55cqw, 620px);
   --profile-rail-scores-min: clamp(290px, min(35cqh, 58cqw), 520px);
-  --profile-rail-scores-copy-size: var(--profile-rail-bio-size);
-  --profile-rail-scores-row-label-size: var(--profile-rail-bio-size);
+  --profile-rail-scores-copy-size: var(--profile-rail-blurb-size);
+  --profile-rail-scores-row-label-size: var(--profile-rail-blurb-size);
   --profile-rail-scores-row-gap: clamp(8px, 1.2cqh, 16px);
-  --profile-rail-ring-size: clamp(7.25rem, min(22cqw, 14.5cqh), 13.5rem);
-  --profile-rail-ring-footprint: calc(var(--profile-rail-ring-size) * 0.68);
+  --profile-rail-ring-size: clamp(8.5rem, min(25cqw, 16.5cqh), 16rem);
+  --profile-rail-ring-footprint: calc(var(--profile-rail-ring-size) * 0.72);
   --profile-rail-ring-center-factor: 0.52;
 
   display: grid;
@@ -621,8 +622,8 @@ button.profile-last-analysis-pill:disabled {
     --profile-rail-card-pad-left: clamp(18px, 3.8cqw, 26px);
     --profile-rail-card-pad-right: clamp(16px, 3.1cqw, 22px);
     --profile-rail-card-pad-bottom: clamp(18px, 2.8cqh, 26px);
-    --profile-rail-name-size: clamp(32px, min(7cqw, 4.2cqh), 68px);
-    --profile-rail-ring-size: clamp(6.75rem, min(21cqw, 13.5cqh), 12rem);
+    --profile-rail-name-size: clamp(38px, min(8.7cqw, 5.2cqh), 82px);
+    --profile-rail-ring-size: clamp(8rem, min(25cqw, 16cqh), 14rem);
     --profile-rail-tabs-pad-y: clamp(8px, 1cqh, 11px);
     --profile-rail-tab-h: clamp(34px, min(4.1cqh, 6.6cqw), 48px);
     --profile-rail-tab-gap: clamp(5px, 0.7cqh, 8px);
@@ -919,7 +920,7 @@ button.profile-last-analysis-pill:disabled {
   align-items: center;
   gap: clamp(5px, 1.3cqw, 8px);
   min-width: 0;
-  font-size: var(--profile-rail-bio-size);
+  font-size: var(--profile-rail-scores-row-label-size);
   font-weight: 700;
   line-height: 1.15;
   color: #000;
@@ -937,7 +938,7 @@ button.profile-last-analysis-pill:disabled {
   display: inline-flex;
   align-items: baseline;
   gap: clamp(4px, 1cqw, 6px);
-  font-size: var(--profile-rail-bio-size);
+  font-size: var(--profile-rail-scores-row-label-size);
   font-weight: 700;
   line-height: 1;
   color: #000;
@@ -951,7 +952,7 @@ button.profile-last-analysis-pill:disabled {
 
 .profile-rail-capsule .profile-rail-persona-row__copy {
   margin: 0;
-  font-size: var(--profile-rail-bio-size);
+  font-size: var(--profile-rail-scores-copy-size);
   font-weight: 600;
   line-height: 1.25;
   color: #000;
