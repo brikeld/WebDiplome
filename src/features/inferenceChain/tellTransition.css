@@ -372,7 +372,7 @@
   width: 54%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #000, var(--tell-pill-accent, #759aef), #000);
+  background: var(--tell-pill-accent, #759aef);
   will-change: transform;
   animation: tell-idle-bar-progress 3.4s ease-in-out infinite;
 }
@@ -432,12 +432,16 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: clamp(24px, 5vw, 56px);
+  padding: clamp(18px, 3vw, 36px);
   box-sizing: border-box;
 }
 
 .tell-analysis-loader__card {
-  width: min(360px, 100%);
+  width: min(500px, 100%);
+  min-height: min(520px, 100%);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
   border: 1px solid color-mix(in srgb, var(--tell-pill-accent, #759aef) 32%, rgba(0, 0, 0, 0.12));
   border-radius: 24px;
   background:
@@ -485,7 +489,7 @@
 
 .tell-analysis-loader__scope {
   position: relative;
-  width: clamp(126px, 19vh, 172px);
+  width: clamp(190px, min(33vh, 45vw), 286px);
   aspect-ratio: 1;
   margin: clamp(18px, 3vh, 28px) auto;
   border-radius: 999px;
@@ -557,7 +561,7 @@
   height: 100%;
   width: 54%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #000, var(--tell-pill-accent, #759aef), #000);
+  background: var(--tell-pill-accent, #759aef);
   animation: tell-loader-progress 1.55s cubic-bezier(0.32, 0.72, 0, 1) infinite;
 }
 

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 const profileCss = readFileSync('src/styles/profile.css', 'utf8');
+const profileHeader = readFileSync('src/features/profile/ProfileHeader.jsx', 'utf8');
+const profileRailScores = readFileSync('src/features/profile/ProfileRailPersonaScores.jsx', 'utf8');
 
 function blockFor(css, selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -54,8 +56,9 @@ describe('profile rail desktop layout CSS contract', () => {
     const rowLabel = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__label');
     const rowScore = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__score');
     const rowCopy = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__copy');
+    const bioLabel = blockFor(profileCss, '.profile-rail-capsule .profile-bio-label');
 
-    expect(rail).toContain('--profile-rail-name-size: clamp(52px');
+    expect(rail).toContain('--profile-rail-name-size: clamp(64px');
     expect(rail).toContain('--profile-rail-bio-gap');
     expect(rail).toContain('--profile-rail-content-offset-y');
     expect(rail).toContain('--profile-rail-bio-size: clamp(15px');
@@ -68,11 +71,16 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(bioBlock).toContain('align-self: end');
     expect(bioBlock).toContain('margin-top: var(--profile-rail-bio-gap)');
     expect(rowLabel).toContain('font-size: var(--profile-rail-scores-row-label-size)');
+    expect(rowLabel).toContain('background: var(--profile-row-accent');
+    expect(rowLabel).toContain('border-radius: var(--radius-pill)');
     expect(rowScore).toContain('font-size: var(--profile-rail-scores-row-label-size)');
     expect(rowCopy).toContain('font-size: var(--profile-rail-scores-copy-size)');
 
-    expect(compactRail).toContain('--profile-rail-name-size: clamp(48px');
+    expect(compactRail).toContain('--profile-rail-name-size: clamp(60px');
     expect(compactRail).toContain('--profile-rail-ring-size: clamp(9rem');
+    expect(profileHeader).toContain('<span className="profile-bio-label">Bio</span>');
+    expect(bioLabel).not.toContain('text-transform: lowercase;');
+    expect(profileRailScores).toContain("style={{ '--profile-row-accent': color }}");
   });
 
   it('uses a distinct 6k rail layout that scales text and prevents an oversized blurb capsule', () => {

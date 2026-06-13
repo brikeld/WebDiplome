@@ -191,7 +191,7 @@ body {
 .persona-side-panel {
   /* Shared row heights + inner radius for dashboard timer vs persona-change banner */
   --dashboard-actions-h: clamp(124px, 13.2vh, 164px);
-  --dashboard-rings-h: clamp(100px, 12.6vh, 124px);
+  --dashboard-rings-h: clamp(112px, 13.8vh, 148px);
   --dashboard-timer-radius: 28px;
   position: static;
   flex: 0 0 auto;
@@ -365,23 +365,33 @@ body {
 
 /* 3 persona ring cards below the dashboard capsule */
 .dashboard-rings {
-  flex: 0 0 var(--dashboard-rings-h, clamp(100px, 12.6vh, 124px));
+  flex: 0 0 var(--dashboard-rings-h, clamp(112px, 13.8vh, 148px));
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 9px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 1vw, 14px);
   width: 100%;
   align-items: stretch;
   margin-top: 6px;
+  padding: clamp(10px, 1.2vh, 14px) clamp(12px, 1.5vw, 18px);
+  border: var(--capsule-shell-border-width) solid var(--ink, #000);
+  border-radius: calc(
+    var(--capsule-radius) *
+    var(--dashboard-rings-h, clamp(112px, 13.8vh, 148px)) /
+    var(--dashboard-actions-h, clamp(124px, 13.2vh, 164px))
+  );
+  background: var(--card, #fff);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Replaces .dashboard-rings when the live dominant persona flips */
 .dashboard-persona-change {
-  flex: 0 0 var(--dashboard-rings-h, clamp(100px, 12.6vh, 124px));
+  flex: 0 0 var(--dashboard-rings-h, clamp(112px, 13.8vh, 148px));
   width: 100%;
   margin-top: 6px;
   display: flex;
   align-items: stretch;
-  min-height: var(--dashboard-rings-h, clamp(100px, 12.6vh, 124px));
+  min-height: var(--dashboard-rings-h, clamp(112px, 13.8vh, 148px));
 }
 
 .dashboard-persona-change__capsule {
@@ -392,7 +402,7 @@ body {
   /* Same curvature family as dashboard / for-you shells (44px), scaled to this row height */
   border-radius: calc(
     var(--capsule-radius) *
-    var(--dashboard-rings-h, clamp(100px, 12.6vh, 124px)) /
+    var(--dashboard-rings-h, clamp(112px, 13.8vh, 148px)) /
     var(--dashboard-actions-h, clamp(124px, 13.2vh, 164px))
   );
   background: var(--ink, #000);
@@ -476,6 +486,7 @@ body {
 
 .dashboard-ring-card::before {
   content: '';
+  display: none;
   grid-row: 2;
   grid-column: 1;
   width: 82%;
@@ -2662,12 +2673,7 @@ button.profile-name-link.leaderboard-row__name {
 /* Idle countdown — white outer shell + persona time capsule (compact) */
 .dashboard-timer-card--idle-countdown.dashboard-timer-card--action-update {
   padding: clamp(10px, 1.1vh, 13px) clamp(13px, 1.45vw, 18px);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.98),
-      color-mix(in srgb, var(--tell-pill-pastel, var(--persona-accent, #759aef)) 72%, #fff)
-    );
+  background: #fff;
   border: none;
 }
 

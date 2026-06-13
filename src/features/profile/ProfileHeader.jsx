@@ -145,9 +145,7 @@ export default function ProfileHeader({
                 </button>
               </div>
               <div className="profile-bio-block">
-                {isRail ? (
-                  <span className="profile-bio-label">bio</span>
-                ) : null}
+                {isRail ? <span className="profile-bio-label">Bio</span> : null}
                 <p className="profile-bio">{bio ? `"${bio}"` : '—'}</p>
               </div>
             </div>

@@ -39,12 +39,10 @@ function PersonaRow({ label, value, delta, color, copy, isDominant, isPending })
   return (
     <article
       className={`profile-rail-persona-row${isDominant ? ' profile-rail-persona-row--dominant' : ''}`}
+      style={{ '--profile-row-accent': color }}
     >
       <div className="profile-rail-persona-row__head">
-        <span className="profile-rail-persona-row__label">
-          {label}
-          <i className="profile-rail-persona-row__dot" style={{ background: color }} aria-hidden />
-        </span>
+        <span className="profile-rail-persona-row__label">{label}</span>
         <span className="profile-rail-persona-row__score" aria-label={`${label} ${value} percent`}>
           <span className="profile-rail-persona-row__value">{value}%</span>
           {ringDelta ? (
