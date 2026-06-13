@@ -93,7 +93,7 @@ export default function DashboardPersonaRings({
                 cy="40"
                 r={RING_R}
                 fill="none"
-                stroke="#000"
+                stroke={ringColor}
                 strokeWidth="8"
                 strokeDasharray={`${dash} ${gap}`}
                 strokeLinecap="round"

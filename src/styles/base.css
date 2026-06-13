@@ -578,12 +578,12 @@ body {
   gap: 1px;
   justify-content: center;
   z-index: 2;
-  color: #000;
+  color: var(--ring-accent, #000);
 }
 
-/* Counter tick target — never inherit ring pulse filters or persona tints */
+/* Counter tick target — persona-colored score, not global black */
 [data-persona-ring-score] {
-  color: #000;
+  color: var(--ring-accent, #000);
 }
 
 .dashboard-ring-score-pct {
@@ -639,6 +639,22 @@ body {
   border: none;
   border-radius: var(--radius-pill);
   box-sizing: border-box;
+}
+
+@media (min-width: 1600px) {
+  .project-name {
+    font-size: clamp(20px, 2.2vw, 32px);
+    min-height: 38px;
+    padding: 9px 16px 5px;
+  }
+}
+
+@media (min-width: 2400px) {
+  .project-name {
+    font-size: clamp(24px, 2.4vw, 40px);
+    min-height: 44px;
+    padding: 11px 20px 6px;
+  }
 }
 
 .project-name--button {

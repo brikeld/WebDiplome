@@ -541,8 +541,8 @@ button.profile-last-analysis-pill:disabled {
   container-name: profile-rail;
   --profile-rail-cap-gap: clamp(12px, 1.9cqh, 26px);
   --profile-rail-card-gap: clamp(8px, 1.1cqh, 14px);
-  --profile-rail-content-offset-y: clamp(10px, 1.1cqh, 16px);
-  --profile-rail-card-pad-top: clamp(22px, 3.3cqh, 36px);
+  --profile-rail-content-offset-y: clamp(14px, 1.8cqh, 22px);
+  --profile-rail-card-pad-top: clamp(28px, 4.2cqh, 48px);
   --profile-rail-card-pad-left: clamp(22px, 4.2cqw, 36px);
   --profile-rail-card-pad-right: clamp(18px, 3.4cqw, 30px);
   --profile-rail-card-pad-bottom: clamp(20px, 3.1cqh, 34px);
@@ -620,11 +620,11 @@ button.profile-last-analysis-pill:disabled {
 @media (max-width: 1660px) {
   .profile-rail-capsule.dashboard-capsule {
     --profile-rail-cap-gap: clamp(10px, 1.7cqh, 20px);
-    --profile-rail-card-pad-top: clamp(18px, 2.9cqh, 28px);
+    --profile-rail-card-pad-top: clamp(22px, 3.4cqh, 34px);
     --profile-rail-card-pad-left: clamp(18px, 3.8cqw, 26px);
     --profile-rail-card-pad-right: clamp(16px, 3.1cqw, 22px);
     --profile-rail-card-pad-bottom: clamp(18px, 2.8cqh, 26px);
-    --profile-rail-content-offset-y: clamp(8px, 1cqh, 12px);
+    --profile-rail-content-offset-y: clamp(10px, 1.4cqh, 16px);
     --profile-rail-name-size: clamp(60px, min(12.8cqw, 8.2cqh), 136px);
     --profile-rail-bio-gap: clamp(36px, min(5.5cqh, 6.6cqw), 72px);
     --profile-rail-ring-size: clamp(9rem, min(28cqw, 18cqh), 16rem);
@@ -639,7 +639,7 @@ button.profile-last-analysis-pill:disabled {
 
 @media (min-width: 3000px) and (min-height: 1800px) {
   .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-content-offset-y: clamp(16px, 0.65cqh, 26px);
+    --profile-rail-content-offset-y: clamp(18px, 0.75cqh, 30px);
     --profile-rail-profile-min: clamp(760px, 24cqh, 860px);
     --profile-rail-bio-gap: clamp(52px, 2.6cqh, 96px);
     --profile-rail-bio-label-size: clamp(30px, min(3.4cqw, 1.35cqh), 38px);
