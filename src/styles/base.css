@@ -1005,6 +1005,28 @@ body {
   }
 }
 
+/* ── RESPONSIVE: large desktop / 4K–6K (≥ 1920px) ──
+   On very wide screens the capsule pair (left content + right dashboard/profile
+   rail) otherwise stays capped at its desktop size and strands the extra width
+   as empty side margins, which also keeps the right column too narrow: small
+   container-query type in the profile rail and cell-text overflow in the
+   dashboard. Let both columns grow into the available width. */
+@media (min-width: 1920px) {
+  .view-home .page,
+  .view-profile .page {
+    --shell-left-col-max: clamp(1180px, 56vw, 1560px);
+    --shell-right-col-width: clamp(720px, 34vw, 940px);
+  }
+}
+
+@media (min-width: 2560px) {
+  .view-home .page,
+  .view-profile .page {
+    --shell-left-col-max: clamp(1560px, 58vw, 1880px);
+    --shell-right-col-width: clamp(940px, 36vw, 1140px);
+  }
+}
+
 /* ── RESPONSIVE: 14" MacBook and similar (≤ 1660px) ──
    Wider posts column + slightly smaller type so density matches large desktop. */
 @media (max-width: 1660px) {

@@ -600,6 +600,18 @@ button.profile-last-analysis-pill:disabled {
   }
 }
 
+/* 4K–6K: the rail column is much wider/taller now, so allow the blurb and
+   label type to keep climbing instead of stalling at the desktop ceilings. */
+@media (min-width: 1920px) {
+  .profile-rail-capsule.dashboard-capsule {
+    --profile-rail-scores-copy-size: clamp(16px, min(2.6cqw, 1.95cqh), 27px);
+    --profile-rail-scores-row-label-size: clamp(18px, min(3cqw, 2.2cqh), 32px);
+    --profile-rail-scores-row-gap: clamp(20px, 2.1cqh, 36px);
+    --profile-rail-bio-size: clamp(16px, min(2.9cqw, 1.85cqh), 24px);
+    --profile-rail-bio-label-size: clamp(15px, 2.4cqw, 22px);
+  }
+}
+
 /* Laptop: narrower rail width — retune cqw/cqh so type/rings match post-column scale */
 @media (max-width: 1660px) {
   .profile-rail-capsule.dashboard-capsule {

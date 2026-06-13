@@ -37,7 +37,9 @@ const FIT_VAR_NAMES = [
 ];
 
 const MIN_FIT_SCALE = 0.46;
-const MAX_FIT_SCALE = 1.18;
+// On very tall rails (4K–6K) the blurbs have lots of vertical room; allow them
+// to grow well past the desktop size instead of stranding empty space.
+const MAX_FIT_SCALE = 1.5;
 
 function clampNumber(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -94,19 +96,19 @@ function useRailPersonaScoreFit(rootRef, fitKey) {
 
         root.style.setProperty(
           '--profile-rail-scores-copy-size-fit',
-          `${clampNumber(px(copyStyles.fontSize, 14) * scale, 7.5, 22).toFixed(2)}px`,
+          `${clampNumber(px(copyStyles.fontSize, 14) * scale, 7.5, 30).toFixed(2)}px`,
         );
         root.style.setProperty(
           '--profile-rail-scores-label-size-fit',
-          `${clampNumber(px(labelStyles.fontSize, 16) * scale, 9, 26).toFixed(2)}px`,
+          `${clampNumber(px(labelStyles.fontSize, 16) * scale, 9, 36).toFixed(2)}px`,
         );
         root.style.setProperty(
           '--profile-rail-scores-score-size-fit',
-          `${clampNumber(px(scoreStyles.fontSize, 14) * scale, 8, 22).toFixed(2)}px`,
+          `${clampNumber(px(scoreStyles.fontSize, 14) * scale, 8, 30).toFixed(2)}px`,
         );
         root.style.setProperty(
           '--profile-rail-scores-delta-size-fit',
-          `${clampNumber(px(deltaStyles.fontSize, 12) * scale, 7, 20).toFixed(2)}px`,
+          `${clampNumber(px(deltaStyles.fontSize, 12) * scale, 7, 26).toFixed(2)}px`,
         );
         root.style.setProperty(
           '--profile-rail-scores-row-gap-fit',
