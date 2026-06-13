@@ -3411,19 +3411,26 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
 }
 
 .profile-lb-analysis-body .lbx {
-  --lbx-gap: clamp(10px, 1.4vh, 20px);
-  --lbx-sec-pad: clamp(14px, 1.8vh, 28px) clamp(16px, 1.5vw, 30px);
-  --lbx-title-fs: clamp(12px, 1.05vw, 22px);
-  --lbx-body-fs: clamp(15px, 1.35vw, 30px);
+  --lbx-gap: clamp(12px, 1.6vh, 24px);
+  --lbx-sec-pad: clamp(16px, 1.9vh, 32px) clamp(18px, 1.6vw, 34px);
+  --lbx-title-fs: clamp(13px, 1.1vw, 26px);
+  --lbx-body-fs: clamp(16px, 1.5vw, 40px);
   --lbx-radius: 16px;
   --lbx-chip-radius: 12px;
   height: 100%;
 }
 
-/* Big analysis panel: center each section's title+body block so the text isn't
-   stranded at the top of a tall capsule with empty space below. */
+/* Big analysis panel: prose sections hug their text (no empty space stranded
+   below a short verdict) while the chips section grows to fill the panel — so
+   the height is absorbed by content that is meant to stretch, not by voids. */
 .profile-lb-analysis-body .lbx__sec {
-  justify-content: center;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+}
+
+.profile-lb-analysis-body .lbx__sec--signals,
+.profile-lb-analysis-body .lbx__sec--signals:not(.is-detail) {
+  flex: 1 1 0;
 }
 
 .profile-lb-analysis-body .lbx__sec > .lbx__body {
@@ -3453,21 +3460,21 @@ button.profile-avatar-link.profile-leaderboard-row__avatar {
 }
 
 .profile-lb-analysis-body .lbx__rank-label {
-  font-size: clamp(12px, 1.4vw, 26px);
+  font-size: clamp(13px, 1.5vw, 32px);
 }
 
 .profile-lb-analysis-body .lbx__rank-of {
-  font-size: clamp(10px, 1.1vw, 18px);
+  font-size: clamp(10px, 1.1vw, 22px);
 }
 
 .profile-lb-analysis-body .lbx__others-btn {
-  font-size: clamp(12px, 1.4vw, 22px);
-  min-height: clamp(42px, 4.5vh, 64px);
+  font-size: clamp(12px, 1.5vw, 28px);
+  min-height: clamp(42px, 4.5vh, 72px);
 }
 
 .profile-lb-analysis-body .lbx__chip {
-  font-size: clamp(12px, 1.2vw, 24px);
-  min-height: clamp(34px, 3.8vh, 56px);
+  font-size: clamp(12px, 1.4vw, 30px);
+  min-height: clamp(34px, 3.8vh, 64px);
 }
 
 /* Others screen — scale with vh so rows fill their height as the panel grows */

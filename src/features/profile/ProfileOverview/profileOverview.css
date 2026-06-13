@@ -21,6 +21,27 @@
   gap: var(--po-gap);
 }
 
+/* Large desktop / 4K–6K: scale the whole dashboard up via the 3 shared type
+   tokens so the data reads at a comfortable size (and the page scrolls instead
+   of cramming everything onto one screen). Keeps the type scale homogeneous. */
+@media (min-width: 1920px) {
+  .po-stack {
+    --po-fs-lg: 32px;
+    --po-fs-md: 22px;
+    --po-fs-sm: 17px;
+    --po-gap: 22px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .po-stack {
+    --po-fs-lg: 38px;
+    --po-fs-md: 26px;
+    --po-fs-sm: 20px;
+    --po-gap: 28px;
+  }
+}
+
 .po-empty {
   margin: 0;
   padding: 24px;

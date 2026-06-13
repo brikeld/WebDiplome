@@ -572,7 +572,10 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-ring-center-factor: 0.57;
   --profile-rail-ring-gap: clamp(8px, 2.2cqw, 14px);
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* Profile hero + blurbs hug their content at the top; the tabs row takes the
+     remaining height and pins the tabs to the bottom, so any leftover space on a
+     tall screen sits as a single gap above the tabs (not inside the cards). */
+  grid-template-rows: auto auto 1fr;
   background: var(--persona-accent, #759aef);
   border: none;
   gap: var(--profile-rail-section-gap);
@@ -600,15 +603,21 @@ button.profile-last-analysis-pill:disabled {
   }
 }
 
-/* 4K–6K: the rail column is much wider/taller now, so allow the blurb and
-   label type to keep climbing instead of stalling at the desktop ceilings. */
+/* 4K–6K: the profile hero is the focal point, so its type + avatar grow well
+   past the desktop ceilings. The bio size doubles as the blurb size (one shared
+   body size keeps the rail's type scale homogeneous). */
 @media (min-width: 1920px) {
   .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-scores-copy-size: clamp(16px, min(2.6cqw, 1.95cqh), 27px);
-    --profile-rail-scores-row-label-size: clamp(18px, min(3cqw, 2.2cqh), 32px);
-    --profile-rail-scores-row-gap: clamp(20px, 2.1cqh, 36px);
-    --profile-rail-bio-size: clamp(16px, min(2.9cqw, 1.85cqh), 24px);
-    --profile-rail-bio-label-size: clamp(15px, 2.4cqw, 22px);
+    --profile-rail-name-size: clamp(48px, 8.6cqw, 96px);
+    --profile-rail-bio-size: clamp(18px, min(2.7cqw, 2cqh), 30px);
+    --profile-rail-bio-label-size: clamp(16px, 2.3cqw, 26px);
+    --profile-rail-badge-size: clamp(28px, 4.6cqw, 46px);
+    --profile-rail-stat-icon: clamp(20px, 2.9cqw, 32px);
+    --profile-rail-stat-num: clamp(18px, 2.7cqw, 30px);
+    --profile-rail-tab-h: clamp(40px, 5cqw, 58px);
+    --profile-rail-tab-font: clamp(15px, 2.4cqw, 26px);
+    --profile-rail-ring-footprint: clamp(6rem, 16cqw, 9rem);
+    --profile-rail-ring-size: clamp(11rem, 30cqw, 17rem);
   }
 }
 
@@ -913,48 +922,39 @@ button.profile-last-analysis-pill:disabled {
 }
 
 /* Persona scores — no inner scroll; blurbs capped at 200 chars (see railBlurb.js) */
-/* Persona blurbs are laid out as equal-height cards that always fill the rail's
-   middle row. Each card stretches to an equal share of the available height and
-   centers its own content, so there is never a cluster of text floating in a
-   sea of empty space — the layout reads identically on a laptop and on a 6K
-   display. (Replaces the old JS height-fit hack.) */
+/* Persona blurbs are compact, content-sized cards stacked just under the profile
+   hero. They hug their text (bio-sized, homogeneous) so the blurbs read as a
+   smaller supporting block; leftover column height collects as one gap above the
+   tabs rather than inflating these cards. */
 .profile-rail-capsule .profile-rail-persona-scores {
   grid-row: 2;
   min-height: 0;
-  height: 100%;
   margin: 0;
   padding: 0;
   background: transparent;
   color: #000;
   box-sizing: border-box;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
 .profile-rail-capsule .profile-rail-persona-scores__list {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--profile-rail-scores-row-gap, clamp(10px, 1.4cqh, 18px));
-  overflow: hidden;
 }
 
 .profile-rail-capsule .profile-rail-persona-row {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   min-height: 0;
-  /* Each card is its own size container, so the label/score/blurb scale to the
-     card's real dimensions — large on a 6K rail, shrinking to fit on a laptop —
-     without any JS measurement. */
-  container-type: size;
-  container-name: persona-card;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
-  gap: clamp(6px, 1.1cqh, 14px);
-  padding: clamp(14px, 2.4cqh, 30px) clamp(16px, 3.4cqw, 28px);
+  gap: clamp(6px, 0.9cqh, 12px);
+  padding: clamp(12px, 1.7cqh, 24px) clamp(16px, 3.4cqw, 28px);
   box-sizing: border-box;
   background: var(--card, #fff);
   border: 1.5px solid color-mix(in srgb, #000 7%, transparent);
@@ -980,9 +980,9 @@ button.profile-last-analysis-pill:disabled {
   align-items: center;
   gap: clamp(5px, 1.3cqw, 8px);
   min-width: 0;
-  font-size: clamp(14px, min(13cqh, 6.8cqw), 34px);
+  font-size: var(--profile-rail-bio-size);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.15;
   color: #000;
 }
 
@@ -998,21 +998,21 @@ button.profile-last-analysis-pill:disabled {
   display: inline-flex;
   align-items: baseline;
   gap: clamp(4px, 1cqw, 6px);
-  font-size: clamp(14px, min(13cqh, 6.8cqw), 34px);
+  font-size: var(--profile-rail-bio-size);
   font-weight: 700;
   line-height: 1;
   color: #000;
 }
 
 .profile-rail-capsule .profile-rail-persona-row__delta {
-  font-size: clamp(10px, min(9cqh, 4.6cqw), 24px);
+  font-size: calc(var(--profile-rail-bio-size) * 0.72);
   font-weight: 700;
   line-height: 1;
 }
 
 .profile-rail-capsule .profile-rail-persona-row__copy {
   margin: 0;
-  font-size: clamp(12px, min(11cqh, 4.6cqw), 30px);
+  font-size: var(--profile-rail-bio-size);
   font-weight: 600;
   line-height: 1.28;
   color: #000;

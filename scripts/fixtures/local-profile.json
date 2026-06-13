@@ -1,0 +1,39 @@
+{
+  "slug": "brikeld-hoxha",
+  "id": "brikeld-hoxha",
+  "firstname": "Brikeld",
+  "lastname": "Hoxha",
+  "machineName": "Brikeld’s MacBook Pro",
+  "globalScore": 71,
+  "personaScores": {
+    "productivity": 41,
+    "security": 22,
+    "social": 37
+  },
+  "dominantPersona": "productivity",
+  "collectedAt": "2026-05-26T22:04:55.650Z",
+  "wallpaperBase64": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiOWUzNGIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3ZmFlMWIiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjgwIiB5PSIxMDYiIGZvbnQtZmFtaWx5PSJBcmlhbCxIZWx2ZXRpY2Esc2Fucy1zZXJpZiIgZm9udC1zaXplPSI3NCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzBjMTAxOCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Qkg8L3RleHQ+PC9zdmc+",
+  "uptimeDays": "",
+  "lastAnalysisAt": "2026-05-27 00:04:55",
+  "ram": "36 GB",
+  "batteryCycles": 245,
+  "storageUsed": "349.2 GB",
+  "storageTotal": "994.7 GB",
+  "applications": 59,
+  "systemLanguages": [
+    "en-CH",
+    "de-CH",
+    "fr-CH",
+    "it-CH"
+  ],
+  "mostUsedApps": [
+    "Safari",
+    "Google Chrome",
+    "Rectangle"
+  ],
+  "appearance": "Dark Mode",
+  "osVersion": "26.0",
+  "profileSummary": "I focus on merging logic into clean CSS to ensure every digital project compiles perfectly.",
+  "userDescription": "I focus on merging logic into clean CSS to ensure every digital project compiles perfectly.",
+  "hardwareChip": "Apple M3 Max"
+}
