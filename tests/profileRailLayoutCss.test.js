@@ -55,7 +55,7 @@ describe('profile rail desktop layout CSS contract', () => {
     const rowScore = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__score');
     const rowCopy = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__copy');
 
-    expect(rail).toContain('--profile-rail-name-size: clamp(46px');
+    expect(rail).toContain('--profile-rail-name-size: clamp(52px');
     expect(rail).toContain('--profile-rail-bio-gap');
     expect(rail).toContain('--profile-rail-content-offset-y');
     expect(rail).toContain('--profile-rail-bio-size: clamp(15px');
@@ -71,7 +71,7 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(rowScore).toContain('font-size: var(--profile-rail-scores-row-label-size)');
     expect(rowCopy).toContain('font-size: var(--profile-rail-scores-copy-size)');
 
-    expect(compactRail).toContain('--profile-rail-name-size: clamp(42px');
+    expect(compactRail).toContain('--profile-rail-name-size: clamp(48px');
     expect(compactRail).toContain('--profile-rail-ring-size: clamp(9rem');
   });
 
