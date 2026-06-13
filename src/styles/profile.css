@@ -554,7 +554,7 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-inner-pad-bottom: var(--profile-rail-card-pad-bottom);
 
   --profile-rail-name-size: clamp(64px, min(12.5cqw, 8.2cqh), 168px);
-  --profile-rail-bio-gap: clamp(34px, min(6.4cqh, 6cqw), 94px);
+  --profile-rail-bio-gap: clamp(14px, 2cqh, 24px);
   --profile-rail-bio-label-size: clamp(15px, min(2.3cqw, 1.85cqh), 24px);
   --profile-rail-bio-size: clamp(15px, min(2.5cqw, 1.9cqh), 24px);
   --profile-rail-blurb-size: clamp(13px, min(2.18cqw, 1.65cqh), 21px);
@@ -626,7 +626,7 @@ button.profile-last-analysis-pill:disabled {
     --profile-rail-card-pad-bottom: clamp(18px, 2.8cqh, 26px);
     --profile-rail-content-offset-y: clamp(10px, 1.4cqh, 16px);
     --profile-rail-name-size: clamp(60px, min(12.8cqw, 8.2cqh), 136px);
-    --profile-rail-bio-gap: clamp(36px, min(5.5cqh, 6.6cqw), 72px);
+    --profile-rail-bio-gap: clamp(12px, 1.8cqh, 20px);
     --profile-rail-ring-size: clamp(9rem, min(28cqw, 18cqh), 16rem);
     --profile-rail-tabs-pad-y: clamp(8px, 1cqh, 11px);
     --profile-rail-tab-h: clamp(34px, min(4.1cqh, 6.6cqw), 48px);
@@ -641,7 +641,7 @@ button.profile-last-analysis-pill:disabled {
   .profile-rail-capsule.dashboard-capsule {
     --profile-rail-content-offset-y: clamp(18px, 0.75cqh, 30px);
     --profile-rail-profile-min: clamp(760px, 24cqh, 860px);
-    --profile-rail-bio-gap: clamp(52px, 2.6cqh, 96px);
+    --profile-rail-bio-gap: clamp(18px, 1.6cqh, 28px);
     --profile-rail-bio-label-size: clamp(30px, min(3.4cqw, 1.35cqh), 38px);
     --profile-rail-bio-size: clamp(34px, min(3.8cqw, 1.55cqh), 44px);
     --profile-rail-blurb-size: clamp(34px, min(3.6cqw, 1.55cqh), 42px);
@@ -689,7 +689,7 @@ button.profile-last-analysis-pill:disabled {
 .profile-rail-capsule .profile-hero-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--profile-rail-ring-footprint);
-  grid-template-rows: auto auto minmax(min-content, 1fr);
+  grid-template-rows: auto auto auto;
   align-content: start;
   align-items: start;
   column-gap: clamp(6px, 1.6cqw, 14px);
@@ -724,7 +724,7 @@ button.profile-last-analysis-pill:disabled {
 .profile-rail-capsule .profile-bio-block {
   grid-column: 1 / -1;
   grid-row: 3;
-  align-self: end;
+  align-self: start;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

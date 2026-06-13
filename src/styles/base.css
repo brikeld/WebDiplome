@@ -373,7 +373,7 @@ body {
   align-items: stretch;
   margin-top: 6px;
   padding: clamp(10px, 1.2vh, 14px) clamp(12px, 1.5vw, 18px);
-  border: var(--capsule-shell-border-width) solid var(--ink, #000);
+  border: var(--capsule-shell-border-width) solid var(--persona-accent, #759aef);
   border-radius: calc(
     var(--capsule-radius) *
     var(--dashboard-rings-h, clamp(112px, 13.8vh, 148px)) /
