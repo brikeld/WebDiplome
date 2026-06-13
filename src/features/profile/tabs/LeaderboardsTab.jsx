@@ -12,6 +12,12 @@ const PERSONA_COLORS = {
   popularite: '#CCF847',
 };
 
+const PERSONA_PASTEL = {
+  productivite: '#EEEEEE',
+  securite: '#BCCDF5',
+  popularite: '#EBF8B7',
+};
+
 const PERSONA_SECTION_ORDER = ['productivite', 'securite', 'popularite'];
 
 const PERSONA_SECTION_LABEL = {
@@ -206,7 +212,9 @@ export default function LeaderboardsTab({
     [selectedBoard],
   );
 
-  const accentColor = selectedBoard ? (PERSONA_COLORS[selectedBoard.persona] ?? '#759aef') : null;
+  const selectedPersona = selectedBoard?.persona ?? selectedBoard?.board?.persona ?? null;
+  const accentColor = selectedPersona ? (PERSONA_COLORS[selectedPersona] ?? '#759aef') : null;
+  const pastelColor = selectedPersona ? (PERSONA_PASTEL[selectedPersona] ?? '#bccdf5') : null;
   const selRank = selectedBoard ? Number(selectedBoard.board.userRank) : null;
   const hasSelRank = Number.isFinite(selRank);
 
@@ -277,7 +285,12 @@ export default function LeaderboardsTab({
 
           <div
             className="profile-lb-analysis-body"
-            style={{ '--lbx-accent': accentColor, '--tell-pill-accent': accentColor }}
+            style={{
+              '--lbx-accent': accentColor,
+              '--lbx-pastel': pastelColor,
+              '--tell-pill-accent': accentColor,
+              '--tell-pill-pastel': pastelColor,
+            }}
           >
             <LeaderboardRationaleView
               leaderboard={rationaleLeaderboard}
