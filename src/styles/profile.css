@@ -537,7 +537,9 @@ button.profile-last-analysis-pill:disabled {
 
 /* Right rail: profile card + persona scores + tabs */
 .profile-rail-capsule.dashboard-capsule {
-  container-type: inline-size size;
+  /* `size` (valid) makes BOTH cqw and cqh resolve against the rail, so content
+     can scale with the column HEIGHT and always fit the viewport. */
+  container-type: size;
   container-name: profile-rail;
   --profile-rail-section-gap: clamp(12px, 2.6cqw, 18px);
   --profile-rail-card-gap: clamp(9px, 2.1cqw, 14px);
@@ -555,20 +557,24 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-inner-pad-x: var(--profile-rail-card-pad-left);
   --profile-rail-inner-pad-right: var(--profile-rail-card-pad-right);
   --profile-rail-inner-pad-bottom: var(--profile-rail-card-pad-bottom);
-  --profile-rail-name-size: clamp(32px, 9.8cqw, 58px);
-  --profile-rail-bio-label-size: clamp(14px, 3.8cqw, 18px);
-  --profile-rail-bio-size: clamp(14px, min(3.5cqw, 1.75cqh), 18px);
-  --profile-rail-badge-size: clamp(20px, 5.4cqw, 30px);
-  --profile-rail-stat-icon: clamp(16px, 4.2cqw, 22px);
-  --profile-rail-stat-num: clamp(14px, 3.8cqw, 20px);
-  --profile-rail-tab-h: clamp(32px, 6cqw, 38px);
-  --profile-rail-tab-gap: clamp(4px, 1cqw, 6px);
-  --profile-rail-tab-font: clamp(13px, 3.5cqw, 16px);
-  --profile-rail-scores-copy-size: clamp(13px, min(3.3cqw, 1.85cqh), 18px);
-  --profile-rail-scores-row-label-size: clamp(16px, min(3.9cqw, 2.15cqh), 22px);
-  --profile-rail-scores-row-gap: clamp(16px, min(2.7cqw, 1.9cqh), 24px);
-  --profile-rail-ring-footprint: clamp(5.15rem, 18cqw, 6.85rem);
-  --profile-rail-ring-size: clamp(9.45rem, 35.5cqw, 12.85rem);
+  /* Every size below is min(width, height) based so the whole rail scales to fit
+     the viewport — small on a laptop, large on a 6K display — with no clipping
+     and the tabs always visible. These are the single source of truth (the old
+     per-width media tiers for these vars are gone). */
+  --profile-rail-name-size: clamp(26px, min(9cqw, 5.2cqh), 116px);
+  --profile-rail-bio-label-size: clamp(13px, min(2.9cqw, 1.9cqh), 32px);
+  --profile-rail-bio-size: clamp(11px, min(2.7cqw, 1.7cqh), 28px);
+  --profile-rail-badge-size: clamp(18px, min(5cqw, 3cqh), 48px);
+  --profile-rail-stat-icon: clamp(15px, min(2.9cqw, 2cqh), 40px);
+  --profile-rail-stat-num: clamp(13px, min(2.7cqw, 1.85cqh), 36px);
+  --profile-rail-tab-h: clamp(30px, min(6cqw, 6.5cqh), 64px);
+  --profile-rail-tab-gap: clamp(4px, 1cqh, 12px);
+  --profile-rail-tab-font: clamp(13px, min(2.4cqw, 2.1cqh), 26px);
+  --profile-rail-scores-copy-size: var(--profile-rail-bio-size);
+  --profile-rail-scores-row-label-size: var(--profile-rail-bio-size);
+  --profile-rail-scores-row-gap: clamp(8px, 1.3cqh, 22px);
+  --profile-rail-ring-footprint: clamp(4.25rem, min(15cqw, 8.5cqh), 11rem);
+  --profile-rail-ring-size: clamp(7rem, min(27cqw, 18cqh), 21rem);
   --profile-rail-ring-center-factor: 0.57;
   --profile-rail-ring-gap: clamp(8px, 2.2cqw, 14px);
   /* Three stacked capsules (profile / blurbs / tabs) that share one equal gap
@@ -587,23 +593,19 @@ button.profile-last-analysis-pill:disabled {
 
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule {
   padding: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
+  /* Locked to the viewport — the three capsules always fit; no scroll, so the
+     tabs capsule can never be pushed off-screen. */
+  overflow: hidden;
 }
 
-.view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule::-webkit-scrollbar {
-  display: none;
-}
-
-/* The three capsules: white cards with the persona accent as a border, each an
-   equal share of the column (but never shrunk below their content → on short
-   laptops the rail scrolls instead of overlapping). */
+/* The three capsules: white cards with the persona accent as a border. Each is
+   an equal share of the column height (flex: 1) so together with the gaps they
+   exactly fill the rail — content is sized (above) to fit. */
 .profile-rail-capsule > .profile-header-stack,
 .profile-rail-capsule > .profile-rail-persona-scores,
 .profile-rail-capsule > .tabs-row--rail {
-  flex: 1 1 auto;
-  min-height: min-content;
+  flex: 1 1 0;
+  min-height: 0;
   box-sizing: border-box;
   background: var(--card, #fff);
   border: clamp(2px, 0.45cqw, 3px) solid var(--persona-accent, #759aef);
@@ -611,61 +613,17 @@ button.profile-last-analysis-pill:disabled {
   overflow: hidden;
 }
 
-/* Wide / tall rail — scale persona copy with capsule height, not only width */
-@media (min-width: 1661px) {
-  .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-card-pad-top: clamp(20px, 5.2cqw, 32px);
-    --profile-rail-card-pad-left: clamp(24px, 5.8cqw, 36px);
-    --profile-rail-scores-copy-size: clamp(15px, min(3.2cqw, 1.95cqh), 20px);
-    --profile-rail-scores-row-label-size: clamp(17px, min(3.7cqw, 2.2cqh), 24px);
-    --profile-rail-scores-row-gap: clamp(18px, 1.95cqh, 28px);
-    --profile-rail-bio-size: clamp(15px, min(3.7cqw, 1.85cqh), 19px);
-  }
-}
-
-/* 4K–6K: the profile hero is the focal point, so its type + avatar grow well
-   past the desktop ceilings. The bio size doubles as the blurb size (one shared
-   body size keeps the rail's type scale homogeneous). */
-@media (min-width: 1920px) {
-  .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-name-size: clamp(56px, 10cqw, 120px);
-    --profile-rail-bio-size: clamp(18px, min(2.7cqw, 2cqh), 30px);
-    --profile-rail-bio-label-size: clamp(18px, 3cqw, 34px);
-    --profile-rail-badge-size: clamp(30px, 5cqw, 52px);
-    --profile-rail-stat-icon: clamp(24px, 3.6cqw, 44px);
-    --profile-rail-stat-num: clamp(22px, 3.4cqw, 40px);
-    --profile-rail-tab-h: clamp(40px, 5cqw, 58px);
-    --profile-rail-tab-font: clamp(15px, 2.4cqw, 26px);
-    --profile-rail-ring-footprint: clamp(7rem, 20cqw, 12rem);
-    --profile-rail-ring-size: clamp(13rem, 36cqw, 22rem);
-  }
-}
-
-/* Laptop: narrower rail width — retune cqw/cqh so type/rings match post-column scale */
+/* Padding/spacing tiers only — all type/ring SIZES now come from the height-aware
+   base vars so they scale to the viewport at every width. */
 @media (max-width: 1660px) {
   .profile-rail-capsule.dashboard-capsule {
     --profile-rail-section-gap: clamp(10px, 2.3cqw, 15px);
     --profile-rail-card-gap: clamp(8px, 1.9cqw, 12px);
-    --profile-rail-card-pad-top: clamp(16px, 4.2cqw, 22px);
-    --profile-rail-card-pad-left: clamp(18px, 4.6cqw, 24px);
-    --profile-rail-card-pad-right: clamp(14px, 3.5cqw, 18px);
-    --profile-rail-card-pad-bottom: clamp(14px, 3.5cqw, 18px);
-    --profile-rail-icons-to-bio-gap: clamp(14px, 3.8cqw, 24px);
-    --profile-rail-name-size: clamp(28px, 8.8cqw, 50px);
-    --profile-rail-bio-label-size: clamp(13px, 3.6cqw, 17px);
-    --profile-rail-bio-size: clamp(13px, 3.5cqw, 16px);
-    --profile-rail-badge-size: clamp(18px, 5cqw, 26px);
-    --profile-rail-stat-icon: clamp(12px, 3.2cqw, 16px);
-    --profile-rail-stat-num: clamp(11px, 3cqw, 15px);
-    --profile-rail-tab-h: clamp(28px, 5.4cqw, 34px);
-    --profile-rail-tab-gap: clamp(4px, 0.9cqw, 6px);
-    --profile-rail-tab-font: clamp(12px, 3.2cqw, 15px);
-    --profile-rail-scores-copy-size: clamp(12px, min(3.05cqw, 1.85cqh), 16px);
-    --profile-rail-scores-row-label-size: clamp(14px, min(3.5cqw, 2.1cqh), 18px);
-    --profile-rail-scores-row-gap: clamp(13px, min(2.1cqw, 1.5cqh), 17px);
-    --profile-rail-ring-footprint: clamp(4.55rem, 15.6cqw, 5.8rem);
-    --profile-rail-ring-size: clamp(8.15rem, 31cqw, 10.5rem);
-    --profile-rail-ring-center-factor: 0.57;
+    --profile-rail-card-pad-top: clamp(14px, 3.6cqw, 22px);
+    --profile-rail-card-pad-left: clamp(16px, 4cqw, 24px);
+    --profile-rail-card-pad-right: clamp(13px, 3.2cqw, 18px);
+    --profile-rail-card-pad-bottom: clamp(13px, 3.2cqw, 18px);
+    --profile-rail-icons-to-bio-gap: clamp(12px, 3.4cqw, 24px);
     --profile-rail-ring-gap: clamp(7px, 2cqw, 12px);
   }
 
@@ -674,47 +632,13 @@ button.profile-last-analysis-pill:disabled {
   }
 }
 
-@media (max-width: 1350px) {
-  .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-card-pad-top: clamp(14px, 3.6cqw, 18px);
-    --profile-rail-card-pad-left: clamp(16px, 4cqw, 20px);
-    --profile-rail-card-pad-right: clamp(13px, 3.2cqw, 16px);
-    --profile-rail-card-pad-bottom: clamp(13px, 3.2cqw, 16px);
-    --profile-rail-icons-to-bio-gap: clamp(12px, 3.4cqw, 20px);
-    --profile-rail-name-size: clamp(26px, 8.2cqw, 44px);
-    --profile-rail-bio-label-size: clamp(12px, 3.4cqw, 16px);
-    --profile-rail-bio-size: clamp(12px, min(3.1cqw, 1.65cqh), 15px);
-    --profile-rail-ring-footprint: clamp(3.95rem, 13.2cqw, 4.8rem);
-    --profile-rail-ring-size: clamp(6.9rem, 25cqw, 8.55rem);
-    --profile-rail-tab-h: clamp(26px, 5cqw, 32px);
-    --profile-rail-tab-gap: clamp(3px, 0.8cqw, 5px);
-    --profile-rail-tab-font: clamp(11px, 3cqw, 14px);
-    --profile-rail-scores-copy-size: clamp(11px, min(3cqw, 1.75cqh), 15px);
-    --profile-rail-scores-row-label-size: clamp(13px, min(3.35cqw, 1.95cqh), 17px);
-    --profile-rail-scores-row-gap: clamp(11px, min(1.9cqw, 1.35cqh), 15px);
-  }
-}
-
-@media (min-height: 900px) {
-  .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-section-gap: clamp(10px, 1.35cqh, 18px);
-    --profile-rail-card-pad-top: clamp(20px, 4.8cqw, 30px);
-    --profile-rail-card-pad-bottom: clamp(18px, 3.8cqw, 24px);
-    --profile-rail-scores-copy-size: clamp(14px, min(3.35cqw, 2cqh), 19px);
-    --profile-rail-scores-row-label-size: clamp(16px, min(3.95cqw, 2.25cqh), 23px);
-    --profile-rail-scores-row-gap: clamp(18px, min(3.1cqw, 2.05cqh), 28px);
-  }
-}
-
 .profile-rail-capsule .profile-header-stack {
   margin-bottom: 0;
   padding-bottom: 0;
-  /* min-content (NOT 0) so the capsule never shrinks below the hero and clips
-     the name; on big screens it grows past content and centers it. */
-  min-height: min-content;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  /* Center the content block in the (taller) capsule on big screens. */
+  /* Content is cqh-sized to fit, so centering just balances any slack. */
   justify-content: center;
   /* Let the score ring draw past the card edge (it is intentionally larger). */
   overflow: visible;
