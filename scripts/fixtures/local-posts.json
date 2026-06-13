@@ -631,7 +631,7 @@
       {
         "step": "data",
         "value": "The user recently used several AI coding tools like Claude and Cursor along with design software like Figma and various code-related files.",
-        "source": "App usage (last 7 days)"
+        "source": "App usage"
       },
       {
         "step": "classify",

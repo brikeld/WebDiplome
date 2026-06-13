@@ -18,7 +18,7 @@ import LeaderboardRationaleView from './LeaderboardRationaleView.jsx';
 import RedactedAnalysisOverlay from './RedactedAnalysisOverlay.jsx';
 import { freshPanelUi, nextPanelUi } from './panelState.js';
 import FocusDetail from './FocusDetail.jsx';
-import { chainChipLines, splitLabelTwoLines } from './chipLabelUtils.js';
+import { chainChipLines, formatAnalysisDisplayText, splitLabelTwoLines } from './chipLabelUtils.js';
 import { chipEmojiForLabel } from './chipEmojiUtils.js';
 import { synthesiseChartMetadata } from '@/lib/chartPostMetadata.js';
 
@@ -33,12 +33,13 @@ function looksLikeInternalKey(s) {
 
 function readableValue(value, fallback) {
   if (looksLikeInternalKey(value)) return fallback;
-  return value;
+  return formatAnalysisDisplayText(value);
 }
 
 function readableSource(source) {
   if (!source) return null;
-  return looksLikeInternalKey(source) ? null : source;
+  if (looksLikeInternalKey(source)) return null;
+  return formatAnalysisDisplayText(source);
 }
 
 function isValidChain(chain) {
@@ -323,8 +324,8 @@ export default function InferenceChainPanel({
                 eyebrow="framing"
                 onBack={() => setPanelUi(freshPanelUi())}
               >
-                <b>{thinking[activeThinking].label}</b>
-                {thinking[activeThinking].detail}
+                <b>{formatAnalysisDisplayText(thinking[activeThinking].label)}</b>
+                {formatAnalysisDisplayText(thinking[activeThinking].detail)}
               </FocusDetail>
             ) : null}
           </section>
@@ -363,7 +364,7 @@ export default function InferenceChainPanel({
                 eyebrow="evidence"
                 onBack={() => setPanelUi(freshPanelUi())}
               >
-                <b>{ingredients[activeIngredient].label}</b>
+                <b>{formatAnalysisDisplayText(ingredients[activeIngredient].label)}</b>
                 {(ingredients[activeIngredient].dataPoints || ingredients[activeIngredient].points || []).length ? (
                   <ul>
                     {(ingredients[activeIngredient].dataPoints || ingredients[activeIngredient].points || [])

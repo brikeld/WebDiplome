@@ -1,6 +1,16 @@
+/** Normalize tell-me-more labels/values for display (strip noise, fix typos). */
+export function formatAnalysisDisplayText(text) {
+  let out = String(text ?? '').trim();
+  if (!out) return out;
+  out = out.replace(/\bprofessionnal\b/gi, 'professional');
+  out = out.replace(/\/fees\b/gi, '');
+  out = out.replace(/\s*\(last 7 days\)/gi, '');
+  return out.replace(/\s{2,}/g, ' ').trim();
+}
+
 /** Split label text into two balanced lines for compact chip buttons. */
 export function splitLabelTwoLines(text) {
-  const words = String(text ?? '')
+  const words = formatAnalysisDisplayText(text)
     .trim()
     .split(/\s+/)
     .filter(Boolean);

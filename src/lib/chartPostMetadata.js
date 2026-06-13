@@ -260,7 +260,7 @@ const TEXT_SLICE_SOURCES = {
   browser: 'Browser history',
   wifi: 'Wi‑Fi history',
   downloads: 'Recent downloads',
-  app_usage: 'App usage (last 7 days)',
+  app_usage: 'App usage',
   recent_files: 'Recent files',
   app_stack: 'Installed apps',
   security_posture: 'Security settings',

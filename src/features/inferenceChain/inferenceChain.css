@@ -2569,13 +2569,13 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
   box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--a-accent, #759aef) 80%, #000);
 }
 
-/* Open/selected = solid accent fill + black text (matches .rail-btn.is-active). */
+/* Open/selected = accent fill + black border + black text. */
 .tell-panel-a--alt-palette-2 .tape__content.is-open,
 .tell-panel-a--alt-palette-2 .reason-chip.is-open,
 .tell-panel-a--alt-palette-2 .ing-bar__row.is-open {
   transform: none;
   background: var(--a-accent, #759aef);
-  border-color: var(--a-accent, #759aef);
+  border-color: #000;
   color: #000;
 }
 
