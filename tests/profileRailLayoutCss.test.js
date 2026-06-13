@@ -33,6 +33,9 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(rail).toContain('grid-template-rows');
     expect(rail).toContain('minmax(var(--profile-rail-profile-min), max-content)');
     expect(rail).toContain('var(--profile-rail-tabs-min)');
+    expect(rail).toContain('--profile-rail-tab-font: var(--profile-rail-blurb-size)');
+    expect(rail).toContain('--profile-rail-ring-center-factor: 0.58');
+    expect(rail).toContain('--profile-rail-ring-center-y-factor: 0.43');
     expect(profile).toContain('min-height: var(--profile-rail-profile-min)');
     expect(tabs).toContain('flex: 0 0 auto');
     expect(tabs).toContain('grid-row: -2 / -1');
@@ -60,9 +63,9 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(rail).toContain('--profile-rail-scores-copy-size: var(--profile-rail-blurb-size)');
     expect(rail).toContain('--profile-rail-ring-size: clamp(10rem');
     expect(railCards).toContain('border: var(--capsule-shell-border-width) solid');
-    expect(hero).toContain('grid-template-rows: auto auto auto');
+    expect(hero).toContain('grid-template-rows: auto auto minmax(min-content, 1fr)');
     expect(hero).toContain('align-content: start');
-    expect(bioBlock).toContain('align-self: start');
+    expect(bioBlock).toContain('align-self: end');
     expect(bioBlock).toContain('margin-top: var(--profile-rail-bio-gap)');
     expect(rowLabel).toContain('font-size: var(--profile-rail-scores-row-label-size)');
     expect(rowScore).toContain('font-size: var(--profile-rail-scores-row-label-size)');
@@ -75,11 +78,12 @@ describe('profile rail desktop layout CSS contract', () => {
   it('uses a distinct 6k rail layout that scales text and prevents an oversized blurb capsule', () => {
     const largeDesktop = blockFor(profileCss, '@media (min-width: 3000px) and (min-height: 1800px)');
 
-    expect(largeDesktop).toContain('--profile-rail-profile-min: clamp(620px');
-    expect(largeDesktop).toContain('--profile-rail-bio-size: clamp(28px');
-    expect(largeDesktop).toContain('--profile-rail-blurb-size: clamp(28px');
+    expect(largeDesktop).toContain('--profile-rail-profile-min: clamp(760px');
+    expect(largeDesktop).toContain('--profile-rail-tab-h: clamp(88px');
+    expect(largeDesktop).toContain('--profile-rail-bio-size: clamp(34px');
+    expect(largeDesktop).toContain('--profile-rail-blurb-size: clamp(34px');
     expect(largeDesktop).toContain('--profile-rail-scores-target');
-    expect(largeDesktop).toContain('var(--profile-rail-scores-target)');
-    expect(largeDesktop).toContain('minmax(0, 1fr)');
+    expect(largeDesktop).toContain('minmax(var(--profile-rail-scores-target), 1fr)');
+    expect(largeDesktop).not.toContain('minmax(0, 1fr)');
   });
 });
