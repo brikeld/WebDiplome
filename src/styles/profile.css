@@ -709,7 +709,9 @@ button.profile-last-analysis-pill:disabled {
 .profile-rail-capsule .profile-header-stack {
   margin-bottom: 0;
   padding-bottom: 0;
-  min-height: 0;
+  /* min-content (NOT 0) so the capsule never shrinks below the hero and clips
+     the name; on big screens it grows past content and centers it. */
+  min-height: min-content;
   display: flex;
   flex-direction: column;
   /* Center the content block in the (taller) capsule on big screens. */

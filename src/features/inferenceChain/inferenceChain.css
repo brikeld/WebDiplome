@@ -2524,9 +2524,14 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
 }
 
 .tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight.is-open,
-.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight:hover {
+.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight:hover,
+.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight:focus-visible {
+  background: #000;
+  border-color: #000;
+  border-radius: 999px;
+  padding: 1px 10px 2px;
   color: var(--tell-pill-accent, #759aef);
-  text-decoration-color: var(--tell-pill-accent, #759aef);
+  text-decoration-color: transparent;
 }
 
 .tell-panel-a--alt-palette-2 .tape__badge {
@@ -2578,12 +2583,6 @@ button.profile-avatar-link.lb2__other-avatar:not(:disabled):hover {
 .tell-panel-a--alt-palette-2 .reason-chip:active,
 .tell-panel-a--alt-palette-2 .ing-bar__row:active {
   transform: translateY(-2px) scale(1.01);
-}
-
-/* Highlight phrases inside the quote keep the simple accent treatment. */
-.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight:hover,
-.tell-panel-a--alt-palette-2 .post-quote-a .inference-panel__highlight.is-open {
-  color: var(--tell-pill-accent, #759aef);
 }
 
 .tell-panel-a--alt-palette-2 .tape__row:has(.tape__content.is-open) .tape__badge {
