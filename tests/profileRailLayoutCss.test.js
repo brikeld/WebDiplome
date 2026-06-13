@@ -31,7 +31,7 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(rail).toContain('--profile-rail-profile-min');
     expect(rail).toContain('--profile-rail-tabs-min');
     expect(rail).toContain('grid-template-rows');
-    expect(rail).toContain('var(--profile-rail-profile-min)');
+    expect(rail).toContain('minmax(var(--profile-rail-profile-min), max-content)');
     expect(rail).toContain('var(--profile-rail-tabs-min)');
     expect(profile).toContain('min-height: var(--profile-rail-profile-min)');
     expect(tabs).toContain('flex: 0 0 auto');
@@ -43,20 +43,27 @@ describe('profile rail desktop layout CSS contract', () => {
   it('fills the profile card by scaling identity elements without changing the blurb scale', () => {
     const rail = blockFor(profileCss, '.profile-rail-capsule.dashboard-capsule');
     const compactRail = blockFor(profileCss, '@media (max-width: 1660px)');
+    const hero = blockFor(profileCss, '.profile-rail-capsule .profile-hero-main');
+    const bioBlock = blockFor(profileCss, '.profile-rail-capsule .profile-bio-block');
     const rowLabel = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__label');
     const rowScore = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__score');
     const rowCopy = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__copy');
 
-    expect(rail).toContain('--profile-rail-name-size: clamp(40px');
+    expect(rail).toContain('--profile-rail-name-size: clamp(46px');
+    expect(rail).toContain('--profile-rail-bio-gap');
     expect(rail).toContain('--profile-rail-bio-size: clamp(15px');
     expect(rail).toContain('--profile-rail-blurb-size: clamp(13px');
     expect(rail).toContain('--profile-rail-scores-copy-size: var(--profile-rail-blurb-size)');
-    expect(rail).toContain('--profile-rail-ring-size: clamp(8.5rem');
+    expect(rail).toContain('--profile-rail-ring-size: clamp(10rem');
+    expect(hero).toContain('grid-template-rows: auto auto auto');
+    expect(hero).toContain('align-content: start');
+    expect(bioBlock).toContain('align-self: start');
+    expect(bioBlock).toContain('margin-top: var(--profile-rail-bio-gap)');
     expect(rowLabel).toContain('font-size: var(--profile-rail-scores-row-label-size)');
     expect(rowScore).toContain('font-size: var(--profile-rail-scores-row-label-size)');
     expect(rowCopy).toContain('font-size: var(--profile-rail-scores-copy-size)');
 
-    expect(compactRail).toContain('--profile-rail-name-size: clamp(38px');
-    expect(compactRail).toContain('--profile-rail-ring-size: clamp(8rem');
+    expect(compactRail).toContain('--profile-rail-name-size: clamp(42px');
+    expect(compactRail).toContain('--profile-rail-ring-size: clamp(9rem');
   });
 });
