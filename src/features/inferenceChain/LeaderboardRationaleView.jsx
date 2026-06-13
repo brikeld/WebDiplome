@@ -23,6 +23,11 @@ import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
  * Content is covered by the parent panel loading shimmer, then staggers in.
  */
 
+/** Drop a leading count so the chip reads as a category ("2 work apps" → "work apps"). */
+function stripLeadingCount(label) {
+  return String(label ?? '').replace(/^\s*\d+\s*/, '').trim() || String(label ?? '');
+}
+
 function OtherUserRow({ entry, rationale, authorSlug, directorySlugs, onOpenProfile }) {
   const isBot = isLeaderboardBotEntry(entry);
   const entrySlug = leaderboardEntryProfileSlug(entry, authorSlug, directorySlugs);
@@ -188,7 +193,9 @@ export default function LeaderboardRationaleView({
                     className="lbx__chip"
                     onClick={() => setActiveSignal(i)}
                   >
-                    <span className="lbx__chip-label">{sig.label}</span>
+                    {/* Button shows just the category ("WORK APPS"); the count and
+                        which apps appear in the detail view once clicked. */}
+                    <span className="lbx__chip-label">{stripLeadingCount(sig.label)}</span>
                   </button>
                 ))}
               </div>

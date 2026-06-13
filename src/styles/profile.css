@@ -571,23 +571,43 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-ring-size: clamp(9.45rem, 35.5cqw, 12.85rem);
   --profile-rail-ring-center-factor: 0.57;
   --profile-rail-ring-gap: clamp(8px, 2.2cqw, 14px);
-  display: grid;
-  /* Profile hero + blurbs hug their content at the top; the tabs row takes the
-     remaining height and pins the tabs to the bottom, so any leftover space on a
-     tall screen sits as a single gap above the tabs (not inside the cards). */
-  grid-template-rows: auto auto 1fr;
-  background: var(--persona-accent, #759aef);
+  /* Three stacked capsules (profile / blurbs / tabs) that share one equal gap
+     and fill the column. The accent frame is dropped — the capsules ARE the
+     three cards. */
+  display: flex;
+  flex-direction: column;
+  --profile-rail-cap-gap: clamp(14px, 2.4cqh, 44px);
+  gap: var(--profile-rail-cap-gap);
+  background: transparent;
   border: none;
-  gap: var(--profile-rail-section-gap);
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
 }
 
 .view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule {
-  gap: var(--profile-rail-section-gap);
-  padding: clamp(14px, 3.8cqw, 20px) clamp(14px, 3.6cqw, 22px)
-    var(--profile-rail-section-gap);
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.view-profile .persona-side-panel .dashboard-capsule.profile-rail-capsule::-webkit-scrollbar {
+  display: none;
+}
+
+/* The three capsules: white cards with the persona accent as a border, each an
+   equal share of the column (but never shrunk below their content → on short
+   laptops the rail scrolls instead of overlapping). */
+.profile-rail-capsule > .profile-header-stack,
+.profile-rail-capsule > .profile-rail-persona-scores,
+.profile-rail-capsule > .tabs-row--rail {
+  flex: 1 1 auto;
+  min-height: min-content;
+  box-sizing: border-box;
+  background: var(--card, #fff);
+  border: clamp(2px, 0.45cqw, 3px) solid var(--persona-accent, #759aef);
+  border-radius: var(--radius-post-surface);
   overflow: hidden;
 }
 
@@ -687,12 +707,13 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-header-stack {
-  grid-row: 1;
   margin-bottom: 0;
   padding-bottom: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* Let the score ring draw past the card edge (it is intentionally larger). */
+  overflow: visible;
 }
 
 .profile-rail-capsule .profile-hero-capsule {
@@ -704,10 +725,13 @@ button.profile-last-analysis-pill:disabled {
   --profile-score-size: var(--profile-rail-ring-size);
   --profile-score-size-max: var(--profile-rail-ring-size);
   --profile-rail-text-gap: var(--profile-rail-card-gap);
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
   width: 100%;
   margin-top: 0;
-  background: var(--card, #fff);
+  /* The header-stack is the capsule now; the hero fills it transparently. */
+  background: transparent;
   border: none;
   border-radius: var(--radius-post-surface);
   overflow: visible;
@@ -723,7 +747,9 @@ button.profile-last-analysis-pill:disabled {
   row-gap: var(--profile-rail-card-gap);
   box-sizing: border-box;
   width: 100%;
-  height: auto;
+  height: 100%;
+  /* Center the name/stats/bio block within the (taller) profile capsule. */
+  align-content: center;
   padding: var(--profile-rail-inner-pad-y) var(--profile-rail-inner-pad-right, var(--profile-rail-card-pad-right))
     var(--profile-rail-inner-pad-bottom, var(--profile-rail-card-pad-bottom)) var(--profile-rail-inner-pad-x);
 }
@@ -927,11 +953,9 @@ button.profile-last-analysis-pill:disabled {
    smaller supporting block; leftover column height collects as one gap above the
    tabs rather than inflating these cards. */
 .profile-rail-capsule .profile-rail-persona-scores {
-  grid-row: 2;
-  min-height: 0;
+  min-height: min-content;
   margin: 0;
-  padding: 0;
-  background: transparent;
+  padding: clamp(14px, 2.8cqw, 30px) clamp(16px, 3cqw, 30px);
   color: #000;
   box-sizing: border-box;
   display: flex;
@@ -939,32 +963,27 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .profile-rail-persona-scores__list {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--profile-rail-scores-row-gap, clamp(10px, 1.4cqh, 18px));
 }
 
+/* Three blurbs share one capsule now — divided rows that split the height. */
 .profile-rail-capsule .profile-rail-persona-row {
-  flex: 0 0 auto;
-  min-height: 0;
+  flex: 1 1 0;
+  min-height: min-content;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
-  gap: clamp(6px, 0.9cqh, 12px);
-  padding: clamp(12px, 1.7cqh, 24px) clamp(16px, 3.4cqw, 28px);
+  gap: clamp(5px, 0.8cqh, 11px);
+  padding: clamp(10px, 1.6cqh, 22px) 0;
   box-sizing: border-box;
-  background: var(--card, #fff);
-  border: 1.5px solid color-mix(in srgb, #000 7%, transparent);
-  border-radius: var(--radius-post-surface);
-  overflow: hidden;
 }
 
-.profile-rail-capsule .profile-rail-persona-row--dominant {
-  background: color-mix(in srgb, var(--persona-accent, #759aef) 14%, #fff);
-  border-color: color-mix(in srgb, var(--persona-accent, #759aef) 42%, transparent);
+.profile-rail-capsule .profile-rail-persona-row + .profile-rail-persona-row {
+  border-top: 1.5px solid color-mix(in srgb, #000 9%, transparent);
 }
 
 .profile-rail-capsule .profile-rail-persona-row__head {
@@ -1041,31 +1060,26 @@ button.profile-last-analysis-pill:disabled {
   font-style: italic;
 }
 
-/* Tabs pinned to bottom row of rail grid */
+/* Tabs are the third capsule — buttons split its height. */
 .profile-rail-capsule .tabs-row--rail {
-  grid-row: 3;
-  align-self: end;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--profile-rail-tab-gap, 6px);
-  padding: 0;
+  gap: clamp(8px, 1.3cqh, 18px);
+  padding: clamp(12px, 2.4cqw, 24px);
   align-items: stretch;
-  background: transparent;
-  border: none;
+  justify-content: stretch;
 }
 
 .profile-rail-capsule .tabs-row--rail .tab {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   width: 100%;
-  height: var(--profile-rail-tab-h);
   min-height: var(--profile-rail-tab-h);
-  max-height: var(--profile-rail-tab-h);
   margin: 0;
   padding: clamp(4px, 1.1cqw, 7px) clamp(10px, 2.4cqw, 14px);
   border: clamp(2px, 0.5cqw, 2px) solid transparent;
-  border-radius: clamp(9px, 2.4cqw, 13px);
-  background: #fff;
+  border-radius: clamp(9px, 2.4cqw, 16px);
+  background: color-mix(in srgb, #000 5%, #fff);
   font-size: var(--profile-rail-tab-font);
   font-weight: 700;
   line-height: 1.1;
@@ -1091,7 +1105,7 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .tabs-row--rail .tab:hover:not(.active) {
-  background: #fff;
+  background: color-mix(in srgb, #000 10%, #fff);
   color: #000;
   border-color: transparent;
 }
