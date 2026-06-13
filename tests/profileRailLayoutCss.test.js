@@ -35,14 +35,17 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(rail).toContain('var(--profile-rail-tabs-min)');
     expect(profile).toContain('min-height: var(--profile-rail-profile-min)');
     expect(tabs).toContain('flex: 0 0 auto');
+    expect(tabs).toContain('grid-row: -2 / -1');
     expect(tabs).toContain('min-height: var(--profile-rail-tabs-min)');
-    expect(tabs).toContain('max-height: var(--profile-rail-tabs-max)');
+    expect(tabs).toContain('height: 100%');
+    expect(tabs).not.toContain('max-height');
     expect(tab).toContain('flex: 0 0 var(--profile-rail-tab-h)');
   });
 
   it('fills the profile card by scaling identity elements without changing the blurb scale', () => {
     const rail = blockFor(profileCss, '.profile-rail-capsule.dashboard-capsule');
     const compactRail = blockFor(profileCss, '@media (max-width: 1660px)');
+    const railCards = blockFor(profileCss, '.profile-rail-capsule > .profile-header-stack,\n.profile-rail-capsule > .profile-rail-persona-scores,\n.profile-rail-capsule > .tabs-row--rail');
     const hero = blockFor(profileCss, '.profile-rail-capsule .profile-hero-main');
     const bioBlock = blockFor(profileCss, '.profile-rail-capsule .profile-bio-block');
     const rowLabel = blockFor(profileCss, '.profile-rail-capsule .profile-rail-persona-row__label');
@@ -51,10 +54,12 @@ describe('profile rail desktop layout CSS contract', () => {
 
     expect(rail).toContain('--profile-rail-name-size: clamp(46px');
     expect(rail).toContain('--profile-rail-bio-gap');
+    expect(rail).toContain('--profile-rail-content-offset-y');
     expect(rail).toContain('--profile-rail-bio-size: clamp(15px');
     expect(rail).toContain('--profile-rail-blurb-size: clamp(13px');
     expect(rail).toContain('--profile-rail-scores-copy-size: var(--profile-rail-blurb-size)');
     expect(rail).toContain('--profile-rail-ring-size: clamp(10rem');
+    expect(railCards).toContain('border: var(--capsule-shell-border-width) solid');
     expect(hero).toContain('grid-template-rows: auto auto auto');
     expect(hero).toContain('align-content: start');
     expect(bioBlock).toContain('align-self: start');
@@ -65,5 +70,16 @@ describe('profile rail desktop layout CSS contract', () => {
 
     expect(compactRail).toContain('--profile-rail-name-size: clamp(42px');
     expect(compactRail).toContain('--profile-rail-ring-size: clamp(9rem');
+  });
+
+  it('uses a distinct 6k rail layout that scales text and prevents an oversized blurb capsule', () => {
+    const largeDesktop = blockFor(profileCss, '@media (min-width: 3000px) and (min-height: 1800px)');
+
+    expect(largeDesktop).toContain('--profile-rail-profile-min: clamp(620px');
+    expect(largeDesktop).toContain('--profile-rail-bio-size: clamp(28px');
+    expect(largeDesktop).toContain('--profile-rail-blurb-size: clamp(28px');
+    expect(largeDesktop).toContain('--profile-rail-scores-target');
+    expect(largeDesktop).toContain('var(--profile-rail-scores-target)');
+    expect(largeDesktop).toContain('minmax(0, 1fr)');
   });
 });

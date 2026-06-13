@@ -541,13 +541,14 @@ button.profile-last-analysis-pill:disabled {
   container-name: profile-rail;
   --profile-rail-cap-gap: clamp(12px, 1.9cqh, 26px);
   --profile-rail-card-gap: clamp(8px, 1.1cqh, 14px);
+  --profile-rail-content-offset-y: clamp(10px, 1.1cqh, 16px);
   --profile-rail-card-pad-top: clamp(22px, 3.3cqh, 36px);
   --profile-rail-card-pad-left: clamp(22px, 4.2cqw, 36px);
   --profile-rail-card-pad-right: clamp(18px, 3.4cqw, 30px);
   --profile-rail-card-pad-bottom: clamp(20px, 3.1cqh, 34px);
   --profile-rail-card-pad: var(--profile-rail-card-pad-top) var(--profile-rail-card-pad-right)
     var(--profile-rail-card-pad-bottom) var(--profile-rail-card-pad-left);
-  --profile-rail-inner-pad-y: var(--profile-rail-card-pad-top);
+  --profile-rail-inner-pad-y: calc(var(--profile-rail-card-pad-top) + var(--profile-rail-content-offset-y));
   --profile-rail-inner-pad-x: var(--profile-rail-card-pad-left);
   --profile-rail-inner-pad-right: var(--profile-rail-card-pad-right);
   --profile-rail-inner-pad-bottom: var(--profile-rail-card-pad-bottom);
@@ -610,7 +611,7 @@ button.profile-last-analysis-pill:disabled {
   min-height: 0;
   box-sizing: border-box;
   background: var(--card, #fff);
-  border: clamp(2px, 0.45cqw, 3px) solid var(--persona-accent, #759aef);
+  border: var(--capsule-shell-border-width) solid var(--persona-accent, #759aef);
   border-radius: var(--radius-post-surface);
   overflow: hidden;
 }
@@ -622,6 +623,7 @@ button.profile-last-analysis-pill:disabled {
     --profile-rail-card-pad-left: clamp(18px, 3.8cqw, 26px);
     --profile-rail-card-pad-right: clamp(16px, 3.1cqw, 22px);
     --profile-rail-card-pad-bottom: clamp(18px, 2.8cqh, 26px);
+    --profile-rail-content-offset-y: clamp(8px, 1cqh, 12px);
     --profile-rail-name-size: clamp(42px, min(9.4cqw, 5.8cqh), 88px);
     --profile-rail-bio-gap: clamp(22px, min(4.5cqh, 4.8cqw), 54px);
     --profile-rail-ring-size: clamp(9rem, min(28cqw, 18cqh), 16rem);
@@ -631,6 +633,24 @@ button.profile-last-analysis-pill:disabled {
     --profile-rail-profile-min: clamp(320px, min(36cqh, 50cqw), 390px);
     --profile-rail-scores-min: clamp(280px, min(34cqh, 60cqw), 490px);
     --profile-rail-tabs-max: clamp(136px, 15cqh, 180px);
+  }
+}
+
+@media (min-width: 3000px) and (min-height: 1800px) {
+  .profile-rail-capsule.dashboard-capsule {
+    --profile-rail-content-offset-y: clamp(14px, 0.55cqh, 22px);
+    --profile-rail-profile-min: clamp(620px, 19cqh, 720px);
+    --profile-rail-bio-label-size: clamp(26px, min(3.1cqw, 1.25cqh), 34px);
+    --profile-rail-bio-size: clamp(28px, min(3.2cqw, 1.35cqh), 36px);
+    --profile-rail-blurb-size: clamp(28px, min(3.1cqw, 1.3cqh), 36px);
+    --profile-rail-scores-copy-size: var(--profile-rail-blurb-size);
+    --profile-rail-scores-row-label-size: var(--profile-rail-blurb-size);
+    --profile-rail-scores-target: clamp(820px, 27cqh, 960px);
+    grid-template-rows:
+      minmax(var(--profile-rail-profile-min), max-content)
+      var(--profile-rail-scores-target)
+      minmax(0, 1fr)
+      var(--profile-rail-tabs-min);
   }
 }
 
@@ -982,13 +1002,14 @@ button.profile-last-analysis-pill:disabled {
 }
 
 .profile-rail-capsule .tabs-row--rail {
+  grid-row: -2 / -1;
   flex: 0 0 auto;
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: var(--profile-rail-tab-gap);
   min-height: var(--profile-rail-tabs-min);
-  max-height: var(--profile-rail-tabs-max);
+  height: 100%;
   padding: var(--profile-rail-tabs-pad-y) var(--profile-rail-tabs-pad-x);
   align-items: stretch;
   justify-content: center;
