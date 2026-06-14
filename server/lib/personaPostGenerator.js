@@ -81,8 +81,8 @@ export const ASSET_SLOT_INDEX = 1;
 /** Slot index for the alternating chart / leaderboard slot. */
 export const THIRD_SLOT_INDEX = 2;
 
-/** Min AI posts since the last leaderboard before slot 2 may be a leaderboard (~every 9th AI post). */
-export const MIN_AI_POSTS_BEFORE_LEADERBOARD = 8;
+/** Min AI posts since the last leaderboard before slot 2 may be a leaderboard (~every 4th AI post). */
+export const MIN_AI_POSTS_BEFORE_LEADERBOARD = 3;
 
 function countAiPostsSinceLastLeaderboard(existingPosts) {
   let count = 0;

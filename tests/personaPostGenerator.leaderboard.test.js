@@ -60,13 +60,13 @@ describe('pickThirdSlotKind', () => {
   it('holds chart until enough AI posts have landed since the last leaderboard', () => {
     const chartOnly = [
       { chartType: 'browser_domains', createdAt: '2026-05-25T10:00:00Z' },
-      ...aiTextPosts(6),
+      ...aiTextPosts(2),
     ];
     expect(pickThirdSlotKind(chartOnly)).toBe('chart');
 
     const ready = [
       { chartType: 'browser_domains', createdAt: '2026-05-25T10:00:00Z' },
-      ...aiTextPosts(8),
+      ...aiTextPosts(3),
     ];
     expect(pickThirdSlotKind(ready)).toBe('leaderboard');
   });
