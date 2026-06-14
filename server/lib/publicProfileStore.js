@@ -339,7 +339,21 @@ export function createPublicProfileStore(supabase, { storageStore } = {}) {
           }
         : null,
     );
-    if (!key) return { deletedSlugs: [], orphansRemoved: 0 };
+    if (!key) {
+      // No identity key (e.g. a delta harvest left machine_name empty). Fall back
+      // to purging just the seed profile by its own ids so deletion never silently
+      // no-ops — this is the reliable pre-dedup behavior.
+      if (seedRow?.id) {
+        await purgeProfileData({
+          userId: seedRow.user_id ?? actingUserId,
+          profileId: seedRow.id,
+          slug: seedRow.slug ?? null,
+        });
+        const orphansRemoved = await deleteOrphanPosts();
+        return { deletedSlugs: seedRow.slug ? [String(seedRow.slug)] : [], orphansRemoved };
+      }
+      return { deletedSlugs: [], orphansRemoved: 0 };
+    }
 
     const rows = throwIfError(
       await supabase.from('profiles').select('id, slug, user_id, firstname, lastname, machine_name'),
