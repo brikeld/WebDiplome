@@ -1,7 +1,16 @@
 import { countAiGeneratedPosts } from './generationQueue.js';
 import { isCompliantSystemPost } from './postsMerge.js';
 
-const DEFAULT_APPS = ['Safari', 'Google Chrome', 'Notion', 'Visual Studio Code', 'Discord', 'Spotify'];
+const DEMO_INSTALLED_APPS = [
+  'Safari', 'Google Chrome', 'Firefox',
+  'Visual Studio Code', 'Cursor', 'Figma', 'Notion', 'GitHub Desktop', 'Xcode', 'Slack',
+  'ChatGPT', 'Claude', 'LM Studio',
+  'Adobe Photoshop 2025', 'Adobe Illustrator 2025',
+  'Discord', 'WhatsApp', 'Spotify', 'VLC', 'Netflix',
+  'NordVPN', 'GlobalProtect', 'Little Snitch',
+  'Rectangle', 'AppCleaner', 'The Unarchiver',
+  'Microsoft Teams', 'Zoom',
+];
 
 function personaBucket(persona) {
   const p = String(persona ?? '').toLowerCase();
@@ -11,7 +20,7 @@ function personaBucket(persona) {
 }
 
 function appsFromPosts(posts) {
-  const apps = new Set(DEFAULT_APPS);
+  const apps = new Set(DEMO_INSTALLED_APPS);
   for (const post of posts) {
     const bucket = personaBucket(post?.persona);
     if (bucket === 'productivity') {

@@ -139,9 +139,11 @@ function treemapLayout(items, x, y, w, h, gap) {
 
 // ─── Existing charts (kept) ────────────────────────────────────────────────
 
+const APP_CATEGORY_CHART_MAX = 10;
+
 export function buildAppCategoryChart(appCategorySlice, persona = 'productivite') {
   const palette = chartPalette(persona);
-  let items = (appCategorySlice?.byCategory || []).slice(0, 7);
+  let items = (appCategorySlice?.byCategory || []).slice(0, APP_CATEGORY_CHART_MAX);
   if (!items.length) items = [['No data', 1]];
   const { text, viz } = palette;
   const W = 640; const H = 320;
@@ -618,7 +620,7 @@ export function describeChartContext(chartType, data, profile) {
   switch (chartType) {
     case 'app_categories': {
       const slice = extractAppCategorySlice(data || {});
-      const items = (slice.byCategory || []).slice(0, 7);
+      const items = (slice.byCategory || []).slice(0, APP_CATEGORY_CHART_MAX);
       if (!items.length) return null;
       return {
         title,

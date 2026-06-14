@@ -3,10 +3,10 @@ import { synthesizeHarvestDataFromProfile } from '../server/lib/synthesizeDemoHa
 import { harvestPayloadHasContent } from '../server/lib/generationQueue.js';
 
 describe('synthesizeHarvestDataFromProfile', () => {
-  it('returns null when profile has no AI posts', () => {
+  it('returns null when profile has no AI posts and no identity slug', () => {
     const data = synthesizeHarvestDataFromProfile(
-      { slug: 'daniel-rocha', display_name: 'Daniel Rocha' },
-      { slug: 'daniel-rocha', personaPosts: [] },
+      { display_name: 'User' },
+      { personaPosts: [] },
     );
     expect(data).toBeNull();
   });
@@ -32,7 +32,7 @@ describe('synthesizeHarvestDataFromProfile', () => {
     expect(harvestPayloadHasContent(data)).toBe(true);
     expect(data._synthesizedForRegeneration).toBe(true);
     expect(data.MACHINE_IDENTITY.hostname).toBe('Daniels-MacBook');
-    expect(data.MACHINE_IDENTITY.installed_apps.length).toBeGreaterThan(0);
+    expect(data.MACHINE_IDENTITY.installed_apps.length).toBeGreaterThanOrEqual(20);
     expect(data.PAST_HISTORY.browser_history.safari.length).toBeGreaterThan(0);
     expect(data.PAST_HISTORY.app_usage_7days.length).toBeGreaterThan(0);
   });

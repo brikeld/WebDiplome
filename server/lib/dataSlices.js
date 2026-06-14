@@ -147,8 +147,30 @@ export function extractBrowserSlice(data) {
   };
 }
 
+/** Merge installed, dock, and recent-usage app names for category charts. */
+export function collectAppNamesForCategorySlice(data) {
+  const names = new Set();
+  const identity = data?.MACHINE_IDENTITY ?? {};
+  const past = data?.PAST_HISTORY ?? {};
+
+  for (const app of identity.installed_apps ?? []) {
+    const n = String(app ?? '').trim();
+    if (n) names.add(n);
+  }
+  for (const app of identity.dock_apps ?? []) {
+    const n = String(app ?? '').trim();
+    if (n) names.add(n);
+  }
+  for (const entry of past.app_usage_7days ?? []) {
+    const n = String(entry?.app ?? entry?.name ?? '').trim();
+    if (n) names.add(n);
+  }
+
+  return [...names];
+}
+
 export function extractAppCategorySlice(data) {
-  const installed = Array.isArray(data?.MACHINE_IDENTITY?.installed_apps) ? data.MACHINE_IDENTITY.installed_apps : [];
+  const installed = collectAppNamesForCategorySlice(data);
   const counts = {};
   for (const app of installed) {
     const cat = categorizeApp(app);

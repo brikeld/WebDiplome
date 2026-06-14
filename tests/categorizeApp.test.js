@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { categorizeApp, extractAppCategorySlice } from '../server/lib/dataSlices.js';
+import { categorizeApp, collectAppNamesForCategorySlice, extractAppCategorySlice } from '../server/lib/dataSlices.js';
 
 const BRKELD_INSTALLED_APPS = [
   'Adobe Acrobat DC', 'Adobe After Effects 2025', 'Adobe Creative Cloud', 'Adobe Illustrator 2025',
@@ -38,5 +38,36 @@ describe('categorizeApp', () => {
 
     expect(otherCount).toBe(0);
     expect(slice.byCategory.some(([cat]) => cat === 'Utilities')).toBe(true);
+  });
+
+  it('merges installed, dock, and recent-usage apps for category counts', () => {
+    const names = collectAppNamesForCategorySlice({
+      MACHINE_IDENTITY: {
+        installed_apps: ['Safari', 'Google Chrome'],
+        dock_apps: ['Cursor'],
+      },
+      PAST_HISTORY: {
+        app_usage_7days: [{ app: 'Spotify' }, { app: 'NordVPN' }],
+      },
+    });
+    expect(names).toHaveLength(5);
+
+    const slice = extractAppCategorySlice({
+      MACHINE_IDENTITY: { installed_apps: ['Safari'] },
+      PAST_HISTORY: {
+        app_usage_7days: [
+          { app: 'Cursor' },
+          { app: 'Figma' },
+          { app: 'ChatGPT' },
+          { app: 'Discord' },
+          { app: 'Spotify' },
+          { app: 'NordVPN' },
+          { app: 'Adobe Photoshop 2025' },
+          { app: 'Rectangle' },
+        ],
+      },
+    });
+    expect(slice.totalInstalled).toBe(9);
+    expect(slice.byCategory.length).toBeGreaterThanOrEqual(6);
   });
 });
