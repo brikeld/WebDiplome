@@ -80,10 +80,6 @@ export default function ProfileOverview({ profile }) {
 
   return (
     <div className="po-stack" style={{ '--persona-accent': profileData.personaAccent }}>
-      <PoCard eyebrow="Live vs harvest" title="Score drift" persona="security">
-        <ScoreDrift scoreDrift={profileData.scoreDrift} />
-      </PoCard>
-
       {showEnvironment ? (
         <PoCard
           eyebrow="Desktop"
@@ -99,6 +95,10 @@ export default function ProfileOverview({ profile }) {
           />
         </PoCard>
       ) : null}
+
+      <PoCard eyebrow="Live vs harvest" title="Score drift" persona="security">
+        <ScoreDrift scoreDrift={profileData.scoreDrift} />
+      </PoCard>
 
       <PoCard
         eyebrow="Feed"
