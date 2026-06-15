@@ -1585,6 +1585,20 @@ export default function App() {
     setDemoGeneratingPersona(persona ?? null);
   }, []);
 
+  // Re-apply the live reveal order onto a fresh API snapshot before it replaces
+  // allProfiles, so a directory poll / reload can't drop already-revealed posts
+  // back to their stale `createdAt` position (which would make the feed jump
+  // back to the wrong order between reveals).
+  const reconcileProfilesRevealOrder = useCallback((profiles) => {
+    const controller = spectateRevealRef.current;
+    if (!controller?.reconcileRevealOrder || !Array.isArray(profiles)) return profiles;
+    return profiles.map((p) =>
+      p && Array.isArray(p.personaPosts)
+        ? { ...p, personaPosts: controller.reconcileRevealOrder(p.personaPosts) }
+        : p,
+    );
+  }, []);
+
   const syncAccountDeletionState = useCallback(async () => {
     try {
       const stateRes = await fetch(`${API_ORIGIN}/api/account-state`);
@@ -1706,8 +1720,8 @@ export default function App() {
           /* ignore */
         }
 
-        const normalized = normalizeProfilesFromApi(
-          filterProfilesNotDeleted(data, deleted),
+        const normalized = reconcileProfilesRevealOrder(
+          normalizeProfilesFromApi(filterProfilesNotDeleted(data, deleted)),
         );
         ingestProfileAvatars(normalized);
         inferPublicMediaConfigFromProfiles(normalized);
@@ -1800,7 +1814,7 @@ export default function App() {
       cancelledRef.cancelled = true;
       clearInterval(id);
     };
-  }, [syncAccountDeletionState, mainView, linkedProfileSlug, applyFullAccountReset, scheduleSpectatorIngest, syncDeletedProfileIds]);
+  }, [syncAccountDeletionState, mainView, linkedProfileSlug, applyFullAccountReset, scheduleSpectatorIngest, syncDeletedProfileIds, reconcileProfilesRevealOrder]);
 
   const reloadProfileFromApi = useCallback(async ({
     skipPostsMerge = false,
@@ -1821,7 +1835,7 @@ export default function App() {
       setProfile(null);
       return null;
     }
-    const normalized = normalizeProfilesFromApi(filtered);
+    const normalized = reconcileProfilesRevealOrder(normalizeProfilesFromApi(filtered));
     ingestProfileAvatars(normalized);
     const preserveSet = new Set(
       (Array.isArray(preservePersonaPostsForSlugs) ? preservePersonaPostsForSlugs : [])
@@ -1875,7 +1889,7 @@ export default function App() {
       return merged;
     });
     return merged;
-  }, [deletedProfileIds, linkedProfileSlug]);
+  }, [deletedProfileIds, linkedProfileSlug, reconcileProfilesRevealOrder]);
 
   useEffect(() => {
     const operatorSlug = profile?.slug ?? profile?.id ?? null;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createFeedSpectatorRevealController } from '../src/lib/feedSpectatorReveals.js';
 import { postIdentityKey } from '../src/lib/mergePersonaPosts.js';
+import { sortNewestFirst } from '../src/features/feed/PostsTab.jsx';
 
 describe('feedSpectatorReveals', () => {
   it('does not wipe the directory when reveal fires before React commits profiles', () => {
@@ -285,6 +286,43 @@ describe('feedSpectatorReveals', () => {
     expect(seqOf('a1')).toBeGreaterThan(0);
     expect(seqOf('b1')).toBeGreaterThan(seqOf('a1'));
     expect(seqOf('a2')).toBeGreaterThan(seqOf('b1'));
+  });
+
+  it('reconciles a fresh API snapshot back into reveal order after a poll strips the sequence', async () => {
+    let profiles = [
+      { slug: 'user-a', personaPosts: [{ id: 'a0', persona: 'productivite', content: 'a base', createdAt: '2026-01-01T00:00:00Z' }] },
+    ];
+    const controller = createFeedSpectatorRevealController({
+      setAllProfiles: (u) => { profiles = typeof u === 'function' ? u(profiles) : u; },
+      gapMs: 1,
+    });
+    controller.ingestProfiles(profiles);
+
+    // Reveal a fresh post whose createdAt is OLDER than the baseline — only the
+    // reveal sequence (not createdAt) puts it on top.
+    const newPost = { id: 'a1', persona: 'securite', content: 'fresh', createdAt: '2020-01-01T00:00:00Z' };
+    controller.setIngestAllowSlugs(['user-a']);
+    controller.setExpectedRevealKey('user-a', postIdentityKey(newPost));
+    controller.ingestProfiles([
+      { slug: 'user-a', personaPosts: [newPost, { id: 'a0', persona: 'productivite', content: 'a base', createdAt: '2026-01-01T00:00:00Z' }] },
+    ]);
+    await controller.waitForSlugIdle('user-a', { waitForEnterAnimation: false });
+
+    // The directory poll returns the same posts with NO _feedRevealSeq — exactly
+    // what reverts the feed to stale-createdAt order. Reconcile must restore it.
+    const pollSnapshot = [
+      { id: 'a0', persona: 'productivite', content: 'a base', createdAt: '2026-01-01T00:00:00Z' },
+      { id: 'a1', persona: 'securite', content: 'fresh', createdAt: '2020-01-01T00:00:00Z' },
+    ];
+    const reconciled = controller.reconcileRevealOrder(pollSnapshot);
+    const a1 = reconciled.find((p) => p.id === 'a1');
+    const a0 = reconciled.find((p) => p.id === 'a0');
+
+    expect(Number(a1._feedRevealSeq ?? 0)).toBeGreaterThan(0); // revealed → order restored
+    expect(Number(a0._feedRevealSeq ?? 0)).toBe(0); // never revealed → untouched
+    // With the sequence restored, the revealed post sorts above the baseline
+    // even though its createdAt is older.
+    expect([a0, a1].sort(sortNewestFirst)).toEqual([a1, a0]);
   });
 
   it('keeps older API posts when revealing a new one', async () => {

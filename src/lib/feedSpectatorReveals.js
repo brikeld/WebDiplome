@@ -26,6 +26,14 @@ export function createFeedSpectatorRevealController({
     globalRevealSeq += 1;
     return globalRevealSeq;
   };
+  // Reveal order persisted by post identity. The home feed polls the directory
+  // on an interval and overwrites every profile's posts with a fresh API
+  // snapshot that has no `_feedRevealSeq`. Without re-applying the order, the
+  // feed reverts to the stored `createdAt` order on each poll — and `createdAt`
+  // is an unreliable harvest timestamp, so posts visibly jump back to the wrong
+  // order until the next reveal. This map lets us re-stamp the known reveal
+  // sequence onto any snapshot so the order survives polls/reloads.
+  const revealSeqByKey = new Map();
   let skipSlug = null;
   /** When set, only these profile slugs may enqueue new spectator reveals. */
   let ingestAllowSlugs = null;
@@ -55,6 +63,15 @@ export function createFeedSpectatorRevealController({
       onPostRevealed,
       onPostsChange: (queuePosts) => {
         const merged = mergeAnimatedWithApiPosts(slug, queuePosts);
+        // Remember the reveal sequence each post animated through so later API
+        // snapshots can be re-stamped (see revealSeqByKey above).
+        for (const p of merged) {
+          const seq = Number(p?._feedRevealSeq ?? 0) || 0;
+          if (seq <= 0) continue;
+          const key = postIdentityKey(p);
+          if (!key) continue;
+          if (seq > (revealSeqByKey.get(key) ?? 0)) revealSeqByKey.set(key, seq);
+        }
         setAllProfiles((prev) => {
           const list = Array.isArray(prev) ? prev : [];
           if (list.length === 0) return list;
@@ -154,6 +171,22 @@ export function createFeedSpectatorRevealController({
         }
       }
     },
+    /**
+     * Re-stamp the known reveal sequence onto a fresh API snapshot so the feed
+     * order survives directory polls / profile reloads (which arrive without
+     * `_feedRevealSeq` and would otherwise revert to stale `createdAt` order).
+     */
+    reconcileRevealOrder(posts) {
+      const list = Array.isArray(posts) ? posts : [];
+      if (revealSeqByKey.size === 0) return list;
+      return list.map((p) => {
+        if (!p || Number(p?._feedRevealSeq ?? 0) > 0) return p;
+        const key = postIdentityKey(p);
+        const seq = key ? revealSeqByKey.get(key) : 0;
+        if (!seq) return p;
+        return { ...p, _feedRevealSeq: seq, _feedEnterDone: true };
+      });
+    },
     isSlugIdle(slug) {
       const queue = queuesBySlug.get(String(slug));
       return !queue || queue.isIdle();
@@ -173,6 +206,7 @@ export function createFeedSpectatorRevealController({
       skipSlug = null;
       ingestAllowSlugs = null;
       globalRevealSeq = 0;
+      revealSeqByKey.clear();
       expectedRevealKeyBySlug.clear();
       baselineEstablished.clear();
       latestApiPostsBySlug.clear();
