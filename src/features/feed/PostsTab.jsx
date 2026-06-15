@@ -96,12 +96,22 @@ function postCreatedAtMs(createdAt) {
 export function sortNewestFirst(a, b) {
   const aRevealSeq = Number(a?._feedRevealSeq ?? 0) || 0;
   const bRevealSeq = Number(b?._feedRevealSeq ?? 0) || 0;
-  if (aRevealSeq !== bRevealSeq) return bRevealSeq - aRevealSeq;
+  // Freshly revealed client posts (reveal seq > 0) sit above untouched baseline
+  // posts even when a baseline post is future-dated (demo/seed createdAt). This
+  // is a BINARY partition, not a magnitude compare: _feedRevealSeq is a
+  // per-author queue counter, so comparing its value across authors in the
+  // aggregated feed lets a prolific author's older posts outrank another
+  // author's newer posts. Order within each partition by real post time.
+  const aRevealed = aRevealSeq > 0 ? 1 : 0;
+  const bRevealed = bRevealSeq > 0 ? 1 : 0;
+  if (aRevealed !== bRevealed) return bRevealed - aRevealed;
   const at = postCreatedAtMs(a.createdAt);
   const bt = postCreatedAtMs(b.createdAt);
   const cmp = (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
   if (cmp !== 0) return cmp;
-  return (b._feedRevealSeq ?? 0) - (a._feedRevealSeq ?? 0);
+  // Identical timestamps only collide within a single author's reveal batch, so
+  // the per-author seq is a valid final tie-break here.
+  return bRevealSeq - aRevealSeq;
 }
 
 /** Map one profile's raw persona posts into enriched card models (unsorted). */

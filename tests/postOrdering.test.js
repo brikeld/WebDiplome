@@ -29,4 +29,28 @@ describe('PostsTab feed ordering', () => {
       baseline,
     ]);
   });
+
+  it('orders revealed posts across authors by real time, not per-author reveal seq', () => {
+    // _feedRevealSeq is a PER-AUTHOR queue counter, so its magnitude is not
+    // comparable across authors. A prolific author Y's older post carries a
+    // higher seq than a quieter author X's newer post; the feed must still
+    // order by actual createdAt so X's newer post stays above Y's older one.
+    const yNew = {
+      content: 'Y newest',
+      createdAt: '2026-06-15T10:00:03.000Z',
+      _feedRevealSeq: 6,
+    };
+    const xNew = {
+      content: 'X newest',
+      createdAt: '2026-06-15T10:00:02.000Z',
+      _feedRevealSeq: 3,
+    };
+    const yOld = {
+      content: 'Y older (round 1)',
+      createdAt: '2026-06-15T10:00:01.000Z',
+      _feedRevealSeq: 5,
+    };
+
+    expect([yOld, xNew, yNew].sort(sortNewestFirst)).toEqual([yNew, xNew, yOld]);
+  });
 });
