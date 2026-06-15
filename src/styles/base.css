@@ -1062,19 +1062,26 @@ body {
 @media (min-width: 2560px) {
   .view-home .page,
   .view-profile .page {
-    --shell-left-col-max: clamp(1560px, 58vw, 1880px);
-    --shell-right-col-width: clamp(940px, 36vw, 1140px);
+    /* 5K–6K: hold the capsule pair to ~75% of the viewport so the design reads
+       as a centered, framed layout with calm empty margins on both sides,
+       rather than two columns stretched nearly edge-to-edge. The right rail's
+       internals are container-query sized, so a narrower column scales the
+       Daniel Rocha card and its score capsules down to match. */
+    --shell-left-col-max: clamp(1100px, 46vw, 1400px);
+    --shell-right-col-width: clamp(700px, 28vw, 860px);
   }
 
+  /* Step the post type back to large-desktop scale so it sits comfortably in the
+     now-narrower column instead of looking oversized. */
   .view-home .main-col,
   .view-profile .main-col {
-    --post-body-size: 32px;
-    --post-avatar-size: 12.5rem;
-    --post-name-size: 16px;
-    --post-handle-size: 13px;
-    --post-meta-pill-size: 18px;
-    --post-meta-pill-icon-size: 26px;
-    --post-meta-comment-icon-size: 32px;
+    --post-body-size: 26px;
+    --post-avatar-size: 10rem;
+    --post-name-size: 14px;
+    --post-handle-size: 11px;
+    --post-meta-pill-size: 16px;
+    --post-meta-pill-icon-size: 22px;
+    --post-meta-comment-icon-size: 28px;
   }
 }
 
