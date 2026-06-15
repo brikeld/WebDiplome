@@ -783,7 +783,7 @@ export default function LandingPage({ onBrowseFeed, onLoginClick, profile, profi
               disabled={!DMG_DOWNLOAD_URL}
               title={DMG_DOWNLOAD_URL ? 'Download COMPLIANT for macOS' : 'Download coming soon'}
             >
-              Get Started
+              Download Now
             </button>
           </div>
           <h1 className="lp-hero-title">
