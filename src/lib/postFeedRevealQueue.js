@@ -30,6 +30,11 @@ export function createPostFeedRevealQueue({
   onPostRevealed,
   onNextPostChange,
   beforeRevealPost = null,
+  // Optional shared allocator returning a strictly increasing reveal sequence.
+  // When several queues (one per author) share one allocator, `_feedRevealSeq`
+  // becomes GLOBAL across authors, so the aggregated feed can order posts by the
+  // true order they were revealed instead of comparing per-author counters.
+  nextRevealSeq = null,
 }) {
   const revealedKeys = new Set();
   const baselineKeys = new Set();
@@ -37,7 +42,14 @@ export function createPostFeedRevealQueue({
   const enterDoneKeys = new Set();
   const pending = [];
   let drainPromise = null;
-  let revealSeq = 0;
+  let localRevealSeq = 0;
+  const allocRevealSeq =
+    typeof nextRevealSeq === 'function'
+      ? nextRevealSeq
+      : () => {
+          localRevealSeq += 1;
+          return localRevealSeq;
+        };
   let revealedBatch = [];
   let firstRevealFired = false;
   let nextPostPersona = Symbol('unset');
@@ -102,15 +114,15 @@ export function createPostFeedRevealQueue({
         continue;
       }
       revealedKeys.add(key);
-      revealSeq += 1;
+      const seq = allocRevealSeq();
       const feedKey =
         typeof crypto !== 'undefined' && crypto.randomUUID
           ? crypto.randomUUID()
-          : `feed-${Date.now()}-${revealSeq}`;
+          : `feed-${Date.now()}-${seq}`;
       revealedBatch.push({
         ...stripFeedClientMeta(raw),
         _feedKey: feedKey,
-        _feedRevealSeq: revealSeq,
+        _feedRevealSeq: seq,
       });
       if (!firstRevealFired) {
         firstRevealFired = true;

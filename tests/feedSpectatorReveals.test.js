@@ -231,6 +231,62 @@ describe('feedSpectatorReveals', () => {
     expect(controller.hasSlugRevealedKey('user-b', newKey)).toBe(false);
   });
 
+  it('assigns a global reveal sequence across authors so cross-author feed order follows reveal order', async () => {
+    let profiles = [
+      { slug: 'user-a', personaPosts: [{ id: 'a0', persona: 'productivite', content: 'a base', createdAt: '2026-01-01T00:00:00Z' }] },
+      { slug: 'user-b', personaPosts: [{ id: 'b0', persona: 'securite', content: 'b base', createdAt: '2026-01-01T00:00:00Z' }] },
+    ];
+    const controller = createFeedSpectatorRevealController({
+      setAllProfiles: (u) => { profiles = typeof u === 'function' ? u(profiles) : u; },
+      gapMs: 1,
+    });
+
+    // Establish baselines for both authors (no reveals yet).
+    controller.ingestProfiles(profiles);
+
+    const reveal = async (slug, posts, newId) => {
+      const newPost = posts.find((p) => p.id === newId);
+      controller.setIngestAllowSlugs([slug]);
+      controller.setExpectedRevealKey(slug, postIdentityKey(newPost));
+      // Simulate the demo reload: the revealing author's posts come fresh from the API.
+      profiles = profiles.map((p) => (p.slug === slug ? { ...p, personaPosts: posts } : p));
+      controller.ingestProfiles(profiles.map((p) => ({ slug: p.slug, personaPosts: p.personaPosts })));
+      await controller.waitForSlugIdle(slug, { waitForEnterAnimation: false });
+      controller.setExpectedRevealKey(slug, null);
+      controller.setIngestAllowSlugs(null);
+    };
+
+    // Round-robin reveal order across authors: A's first, then B's first, then A's second.
+    await reveal('user-a', [
+      { id: 'a1', persona: 'securite', content: 'a one', createdAt: '2026-06-15T10:00:00Z' },
+      { id: 'a0', persona: 'productivite', content: 'a base', createdAt: '2026-01-01T00:00:00Z' },
+    ], 'a1');
+    await reveal('user-b', [
+      { id: 'b1', persona: 'popularite', content: 'b one', createdAt: '2026-06-15T10:00:10Z' },
+      { id: 'b0', persona: 'securite', content: 'b base', createdAt: '2026-01-01T00:00:00Z' },
+    ], 'b1');
+    await reveal('user-a', [
+      { id: 'a2', persona: 'productivite', content: 'a two', createdAt: '2026-06-15T10:00:20Z' },
+      { id: 'a1', persona: 'securite', content: 'a one', createdAt: '2026-06-15T10:00:00Z' },
+      { id: 'a0', persona: 'productivite', content: 'a base', createdAt: '2026-01-01T00:00:00Z' },
+    ], 'a2');
+
+    const seqOf = (id) => {
+      for (const p of profiles) {
+        const found = (p.personaPosts || []).find((x) => x.id === id);
+        if (found) return Number(found._feedRevealSeq ?? 0) || 0;
+      }
+      return 0;
+    };
+
+    // The reveal counter must be monotonic ACROSS authors: a1 < b1 < a2. With a
+    // per-author counter, a1 and b1 both get seq 1, so a1's seq is not below b1's
+    // and A's older post wrongly ties/outranks B's newer one in the feed.
+    expect(seqOf('a1')).toBeGreaterThan(0);
+    expect(seqOf('b1')).toBeGreaterThan(seqOf('a1'));
+    expect(seqOf('a2')).toBeGreaterThan(seqOf('b1'));
+  });
+
   it('keeps older API posts when revealing a new one', async () => {
     let profiles = [
       {

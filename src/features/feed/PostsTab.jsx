@@ -96,22 +96,19 @@ function postCreatedAtMs(createdAt) {
 export function sortNewestFirst(a, b) {
   const aRevealSeq = Number(a?._feedRevealSeq ?? 0) || 0;
   const bRevealSeq = Number(b?._feedRevealSeq ?? 0) || 0;
-  // Freshly revealed client posts (reveal seq > 0) sit above untouched baseline
-  // posts even when a baseline post is future-dated (demo/seed createdAt). This
-  // is a BINARY partition, not a magnitude compare: _feedRevealSeq is a
-  // per-author queue counter, so comparing its value across authors in the
-  // aggregated feed lets a prolific author's older posts outrank another
-  // author's newer posts. Order within each partition by real post time.
-  const aRevealed = aRevealSeq > 0 ? 1 : 0;
-  const bRevealed = bRevealSeq > 0 ? 1 : 0;
-  if (aRevealed !== bRevealed) return bRevealed - aRevealed;
+  // `_feedRevealSeq` is a GLOBAL monotonic reveal counter (shared across every
+  // author's reveal queue — see feedSpectatorReveals.js), so it captures the
+  // true order posts appeared in the live feed. Order by it first: the most
+  // recently revealed post sits on top regardless of author, and freshly
+  // revealed posts (seq > 0) stay above untouched baseline posts (seq 0) even
+  // when baseline/seed data carries a future-dated createdAt. We order by reveal
+  // sequence rather than createdAt because the hosted worker/DB does not stamp
+  // post timestamps in a reliably monotonic way across generation cycles.
+  if (aRevealSeq !== bRevealSeq) return bRevealSeq - aRevealSeq;
+  // Baseline posts (both seq 0), or an exact collision, fall back to post time.
   const at = postCreatedAtMs(a.createdAt);
   const bt = postCreatedAtMs(b.createdAt);
-  const cmp = (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
-  if (cmp !== 0) return cmp;
-  // Identical timestamps only collide within a single author's reveal batch, so
-  // the per-author seq is a valid final tie-break here.
-  return bRevealSeq - aRevealSeq;
+  return (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
 }
 
 /** Map one profile's raw persona posts into enriched card models (unsorted). */

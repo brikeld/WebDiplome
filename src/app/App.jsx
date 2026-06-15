@@ -103,6 +103,7 @@ import { canUseDemoRotateControl } from '@/lib/demoRotate.js';
 import {
   persistProfileSlug,
   readStoredProfileSlug,
+  readViewProfileSlugFromUrl,
   resolveOwnedLandingProfile,
   clearStoredProfileSlug,
 } from '@/lib/profileSlugStorage.js';
@@ -1415,6 +1416,8 @@ export default function App() {
   const [linkedProfileSlug, setLinkedProfileSlug] = useState(() => readLinkedProfileSlug());
   const landingEnterProfileTimerRef = useRef(null);
   const landingManualReturnRef = useRef(false);
+  /** True when opened via Electron “View on web” (`#access_token=…` in URL). */
+  const openedFromElectronRef = useRef(false);
 
   const tryDeferCompliant = useCallback((apply) => {
     if (!deferCompliantRef.current) return false;
@@ -1604,9 +1607,48 @@ export default function App() {
   }, [applyFullAccountReset, linkedProfileSlug, profile?.slug, profile?.id, syncDeletedProfileIds]);
 
   useEffect(() => {
+    if (landingManualReturnRef.current) return;
+    if (mainView !== 'landing' && mainView !== 'login') return;
+
+    const urlSlug = readViewProfileSlugFromUrl();
+    const fromElectron = openedFromElectronRef.current;
+    const hasHostedSession = Boolean(readHostedSession()?.access_token);
+    const shouldDeepLink =
+      fromElectron
+      || (urlSlug && hasHostedSession && isHostedApiOrigin())
+      || (urlSlug && !isHostedApiOrigin());
+
+    if (!shouldDeepLink) return;
+
+    let target =
+      landingOwnedProfile
+      ?? (profile
+        && (!urlSlug || String(profile.slug ?? profile.id) === String(urlSlug))
+        ? profile
+        : null);
+    if (!target && urlSlug) {
+      target = (Array.isArray(allProfiles) ? allProfiles : []).find(
+        (p) => p?.slug === urlSlug || p?.id === urlSlug,
+      ) ?? null;
+    }
+    if (!target) return;
+
+    openedFromElectronRef.current = false;
+    const slug = target.slug ?? target.id ?? urlSlug;
+    if (slug) persistProfileSlug(slug);
+    setProfile((prev) => mergeOwnedProfileFromApi(prev, target, {
+      preserveClientPosts: generationSessionActiveRef.current,
+    }));
+    setActiveTab('profile');
+    setMainView('profile');
+  }, [landingOwnedProfile, profile, allProfiles, mainView]);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
-      ingestHostedSessionFromHash();
+      if (ingestHostedSessionFromHash()) {
+        openedFromElectronRef.current = true;
+      }
       if (!readHostedSession()?.access_token) return;
       const linked = await fetchLinkedProfile();
       if (cancelled || !linked) return;

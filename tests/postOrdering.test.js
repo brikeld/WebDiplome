@@ -30,27 +30,37 @@ describe('PostsTab feed ordering', () => {
     ]);
   });
 
-  it('orders revealed posts across authors by real time, not per-author reveal seq', () => {
-    // _feedRevealSeq is a PER-AUTHOR queue counter, so its magnitude is not
-    // comparable across authors. A prolific author Y's older post carries a
-    // higher seq than a quieter author X's newer post; the feed must still
-    // order by actual createdAt so X's newer post stays above Y's older one.
-    const yNew = {
-      content: 'Y newest',
-      createdAt: '2026-06-15T10:00:03.000Z',
-      _feedRevealSeq: 6,
-    };
-    const xNew = {
-      content: 'X newest',
-      createdAt: '2026-06-15T10:00:02.000Z',
-      _feedRevealSeq: 3,
-    };
-    const yOld = {
-      content: 'Y older (round 1)',
-      createdAt: '2026-06-15T10:00:01.000Z',
+  it('orders revealed posts across authors by global reveal sequence', () => {
+    // _feedRevealSeq is a GLOBAL counter shared across authors, so it reflects
+    // the real order posts were revealed. Round-robin reveal order a1, b1, a2
+    // must render newest-reveal-first with B interleaved between A's two posts —
+    // A's older post never clings directly below A's newer one.
+    const a1 = { content: 'A first', createdAt: '2026-06-15T10:00:00Z', _feedRevealSeq: 1 };
+    const b1 = { content: 'B first', createdAt: '2026-06-15T10:00:10Z', _feedRevealSeq: 2 };
+    const a2 = { content: 'A second', createdAt: '2026-06-15T10:00:20Z', _feedRevealSeq: 3 };
+
+    expect([a1, a2, b1].sort(sortNewestFirst)).toEqual([a2, b1, a1]);
+  });
+
+  it('prioritises global reveal sequence over an unreliable createdAt', () => {
+    // The hosted worker/DB does not stamp createdAt monotonically across cycles,
+    // so a post revealed later can carry an older timestamp. Reveal order (seq)
+    // is authoritative: the later-revealed post (higher seq) stays on top even
+    // though its createdAt is older.
+    const revealedLater = {
+      content: 'revealed later, stale timestamp',
+      createdAt: '2026-06-15T09:00:00Z',
       _feedRevealSeq: 5,
     };
+    const revealedEarlier = {
+      content: 'revealed earlier, fresher timestamp',
+      createdAt: '2026-06-15T10:00:00Z',
+      _feedRevealSeq: 4,
+    };
 
-    expect([yOld, xNew, yNew].sort(sortNewestFirst)).toEqual([yNew, xNew, yOld]);
+    expect([revealedEarlier, revealedLater].sort(sortNewestFirst)).toEqual([
+      revealedLater,
+      revealedEarlier,
+    ]);
   });
 });

@@ -18,6 +18,14 @@ export function createFeedSpectatorRevealController({
   const queuesBySlug = new Map();
   const baselineEstablished = new Set();
   const latestApiPostsBySlug = new Map();
+  // One reveal counter shared by every author's queue, so `_feedRevealSeq` is
+  // monotonic across the whole feed and posts can be ordered by the real order
+  // they were revealed — not by a per-author counter that resets each author.
+  let globalRevealSeq = 0;
+  const nextRevealSeq = () => {
+    globalRevealSeq += 1;
+    return globalRevealSeq;
+  };
   let skipSlug = null;
   /** When set, only these profile slugs may enqueue new spectator reveals. */
   let ingestAllowSlugs = null;
@@ -40,6 +48,8 @@ export function createFeedSpectatorRevealController({
 
     const queue = createPostFeedRevealQueue({
       gapMs,
+      // Shared so reveal sequence numbers are global across all authors' queues.
+      nextRevealSeq,
       // Spectator reveals merge against latest API posts — not a frozen baseline copy.
       getBaseline: () => [],
       onPostRevealed,
@@ -162,6 +172,7 @@ export function createFeedSpectatorRevealController({
     reset() {
       skipSlug = null;
       ingestAllowSlugs = null;
+      globalRevealSeq = 0;
       expectedRevealKeyBySlug.clear();
       baselineEstablished.clear();
       latestApiPostsBySlug.clear();
