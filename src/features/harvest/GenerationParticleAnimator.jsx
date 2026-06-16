@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   GENERATION_PARTICLE_BURST_MS,
+  GENERATION_PARTICLE_DEMO_FLIGHT_MS,
   GENERATION_PARTICLE_EVENT,
   GENERATION_PARTICLE_FLIGHT_MS,
   GENERATION_PARTICLE_SIZE,
+  computeDemoParticleFrame,
   computeGenerationParticleFrame,
   personaUiColorForParticle,
 } from '@/lib/generationParticleFlight.js';
@@ -13,15 +15,20 @@ import '@/features/liveScoring/liveScoring.css';
 const SIZE = GENERATION_PARTICLE_SIZE;
 
 /**
- * A persona-colored sphere lobs from the generating row to the reserved feed
- * slot, then bursts once on landing. The flight is driven by rAF (left/top
- * only); the impact pop + shockwave are CSS animations on `--impacting`. The
- * flight resolves at the moment of impact, so the new post materializes from
- * the burst.
+ * A persona-colored sphere flies to the reserved feed slot, then bursts once on
+ * landing. Two variants share the same sphere + burst styling:
+ *  - `generation`: lobs from the dashboard generating row (your own post).
+ *  - `demo`: descends from the top of the feed (a post from another user).
+ * The flight is driven by rAF (left/top only); the impact pop + shockwave are
+ * CSS animations on `--impacting`. The flight resolves at the moment of impact,
+ * so the new post materializes from the burst.
  */
 function GenerationParticle({ flight, onDone }) {
   const elRef = useRef(null);
   const color = personaUiColorForParticle(flight.persona);
+  const isDemo = flight.variant === 'demo';
+  const computeFrame = isDemo ? computeDemoParticleFrame : computeGenerationParticleFrame;
+  const flightMs = isDemo ? GENERATION_PARTICLE_DEMO_FLIGHT_MS : GENERATION_PARTICLE_FLIGHT_MS;
   const sx = flight.sourceRect.x + flight.sourceRect.width / 2;
   const sy = flight.sourceRect.y + flight.sourceRect.height / 2;
 
@@ -52,8 +59,8 @@ function GenerationParticle({ flight, onDone }) {
     };
 
     const step = (ts) => {
-      const progress = Math.min((ts - startTime) / GENERATION_PARTICLE_FLIGHT_MS, 1);
-      const { x, y } = computeGenerationParticleFrame({
+      const progress = Math.min((ts - startTime) / flightMs, 1);
+      const { x, y } = computeFrame({
         progress,
         sourceRect: flight.sourceRect,
         targetRect: flight.targetRect,
@@ -68,7 +75,7 @@ function GenerationParticle({ flight, onDone }) {
       cancelAnimationFrame(rafId);
       window.clearTimeout(removeTimer);
     };
-  }, [flight, onDone]);
+  }, [flight, onDone, computeFrame, flightMs]);
 
   return (
     <div
@@ -107,6 +114,7 @@ export default function GenerationParticleAnimator() {
         {
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           persona: detail.persona ?? null,
+          variant: detail.variant === 'demo' ? 'demo' : 'generation',
           sourceRect: detail.sourceRect,
           targetRect: detail.targetRect,
           resolve: detail.resolve,

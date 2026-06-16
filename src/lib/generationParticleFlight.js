@@ -11,14 +11,20 @@ const PERSONA_UI_COLORS = {
   popularite: '#CCF847',
 };
 
-/** Travel time from the generating row to the reserved feed slot. */
+/** Travel time from the generating row to the reserved feed slot (own generation). */
 export const GENERATION_PARTICLE_FLIGHT_MS = 700;
+/** Travel time for the demo descent (a post arriving from another user). */
+export const GENERATION_PARTICLE_DEMO_FLIGHT_MS = 560;
 /** Impact lifetime after landing — core pop + shockwave. Mirror `--burst-ms` in CSS. */
 export const GENERATION_PARTICLE_BURST_MS = 500;
 export const GENERATION_PARTICLE_SIZE = 32;
 
 function easeOutCubic(t) {
   return 1 - (1 - t) ** 3;
+}
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
 const EASE_AT_HALF = easeOutCubic(0.5);
@@ -104,7 +110,7 @@ export function animateGenerationParticleToFeed(persona) {
       const targetRect = getFeedRevealTargetRect();
       if (!sourceRect || !targetRect) { resolve(); return; }
       window.dispatchEvent(new CustomEvent(GENERATION_PARTICLE_EVENT, {
-        detail: { persona, sourceRect, targetRect, resolve },
+        detail: { persona, sourceRect, targetRect, resolve, variant: 'generation' },
       }));
     }, 0);
   });
@@ -114,6 +120,68 @@ export function createGenerationBeforeReveal() {
   return async (post) => {
     await animateGenerationParticleToFeed(post?.persona ?? null);
   };
+}
+
+/** Target for a demo reveal: the top of the feed where the prepended post lands. */
+export function getDemoRevealTargetRect() {
+  if (typeof document === 'undefined') return null;
+  const shell = document.querySelector('.posts-tab .post-card-shell');
+  if (shell) {
+    const r = shell.getBoundingClientRect();
+    return { x: r.x, y: r.y + 4, width: r.width, height: 36 };
+  }
+  const tab = document.querySelector('.posts-tab');
+  if (tab) {
+    const r = tab.getBoundingClientRect();
+    return { x: r.x, y: r.y + 24, width: r.width, height: 36 };
+  }
+  return getFeedRevealTargetRect();
+}
+
+/** Source for a demo reveal: just below the header, centered above the slot. */
+function getDemoSourceRect(targetRect) {
+  if (!targetRect) return null;
+  const cx = targetRect.x + targetRect.width / 2;
+  const top = Math.max(80, targetRect.y - 120);
+  return { x: cx - GENERATION_PARTICLE_SIZE / 2, y: top - GENERATION_PARTICLE_SIZE / 2, width: GENERATION_PARTICLE_SIZE, height: GENERATION_PARTICLE_SIZE };
+}
+
+/**
+ * Request a portal-rendered sphere that descends into the feed slot and bursts
+ * — imitating a post arriving from another user. Resolves at impact.
+ */
+export function animateDemoParticleToFeed(persona) {
+  if (prefersReducedGenerationMotion()) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const targetRect = getDemoRevealTargetRect();
+      const sourceRect = getDemoSourceRect(targetRect);
+      if (!sourceRect || !targetRect) { resolve(); return; }
+      window.dispatchEvent(new CustomEvent(GENERATION_PARTICLE_EVENT, {
+        detail: { persona, sourceRect, targetRect, resolve, variant: 'demo' },
+      }));
+    }, 0);
+  });
+}
+
+export function createDemoBeforeReveal() {
+  return async (post) => {
+    await animateDemoParticleToFeed(post?.persona ?? null);
+  };
+}
+
+/** Frame for the demo descent: a smooth ease-in-out drop with a gentle sway. */
+export function computeDemoParticleFrame({ progress, sourceRect, targetRect }) {
+  const sx = sourceRect.x + sourceRect.width / 2;
+  const sy = sourceRect.y + sourceRect.height / 2;
+  const tx = targetRect.x + targetRect.width / 2;
+  const ty = targetRect.y + targetRect.height / 2;
+
+  const p = Math.max(0, Math.min(progress, 1));
+  const t = easeInOutCubic(p);
+  const sway = Math.sin(p * Math.PI) * 18;
+  return { x: sx + (tx - sx) * t + sway, y: sy + (ty - sy) * t, opacity: 1 };
 }
 
 export function computeGenerationParticleFrame({

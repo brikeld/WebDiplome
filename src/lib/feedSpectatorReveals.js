@@ -1,4 +1,5 @@
 import { mergePostsPrepend, postIdentityKey } from '@/lib/mergePersonaPosts.js';
+import { createDemoBeforeReveal } from '@/lib/generationParticleFlight.js';
 import {
   createPostFeedRevealQueue,
   POST_REVEAL_GAP_MS,
@@ -34,6 +35,9 @@ export function createFeedSpectatorRevealController({
   // order until the next reveal. This map lets us re-stamp the known reveal
   // sequence onto any snapshot so the order survives polls/reloads.
   const revealSeqByKey = new Map();
+  // A post arriving from another user descends into the feed slot and bursts,
+  // then materializes — the same sphere + burst used for your own generation.
+  const beforeRevealPost = createDemoBeforeReveal();
   let skipSlug = null;
   /** When set, only these profile slugs may enqueue new spectator reveals. */
   let ingestAllowSlugs = null;
@@ -60,6 +64,7 @@ export function createFeedSpectatorRevealController({
       nextRevealSeq,
       // Spectator reveals merge against latest API posts — not a frozen baseline copy.
       getBaseline: () => [],
+      beforeRevealPost,
       onPostRevealed,
       onPostsChange: (queuePosts) => {
         const merged = mergeAnimatedWithApiPosts(slug, queuePosts);

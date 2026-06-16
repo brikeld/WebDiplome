@@ -1266,9 +1266,7 @@ function AppInner({
                 feedProfiles={feedProfiles}
                 viewerProfile={viewerProfile}
                 aiFeaturesEnabled={accountFeaturesEnabled}
-                isGeneratingPosts={
-                  (postGen.phase === 'generating' && postGen.loading) || demoRotateActive
-                }
+                isGeneratingPosts={postGen.phase === 'generating' && postGen.loading}
                 generatingPersona={demoGeneratingPersona ?? postGen.generatingPersona}
                 highlightedPostId={feedHighlightedPostId}
                 onHighlightPost={handleHighlightPost}
