@@ -11,10 +11,11 @@ const PERSONA_UI_COLORS = {
   popularite: '#CCF847',
 };
 
-export const GENERATION_PARTICLE_DURATION_MS = 920;
+/** Travel time from the generating row to the reserved feed slot. */
+export const GENERATION_PARTICLE_FLIGHT_MS = 700;
+/** Impact lifetime after landing — core pop + shockwave. Mirror `--burst-ms` in CSS. */
+export const GENERATION_PARTICLE_BURST_MS = 500;
 export const GENERATION_PARTICLE_SIZE = 32;
-/** Progress fraction at which the particle "impacts" — resolve fires here, post reveal begins. */
-export const GENERATION_PARTICLE_IMPACT_PROGRESS = 0.88;
 
 function easeOutCubic(t) {
   return 1 - (1 - t) ** 3;
@@ -137,9 +138,6 @@ export function computeGenerationParticleFrame({
   const arcY = arcHeight * Math.sin(Math.PI * progress);
   const y = sy + dy * t + arcY;
 
-  const fadeStart = GENERATION_PARTICLE_IMPACT_PROGRESS;
-  const opacity = progress > fadeStart
-    ? Math.max(0, 1 - (progress - fadeStart) / (1 - fadeStart))
-    : 1;
-  return { x, y, opacity };
+  // Flight stays fully opaque; the impact burst owns the fade (CSS-driven).
+  return { x, y, opacity: 1 };
 }

@@ -282,17 +282,77 @@
   animation-duration: 520ms;
 }
 
-/* Generation particle: pure persona-color burst, no black/white hide rings */
+/* ── Generation particle ───────────────────────────────────────────────
+   Self-contained: a persona-colored sphere that lobs into the feed and
+   bursts once on impact. It deliberately does NOT reuse the live-scoring
+   reveal look (orbit rings / black-white frame) — only the `.lsc-particle`
+   and `.lsc-particle--generation` classes are applied. Sizing, position and
+   the flight glow are set inline; the impact burst is owned by CSS below. */
 .lsc-particle--generation {
-  will-change: left, top, opacity;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  border: none;
+  outline: none;
+  will-change: left, top, transform, opacity;
 }
 
+/* Shock rings stay dormant during the flight. */
+.lsc-particle--generation .lsc-particle__shock {
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  animation: none;
+}
+
+/* Impact: a single core pop that fades, plus one expanding shockwave
+   (outer ring, then a tighter inner ring). `--burst-ms` mirrors
+   GENERATION_PARTICLE_BURST_MS so JS removal and the CSS burst stay in sync. */
 .lsc-particle--generation.lsc-particle--impacting {
-  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: lsc-generation-core var(--burst-ms, 500ms) cubic-bezier(0.22, 1, 0.36, 1) forwards;
   box-shadow:
-    0 0 0 5px color-mix(in srgb, var(--lsc-color, #759aef) 70%, transparent),
-    0 0 52px 20px color-mix(in srgb, var(--lsc-color, #759aef) 88%, transparent),
-    0 0 130px 52px color-mix(in srgb, var(--lsc-color, #759aef) 42%, transparent) !important;
+    0 0 0 4px color-mix(in srgb, var(--lsc-color, #759aef) 55%, transparent),
+    0 0 60px 22px color-mix(in srgb, var(--lsc-color, #759aef) 80%, transparent),
+    0 0 140px 56px color-mix(in srgb, var(--lsc-color, #759aef) 36%, transparent) !important;
+}
+
+.lsc-particle--generation.lsc-particle--impacting .lsc-particle__shock--outer {
+  animation: lsc-generation-shock var(--burst-ms, 500ms) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lsc-particle--generation.lsc-particle--impacting .lsc-particle__shock--inner {
+  animation: lsc-generation-shock calc(var(--burst-ms, 500ms) * 0.8) 70ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes lsc-generation-core {
+  0% {
+    transform: translateZ(0) scale(1);
+    opacity: 1;
+  }
+  28% {
+    transform: translateZ(0) scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translateZ(0) scale(0.35);
+    opacity: 0;
+  }
+}
+
+@keyframes lsc-generation-shock {
+  0% {
+    width: 8px;
+    height: 8px;
+    opacity: 0.85;
+  }
+  100% {
+    width: 150px;
+    height: 150px;
+    opacity: 0;
+  }
 }
 
 .lsc-particle__label {
