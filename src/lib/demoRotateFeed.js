@@ -191,8 +191,75 @@ async function revealCompletedPost(entry, {
 }
 
 /**
- * Strict round-robin: one profile at a time — queue → generate → reveal → next profile.
- * Cycles through every demo user before repeating anyone.
+ * Generate the next demo post: queue it, then wait for the worker to finish.
+ * Skips any target that can't be generated (no harvest, queue failure, timeout)
+ * and moves on to the next in round-robin. Returns the completed post entry plus
+ * the index to resume from, or null once generation should stop.
+ *
+ * This deliberately does NOT reveal the post — it runs one step AHEAD of the
+ * reveal so LM Studio keeps working while the previous post animates in.
+ */
+async function generateNextDemoPost(ordered, startIndex, { shouldContinue }) {
+  let index = startIndex;
+  while (shouldContinue()) {
+    const target = ordered[index % ordered.length];
+    index += 1;
+
+    if (isHostedApiOrigin() && readHostedSession()?.refresh_token) {
+      await refreshHostedSession().catch(() => null);
+    }
+
+    let queued = null;
+    try {
+      queued = await queueDemoPostWithRetry(target.slug, { shouldContinue });
+    } catch (err) {
+      console.warn(`[demo-rotate] queue ${target.slug}:`, err?.message || err);
+    }
+
+    if (!queued?.jobId) {
+      const label = target.displayName || target.slug;
+      if (queued === null) {
+        console.warn(`[demo-rotate] skip ${label} (no harvest)`);
+      } else if (queued?.reason) {
+        console.warn(`[demo-rotate] skip ${label} (${queued.reason})`);
+      } else {
+        console.warn(`[demo-rotate] skip ${label} (queue failed)`);
+      }
+      await sleep(300);
+      continue;
+    }
+
+    let job = null;
+    try {
+      job = await waitForJobComplete(queued.jobId, { shouldContinue });
+    } catch (err) {
+      console.warn(`[demo-rotate] job ${target.slug}:`, err?.message || err);
+      await sleep(300);
+      continue;
+    }
+
+    return {
+      entry: {
+        slug: target.slug,
+        generatingPersona: personaFromGenerationJob(job) ?? queued.generatingPersona ?? null,
+        postKey: postKeyFromGenerationJob(job),
+      },
+      nextIndex: index,
+    };
+  }
+  return null;
+}
+
+/**
+ * Round-robin demo feed: one post per user, revealed in order. Generation is
+ * pipelined ONE step ahead of the reveal — while the current post animates in
+ * (and during the inter-post gap), the worker is already generating the next
+ * post, so LM Studio never sits idle between reveals. The reveal animation,
+ * order and pacing are unchanged; only the dead time between requests is removed.
+ *
+ * Pre-generating the next post is safe: each reveal reloads with
+ * `preservePersonaPostsForSlugs` for every OTHER slug, so a post that finished
+ * generating early stays hidden until it's that profile's turn to reveal.
  */
 export async function runDemoRotatePipeline({
   targets,
@@ -206,7 +273,6 @@ export async function runDemoRotatePipeline({
   if (ordered.length === 0) throw new Error('No demo profiles available');
 
   const allSlugs = ordered.map((entry) => entry.slug);
-  let cycleIndex = 0;
 
   spectateController?.setIngestAllowSlugs?.(null);
 
@@ -217,70 +283,36 @@ export async function runDemoRotatePipeline({
       /* baseline reload is best-effort */
     }
 
+    // Kick off the first generation; from then on we always start the next
+    // generation BEFORE revealing the current post so the two overlap.
+    let pending = generateNextDemoPost(ordered, 0, { shouldContinue });
+
     while (shouldContinue()) {
-      const target = ordered[cycleIndex % ordered.length];
-      cycleIndex += 1;
+      const result = await pending;
+      if (!result) break;
 
-      if (isHostedApiOrigin() && readHostedSession()?.refresh_token) {
-        await refreshHostedSession().catch(() => null);
-      }
+      const { entry, nextIndex } = result;
+      // Overlap: the worker starts the next post while this one reveals.
+      pending = generateNextDemoPost(ordered, nextIndex, { shouldContinue });
 
-      let queued = null;
+      onGeneratingPersona?.(entry.generatingPersona);
       try {
-        queued = await queueDemoPostWithRetry(target.slug, { shouldContinue });
+        await revealCompletedPost(entry, {
+          reloadProfileFromApi,
+          spectateController,
+          allSlugs,
+          shouldContinue,
+        });
       } catch (err) {
-        console.warn(`[demo-rotate] queue ${target.slug}:`, err?.message || err);
-      }
-
-      if (!queued?.jobId) {
-        const label = target.displayName || target.slug;
-        if (queued === null) {
-          console.warn(`[demo-rotate] skip ${label} (no harvest)`);
-        } else if (queued?.reason) {
-          console.warn(`[demo-rotate] skip ${label} (${queued.reason})`);
-        } else {
-          console.warn(`[demo-rotate] skip ${label} (queue failed)`);
-        }
-        await sleep(300);
-        continue;
-      }
-
-      const expectedPersona = queued.generatingPersona ?? null;
-      onGeneratingPersona?.(expectedPersona);
-
-      let job = null;
-      try {
-        job = await waitForJobComplete(queued.jobId, { shouldContinue });
-      } catch (err) {
-        console.warn(`[demo-rotate] job ${target.slug}:`, err?.message || err);
-        await sleep(300);
-        continue;
-      }
-
-      const persona = personaFromGenerationJob(job) ?? expectedPersona;
-      const postKey = postKeyFromGenerationJob(job);
-
-      try {
-        await revealCompletedPost(
-          {
-            slug: target.slug,
-            generatingPersona: persona,
-            postKey,
-          },
-          {
-            reloadProfileFromApi,
-            spectateController,
-            allSlugs,
-            shouldContinue,
-          },
-        );
-      } catch (err) {
-        console.warn(`[demo-rotate] reveal ${target.slug}:`, err?.message || err);
+        console.warn(`[demo-rotate] reveal ${entry.slug}:`, err?.message || err);
       }
 
       onGeneratingPersona?.(null);
       await sleep(revealGapMs);
     }
+
+    // Let any in-flight generation settle so we don't leave a floating promise.
+    await pending.catch(() => null);
   } finally {
     for (const slug of allSlugs) {
       spectateController?.setExpectedRevealKey?.(slug, null);
