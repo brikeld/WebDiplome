@@ -486,7 +486,7 @@ function AppInner({
 
   const manualDashboardGenerateEnabled = canManuallyGenerateDashboardUpdate(viewerProfile ?? profile);
   const dashboardTimerActive =
-    mainView === 'home'
+    (mainView === 'home' || mainView === 'profile')
     && Boolean(profile)
     && accountFeaturesEnabled
     && !updateSessionActive
@@ -1744,14 +1744,21 @@ export default function App() {
             const meJson = await meRes.json().catch(() => ({}));
             const meProfile = meJson?.profile ?? null;
             if (meProfile) {
-              const meSlug = String(meProfile.slug ?? meProfile.id ?? '').trim();
+              // `/api/profile/me` returns posts WITHOUT `_feedRevealSeq`. Reconcile
+              // them back into reveal order here, or the owner's freshly revealed
+              // posts lose their sequence on every poll/navigation and sink below
+              // spectator posts that still carry theirs — the feed reshuffles when
+              // you leave and return to home. (The directory `normalized` is already
+              // reconciled; this `/me` payload is a separate, un-reconciled fetch.)
+              const reconciledMe = reconcileProfilesRevealOrder([meProfile])[0] ?? meProfile;
+              const meSlug = String(reconciledMe.slug ?? reconciledMe.id ?? '').trim();
               if (meSlug) {
                 setLinkedProfileSlug(meSlug);
                 persistProfileSlug(meSlug);
               }
-              setLandingOwnedProfile(meProfile);
+              setLandingOwnedProfile(reconciledMe);
               setProfile((prev) =>
-                mergeOwnedProfileFromApi(prev, meProfile, {
+                mergeOwnedProfileFromApi(prev, reconciledMe, {
                   preserveClientPosts: generationSessionActiveRef.current,
                 }),
               );
@@ -1760,11 +1767,11 @@ export default function App() {
                 (p) => p?.slug === meSlug || p?.id === meSlug,
               );
               if (idx >= 0) {
-                directory[idx] = mergeOwnedProfileFromApi(directory[idx], meProfile, {
+                directory[idx] = mergeOwnedProfileFromApi(directory[idx], reconciledMe, {
                   preserveClientPosts: generationSessionActiveRef.current,
                 });
               } else {
-                directory.unshift(meProfile);
+                directory.unshift(reconciledMe);
               }
               setAllProfiles(directory);
               scheduleSpectatorIngest(directory, cancelledRef);

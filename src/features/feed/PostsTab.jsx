@@ -87,7 +87,11 @@ const stablePct = (seed) => {
   return (h % 5) + 1;
 };
 
-const createdAtFallback = (i) => Date.now() - (i + 1) * 6 * 60 * 60 * 1000; // 6h steps
+// Captured ONCE at module load — never `Date.now()` per call. A per-call
+// timestamp would shift on every render, so timestamp-less posts would jump
+// position each time the feed re-rendered (e.g. navigating home→profile→home).
+const FEED_ORDER_EPOCH = Date.now();
+const createdAtFallback = (i) => FEED_ORDER_EPOCH - (i + 1) * 6 * 60 * 60 * 1000; // 6h steps
 
 function postCreatedAtMs(createdAt) {
   return typeof createdAt === 'number' ? createdAt : new Date(createdAt).getTime();
@@ -108,7 +112,14 @@ export function sortNewestFirst(a, b) {
   // Baseline posts (both seq 0), or an exact collision, fall back to post time.
   const at = postCreatedAtMs(a.createdAt);
   const bt = postCreatedAtMs(b.createdAt);
-  return (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
+  const ad = Number.isFinite(at) ? at : 0;
+  const bd = Number.isFinite(bt) ? bt : 0;
+  if (ad !== bd) return bd - ad;
+  // Final deterministic tiebreaker by stable identity. Without it, posts with
+  // equal seq AND equal/missing timestamps keep whatever relative order the
+  // input array happened to have — and that input order changes between polls
+  // (the directory re-sorts authors), so the feed would visibly reshuffle.
+  return postStableKey(a, 0).localeCompare(postStableKey(b, 0));
 }
 
 /** Map one profile's raw persona posts into enriched card models (unsorted). */
