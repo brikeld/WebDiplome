@@ -20,6 +20,24 @@ export function stripFeedRevealMetaFromPosts(posts) {
 }
 
 /**
+ * Prepare already-on-screen posts for use as a reveal baseline: clear the
+ * active-entry markers (`_feedEnter`, `_feedKey`) so they don't re-animate, but
+ * KEEP `_feedRevealSeq` (and `_feedEnterDone`) so each post holds its current
+ * place in the feed while new posts reveal above it.
+ *
+ * Using `stripFeedRevealMetaFromPosts` here instead drops the sequence, which
+ * makes already-revealed posts fall back to (unreliable) createdAt order and
+ * visibly sink down the feed the moment a new generation begins.
+ */
+export function settleFeedPostsAsBaseline(posts) {
+  return (Array.isArray(posts) ? posts : []).map((post) => {
+    if (!post || typeof post !== 'object') return post;
+    const { _feedEnter, _feedKey, ...rest } = post;
+    return rest;
+  });
+}
+
+/**
  * Staggered feed reveals: each post prepended with `_feedEnter` animation.
  */
 export function createPostFeedRevealQueue({

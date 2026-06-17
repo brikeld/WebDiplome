@@ -68,8 +68,8 @@ import { isCompliantSystemPost } from '@/lib/mergePersonaPosts.js';
 import {
   createPostFeedRevealQueue,
   POST_REVEAL_GAP_MS,
+  settleFeedPostsAsBaseline,
   sleep as feedRevealSleep,
-  stripFeedRevealMetaFromPosts,
 } from '@/lib/postFeedRevealQueue.js';
 import {
   createOrderedSlotRevealBuffer,
@@ -1897,14 +1897,16 @@ export default function App() {
   }, [deletedProfileIds, linkedProfileSlug, reconcileProfilesRevealOrder]);
 
   useEffect(() => {
+    // Your own profile is never "spectator" content: your posts are revealed by
+    // the generation flow (the lobbing particle), not the spectator controller
+    // (the descend/demo particle meant for other users). Always exclude your slug
+    // from spectator reveals — otherwise the first poll after a generation sees
+    // your fresh posts as "new from someone else" and replays them with the demo
+    // animation. Order for your posts is still preserved separately via
+    // reconcileProfilesRevealOrder + recordRevealOrder, which don't depend on this.
     const operatorSlug = profile?.slug ?? profile?.id ?? null;
-    const skip = demoRotateActive
-      ? operatorSlug
-      : postGen.loading
-        ? linkedProfileSlug ?? operatorSlug
-        : null;
-    spectateRevealRef.current?.setSkipSlug(skip);
-  }, [postGen.loading, demoRotateActive, linkedProfileSlug, profile?.slug, profile?.id]);
+    spectateRevealRef.current?.setSkipSlug(linkedProfileSlug ?? operatorSlug);
+  }, [linkedProfileSlug, profile?.slug, profile?.id]);
 
   const pollHarvestUntilDone = useCallback(async (scoresBefore, profileSlug) => {
     const slug = String(profileSlug || '').trim();
@@ -1971,7 +1973,9 @@ export default function App() {
   const runBioAndPostGeneration = useCallback(async (profileSnapshot) => {
     let p = profileSnapshot ?? profile;
     if (!p) return;
-    streamPostsBaselineRef.current = Array.isArray(p.personaPosts) ? p.personaPosts : [];
+    // Keep `_feedRevealSeq` so existing posts hold their place; only clear the
+    // active-entry markers so they don't re-animate.
+    streamPostsBaselineRef.current = settleFeedPostsAsBaseline(p.personaPosts ?? []);
 
     const existingBio = String(p.profileSummary || p.userDescription || '').trim();
     if (!existingBio) {
@@ -2257,8 +2261,10 @@ export default function App() {
           const jobId = triggerBody?.jobId ?? null;
           // Collapse any duplicate COMPLIANT/system posts (mirrors the manual
           // generate path) so an already-duplicated row never renders twice.
+          // Settle (keep `_feedRevealSeq`) so existing posts hold their place
+          // instead of dropping to stale createdAt order when generation starts.
           streamPostsBaselineRef.current = mergePostsPrepend(
-            stripFeedRevealMetaFromPosts(owned.personaPosts ?? []),
+            settleFeedPostsAsBaseline(owned.personaPosts ?? []),
             [],
           );
           await runHostedPostGenerationWithReveal({
@@ -2431,9 +2437,13 @@ export default function App() {
     // vanish the moment reveals started and "reappear" at the end. Unioning
     // keeps it pinned in the feed (the feed itself re-sorts by time, so new
     // posts still land above it).
-    const freshServerPosts = stripFeedRevealMetaFromPosts(freshProfile?.personaPosts ?? []);
+    // Settle (NOT strip) so existing posts keep their `_feedRevealSeq` and hold
+    // their place in the feed; new generated posts get a higher sequence and
+    // reveal on top. Stripping the sequence here made already-revealed posts
+    // fall back to stale createdAt order and visibly sink during the deltas step.
+    const freshServerPosts = settleFeedPostsAsBaseline(freshProfile?.personaPosts ?? []);
     setProfile((prev) => {
-      const livePosts = stripFeedRevealMetaFromPosts(prev?.personaPosts ?? []);
+      const livePosts = settleFeedPostsAsBaseline(prev?.personaPosts ?? []);
       const baseline = mergePostsPrepend(livePosts, freshServerPosts);
       streamPostsBaselineRef.current = baseline;
       return prev ? { ...prev, personaPosts: baseline } : prev;

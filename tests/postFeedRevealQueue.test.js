@@ -3,8 +3,27 @@ import { isCompliantSystemPost } from '../src/lib/mergePersonaPosts.js';
 import {
   createPostFeedRevealQueue,
   POST_REVEAL_GAP_MS,
+  settleFeedPostsAsBaseline,
   sortPostsForReveal,
 } from '../src/lib/postFeedRevealQueue.js';
+
+describe('settleFeedPostsAsBaseline', () => {
+  it('keeps _feedRevealSeq so settled posts hold their feed position', () => {
+    const settled = settleFeedPostsAsBaseline([
+      { id: 'a', _feedRevealSeq: 7, _feedEnter: true, _feedEnterDone: false, _feedKey: 'k1' },
+    ]);
+    // Sequence (and the settled marker) survive; the active-entry markers do not.
+    expect(settled[0]._feedRevealSeq).toBe(7);
+    expect(settled[0]._feedEnter).toBeUndefined();
+    expect(settled[0]._feedKey).toBeUndefined();
+  });
+
+  it('does not invent a sequence for never-revealed posts', () => {
+    const settled = settleFeedPostsAsBaseline([{ id: 'b', content: 'plain' }]);
+    expect(settled[0]._feedRevealSeq).toBeUndefined();
+    expect(settled[0].content).toBe('plain');
+  });
+});
 
 describe('createPostFeedRevealQueue', () => {
   it('tracks only generated posts for completion (ignores new COMPLIANT posts)', () => {
