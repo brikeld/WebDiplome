@@ -15,6 +15,22 @@ function boardForId(boardId) {
   return BOARDS.find((b) => b.id === boardId) ?? null;
 }
 
+/**
+ * Does the caption name a specific leaderboard position (which goes stale when
+ * the live rank drifts)? Board-themed captions — the default the generator now
+ * produces — talk about the board itself, never the position, so they stay
+ * accurate forever and should be kept rather than swapped for the repetitive
+ * deterministic fallback.
+ */
+function captionMentionsRank(content) {
+  const text = String(content ?? '');
+  return (
+    /\b\d+\s*(st|nd|rd|th)\b/i.test(text) // 1st, 2nd, 3rd…
+    || /#\s*\d/.test(text) // #1, # 2
+    || /\b(rank(ed|ing)?|climb(ed|ing)?|dropp(ed|ing)?|moved\s+(up|down)|new\s+to\s+(the\s+)?board)\b/i.test(text)
+  );
+}
+
 function standingFromRemixed(remixed, authorSlug) {
   const entries = Array.isArray(remixed.entries) ? remixed.entries : [];
   const userRank = remixed.userRank ?? entries.find((e) => e.isUser)?.rank ?? null;
@@ -81,16 +97,22 @@ export function enrichLeaderboardPostForFeed({
   let climbTip = base.climbTip;
 
   if (rankDrifted) {
-    content = buildLeaderboardPostCaption({
-      boardId: base.boardId,
-      title: base.title,
-      hint: remixed.hint ?? base.hint,
-    });
+    // Rationales + climb tip are rank-dependent — always refresh them on drift.
     const board = boardForId(base.boardId);
     if (board) {
       const standing = standingFromRemixed(remixed, authorSlug);
       rationales = fallbackRationales(board, standing, base.cloneHidden);
       climbTip = fallbackClimbTip(board, standing);
+    }
+    // The caption only needs replacing if it actually names a now-stale rank.
+    // Keep board-themed captions so the feed shows the varied AI text instead of
+    // the static deterministic fallback.
+    if (captionMentionsRank(content)) {
+      content = buildLeaderboardPostCaption({
+        boardId: base.boardId,
+        title: base.title,
+        hint: remixed.hint ?? base.hint,
+      });
     }
   }
 

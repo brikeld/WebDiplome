@@ -301,7 +301,7 @@ export default function CommentsCapsule({
         <div className="commenting-thread-replies">
           {picked ? null : (
             <button type="button" className="commenting-write-own">
-              Write your own reply
+              Chose your own reply
             </button>
           )}
 

@@ -101,4 +101,35 @@ describe('enrichLeaderboardPostForFeed', () => {
     expect(result.leaderboard.userRank).toBe(2);
     expect(result.content).toBe('Productivity board has me dead to rights — tabs don’t lie.');
   });
+
+  it('keeps a board-themed caption even when live rank drifts (no stale rank in it)', () => {
+    const stored = {
+      boardId: 'most_productive',
+      title: 'Top 5 Most Productive',
+      persona: 'productivite',
+      postedUserRank: 3,
+      userRank: 3,
+      previousUserRank: 4,
+      cloneHidden: [false, false, false, false],
+      entries: [
+        { rank: 1, name: 'Lea Demo', slug: 'lea-demo', source: 'real', isUser: false, score: 99 },
+        { rank: 2, name: 'Brikeld Hoxha', slug: 'brikeld-hoxha', source: 'real', isUser: true, score: 90 },
+        { rank: 3, name: 'Bot A', slug: 'demo-productivite-0', source: 'bot', isUser: false, score: 80 },
+        { rank: 4, name: 'Bot B', slug: 'demo-productivite-1', source: 'bot', isUser: false, score: 70 },
+        { rank: 5, name: 'Bot C', slug: 'demo-productivite-2', source: 'bot', isUser: false, score: 60 },
+      ],
+    };
+
+    const boardThemed = 'The productivity board read my open tabs and called it — work vs distraction, and it’s not wrong.';
+    const result = enrichLeaderboardPostForFeed({
+      storedLeaderboard: stored,
+      storedContent: boardThemed,
+      directory,
+      authorSlug: 'brikeld-hoxha',
+    });
+
+    // Rank drifted 3 → 2, but the caption never named a rank, so it is kept as-is.
+    expect(result.leaderboard.userRank).toBe(2);
+    expect(result.content).toBe(boardThemed);
+  });
 });

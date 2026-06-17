@@ -1,5 +1,5 @@
 /** Persona score floor — below this, COMPLIANT limits hide + comments. */
-export const PERSONA_SCORE_RESTRICT_THRESHOLD = 20;
+export const PERSONA_SCORE_RESTRICT_THRESHOLD = 10;
 
 const UI_PERSONA_KEYS = ['productivity', 'security', 'popularity'];
 

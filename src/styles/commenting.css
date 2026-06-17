@@ -403,27 +403,27 @@ button.profile-avatar-link.commenting-comment-avatar .persona-badge {
 .commenting-write-own {
   appearance: none;
   cursor: pointer;
-  background: var(--post-accent, var(--persona-accent, #759aef));
+  /* No capsule: plain text styled like the "Comments" title. */
+  background: none;
   border: none;
-  border-radius: var(--comment-chip-radius);
-  padding: 12px var(--commenting-write-padding-x);
+  border-radius: 0;
+  padding: 4px 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: #000;
+  justify-content: flex-start;
+  text-align: left;
+  color: var(--post-accent, var(--persona-accent, #759aef));
   font-family: var(--font-avant);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  line-height: 1;
+  font-size: var(--post-body-size);
+  font-weight: var(--post-body-weight);
+  line-height: var(--post-body-line);
+  letter-spacing: -0.01em;
   opacity: 0;
   transform: translateY(8px);
   transition:
     opacity var(--commenting-duration) var(--commenting-ease),
     transform var(--commenting-duration) var(--commenting-ease),
-    background 220ms ease,
-    box-shadow 220ms ease;
+    color 220ms ease;
 }
 
 .commenting-capsule--open .commenting-write-own {
@@ -433,8 +433,7 @@ button.profile-avatar-link.commenting-comment-avatar .persona-badge {
 }
 
 .commenting-write-own:hover {
-  background: color-mix(in srgb, var(--post-accent, var(--persona-accent, #759aef)) 82%, #fff);
-  box-shadow: none;
+  color: color-mix(in srgb, var(--post-accent, var(--persona-accent, #759aef)) 70%, #000);
 }
 
 .commenting-suggestion-shell {

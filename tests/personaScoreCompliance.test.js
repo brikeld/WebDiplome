@@ -15,9 +15,12 @@ describe('personaScoreCompliance', () => {
     expect(getPersonaScore(scores, 'security')).toBe(6);
   });
 
-  it('flags restricted personas below 20%', () => {
+  it('flags restricted personas below 10%', () => {
     expect(isPersonaScoreRestricted(scores, 'security')).toBe(true);
     expect(isPersonaScoreRestricted(scores, 'productivity')).toBe(false);
+    // 15% is below the old 20% floor but above the current 10% floor.
+    expect(isPersonaScoreRestricted({ ...scores, security: 15 }, 'security')).toBe(false);
+    expect(isPersonaScoreRestricted({ ...scores, security: 9 }, 'security')).toBe(true);
   });
 
   it('limits comments to restricted personas only', () => {
