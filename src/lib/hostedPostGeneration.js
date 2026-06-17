@@ -46,6 +46,7 @@ export async function runHostedPostGenerationWithReveal({
   onPostRevealed,
   onNextPostChange,
   beforeRevealPost = null,
+  nextRevealSeq = null,
   pollMs = 1000,
   timeoutMs = 120000,
   postJobDoneGraceMs = 12000,
@@ -57,6 +58,9 @@ export async function runHostedPostGenerationWithReveal({
     onPostRevealed,
     onNextPostChange,
     beforeRevealPost,
+    // Share the global reveal counter so own-generation posts sort newest-on-top
+    // against already-revealed spectator posts (see feedSpectatorReveals.js).
+    nextRevealSeq,
   });
   queue.markBaseline(getBaselinePosts());
 

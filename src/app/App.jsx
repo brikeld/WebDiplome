@@ -2011,6 +2011,9 @@ export default function App() {
 
     revealQueue = createPostFeedRevealQueue({
       gapMs: POST_REVEAL_GAP_MS,
+      // Shared global reveal counter so freshly generated own posts sort
+      // newest-on-top against already-revealed spectator posts.
+      nextRevealSeq: () => spectateRevealRef.current?.allocRevealSeq?.() ?? 0,
       getBaseline: () => streamPostsBaselineRef.current,
       beforeRevealPost: generationBeforeReveal,
       onPostRevealed: (persona) => {
@@ -2036,6 +2039,7 @@ export default function App() {
       // thread when the feed has 50+ cards — which in turn blocks the
       // stream reader from draining further posts.
       onPostsChange: (personaPosts) => {
+        spectateRevealRef.current?.recordRevealOrder?.(personaPosts);
         setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
       },
     });
@@ -2255,6 +2259,7 @@ export default function App() {
             reloadProfileFromApi,
             getBaselinePosts: () => streamPostsBaselineRef.current,
             beforeRevealPost: generationBeforeReveal,
+            nextRevealSeq: () => spectateRevealRef.current?.allocRevealSeq?.() ?? 0,
             onGenerationPlan: applyGenerationPlan,
             onPostRevealed: (persona) => {
               planRevealCount += 1;
@@ -2275,6 +2280,7 @@ export default function App() {
               });
             },
             applyRevealedPosts: (personaPosts) => {
+              spectateRevealRef.current?.recordRevealOrder?.(personaPosts);
               setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
             },
           });
@@ -2446,6 +2452,7 @@ export default function App() {
           reloadProfileFromApi,
           getBaselinePosts: () => streamPostsBaselineRef.current,
           beforeRevealPost: generationBeforeReveal,
+          nextRevealSeq: () => spectateRevealRef.current?.allocRevealSeq?.() ?? 0,
           onGenerationPlan: applyGenerationPlan,
           onPostRevealed: (persona) => {
             planRevealCount += 1;
@@ -2466,6 +2473,7 @@ export default function App() {
             });
           },
           applyRevealedPosts: (personaPosts) => {
+            spectateRevealRef.current?.recordRevealOrder?.(personaPosts);
             setProfile((prev) => (prev ? { ...prev, personaPosts } : prev));
           },
         });

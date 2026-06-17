@@ -35,6 +35,18 @@ export function createFeedSpectatorRevealController({
   // order until the next reveal. This map lets us re-stamp the known reveal
   // sequence onto any snapshot so the order survives polls/reloads.
   const revealSeqByKey = new Map();
+  // Remember the reveal sequence each revealed post carries, so later API
+  // snapshots can be re-stamped (see revealSeqByKey above). Used by both
+  // spectator reveals and the owner's own-generation reveals.
+  const recordRevealOrder = (posts) => {
+    for (const p of Array.isArray(posts) ? posts : []) {
+      const seq = Number(p?._feedRevealSeq ?? 0) || 0;
+      if (seq <= 0) continue;
+      const key = postIdentityKey(p);
+      if (!key) continue;
+      if (seq > (revealSeqByKey.get(key) ?? 0)) revealSeqByKey.set(key, seq);
+    }
+  };
   // A post arriving from another user descends into the feed slot and bursts,
   // then materializes — the same sphere + burst used for your own generation.
   const beforeRevealPost = createDemoBeforeReveal();
@@ -68,15 +80,7 @@ export function createFeedSpectatorRevealController({
       onPostRevealed,
       onPostsChange: (queuePosts) => {
         const merged = mergeAnimatedWithApiPosts(slug, queuePosts);
-        // Remember the reveal sequence each post animated through so later API
-        // snapshots can be re-stamped (see revealSeqByKey above).
-        for (const p of merged) {
-          const seq = Number(p?._feedRevealSeq ?? 0) || 0;
-          if (seq <= 0) continue;
-          const key = postIdentityKey(p);
-          if (!key) continue;
-          if (seq > (revealSeqByKey.get(key) ?? 0)) revealSeqByKey.set(key, seq);
-        }
+        recordRevealOrder(merged);
         setAllProfiles((prev) => {
           const list = Array.isArray(prev) ? prev : [];
           if (list.length === 0) return list;
@@ -103,6 +107,18 @@ export function createFeedSpectatorRevealController({
   };
 
   return {
+    // Shared monotonic reveal counter. The owner's own-generation reveal queues
+    // MUST allocate `_feedRevealSeq` from here too, otherwise their posts (with a
+    // separate local counter starting at 1) sort below already-revealed spectator
+    // posts (which hold much larger global seq values) instead of newest-on-top.
+    allocRevealSeq() {
+      return nextRevealSeq();
+    },
+    // Register reveal-seq for posts revealed outside this controller (the owner's
+    // own posts) so `reconcileRevealOrder` keeps them in order across reloads.
+    recordRevealOrder(posts) {
+      recordRevealOrder(posts);
+    },
     setSkipSlug(slug) {
       skipSlug = slug ? String(slug) : null;
     },
