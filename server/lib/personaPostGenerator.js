@@ -66,7 +66,7 @@ import {
 } from './leaderboardRationales.js';
 import { buildLeaderboardSlotContext } from './leaderboardCaption.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
-import { synthesiseChartMetadata, synthesiseTextSliceMetadata } from '../../src/lib/chartPostMetadata.js';
+import { synthesiseChartMetadata, synthesiseTextSliceMetadata, synthesisePostMetadata } from '../../src/lib/chartPostMetadata.js';
 import { prepareVisionImageData, truncateUserPayloadString } from './lmContextBudget.js';
 import {
   scoreTextSliceFreshness,
@@ -432,13 +432,13 @@ function normalizeSentiment(s) {
 
 const INFERENCE_CHAIN_STEPS = ['data', 'classify', 'infer', 'generate'];
 const INFERENCE_CHAIN_CONFIDENCES = new Set(['high', 'med', 'low']);
-const INFERENCE_CHAIN_VALUE_MAX = 220;
+const INFERENCE_CHAIN_VALUE_MAX = 320;
 const INGREDIENT_LABEL_MAX = 48;
 const INGREDIENT_DATAPOINT_MAX = 80;
 const INGREDIENT_COUNT = 3;
 const HIGHLIGHT_PHRASE_MAX = 80;
 const THINKING_LABEL_MAX = 32;
-const THINKING_DETAIL_MAX = 180;
+const THINKING_DETAIL_MAX = 320;
 const THINKING_MIN = 3;
 const THINKING_MAX = 5;
 
@@ -446,28 +446,30 @@ const THINKING_MAX = 5;
 // the ingredients summary, and the highlight ↔ chain/ingredient mapping.
 export const INFERENCE_CHAIN_INSTRUCTION = `
 
-Additional output fields — "inferenceChain", "ingredients", "highlights":
+Additional output fields — "inferenceChain", "ingredients", "highlights", "thinking".
 
-1) "inferenceChain" — array of EXACTLY 4 step objects in this order, revealing how the algorithm went from raw user data to the post sentence:
+VOICE for every prose value below: explain it to the reader like a friend leaning over their shoulder — warm, casual, a little playful and self-aware. Use plain everyday words, zero jargon; never say "the algorithm" or "the model" or "the system classified". Write 2–3 short sentences per prose field (NOT one clipped line): say what you actually saw, then what it made you think, and keep it fun. Always point at something real and specific from the user data — never generic filler.
 
-[
-  { "step": "data",     "value": "<a HUMAN-READABLE sentence describing one concrete signal from the user data, e.g. '42 .png files created in the last week' or 'Screenshot captured at 22:44 named Screenshot 2026-04-28' or 'Cursor and Claude opened back-to-back this afternoon'. NEVER mention internal field names, JSON paths, or keys like 'attached_image', 'app_usage_7days', 'MACHINE_IDENTITY'. Write as a journalist would describe what the system saw.>", "source": "<short human label for where the signal came from, e.g. 'Recent files', 'App usage', 'Screenshot library', 'Browser history'. NEVER a JSON path or field name.>" },
-  { "step": "classify", "value": "<short label categorizing that signal>", "confidence": "high" },
-  { "step": "infer",    "value": "<a reductive, biased, or oversimplified judgment the algorithm draws from the classification>", "confidence": "low", "isBiased": true, "biasNote": "<one sentence admitting why this judgment is superficial or unfair>" },
-  { "step": "generate", "value": "<the exact phrase or sentence from the 'content' field that this chain produced — must appear verbatim inside 'content'>" }
-]
-
-The "infer" step MUST be a leap — make it sound like an algorithm making a snap judgment. Keep each value under 180 characters.
-
-2) "ingredients" — array of EXACTLY 3 objects describing the data categories that fed the post, each with a relative weight (0–100) and concrete data points:
+1) "inferenceChain" — array of EXACTLY 4 step objects in this order, telling the little story of how raw data turned into this post:
 
 [
-  { "label": "<short category name, e.g. 'Installed apps', 'Activity rhythm', 'Risk signals', 'Location signals', 'Recent files', 'Browsing patterns'>", "weight": <integer 30–95>, "dataPoints": ["<concrete raw value 1>", "<concrete raw value 2>", "<concrete raw value 3>", "..."] }
+  { "step": "data",     "value": "<2–3 friendly sentences describing ONE concrete signal you saw, in plain words. e.g. 'You spun up 42 PNGs this week, a bunch of them way past midnight. Your Mac basically had a front-row seat to you turning into a one-person screenshot factory.' NEVER mention internal field names, JSON paths, or keys like 'attached_image', 'app_usage_7days', 'MACHINE_IDENTITY'.>", "source": "<short human label for where it came from, e.g. 'Recent files', 'App usage', 'Screenshot library', 'Browser history'. Never a JSON path or field name.>" },
+  { "step": "classify", "value": "<short, friendly label for that signal — just a few words>", "confidence": "high" },
+  { "step": "infer",    "value": "<2–3 cheeky, confident sentences with the snap judgment you jumped to from that signal — and half-own how big a leap it really is.>", "confidence": "low", "isBiased": true, "biasNote": "<1–2 honest, down-to-earth sentences admitting why that judgment is unfair, lazy, or way too quick.>" },
+  { "step": "generate", "value": "<the exact phrase or sentence from the 'content' field that this chain produced — must appear VERBATIM inside 'content'.>" }
 ]
 
-Include as MANY dataPoints per ingredient as the source data supports (5–12 ideal). Data points are real, specific values from the data — app names, file names, timestamps, wifi SSIDs, URLs, file extensions, etc. NEVER internal field names.
+The "infer" step MUST be a real leap — a snap judgment with attitude, not a careful summary.
 
-3) "highlights" — array of 2–3 short phrases from "content" that map onto the chain steps and ingredients. Each highlight links one literal substring of "content" to a chain step and an ingredient:
+2) "ingredients" — array of EXACTLY 3 objects, the data categories that fed the post, each with a relative weight (30–95) and concrete data points:
+
+[
+  { "label": "<short, friendly category name, e.g. 'Late-night files', 'App habits', 'Risk signals', 'Where you connect', 'Recent files', 'Browsing patterns'>", "weight": <integer 30–95>, "dataPoints": ["<concrete raw value 1>", "<concrete raw value 2>", "<concrete raw value 3>", "..."] }
+]
+
+dataPoints stay SHORT and REAL — actual app names, file names, timestamps, wifi SSIDs, URLs, file extensions (5–12 ideal). They are evidence, so don't pad them with prose. NEVER internal field names.
+
+3) "highlights" — array of 2–3 short phrases from "content" that map onto the chain steps and ingredients. Each links one literal substring of "content" to a chain step and an ingredient:
 
 [
   { "phrase": "<exact substring that appears VERBATIM in 'content'>", "stepIndex": <0|1|2|3>, "ingredientIndex": <0|1|2> }
@@ -475,17 +477,17 @@ Include as MANY dataPoints per ingredient as the source data supports (5–12 id
 
 Pick phrases the reader would want to interrogate ("42 PNGs", "tricky design logic", "FigmaAgent and Claude"). They MUST appear character-for-character inside "content".
 
-4) "thinking" — array of EXACTLY 3 to 5 short objects describing the model's internal reasoning while writing this post. Each is a small thought, written as if the model is thinking out loud in first-person ("I noticed...", "I almost said...", "I picked..."). Must be specific to this user's data, not generic. Each entry has a tiny LABEL (1–3 words, ALL CAPS, no punctuation) and a DETAIL (one short sentence, plain text, max 180 chars):
+4) "thinking" — array of EXACTLY 3 to 5 thoughts, first-person, like you're thinking out loud to a friend ("Honestly, I noticed…", "I almost went with…", "I picked … because…"). Each has a tiny LABEL (1–3 words, ALL CAPS, no punctuation) and a DETAIL of 2–3 casual, specific, genuinely-fun sentences that actually explains it — never a dry one-liner. Always cite a real artefact from the data above.
 
 [
-  { "label": "WHAT I SAW",      "detail": "<one specific concrete observation about the user data, e.g. '12 .fig files modified yesterday — peak around 23:00.'>" },
-  { "label": "WHAT I IGNORED",  "detail": "<one specific signal you considered then dropped, e.g. 'The Spotify history — interesting but off-topic for productivity persona.'>" },
-  { "label": "WHY THIS ANGLE",  "detail": "<why you wrote the post the way you did, in plain language>" },
-  { "label": "WORD I PICKED",   "detail": "<one specific word/phrase choice and why, e.g. 'Said \"basically a map of caffeine\" because the wifi names skewed café-heavy.'>" },
-  { "label": "ALMOST WROTE",    "detail": "<the alternate post you considered first and rejected, in plain words>" }
+  { "label": "WHAT I SAW",      "detail": "<a real observation + why it caught your eye, 2–3 fun sentences>" },
+  { "label": "WHAT I IGNORED",  "detail": "<a real signal you considered then dropped, and why>" },
+  { "label": "WHY THIS ANGLE",  "detail": "<why you wrote it this way instead of another, explained casually>" },
+  { "label": "WORD I PICKED",   "detail": "<a specific word/phrase choice and the reason it felt right>" },
+  { "label": "ALMOST WROTE",    "detail": "<the alternate version you considered first and ditched, and why>" }
 ]
 
-These five labels are EXAMPLES — feel free to swap any of them for a more specific label, but keep the 1–3 word ALL-CAPS rule, and keep the detail concrete and grounded in the data the system saw. NO generic phrases like "I analyzed the data" — always cite a real artefact from the user data above.
+These five labels are EXAMPLES — swap any for a more specific one, but keep the 1–3 word ALL-CAPS rule and keep every detail concrete, grounded in the real data, and fun. NO filler like "I analyzed the data" — always cite a real artefact.
 
 Return the full envelope: {"content":"...","sentiment":"positive"|"negative","inferenceChain":[…4…],"ingredients":[…3…],"highlights":[…2-3…],"thinking":[…3-5…]}.`;
 
@@ -1013,7 +1015,9 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
 async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFallback = false }) {
   const promptCfg = SP[slot.promptKey] ?? DEFAULT_SLOT_PROMPTS.browser;
   const systemPrompt = injectInferenceChainInstruction(promptCfg.system);
-  const maxTokens = Math.max(promptCfg.maxTokens || 900, 2100);
+  // Floor bumped so the richer, longer analysis prose has room and never
+  // truncates mid-envelope (which would drop fields and re-trigger fallbacks).
+  const maxTokens = Math.max(promptCfg.maxTokens || 900, 2800);
 
   const runOnce = async (temperature, withVision) => {
     let visionImage = null;
@@ -1102,6 +1106,22 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
 
   parsed = applyChartMetadataFallback(parsed, slot);
   parsed = applyTextSliceMetadataFallback(parsed, slot);
+
+  // Universal safety net: if the model (and the chart/text-slice fallbacks)
+  // still left any analysis field empty, synthesise a grounded one from the post
+  // content + persona. Without this, normal posts whose model output was
+  // malformed render with only some sections — or "Analysis not available".
+  if (parsed.content && (!parsed.inferenceChain || !parsed.ingredients || !parsed.thinking)) {
+    const generic = synthesisePostMetadata({ content: parsed.content, persona: slot.persona });
+    if (generic) {
+      if (!parsed.inferenceChain) parsed.inferenceChain = generic.inferenceChain;
+      if (!parsed.ingredients) {
+        parsed.ingredients = generic.ingredients;
+        if (!parsed.highlights) parsed.highlights = generic.highlights;
+      }
+      if (!parsed.thinking) parsed.thinking = generic.thinking;
+    }
+  }
 
   const post = {
     persona: slot.persona,

@@ -20,7 +20,8 @@ import { freshPanelUi, nextPanelUi } from './panelState.js';
 import FocusDetail from './FocusDetail.jsx';
 import { chainChipLines, formatAnalysisDisplayText, splitLabelTwoLines } from './chipLabelUtils.js';
 import { chipEmojiForLabel } from './chipEmojiUtils.js';
-import { synthesiseChartMetadata } from '@/lib/chartPostMetadata.js';
+import { synthesiseChartMetadata, synthesisePostMetadata } from '@/lib/chartPostMetadata.js';
+import { isCompliantSystemPost } from '@/lib/mergePersonaPosts.js';
 
 const CHAIN_KEYS = ['data', 'classify', 'infer'];
 
@@ -106,6 +107,22 @@ function resolvePostAnalysis(post) {
       if (!ingredients?.length) ingredients = synth.ingredients;
       if (!highlights?.length) highlights = synth.highlights;
       if (!rawThinking?.length) rawThinking = synth.thinking;
+    }
+  }
+
+  // Universal fallback so every algorithmic post renders all three sections —
+  // covers older posts whose stored analysis was incomplete (only some fields,
+  // or none → "Analysis not available"). Compliant/system posts are skipped.
+  const incomplete = !isValidChain(chain) || !ingredients?.length || !rawThinking?.length;
+  if (incomplete && post?.content && !isCompliantSystemPost(post)) {
+    const generic = synthesisePostMetadata({ content: post.content, persona: post.persona });
+    if (generic) {
+      if (!isValidChain(chain)) chain = generic.inferenceChain;
+      if (!ingredients?.length) {
+        ingredients = generic.ingredients;
+        if (!highlights?.length) highlights = generic.highlights;
+      }
+      if (!rawThinking?.length) rawThinking = generic.thinking;
     }
   }
 

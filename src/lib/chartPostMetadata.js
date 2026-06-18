@@ -38,6 +38,113 @@ function longestContentSubstring(content, maxLen = 180) {
 }
 
 /**
+ * Per-persona framing for the universal analysis fallback (used for normal posts
+ * that have no chart / text-slice context to draw from).
+ */
+const PERSONA_SYNTH = {
+  productivite: {
+    label: 'Productivity',
+    source: 'App & file activity',
+    classify: 'Productivity signals',
+    dataValue: 'Your Mac kept half an eye on the apps you actually live in and the files quietly piling up — plus how often "one quick thing" turned into a whole afternoon. That work-versus-distraction rhythm is what fed this post.',
+    infer: "From that it decided you're either a relentless focus machine or one tab away from total chaos, and wrote you up as exactly that. No in-between, no nuance — just a confident little verdict.",
+    biasNote: "Which is a bit cheeky, honestly — one busy stretch isn't your whole work life, and a messy afternoon doesn't erase the mornings you were locked in.",
+    ingredientLabel: 'Work patterns',
+    ingredientPoints: ['Apps you keep returning to', 'Files created and edited', 'Focus stretches vs distraction'],
+    saw: "I looked at where your hours actually went — the apps you kept circling back to and the files stacking up — and let that set the whole tone.",
+    leap: "Then I did the cheeky thing and turned one little pattern into a confident one-liner, like I've known you for years. (Reader, I have not.)",
+    word: "I kept the wording casual on purpose, so it reads like a friend ribbing you over coffee instead of a performance review.",
+  },
+  securite: {
+    label: 'Security',
+    source: 'Network & privacy signals',
+    classify: 'Security signals',
+    dataValue: "Your Mac glanced over the networks you hop onto, the Wi‑Fi names you've collected, and how locked-down (or wide-open) your privacy settings are. That little security footprint is what got fed in here.",
+    infer: "So it decided you're either fully buttoned-up or quietly leaving breadcrumbs everywhere, and committed to that read instantly. It does love a dramatic security take.",
+    biasNote: "Not entirely fair, though — a few open networks or one skipped update doesn't actually mean the sky is falling on your privacy.",
+    ingredientLabel: 'Security posture',
+    ingredientPoints: ['Networks you connect to', 'Saved Wi‑Fi history', 'Privacy & update settings'],
+    saw: "I peeked at your network footprint and privacy posture — where you connect and how careful you are about it — and built the vibe from there.",
+    leap: "Then I jumped straight to a verdict about how safe you are, off basically a glance. Bold of me, I know.",
+    word: "I leaned a little paranoid-but-playful, so it feels like a friend half-joking about your habits, not a security audit.",
+  },
+  popularite: {
+    label: 'Popularity',
+    source: 'Social & communication signals',
+    classify: 'Social signals',
+    dataValue: 'Your Mac noticed the messaging and social apps you keep open, the browsing that leans social, and how present you are online. That little popularity footprint is what fed this post.',
+    infer: "From that it decided you're either everyone's main character or quietly lurking in the group chat, and ran with whichever felt punchier. Subtlety is not its strong suit.",
+    biasNote: "Bit of a stretch, really — how much you post or scroll on one device isn't the same as how connected you actually are.",
+    ingredientLabel: 'Social footprint',
+    ingredientPoints: ['Messaging & social apps', 'Social-leaning browsing', 'How present you are online'],
+    saw: "I checked your comms, your browsing, and how online you seem to be, then let that decide whether you read as loud or low-key.",
+    leap: "Then I turned a sliver of that into a confident take on your whole social life. A little presumptuous, sure.",
+    word: "I kept it light and a touch teasing, so it lands like a friend clocking your group-chat energy rather than a profile report.",
+  },
+};
+
+function personaSynthProfile(persona) {
+  const k = String(persona || '').toLowerCase();
+  if (k.startsWith('sec')) return PERSONA_SYNTH.securite;
+  if (k.startsWith('pop') || k === 'social') return PERSONA_SYNTH.popularite;
+  return PERSONA_SYNTH.productivite;
+}
+
+/**
+ * Universal Tell-Me-More fallback for ANY post (no chart / text-slice context
+ * required). Builds a complete, persona-grounded set of analysis fields from the
+ * post content so the panel always shows all three sections — "From data to
+ * post", "How we framed it", "Data used" — instead of partial sections or
+ * "Analysis not available". Voice matches the richer, friendly LM analysis so a
+ * fallback never reads more terse than the real thing. Only fills fields the
+ * model didn't return.
+ * @param {{ content: string, persona?: string }} input
+ * @returns {{ inferenceChain: object[], ingredients: object[], highlights: object[], thinking: object[] } | null}
+ */
+export function synthesisePostMetadata({ content, persona }) {
+  const body = String(content || '').trim();
+  if (!body) return null;
+  const p = personaSynthProfile(persona);
+  const generateValue = longestContentSubstring(body, 180);
+
+  const inferenceChain = [
+    { step: 'data', value: p.dataValue, source: p.source },
+    { step: 'classify', value: p.classify, confidence: 'high' },
+    {
+      step: 'infer',
+      value: p.infer,
+      confidence: 'low',
+      isBiased: true,
+      biasNote: p.biasNote,
+    },
+    { step: 'generate', value: generateValue },
+  ];
+
+  const ingredients = [
+    { label: p.ingredientLabel, weight: 82, dataPoints: p.ingredientPoints },
+    { label: 'Your own words', weight: 60, dataPoints: [clip(body, 80)] },
+    { label: 'Persona lens', weight: 38, dataPoints: [p.label] },
+  ];
+
+  const highlights = [];
+  if (generateValue && body.includes(generateValue)) {
+    highlights.push({ phrase: generateValue, stepIndex: 3, ingredientIndex: 1 });
+  }
+  const numberMatch = body.match(/\d+[\d,.]*\s*(?:%|GB|MB|files?|hrs?|hours?|min)?/i);
+  if (numberMatch && body.includes(numberMatch[0]) && highlights.length < 2) {
+    highlights.push({ phrase: numberMatch[0], stepIndex: 0, ingredientIndex: 0 });
+  }
+
+  const thinking = [
+    { label: 'WHAT I SAW', detail: p.saw },
+    { label: 'THE LEAP', detail: p.leap },
+    { label: 'WHY THESE WORDS', detail: p.word },
+  ];
+
+  return { inferenceChain, ingredients, highlights, thinking };
+}
+
+/**
  * @param {{ content: string, chartType: string, persona?: string, chartContext?: { title?: string, lines?: string[] } }} input
  * @returns {{ inferenceChain: object[], ingredients: object[], highlights: object[], thinking: object[] } | null}
  */

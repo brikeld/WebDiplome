@@ -1,5 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { synthesiseChartMetadata, synthesiseWifiTextMetadata, synthesiseTextSliceMetadata } from '../src/lib/chartPostMetadata.js';
+import { synthesiseChartMetadata, synthesiseWifiTextMetadata, synthesiseTextSliceMetadata, synthesisePostMetadata } from '../src/lib/chartPostMetadata.js';
+
+const CHAIN_STEPS = ['data', 'classify', 'infer', 'generate'];
+
+describe('synthesisePostMetadata (universal fallback)', () => {
+  it('returns a complete, client-valid analysis set for any normal post', () => {
+    const content = 'I keep 14 tabs open and call it focus — the work apps say otherwise.';
+    for (const persona of ['productivite', 'securite', 'popularite', 'social', '']) {
+      const result = synthesisePostMetadata({ content, persona });
+      expect(result).not.toBeNull();
+      // All three sections must be renderable: chain has the 4 ordered steps with
+      // values, ingredients = 3, thinking >= 3.
+      expect(result.inferenceChain.map((s) => s.step)).toEqual(CHAIN_STEPS);
+      expect(result.inferenceChain.every((s) => s.value && s.value.trim())).toBe(true);
+      expect(result.ingredients).toHaveLength(3);
+      expect(result.thinking.length).toBeGreaterThanOrEqual(3);
+      expect(content).toContain(result.inferenceChain[3].value);
+    }
+  });
+
+  it('returns null for empty content', () => {
+    expect(synthesisePostMetadata({ content: '', persona: 'productivite' })).toBeNull();
+    expect(synthesisePostMetadata({ content: '   ' })).toBeNull();
+  });
+});
 
 describe('synthesiseChartMetadata', () => {
   it('returns chain, ingredients, and thinking for chart posts missing analysis', () => {

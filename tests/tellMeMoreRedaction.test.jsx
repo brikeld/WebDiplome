@@ -24,7 +24,7 @@ describe('<TellMeMorePill> hidden redaction', () => {
     expect(html).toContain('tell-idle-a');
     expect(html).toContain('tell-idle-a__bars');
     expect(html).toContain('Security post');
-    expect(html).toContain('Tell me why');
+    expect(html).toContain('Tell me more');
     expect(html).not.toContain('COMPLIANT thinking process');
   });
 

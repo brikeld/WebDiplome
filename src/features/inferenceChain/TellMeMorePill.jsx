@@ -52,7 +52,7 @@ function IdleFace({ displayLabel }) {
         <span />
       </div>
       <div className="tell-idle-a__cta">
-        <span>Tell me why</span>
+        <span>Tell me more</span>
         <b aria-hidden="true">→</b>
       </div>
     </div>
