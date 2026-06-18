@@ -1645,14 +1645,21 @@ export default function App() {
     }
     if (!target) return;
 
+    const wasFromElectron = fromElectron;
     openedFromElectronRef.current = false;
     const slug = target.slug ?? target.id ?? urlSlug;
     if (slug) persistProfileSlug(slug);
     setProfile((prev) => mergeOwnedProfileFromApi(prev, target, {
       preserveClientPosts: generationSessionActiveRef.current,
     }));
-    setActiveTab('profile');
-    setMainView('profile');
+    // Opening from the Compliant app lands on the feed; a shared profile link
+    // (URL slug only) still deep-links into the profile view.
+    if (wasFromElectron) {
+      setMainView('home');
+    } else {
+      setActiveTab('profile');
+      setMainView('profile');
+    }
   }, [landingOwnedProfile, profile, allProfiles, mainView]);
 
   useEffect(() => {

@@ -407,12 +407,18 @@ button.profile-avatar-link.commenting-comment-avatar .persona-badge {
   background: none;
   border: none;
   border-radius: 0;
-  padding: 4px 0;
+  /* Match the "Comments" title indent: the replies container already adds
+     --commenting-thread-inset-left, so only add the line width + gap here. */
+  padding: 4px 0 4px
+    calc(
+      var(--commenting-thread-line-width) +
+      var(--commenting-line-to-comments-gap)
+    );
   display: flex;
   align-items: center;
   justify-content: flex-start;
   text-align: left;
-  color: var(--post-accent, var(--persona-accent, #759aef));
+  color: #000;
   font-family: var(--font-avant);
   font-size: var(--post-body-size);
   font-weight: var(--post-body-weight);
@@ -433,7 +439,7 @@ button.profile-avatar-link.commenting-comment-avatar .persona-badge {
 }
 
 .commenting-write-own:hover {
-  color: color-mix(in srgb, var(--post-accent, var(--persona-accent, #759aef)) 70%, #000);
+  color: #444;
 }
 
 .commenting-suggestion-shell {
