@@ -43,6 +43,15 @@ function readableSource(source) {
   return formatAnalysisDisplayText(source);
 }
 
+/** Human, on-theme reading of the classifier's confidence (not "high confidence"). */
+function confidenceBlurb(confidence) {
+  const c = String(confidence || '').trim().toLowerCase();
+  if (c === 'high') return 'It felt oddly sure about this one — no hesitation dropping you in this box.';
+  if (c === 'med' || c === 'medium') return 'It was only half-sure here, but committed to the label anyway.';
+  if (c === 'low') return 'Honestly it was guessing here — and still wrote it down like a fact about you.';
+  return 'This is the box it decided to put you in, off that one signal.';
+}
+
 function isValidChain(chain) {
   if (!Array.isArray(chain)) return false;
   return CHAIN_KEYS.every((s) => {
@@ -110,18 +119,15 @@ function resolvePostAnalysis(post) {
     }
   }
 
-  // Universal fallback so every algorithmic post renders all three sections —
-  // covers older posts whose stored analysis was incomplete (only some fields,
-  // or none → "Analysis not available"). Compliant/system posts are skipped.
-  const incomplete = !isValidChain(chain) || !ingredients?.length || !rawThinking?.length;
+  // Fallback for the "From data to post" + "How we framed it" sections on older
+  // posts whose stored analysis was incomplete. NOTE: we deliberately do NOT
+  // fabricate "Data used" — that panel must cite the real harvested signals the
+  // server stored on the post, or stay empty. Compliant/system posts are skipped.
+  const incomplete = !isValidChain(chain) || !rawThinking?.length;
   if (incomplete && post?.content && !isCompliantSystemPost(post)) {
     const generic = synthesisePostMetadata({ content: post.content, persona: post.persona });
     if (generic) {
       if (!isValidChain(chain)) chain = generic.inferenceChain;
-      if (!ingredients?.length) {
-        ingredients = generic.ingredients;
-        if (!highlights?.length) highlights = generic.highlights;
-      }
       if (!rawThinking?.length) rawThinking = generic.thinking;
     }
   }
@@ -242,28 +248,26 @@ export default function InferenceChainPanel({
   const simpleChain = validChain
     ? [
         {
-          label: 'What we checked',
-          value: readableValue(dataStep?.value, 'We checked the strongest activity signal available for this post.'),
+          label: 'What we looked at',
+          value: readableValue(dataStep?.value, 'It grabbed the loudest signal in your activity and ran with it.'),
           detail: readableSource(dataStep?.source)
-            ? `Source: ${readableSource(dataStep.source)}.`
-            : 'The post starts from the clearest activity signal in the harvested data.',
-          tag: readableSource(dataStep?.source) ?? 'data',
+            ? `It pulled this straight from your ${readableSource(dataStep.source).toLowerCase()}.`
+            : 'It started from whatever stood out most in the data your Mac handed over.',
+          tag: readableSource(dataStep?.source) ?? 'the data',
         },
         {
-          label: 'What it means',
-          value: readableValue(classifyStep?.value, 'The signal was grouped into a persona direction.'),
-          detail: classifyStep?.confidence
-            ? `The classifier treated this as ${classifyStep.confidence === 'med' ? 'medium' : classifyStep.confidence} confidence.`
-            : 'The system turns raw traces into a simple behavioral reading.',
-          tag: 'classification',
+          label: 'What it decided that means',
+          value: readableValue(classifyStep?.value, 'It filed you under a tidy little category.'),
+          detail: confidenceBlurb(classifyStep?.confidence),
+          tag: 'its read on you',
         },
         {
-          label: 'Why this post',
-          value: readableValue(inferStep?.value, 'The generated post follows from that persona reading.'),
+          label: 'Why it wrote this',
+          value: readableValue(inferStep?.value, 'It jumped from that category straight to a confident take and posted it as you.'),
           detail: inferStep?.biasNote
             ? String(inferStep.biasNote)
-            : 'The wording is a generated interpretation, so it can compress or exaggerate the underlying signal.',
-          tag: inferStep?.confidence ? `confidence ${inferStep.confidence}` : 'inference',
+            : 'This is the leap — where it fills in the blanks about you and writes it like it knows you for sure.',
+          tag: inferStep?.confidence ? `${inferStep.confidence} confidence` : 'a confident guess',
         },
       ]
     : [];

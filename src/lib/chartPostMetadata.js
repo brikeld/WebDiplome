@@ -120,19 +120,16 @@ export function synthesisePostMetadata({ content, persona }) {
     { step: 'generate', value: generateValue },
   ];
 
-  const ingredients = [
-    { label: p.ingredientLabel, weight: 82, dataPoints: p.ingredientPoints },
-    { label: 'Your own words', weight: 60, dataPoints: [clip(body, 80)] },
-    { label: 'Persona lens', weight: 38, dataPoints: [p.label] },
-  ];
+  // No fabricated "Data used" rows: that panel must cite REAL harvested signals
+  // (real apps/files/wifi), which this content-only fallback can't see. The
+  // server fills it from the actual harvest data; on the client (older posts with
+  // nothing stored) it stays empty rather than inventing categories like
+  // "Social footprint" or echoing the post back as "Your own words".
+  const ingredients = [];
 
   const highlights = [];
   if (generateValue && body.includes(generateValue)) {
-    highlights.push({ phrase: generateValue, stepIndex: 3, ingredientIndex: 1 });
-  }
-  const numberMatch = body.match(/\d+[\d,.]*\s*(?:%|GB|MB|files?|hrs?|hours?|min)?/i);
-  if (numberMatch && body.includes(numberMatch[0]) && highlights.length < 2) {
-    highlights.push({ phrase: numberMatch[0], stepIndex: 0, ingredientIndex: 0 });
+    highlights.push({ phrase: generateValue, stepIndex: 3, ingredientIndex: 0 });
   }
 
   const thinking = [

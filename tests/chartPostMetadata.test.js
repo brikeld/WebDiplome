@@ -13,7 +13,8 @@ describe('synthesisePostMetadata (universal fallback)', () => {
       // values, ingredients = 3, thinking >= 3.
       expect(result.inferenceChain.map((s) => s.step)).toEqual(CHAIN_STEPS);
       expect(result.inferenceChain.every((s) => s.value && s.value.trim())).toBe(true);
-      expect(result.ingredients).toHaveLength(3);
+      // "Data used" is NOT fabricated here — real signals come from the harvest.
+      expect(result.ingredients).toEqual([]);
       expect(result.thinking.length).toBeGreaterThanOrEqual(3);
       expect(content).toContain(result.inferenceChain[3].value);
     }

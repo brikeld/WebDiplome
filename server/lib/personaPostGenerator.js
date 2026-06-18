@@ -67,6 +67,7 @@ import {
 import { buildLeaderboardSlotContext } from './leaderboardCaption.js';
 import { normalizePersonaPercentTriplet } from './personaScores.js';
 import { synthesiseChartMetadata, synthesiseTextSliceMetadata, synthesisePostMetadata } from '../../src/lib/chartPostMetadata.js';
+import { buildSignalIngredients, buildSignalDataStep } from './harvestSignals.js';
 import { prepareVisionImageData, truncateUserPayloadString } from './lmContextBudget.js';
 import {
   scoreTextSliceFreshness,
@@ -1012,7 +1013,7 @@ function buildLeaderboardSlot(dataJson, profile, baseUserPayload, existingPosts,
 
 // ─── Slot runner ───────────────────────────────────────────────────────────
 
-async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFallback = false }) {
+async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFallback = false, dataJson = null }) {
   const promptCfg = SP[slot.promptKey] ?? DEFAULT_SLOT_PROMPTS.browser;
   const systemPrompt = injectInferenceChainInstruction(promptCfg.system);
   // Floor bumped so the richer, longer analysis prose has room and never
@@ -1107,20 +1108,24 @@ async function runSlot(slot, { baseUrl, timeoutMs, retries, SP, preferMetadataFa
   parsed = applyChartMetadataFallback(parsed, slot);
   parsed = applyTextSliceMetadataFallback(parsed, slot);
 
-  // Universal safety net: if the model (and the chart/text-slice fallbacks)
-  // still left any analysis field empty, synthesise a grounded one from the post
-  // content + persona. Without this, normal posts whose model output was
-  // malformed render with only some sections — or "Analysis not available".
+  // Safety net when the model (and the chart/text-slice fallbacks) left analysis
+  // fields empty. "Data used" and the chain "data" step are filled from the REAL
+  // harvested signals (actual apps/files/wifi/sites) so the panel always cites
+  // concrete evidence instead of a template; the framing prose (classify/infer)
+  // and "thinking" fall back to the persona-grounded synth.
   if (parsed.content && (!parsed.inferenceChain || !parsed.ingredients || !parsed.thinking)) {
     const generic = synthesisePostMetadata({ content: parsed.content, persona: slot.persona });
-    if (generic) {
-      if (!parsed.inferenceChain) parsed.inferenceChain = generic.inferenceChain;
-      if (!parsed.ingredients) {
-        parsed.ingredients = generic.ingredients;
-        if (!parsed.highlights) parsed.highlights = generic.highlights;
-      }
-      if (!parsed.thinking) parsed.thinking = generic.thinking;
+    const realIngredients = dataJson ? buildSignalIngredients(dataJson, slot.persona) : null;
+    const realDataStep = dataJson ? buildSignalDataStep(dataJson, slot.persona) : null;
+
+    if (!parsed.ingredients && realIngredients) parsed.ingredients = realIngredients;
+
+    if (!parsed.inferenceChain && generic) {
+      const chain = [...generic.inferenceChain];
+      if (realDataStep) chain[0] = realDataStep; // replace generic "data" with real evidence
+      parsed.inferenceChain = chain;
     }
+    if (!parsed.thinking && generic) parsed.thinking = generic.thinking;
   }
 
   const post = {
@@ -1312,7 +1317,7 @@ export async function generatePersonaPosts({
   });
 
   const results = new Array(slots.length).fill(null);
-  const slotRunOpts = { baseUrl, timeoutMs, retries, SP, preferMetadataFallback };
+  const slotRunOpts = { baseUrl, timeoutMs, retries, SP, preferMetadataFallback, dataJson };
 
   await Promise.all(
     slots.map(async (slot, index) => {
@@ -1382,6 +1387,7 @@ export async function generateSinglePersonaPost({
       retries,
       SP,
       preferMetadataFallback,
+      dataJson,
     });
     return post?.content ? post : null;
   } catch (err) {
