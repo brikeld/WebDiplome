@@ -4,7 +4,7 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "node server.js"
-healthcheckPath = "/api/profiles"
+healthcheckPath = "/api/build-info"
 restartPolicyType = "ON_FAILURE"
 
 # Railway injects PORT at runtime. Set PORT=3001 in the dashboard Variables tab

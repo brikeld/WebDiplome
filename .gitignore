@@ -24,3 +24,6 @@ public/uploads/
 # Local environment secrets (never commit)
 .env
 .vercel
+
+# Supabase migration dumps (contain user data; never commit)
+.migration-dump/
