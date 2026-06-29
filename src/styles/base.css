@@ -877,8 +877,15 @@ body {
     + var(--shell-capsules-nudge-left)
   );
   --shell-col-gap: clamp(14px, 1.6vw, 24px);
-  --shell-left-col-max: clamp(620px, 52vw, 1180px);
-  --shell-right-col-width: clamp(420px, 32vw, 720px);
+  /* One centered, bounded composition at EVERY width. The band holds a
+     consistent ~70–78% of the usable width so calm empty margins frame both
+     sides identically at laptop, desktop, and 5K/6K — the "fixed, visually"
+     look, formerly only true at ≥2560px. The viewport-proportional slopes
+     (39vw / 26vw) keep the framing constant as the screen scales, while the
+     caps stop growth on very wide screens. The profile rail is container-query
+     sized, so its internals scale down with its column. */
+  --shell-left-col-max: clamp(520px, 39vw, 1360px);
+  --shell-right-col-width: clamp(410px, 26vw, 820px);
   --shell-left-outward-bleed: 0px;
   --shell-right-outward-bleed: 0px;
   --shell-right-col-total: calc(var(--shell-right-col-width) + var(--shell-right-outward-bleed));
@@ -1033,75 +1040,21 @@ body {
 }
 
 /* ── RESPONSIVE: large desktop / 4K–6K (≥ 1920px) ──
-   On very wide screens the capsule pair (left content + right dashboard/profile
-   rail) otherwise stays capped at its desktop size and strands the extra width
-   as empty side margins, which also keeps the right column too narrow: small
-   container-query type in the profile rail and cell-text overflow in the
-   dashboard. Let both columns grow into the available width. */
-@media (min-width: 1920px) {
-  .view-home .page,
-  .view-profile .page {
-    --shell-left-col-max: clamp(1180px, 56vw, 1560px);
-    --shell-right-col-width: clamp(720px, 34vw, 940px);
-  }
-
-  /* Wider content column → step the post type up so it reads at a comfortable
-     size instead of looking small inside the now-larger capsule. */
-  .view-home .main-col,
-  .view-profile .main-col {
-    --post-body-size: 29px;
-    --post-avatar-size: 11.5rem;
-    --post-name-size: 15px;
-    --post-handle-size: 12px;
-    --post-meta-pill-size: 17px;
-    --post-meta-pill-icon-size: 24px;
-    --post-meta-comment-icon-size: 30px;
-  }
-}
-
-@media (min-width: 2560px) {
-  .view-home .page,
-  .view-profile .page {
-    /* 5K–6K: hold the capsule pair to ~75% of the viewport so the design reads
-       as a centered, framed layout with calm empty margins on both sides,
-       rather than two columns stretched nearly edge-to-edge. The right rail's
-       internals are container-query sized, so a narrower column scales the
-       Daniel Rocha card and its score capsules down to match. */
-    --shell-left-col-max: clamp(1100px, 46vw, 1400px);
-    --shell-right-col-width: clamp(700px, 28vw, 860px);
-  }
-
-  /* Step the post type back to large-desktop scale so it sits comfortably in the
-     now-narrower column instead of looking oversized. */
-  .view-home .main-col,
-  .view-profile .main-col {
-    --post-body-size: 26px;
-    --post-avatar-size: 10rem;
-    --post-name-size: 14px;
-    --post-handle-size: 11px;
-    --post-meta-pill-size: 16px;
-    --post-meta-pill-icon-size: 22px;
-    --post-meta-comment-icon-size: 28px;
-  }
-}
+   The base `.view-*.page` composition is now a single centered, bounded band
+   that frames itself with calm empty margins at every width, so the former
+   1920px and 2560px column/type overrides (which widened the band toward the
+   edges, then clawed it back at 5K) are gone — one rule governs all sizes. */
 
 /* ── RESPONSIVE: 14" MacBook and similar (≤ 1660px) ──
-   Wider posts column + slightly smaller type so density matches large desktop. */
+   Layout is inherited from the base centered composition (no flex-start, no
+   outward bleed, no wider columns). Only the post type steps down a touch so it
+   stays comfortable in the narrower posts column. */
 @media (max-width: 1660px) {
   .page-outer.view-home,
   .page-outer.view-profile {
     --left-capsule-extra-width: 0px;
     --dashboard-extra-width: 0px;
     --shell-capsules-nudge-left: 38px;
-  }
-
-  .view-home .page,
-  .view-profile .page {
-    justify-content: flex-start;
-    --shell-left-outward-bleed: 30px;
-    --shell-right-outward-bleed: 26px;
-    --shell-left-col-max: clamp(552px, 51vw, 920px);
-    --shell-right-col-width: clamp(440px, 34vw, 648px);
   }
 
   .view-home .main-col,
@@ -1118,15 +1071,13 @@ body {
   }
 }
 
-/* ── RESPONSIVE: tighter laptop widths (≤ 1350px) ── */
+/* ── RESPONSIVE: tighter laptop widths (≤ 1350px) ──
+   Still the centered base composition; only the inner gap and post type tighten
+   so the band stays comfortable as it scales down. */
 @media (max-width: 1350px) {
   .view-home .page,
   .view-profile .page {
     --shell-col-gap: 14px;
-    --shell-left-outward-bleed: 26px;
-    --shell-right-outward-bleed: 22px;
-    --shell-left-col-max: clamp(500px, 48vw, 820px);
-    --shell-right-col-width: clamp(420px, 33vw, 580px);
   }
 
   .view-home .main-col,
