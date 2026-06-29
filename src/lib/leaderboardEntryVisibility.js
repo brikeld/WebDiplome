@@ -6,6 +6,7 @@
 export function isLeaderboardBotEntry(entry) {
   if (!entry || entry.isUser) return false;
   if (entry.source === 'real') return false;
+  if (entry.source === 'demoFake') return false;
   if (entry.source === 'bot') return true;
   const slug = entry.slug != null ? String(entry.slug) : '';
   if (slug.startsWith('demo-')) return true;

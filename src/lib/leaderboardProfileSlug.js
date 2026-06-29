@@ -24,7 +24,7 @@ export function leaderboardEntryProfileSlug(entry, authorSlug = null, directoryS
   }
 
   const slug = entry.slug != null ? String(entry.slug).trim() : '';
-  if (!slug || slug.startsWith('demo-')) return null;
+  if (!slug || (slug.startsWith('demo-') && !slug.startsWith('demo-video-'))) return null;
   if (directorySlugs != null && !slugInDirectory(slug, directorySlugs)) return null;
   return slug;
 }

@@ -106,6 +106,24 @@ async function generateFakePost(step, shouldContinue) {
   return generateHostedFakePost(step, shouldContinue);
 }
 
+export function mergeDemoVideoPostIntoProfiles(profiles, userSlug, post) {
+  const list = Array.isArray(profiles) ? profiles : [];
+  const slug = String(userSlug || '').trim();
+  if (!slug || !post?.content) return list;
+
+  let matched = false;
+  const next = list.map((profile) => {
+    const key = String(profile?.slug ?? profile?.id ?? '');
+    if (key !== slug) return profile;
+    matched = true;
+    return {
+      ...profile,
+      personaPosts: mergePostsPrepend([post], profile.personaPosts ?? []),
+    };
+  });
+  return matched ? next : list;
+}
+
 /**
  * Reveal one already-generated post for a fake user through the spectator
  * controller (same machinery as demo rotate). The fake user must already exist
@@ -149,6 +167,7 @@ async function revealFakePost({
  * @param {object}   opts.spectateController
  * @param {function} opts.ensureFakeUser  - (user, posts) => void: make sure the fake
  *                                          user is present in allProfiles (idempotent)
+ * @param {function} [opts.onPostGenerated]
  * @param {function} [opts.onGeneratingPersona]
  * @param {function} [opts.shouldContinue]
  */
@@ -156,6 +175,7 @@ export async function runDemoVideoPipeline({
   schedule,
   spectateController,
   ensureFakeUser,
+  onPostGenerated,
   onGeneratingPersona,
   shouldContinue = () => true,
   revealGapMs = DEMO_VIDEO_REVEAL_GAP_MS,
@@ -203,6 +223,7 @@ export async function runDemoVideoPipeline({
       ensureFakeUser?.(step.user, prevAccumulated);
       const accumulated = mergePostsPrepend([post], prevAccumulated);
       postsByUser.set(slug, accumulated);
+      onPostGenerated?.(step.user, post, accumulated);
 
       onGeneratingPersona?.(post.persona ?? null);
       try {

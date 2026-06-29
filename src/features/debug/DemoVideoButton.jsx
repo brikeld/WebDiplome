@@ -10,6 +10,7 @@ import { runDemoVideoPipeline } from '@/lib/demoVideoFeed.js';
 export default function DemoVideoButton({
   spectateController,
   ensureFakeUser,
+  onPostGenerated,
   onActiveChange,
   onGeneratingPersona,
 }) {
@@ -41,6 +42,7 @@ export default function DemoVideoButton({
         schedule: buildDemoVideoSchedule(),
         spectateController,
         ensureFakeUser,
+        onPostGenerated,
         onGeneratingPersona,
         shouldContinue: () => runningRef.current,
       });
@@ -50,7 +52,7 @@ export default function DemoVideoButton({
     } finally {
       if (runningRef.current) stop();
     }
-  }, [spectateController, ensureFakeUser, onGeneratingPersona, stop]);
+  }, [spectateController, ensureFakeUser, onPostGenerated, onGeneratingPersona, stop]);
 
   const toggle = useCallback(() => {
     if (runningRef.current) {

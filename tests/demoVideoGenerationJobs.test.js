@@ -2,7 +2,14 @@ import express from 'express';
 import { describe, expect, it } from 'vitest';
 import { createGenerationJobRoutes } from '../server/routes/generationJobRoutes.js';
 
-function buildApp({ operatorProfile = { firstname: 'Brikeld', lastname: 'Hoxha' } } = {}) {
+function buildApp({
+  operatorProfile = {
+    id: 'brikeld-hoxha',
+    profileUuid: 'operator-profile-uuid',
+    firstname: 'Brikeld',
+    lastname: 'Hoxha',
+  },
+} = {}) {
   const calls = { createJob: [] };
   const supabaseService = {
     auth: {
@@ -69,7 +76,7 @@ describe('demo-video generation jobs', () => {
     expect(calls.createJob).toEqual([
       {
         userId: 'operator-user',
-        profileId: null,
+        profileId: 'operator-profile-uuid',
         requestPayload: {
           jobType: 'demo-video',
           assetBasename: 'lake.webp',

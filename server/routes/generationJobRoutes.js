@@ -77,6 +77,14 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       if (!isDemoRotateOperator(operator)) {
         return res.status(403).json({ error: 'Demo video restricted' });
       }
+      const operatorProfileId =
+        operator?.profileUuid
+        ?? operator?.profile_id
+        ?? operator?.profileId
+        ?? null;
+      if (!operatorProfileId) {
+        return res.status(400).json({ error: 'Operator profile id missing' });
+      }
 
       const assetBasename = String(req.body?.assetBasename || '').trim();
       if (!assetBasename || assetBasename.includes('/') || assetBasename.includes('..')) {
@@ -86,7 +94,7 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
       const fakeUserName = String(req.body?.fakeUserName || '').trim() || 'A user';
       const job = await jobStore.createJob({
         userId: req.authUser.id,
-        profileId: null,
+        profileId: operatorProfileId,
         requestPayload: {
           jobType: 'demo-video',
           assetBasename,

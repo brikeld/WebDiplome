@@ -33,4 +33,14 @@ describe('leaderboardEntryProfileSlug', () => {
       leaderboardEntryProfileSlug({ source: 'bot', slug: 'demo-most_secure-0', isUser: false }),
     ).toBeNull();
   });
+
+  it('returns demo-video fake profile slugs when they are in the directory', () => {
+    expect(
+      leaderboardEntryProfileSlug(
+        { source: 'demoFake', slug: 'demo-video-camille-laurent', isUser: false },
+        'brikeld-hoxha',
+        ['demo-video-camille-laurent'],
+      ),
+    ).toBe('demo-video-camille-laurent');
+  });
 });

@@ -42,13 +42,13 @@ const CONTENT_FILES = [
 
 /** Made-up French-sounding identities, one per avatar. */
 const PEOPLE = [
-  { first: 'Camille', last: 'Laurent', dominant: 'popularity' },
-  { first: 'Théo', last: 'Moreau', dominant: 'productivity' },
-  { first: 'Léa', last: 'Bernard', dominant: 'popularity' },
-  { first: 'Hugo', last: 'Petit', dominant: 'security' },
-  { first: 'Manon', last: 'Girard', dominant: 'productivity' },
-  { first: 'Lucas', last: 'Rousseau', dominant: 'security' },
-  { first: 'Chloé', last: 'Lefèvre', dominant: 'popularity' },
+  { first: 'Camille', last: 'Laurent', dominant: 'popularity', device: 'Camille MacBook Air', focus: 'Paris food photos, travel planning, and group chats' },
+  { first: 'Théo', last: 'Moreau', dominant: 'productivity', device: 'Theo Studio MacBook', focus: 'PDF invoices, portfolio drafts, and late-night export folders' },
+  { first: 'Léa', last: 'Bernard', dominant: 'popularity', device: 'Lea Social Laptop', focus: 'visual moodboards, city photos, and fast-moving DMs' },
+  { first: 'Hugo', last: 'Petit', dominant: 'security', device: 'Hugo ThinkPad', focus: 'security settings, document cleanup, and cautious downloads' },
+  { first: 'Manon', last: 'Girard', dominant: 'productivity', device: 'Manon MacBook Pro', focus: 'client decks, design files, and invoice admin' },
+  { first: 'Lucas', last: 'Rousseau', dominant: 'security', device: 'Lucas Work Laptop', focus: 'network hygiene, backups, and private folders' },
+  { first: 'Chloé', last: 'Lefèvre', dominant: 'popularity', device: 'Chloe Creator MacBook', focus: 'creator assets, image folders, and social posts' },
 ];
 
 const PERSONA_KEYS = ['productivity', 'security', 'social'];
@@ -96,6 +96,86 @@ function scoresFor(person, slug) {
   };
 }
 
+function mockOverviewFor(person, slug, i) {
+  const collectedAt = new Date(Date.now() - (i + 2) * 36 * 60 * 60 * 1000).toISOString();
+  const appsByPersona = {
+    productivity: ['Notion', 'Figma', 'Preview', 'Numbers', 'Calendar', 'Mail'],
+    security: ['1Password', 'Little Snitch', 'CleanMyMac', 'Preview', 'Finder', 'Safari'],
+    popularity: ['Instagram', 'Messages', 'WhatsApp', 'Photos', 'Spotify', 'Safari'],
+  };
+  const dom = person.dominant;
+  const apps = appsByPersona[dom] ?? appsByPersona.productivity;
+  return {
+    collectedAt,
+    lastAnalysisAt: new Date(Date.now() - (i + 1) * 90 * 60 * 1000).toISOString(),
+    harvestOverview: {
+      machine: {
+        name: person.device,
+        model: i % 2 === 0 ? 'MacBook Pro 14-inch' : 'MacBook Air 13-inch',
+        chip: i % 3 === 0 ? 'Apple M3 Pro' : 'Apple M2',
+        ram: i % 2 === 0 ? '18 GB' : '16 GB',
+        osVersion: 'macOS 15.5',
+        appearance: i % 2 === 0 ? 'Dark' : 'Light',
+        screenResolution: i % 2 === 0 ? '3024 x 1964' : '2560 x 1664',
+        locale: 'fr_CH',
+        languages: ['fr-FR', 'en-US'],
+      },
+      storage: {
+        totalGb: 512,
+        usedGb: 220 + i * 23,
+        freeGb: Math.max(48, 292 - i * 23),
+        usePercent: 43 + i * 4,
+        smartStatus: 'Verified',
+      },
+      battery: {
+        percent: 54 + i * 5,
+        charging: i % 2 === 0,
+        powerSource: i % 2 === 0 ? 'Power Adapter' : 'Battery',
+        cycles: 110 + i * 31,
+        condition: 'Normal',
+        healthPercent: 91 - i,
+      },
+      memory: {
+        pressure: i % 2 === 0 ? 'Normal' : 'Moderate',
+        usedGb: 8 + i,
+        totalGb: i % 2 === 0 ? 18 : 16,
+      },
+      security: {
+        sip: 'Enabled',
+        filevault: i % 3 === 0 ? 'Enabled' : 'Unknown',
+        gatekeeper: 'Enabled',
+      },
+      diagnostics: {
+        crashCount7d: i % 3,
+        errorCount24h: i + 1,
+      },
+      usage: {
+        appUsage7d: apps.slice(0, 4),
+        recentFilesCount: 18 + i * 7,
+        downloadsCount: 4 + i,
+        uptimeDays: 1 + (i % 4),
+      },
+      apps: {
+        mostUsed: apps,
+        dock: apps.slice(0, 5),
+        installedCount: 73 + i * 6,
+      },
+      network: {
+        wifiNetworks: ['Home-5G', 'Cafe_Guest', 'SBB-Free', `${person.first}-Hotspot`],
+        wifiCount: 12 + i,
+      },
+      browser: {
+        topDomains: ['instagram.com', 'notion.so', 'icloud.com', 'google.com'].slice(0, 3 + (i % 2)),
+        totalVisits: 220 + i * 47,
+      },
+      files: {
+        extensions: ['jpg', 'pdf', 'webp', 'png'].slice(0, 3 + (i % 2)),
+      },
+      displays: [{ name: 'Built-in Retina', resolution: i % 2 === 0 ? '3024 x 1964' : '2560 x 1664' }],
+    },
+  };
+}
+
 let cachedRoster = null;
 
 /**
@@ -112,17 +192,27 @@ export function getFakeUsers() {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
     const displayName = `${person.first} ${person.last}`;
+    const scoreSet = scoresFor(person, slug);
+    const overview = mockOverviewFor(person, slug, i);
+    const globalScore = Math.round((scoreSet.productivity + scoreSet.security + scoreSet.social) / 3) + 18;
     return {
       id: slug,
       slug,
       firstname: person.first,
       lastname: person.last,
       displayName,
+      machineName: person.device,
+      globalScore: Math.max(35, Math.min(92, globalScore)),
       avatarUrl: DEMO_VIDEO_AVATARS[i % DEMO_VIDEO_AVATARS.length],
       avatarInitials: initialsOf(person.first, person.last),
       handle: handleOf(person.first, person.last),
-      personaScores: scoresFor(person, slug),
+      personaScores: scoreSet,
       dominantPersona: person.dominant,
+      profileSummary: `${displayName} looks like ${person.focus}. COMPLIANT has enough demo signals to score the profile without using a real account.`,
+      userDescription: `${displayName} looks like ${person.focus}. COMPLIANT has enough demo signals to score the profile without using a real account.`,
+      collectedAt: overview.collectedAt,
+      lastAnalysisAt: overview.lastAnalysisAt,
+      harvestOverview: overview.harvestOverview,
       personaPosts: [],
       __demoVideoFake: true,
     };

@@ -100,6 +100,7 @@ import {
 } from '@/lib/hostedAccount.js';
 import DemoRotateButton from '@/features/debug/DemoRotateButton.jsx';
 import DemoVideoButton from '@/features/debug/DemoVideoButton.jsx';
+import { mergeDemoVideoPostIntoProfiles } from '@/lib/demoVideoFeed.js';
 import { canUseDemoRotateControl, canUseDemoVideoControl } from '@/lib/demoRotate.js';
 import { setDemoVideoActive, isDemoVideoFakeSlug, getFakeUsers } from '@/lib/demoVideoFakeUsers.js';
 import {
@@ -1145,16 +1146,18 @@ function AppInner({
           || p?.id === targetSlug
           || (explicitSlug && slugsReferToSameAccount(p?.slug ?? p?.id, explicitSlug)),
       );
-      try {
-        const res = await fetch(
-          `${API_ORIGIN}/api/profiles/${encodeURIComponent(targetSlug)}`,
-          { cache: 'no-store' },
-        );
-        if (res.ok) {
-          target = await res.json();
+      if (!target?.__demoVideoFake) {
+        try {
+          const res = await fetch(
+            `${API_ORIGIN}/api/profiles/${encodeURIComponent(targetSlug)}`,
+            { cache: 'no-store' },
+          );
+          if (res.ok) {
+            target = await res.json();
+          }
+        } catch (e) {
+          console.warn('[profile] fetch by slug failed', e?.message || e);
         }
-      } catch (e) {
-        console.warn('[profile] fetch by slug failed', e?.message || e);
       }
       if (!target) {
         if (explicitSlug) {
@@ -1263,6 +1266,7 @@ function AppInner({
           <DemoVideoButton
             spectateController={spectateRevealRef.current}
             ensureFakeUser={ensureFakeUser}
+            onPostGenerated={handleDemoVideoPostGenerated}
             onActiveChange={onDemoVideoActiveChange}
             onGeneratingPersona={onDemoGeneratingPersona}
           />
@@ -1632,6 +1636,18 @@ export default function App() {
       const list = Array.isArray(prev) ? prev : [];
       if (list.some((p) => String(p?.slug ?? p?.id ?? '') === slug)) return list;
       return [{ ...user, personaPosts: Array.isArray(posts) ? posts : [] }, ...list];
+    });
+  }, []);
+
+  const handleDemoVideoPostGenerated = useCallback((user, post) => {
+    const slug = String(user?.slug ?? user?.id ?? '').trim();
+    if (!slug || !post?.content) return;
+    setAllProfiles((prev) => mergeDemoVideoPostIntoProfiles(prev, slug, post));
+    setViewedProfile((prev) => {
+      const key = String(prev?.slug ?? prev?.id ?? '');
+      return key === slug
+        ? mergeDemoVideoPostIntoProfiles([prev], slug, post)[0] ?? prev
+        : prev;
     });
   }, []);
 
