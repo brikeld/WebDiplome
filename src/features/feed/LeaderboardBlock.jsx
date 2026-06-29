@@ -8,6 +8,7 @@ import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import ProfileNameLink from '@/features/profile/ProfileNameLink.jsx';
 import { leaderboardEntryProfileSlug } from '@/lib/leaderboardProfileSlug.js';
 import { spliceFakeUsersIntoBoard } from '@/lib/demoVideoFakeUsers.js';
+import { useDemoVideoActive } from '@/lib/useDemoVideoActive.js';
 import './leaderboardBlock.css';
 
 function DeltaChip({ userRank, previousUserRank }) {
@@ -90,6 +91,8 @@ export default function LeaderboardBlock({
     isLeaderboardSelfRowRevealing,
   } = useLiveScoring();
   const reactId = useId();
+  // Subscribe so the block re-renders (and re-splices) the moment the demo video toggles.
+  useDemoVideoActive();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
   // When the demo-video is running, swap placeholder/clone rows for fake people.
   const board = spliceFakeUsersIntoBoard(leaderboard);

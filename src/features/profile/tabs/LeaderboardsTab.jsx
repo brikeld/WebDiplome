@@ -6,6 +6,7 @@ import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { enrichProfileLeaderboardForRationale } from '@/lib/enrichProfileLeaderboard.js';
 import { filterProfileLeaderboards } from '@/lib/profileUtils.js';
 import { spliceFakeUsersIntoBoard } from '@/lib/demoVideoFakeUsers.js';
+import { useDemoVideoActive } from '@/lib/useDemoVideoActive.js';
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -176,6 +177,7 @@ export default function LeaderboardsTab({
 }) {
   const { leaderboards } = useProfileLeaderboards(profile);
   const { isLeaderboardSelfHidden } = useLiveScoring();
+  const demoVideoActive = useDemoVideoActive();
   const [selectedBoard, setSelectedBoard] = useState(null);
 
   const visibleLeaderboards = useMemo(
@@ -200,7 +202,7 @@ export default function LeaderboardsTab({
       out[key].push(board);
     }
     return out;
-  }, [visibleLeaderboards]);
+  }, [visibleLeaderboards, demoVideoActive]);
 
   const openAnalysis = useCallback((board, persona) => {
     setSelectedBoard({ board, persona });

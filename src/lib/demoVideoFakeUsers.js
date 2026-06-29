@@ -163,12 +163,24 @@ export function isDemoVideoFakeSlug(slug) {
 }
 
 // ── active-state singleton (so leaderboard splicers need no prop drilling) ─────
+// Backed by a tiny pub/sub so React views (useDemoVideoActive) re-render and
+// re-splice the moment the demo video is toggled — not only on the next poll.
 let active = false;
+const activeListeners = new Set();
 export function setDemoVideoActive(value) {
-  active = Boolean(value);
+  const next = Boolean(value);
+  if (next === active) return;
+  active = next;
+  for (const listener of activeListeners) {
+    try { listener(); } catch { /* ignore */ }
+  }
 }
 export function isDemoVideoActive() {
   return active;
+}
+export function subscribeDemoVideoActive(listener) {
+  activeListeners.add(listener);
+  return () => activeListeners.delete(listener);
 }
 
 /**

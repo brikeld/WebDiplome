@@ -50,7 +50,7 @@ import {
   mergePostsPrepend,
 } from '@/lib/mergePersonaPosts.js';
 import { prependPersonaPosts } from '@/lib/postsApi.js';
-import { resolveApiOrigin, resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
+import { resolveApiOrigin, resolveGenerateApiOrigin, resolveDemoVideoGenerateOrigin } from '@/lib/apiOrigin.js';
 import { inferPublicMediaConfigFromProfiles } from '@/lib/publicMediaConfig.js';
 import {
   ingestProfileAvatars,
@@ -118,6 +118,7 @@ function selectedProfileSlug() {
 
 const API_ORIGIN = resolveApiOrigin();
 const GENERATE_API_ORIGIN = resolveGenerateApiOrigin();
+const DEMO_VIDEO_GENERATE_ORIGIN = resolveDemoVideoGenerateOrigin();
 const PUBLIC_DIRECTORY_POLL_MS = 30_000;
 const PUBLIC_FEED_POLL_MS = 30_000;
 const TELL_LAYOUT_MS = 2250;
@@ -1259,9 +1260,9 @@ function AppInner({
             onGeneratingPersona={onDemoGeneratingPersona}
           />
         )}
-        {canUseDemoVideoControl(profile) && (
+        {canUseDemoVideoControl() && (
           <DemoVideoButton
-            generateApiOrigin={GENERATE_API_ORIGIN}
+            generateApiOrigin={DEMO_VIDEO_GENERATE_ORIGIN}
             spectateController={spectateRevealRef.current}
             ensureFakeUser={ensureFakeUser}
             onActiveChange={onDemoVideoActiveChange}
