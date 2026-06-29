@@ -14,6 +14,8 @@ create table if not exists public.profiles (
   profile_summary text not null default '',
   wallpaper_url text,
   raw_profile jsonb not null default '{}'::jsonb,
+  persona_blurbs jsonb not null default '{}'::jsonb,
+  live_scoring_records jsonb not null default '{}'::jsonb,
   collected_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -28,6 +30,7 @@ create table if not exists public.posts (
   sentiment text,
   attached_asset jsonb,
   leaderboard jsonb,
+  metadata jsonb not null default '{}'::jsonb,
   source text not null default 'sync',
   created_at timestamptz not null default now()
 );
@@ -139,3 +142,19 @@ on conflict (id) do update set public = excluded.public;
 insert into storage.buckets (id, name, public)
 values ('app-releases', 'app-releases', true)
 on conflict (id) do update set public = excluded.public;
+
+-- Idempotent self-heal for projects created before these columns existed.
+alter table public.profiles add column if not exists persona_blurbs jsonb not null default '{}'::jsonb;
+alter table public.profiles add column if not exists live_scoring_records jsonb not null default '{}'::jsonb;
+alter table public.posts add column if not exists metadata jsonb not null default '{}'::jsonb;
+
+-- Standard Supabase role grants (RLS still gates row access). Required so the
+-- anon/authenticated/service_role API roles can reach tables created via tooling
+-- that doesn't apply Supabase's default privileges.
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert, update, delete on all tables in schema public to anon, authenticated, service_role;
+grant usage, select on all sequences in schema public to anon, authenticated, service_role;
+grant execute on all functions in schema public to anon, authenticated, service_role;
+alter default privileges in schema public grant select, insert, update, delete on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant usage, select on sequences to anon, authenticated, service_role;
+alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
