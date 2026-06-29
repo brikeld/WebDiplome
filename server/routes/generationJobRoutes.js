@@ -54,6 +54,9 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
   router.post('/generation-jobs/public', async (req, res) => {
     try {
       const jobType = String(req.body?.jobType || 'comments').trim();
+      if (jobType === 'demo-video') {
+        return res.status(403).json({ error: 'Demo video restricted' });
+      }
       const payload = req.body?.payload && typeof req.body.payload === 'object'
         ? req.body.payload
         : {};
@@ -61,6 +64,34 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         userId: null,
         profileId: null,
         requestPayload: { jobType, ...payload },
+      });
+      res.json({ success: true, jobId: job.id, status: job.status });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.post('/debug/demo-video/post', requireUser, async (req, res) => {
+    try {
+      const operator = await profileStore.getProfileByUserId(req.authUser.id);
+      if (!isDemoRotateOperator(operator)) {
+        return res.status(403).json({ error: 'Demo video restricted' });
+      }
+
+      const assetBasename = String(req.body?.assetBasename || '').trim();
+      if (!assetBasename || assetBasename.includes('/') || assetBasename.includes('..')) {
+        return res.status(400).json({ error: 'assetBasename required' });
+      }
+
+      const fakeUserName = String(req.body?.fakeUserName || '').trim() || 'A user';
+      const job = await jobStore.createJob({
+        userId: req.authUser.id,
+        profileId: null,
+        requestPayload: {
+          jobType: 'demo-video',
+          assetBasename,
+          fakeUserName,
+        },
       });
       res.json({ success: true, jobId: job.id, status: job.status });
     } catch (err) {

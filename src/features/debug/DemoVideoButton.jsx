@@ -4,11 +4,10 @@ import { runDemoVideoPipeline } from '@/lib/demoVideoFeed.js';
 
 /**
  * Local "demo video" control — same start/stop UX as DemoRotateButton, but it
- * drives the fake-user pipeline (client-only, ephemeral) instead of hosted AI
- * jobs. Sits next to the demo-rotate dot in the brand cluster.
+ * drives ephemeral fake users through the hosted worker queue. Sits next to the
+ * demo-rotate dot in the brand cluster.
  */
 export default function DemoVideoButton({
-  generateApiOrigin,
   spectateController,
   ensureFakeUser,
   onActiveChange,
@@ -40,7 +39,6 @@ export default function DemoVideoButton({
     try {
       await runDemoVideoPipeline({
         schedule: buildDemoVideoSchedule(),
-        generateApiOrigin,
         spectateController,
         ensureFakeUser,
         onGeneratingPersona,
@@ -52,7 +50,7 @@ export default function DemoVideoButton({
     } finally {
       if (runningRef.current) stop();
     }
-  }, [generateApiOrigin, spectateController, ensureFakeUser, onGeneratingPersona, stop]);
+  }, [spectateController, ensureFakeUser, onGeneratingPersona, stop]);
 
   const toggle = useCallback(() => {
     if (runningRef.current) {

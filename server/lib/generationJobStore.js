@@ -38,7 +38,7 @@ function jobTypeFromRow(row) {
   return payload.jobType || 'posts';
 }
 
-const INTERACTIVE_JOB_TYPES = new Set(['comments', 'blurbs', 'bio']);
+const INTERACTIVE_JOB_TYPES = new Set(['comments', 'blurbs', 'bio', 'demo-video']);
 
 function jobPriority(row) {
   return INTERACTIVE_JOB_TYPES.has(jobTypeFromRow(row)) ? 0 : 1;

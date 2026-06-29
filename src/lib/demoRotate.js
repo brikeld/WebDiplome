@@ -9,11 +9,9 @@ export function canUseDemoRotateControl(profile) {
 }
 
 /**
- * Gate for the "demo video" control. The generator endpoint + videoDEMO assets
- * live on the LOCAL machine (server-generate.js :3010), but the web app can be
- * opened either on localhost OR on the deployed site driving that local
- * generator (Chrome allows https→http://localhost). So: always available on
- * localhost, and available to the operator on a hosted origin too.
+ * Gate for the "demo video" control. Local development can show the control for
+ * quick recording, while production restricts it to the demo operator; the API
+ * route enforces the same operator check before queueing hosted worker jobs.
  */
 export function canUseDemoVideoControl(profile) {
   if (!isHostedApiOrigin()) return true;

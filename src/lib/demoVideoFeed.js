@@ -1,26 +1,47 @@
 /**
- * Demo-video pipeline — the client-only counterpart to demoRotateFeed.js.
+ * Demo-video pipeline — drives FAKE users on the feed for a demo recording.
  *
- * Where the real "demo rotate" queues hosted AI jobs for real DB profiles and
- * reveals them off the directory poll, this drives FAKE users entirely in the
- * browser: for each scheduled step it asks the local generator for one post
- * (LM Studio, ephemeral — see server-generate.js `/api/demo-video/generate-post`)
- * and then reveals it through the SAME spectator reveal controller, so the
+ * It runs the SAME hosted path as the demo button: each step queues an ephemeral
+ * `demo-video` generation job (POST /api/debug/demo-video/post) that the
+ * operator's worker PC picks up — the worker reads the asset from the local
+ * /Users/brikeld/Documents/videoDEMO folder, captions it via LM Studio, uploads
+ * the image to storage, and returns the post on the job row. The client polls
+ * the job, then reveals the post through the spectator reveal controller, so the
  * descend/burst/materialize animation, pacing and ordering are identical.
  *
- * Nothing is persisted: the fake users + their posts live only in `allProfiles`
- * (React state) and vanish on refresh.
+ * Nothing is persisted as a profile: the fake users + posts live only in
+ * `allProfiles` (React state) and the job rows; they vanish on refresh. This
+ * works on the deployed site (Vercel→Railway→worker) with no local servers.
  */
+import { resolveApiOrigin, resolveDemoVideoGenerateOrigin } from '@/lib/apiOrigin.js';
 import {
   POST_FEED_ENTER_ANIM_MS,
   sleep,
 } from '@/lib/postFeedRevealQueue.js';
 import { postIdentityKey, mergePostsPrepend } from '@/lib/mergePersonaPosts.js';
+import { fetchWithHostedAuth } from '@/lib/hostedAccount.js';
 
+const API_ORIGIN = resolveApiOrigin();
+const LOCAL_GENERATE_ORIGIN = resolveDemoVideoGenerateOrigin();
 export const DEMO_VIDEO_REVEAL_GAP_MS = 2200;
+const JOB_POLL_MS = 1500;
+const JOB_TIMEOUT_MS = 180000;
 
-async function generateFakePost(generateApiOrigin, step) {
-  const res = await fetch(`${generateApiOrigin}/api/demo-video/generate-post`, {
+export function isLocalDemoVideoApiOrigin(origin) {
+  try {
+    const host = new URL(String(origin || '')).hostname;
+    return host === 'localhost' || host === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+function localContentAssetUrl(assetBasename) {
+  return `${LOCAL_GENERATE_ORIGIN}/videoDEMO/contentFakePeople/${encodeURIComponent(assetBasename)}`;
+}
+
+async function generateLocalFakePost(step) {
+  const res = await fetch(`${LOCAL_GENERATE_ORIGIN}/api/demo-video/generate-post`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     cache: 'no-store',
@@ -29,23 +50,60 @@ async function generateFakePost(generateApiOrigin, step) {
       fakeUserName: step.user.displayName,
     }),
   });
+  const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(text.slice(0, 200) || `Demo-video generate failed (${res.status})`);
+    throw new Error(json?.error || `Demo-video generate failed (${res.status})`);
   }
-  const json = await res.json();
   const post = json?.post;
-  if (!post || !post.content) throw new Error('Demo-video generate returned no post');
-  // Point the attachment at the app-served absolute URL (the public/videoDEMO
-  // file), so the feed renders it directly instead of resolving against the API
-  // origin. createdAt newest-first so reveals stack on top.
+  if (!post?.content) throw new Error('Demo-video generate returned no post');
   post.attachedAsset = {
     ...(post.attachedAsset ?? {}),
-    url: step.assetUrl,
+    url: localContentAssetUrl(step.assetBasename),
     filename: step.assetBasename,
   };
   if (!post.createdAt) post.createdAt = new Date().toISOString();
   return post;
+}
+
+async function generateHostedFakePost(step, shouldContinue) {
+  const queueRes = await fetchWithHostedAuth(`${API_ORIGIN}/api/debug/demo-video/post`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    cache: 'no-store',
+    body: JSON.stringify({
+      assetBasename: step.assetBasename,
+      fakeUserName: step.user.displayName,
+    }),
+  });
+  const queued = await queueRes.json().catch(() => ({}));
+  if (!queueRes.ok || !queued?.jobId) {
+    throw new Error(queued?.error || `Demo-video queue failed (${queueRes.status})`);
+  }
+
+  const start = Date.now();
+  while (shouldContinue() && Date.now() - start < JOB_TIMEOUT_MS) {
+    await sleep(JOB_POLL_MS);
+    const res = await fetch(
+      `${API_ORIGIN}/api/generation-jobs/${encodeURIComponent(queued.jobId)}`,
+      { cache: 'no-store' },
+    );
+    if (!res.ok) continue;
+    const { job } = await res.json();
+    if (job?.status === 'failed') throw new Error(job.error || 'Demo-video generation failed');
+    if (job?.status !== 'complete') continue;
+    const post = job.result?.post ?? (Array.isArray(job.result) ? job.result[0] : null);
+    if (!post?.content) throw new Error('Demo-video job returned no post');
+    if (!post.createdAt) post.createdAt = new Date().toISOString();
+    return post;
+  }
+  return null;
+}
+
+async function generateFakePost(step, shouldContinue) {
+  if (isLocalDemoVideoApiOrigin(API_ORIGIN)) {
+    return generateLocalFakePost(step);
+  }
+  return generateHostedFakePost(step, shouldContinue);
 }
 
 /**
@@ -88,7 +146,6 @@ async function revealFakePost({
  *
  * @param {object}   opts
  * @param {Array}    opts.schedule        - from buildDemoVideoSchedule()
- * @param {string}   opts.generateApiOrigin
  * @param {object}   opts.spectateController
  * @param {function} opts.ensureFakeUser  - (user, posts) => void: make sure the fake
  *                                          user is present in allProfiles (idempotent)
@@ -97,7 +154,6 @@ async function revealFakePost({
  */
 export async function runDemoVideoPipeline({
   schedule,
-  generateApiOrigin,
   spectateController,
   ensureFakeUser,
   onGeneratingPersona,
@@ -115,7 +171,7 @@ export async function runDemoVideoPipeline({
     if (!shouldContinue()) return null;
     const step = steps[index % steps.length];
     try {
-      const post = await generateFakePost(generateApiOrigin, step);
+      const post = await generateFakePost(step, shouldContinue);
       return { step, post };
     } catch (err) {
       console.warn(`[demo-video] generate ${step.assetBasename}:`, err?.message || err);

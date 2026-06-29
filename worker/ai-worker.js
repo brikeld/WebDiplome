@@ -6,6 +6,7 @@ import {
   generateSinglePersonaPost,
   generateUserSummary,
   preparePersonaPostSlotPlan,
+  ASSET_SLOT_INDEX,
 } from '../server/lib/personaPostGenerator.js';
 import { countAiGeneratedPosts } from '../server/lib/generationQueue.js';
 import { generateCommentSuggestions } from '../server/lib/commentSuggestions.js';
@@ -40,6 +41,19 @@ const POLL_MS = parseInt(process.env.AI_WORKER_POLL_MS || '1500', 10);
 /** Parallel LM Studio slots — match demo pipeline size (default 4). */
 const CONCURRENCY = Math.max(1, parseInt(process.env.AI_WORKER_CONCURRENCY || '4', 10));
 const CHART_UPLOAD_DIR = path.join(os.tmpdir(), 'webdiplome-worker-charts');
+// Demo-video fake-user content lives on THIS machine (the worker PC), gitignored.
+const VIDEO_DEMO_CONTENT_DIR = path.join(
+  String(process.env.VIDEO_DEMO_DIR || '/Users/brikeld/Documents/videoDEMO'),
+  'contentFakePeople',
+);
+const DEMO_VIDEO_IMG_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif']);
+const DEMO_VIDEO_DOC_EXTS = new Set(['.pdf']);
+function demoVideoMime(ext) {
+  return {
+    '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif', '.avif': 'image/avif',
+    '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.pdf': 'application/pdf',
+  }[ext] || 'image/jpeg';
+}
 
 function headers() {
   return { 'Content-Type': 'application/json', 'x-ai-worker-token': TOKEN };
@@ -415,6 +429,77 @@ async function processBlurbsJob(payload) {
   };
 }
 
+/**
+ * Demo-video: generate ONE ephemeral post for a fake user from a local
+ * /Users/brikeld/Documents/videoDEMO asset. Not tied to any real profile — the
+ * result is returned on the job row (the /complete route stores `result` for
+ * non-posts jobs), and the client reveals it as a fake user. The asset is
+ * uploaded to storage so the deployed site can load it.
+ */
+async function processDemoVideoJob(payload, jobId, ownerUserId) {
+  const assetBasename = String(payload.assetBasename || '').trim();
+  if (!assetBasename || assetBasename.includes('/') || assetBasename.includes('..')) {
+    throw new Error('invalid assetBasename');
+  }
+  const ext = path.extname(assetBasename).toLowerCase();
+  const isImage = DEMO_VIDEO_IMG_EXTS.has(ext);
+  const isDoc = DEMO_VIDEO_DOC_EXTS.has(ext);
+  if (!isImage && !isDoc) throw new Error(`unsupported asset: ${ext}`);
+
+  const buf = await fs.readFile(path.join(VIDEO_DEMO_CONTENT_DIR, assetBasename));
+  const mime = demoVideoMime(ext);
+
+  let assetAssignment;
+  if (isImage) {
+    assetAssignment = {
+      persona: 'popularite',
+      asset: { kind: 'image', base64: buf.toString('base64'), mime, filename: assetBasename },
+    };
+  } else {
+    const text = await extractDocText(buf, ext);
+    if (!text) throw new Error('could not extract document text');
+    assetAssignment = {
+      persona: 'productivite',
+      asset: { kind: 'document', text, mime, filename: assetBasename },
+    };
+  }
+
+  const fakeUserName = String(payload.fakeUserName || 'A user').trim();
+  const prompts = await loadPrompts(process.cwd());
+  await fs.mkdir(CHART_UPLOAD_DIR, { recursive: true });
+
+  const post = await generateSinglePersonaPost({
+    baseUrl: LM_STUDIO_BASE_URL,
+    model: LM_STUDIO_MODEL,
+    userPayload: JSON.stringify({ display_name: fakeUserName }),
+    timeoutMs: TIMEOUT_MS,
+    retries: RETRIES,
+    assetAssignment,
+    prompts,
+    dataJson: {},
+    profile: { firstname: fakeUserName },
+    existingPosts: [],
+    chartUploadDir: CHART_UPLOAD_DIR,
+    skipLeaderboard: true,
+    preferMetadataFallback: true,
+    slotOffset: ASSET_SLOT_INDEX, // hits the asset slot (index 1)
+  });
+
+  if (!post?.content) throw new Error('empty post from model');
+
+  // Upload the asset so the deployed site can load it (same path as demo-rotate).
+  try {
+    const hosted = await uploadBufferToHostedApi(buf, assetBasename, mime, ownerUserId);
+    if (post.attachedAsset && hosted?.url) {
+      post.attachedAsset = { ...post.attachedAsset, url: hosted.url, filename: hosted.filename || assetBasename, mime };
+    }
+  } catch (err) {
+    console.warn(`[worker] demo-video asset upload failed:`, err.message);
+  }
+
+  return { result: { post } };
+}
+
 async function processJob(job) {
   const payload = job.request_payload || {};
   const jobType = payload.jobType || 'posts';
@@ -426,6 +511,8 @@ async function processJob(job) {
       return processCommentsJob(payload);
     case 'blurbs':
       return processBlurbsJob(payload);
+    case 'demo-video':
+      return processDemoVideoJob(payload, job.id, job.user_id ?? null);
     case 'posts-single':
       return processPostsSingleJob(payload, job.id, job.user_id ?? null);
     case 'posts':

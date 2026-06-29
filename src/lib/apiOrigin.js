@@ -21,14 +21,7 @@ export function resolveGenerateApiOrigin() {
   return resolveApiOrigin();
 }
 
-/**
- * Origin for the LOCAL demo-video generator endpoint. This is a local-only tool
- * (the `/api/demo-video/generate-post` route + the videoDEMO assets live only on
- * the dev machine), so it always targets the local generator on :3010 — never the
- * hosted API or server.js (:3001) — regardless of how the general API origin is
- * configured. Override with VITE_DEMO_VIDEO_GENERATE_ORIGIN if the generator runs
- * on a non-default port.
- */
+/** Local-only fallback used when the demo-video button runs against localhost. */
 export function resolveDemoVideoGenerateOrigin() {
   const fromEnv = import.meta.env.VITE_DEMO_VIDEO_GENERATE_ORIGIN;
   if (fromEnv) return String(fromEnv).replace(/\/$/, '');

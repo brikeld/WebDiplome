@@ -3,9 +3,10 @@
  * video" button. These people do NOT exist in the backend: they live purely in
  * React state during a demo session and vanish on refresh (no DB writes).
  *
- * Assets are served from `public/videoDEMO/` (gitignored, local-only):
- *   - profile pics: `public/videoDEMO/other users/*.png` (memoji)
- *   - post content:  `public/videoDEMO/contentFakePeople/*` (images + PDFs)
+ * Assets:
+ *   - profile pics are embedded as small data URIs for production rendering
+ *   - post content basenames are read from `/Users/brikeld/Documents/videoDEMO`
+ *     by the hosted AI worker and uploaded to public storage per generated post
  *
  * Single source of truth shared by:
  *   - the feed pipeline (src/lib/demoVideoFeed.js) — injects these into
@@ -14,24 +15,11 @@
  *     people so the boards look populated by real-looking strangers.
  */
 
-import { resolveDemoVideoGenerateOrigin } from '@/lib/apiOrigin.js';
-
-const AVATAR_DIR = '/videoDEMO/other users';
-const CONTENT_DIR = '/videoDEMO/contentFakePeople';
-
-/** Profile-pic memoji filenames (public/videoDEMO/other users). */
-const AVATAR_FILES = [
-  'Screenshot 2026-06-29 at 11.27.26.png',
-  'Screenshot 2026-06-29 at 11.27.31.png',
-  'Screenshot 2026-06-29 at 11.27.35.png',
-  'Screenshot 2026-06-29 at 11.27.42.png',
-  'Screenshot 2026-06-29 at 11.27.47.png',
-  'Screenshot 2026-06-29 at 11.27.53.png',
-  'Screenshot 2026-06-29 at 11.27.58.png',
-];
+import { DEMO_VIDEO_AVATARS } from '@/lib/demoVideoAvatars.js';
 
 /**
- * Post attachments (public/videoDEMO/contentFakePeople). Order is the reveal
+ * Post attachment basenames (read from /Users/brikeld/Documents/videoDEMO/
+ * contentFakePeople on the WORKER PC when a job runs). Order is the reveal
  * cycle: the pipeline walks this list round-robin so each pass attaches the
  * next piece of content. Images become `popularite` posts, PDFs `productivite`
  * (the generator's asset slot decides persona by kind — see personaPostGenerator).
@@ -86,14 +74,6 @@ function mulberry32(seed) {
   };
 }
 
-function publicUrl(relPath) {
-  // Assets are served by the LOCAL generator (:3010), not the web app origin, so
-  // they resolve whether the app is opened on localhost or the deployed site.
-  const origin = resolveDemoVideoGenerateOrigin();
-  // encodeURI keeps the path separators but escapes spaces (folder + filenames).
-  return encodeURI(`${origin}${relPath}`);
-}
-
 function initialsOf(first, last) {
   return `${(first[0] ?? '').toUpperCase()}${(last[0] ?? '').toUpperCase()}`;
 }
@@ -121,8 +101,8 @@ let cachedRoster = null;
 /**
  * The fake-user roster (memoized). Each entry is a profile-shaped object the
  * feed (`avatarSrcFromProfile`, `displayNameFromProfile`) and leaderboards can
- * consume directly. Avatars are absolute `${origin}/videoDEMO/...` URLs so they
- * pass `pickProfileMediaUrl`'s http(s) check (relative `/videoDEMO` paths don't).
+ * consume directly. Avatars are base64 `data:` URIs (DEMO_VIDEO_AVATARS) so they
+ * render on any origin — including the deployed site — with no asset deploy.
  */
 export function getFakeUsers() {
   if (cachedRoster) return cachedRoster;
@@ -138,7 +118,7 @@ export function getFakeUsers() {
       firstname: person.first,
       lastname: person.last,
       displayName,
-      avatarUrl: publicUrl(`${AVATAR_DIR}/${AVATAR_FILES[i % AVATAR_FILES.length]}`),
+      avatarUrl: DEMO_VIDEO_AVATARS[i % DEMO_VIDEO_AVATARS.length],
       avatarInitials: initialsOf(person.first, person.last),
       handle: handleOf(person.first, person.last),
       personaScores: scoresFor(person, slug),
@@ -156,7 +136,6 @@ export function buildDemoVideoSchedule() {
   return CONTENT_FILES.map((assetBasename, i) => ({
     user: users[i % users.length],
     assetBasename,
-    assetUrl: publicUrl(`${CONTENT_DIR}/${assetBasename}`),
   }));
 }
 
