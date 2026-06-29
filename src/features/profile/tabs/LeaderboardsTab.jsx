@@ -5,6 +5,7 @@ import { useProfileLeaderboards, profileViewerSlug } from '@/features/profile/us
 import { useLiveScoring } from '@/features/liveScoring/useLiveScoring.js';
 import { enrichProfileLeaderboardForRationale } from '@/lib/enrichProfileLeaderboard.js';
 import { filterProfileLeaderboards } from '@/lib/profileUtils.js';
+import { spliceFakeUsersIntoBoard } from '@/lib/demoVideoFakeUsers.js';
 
 const PERSONA_COLORS = {
   productivite: '#D8D8D8',
@@ -193,8 +194,10 @@ export default function LeaderboardsTab({
   const grouped = useMemo(() => {
     const out = { productivite: [], securite: [], popularite: [] };
     for (const b of visibleLeaderboards) {
-      const key = out[b.persona] ? b.persona : 'productivite';
-      out[key].push(b);
+      // Demo-video: replace placeholder/clone rows with fake people (no-op otherwise).
+      const board = spliceFakeUsersIntoBoard(b);
+      const key = out[board.persona] ? board.persona : 'productivite';
+      out[key].push(board);
     }
     return out;
   }, [visibleLeaderboards]);

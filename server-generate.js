@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { getNewestProfileIdAndPath, readProfileJson } from './server/lib/currentProfile.js';
 import {
   generatePersonaPosts,
+  generateSinglePersonaPost,
   generateUserSummary,
   preparePersonaPostSlotPlan,
   ASSET_SLOT_INDEX,
@@ -31,6 +32,11 @@ import { buildLmUserPayload } from './server/lib/compactHarvestData.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES_DIR = path.join(__dirname, 'profiles');
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+// Demo-video fake-user content (gitignored, local-only). Served to the client
+// by the web app at /videoDEMO/...; read here only to feed LM Studio.
+const VIDEO_DEMO_CONTENT_DIR = path.join(__dirname, 'public', 'videoDEMO', 'contentFakePeople');
+const VIDEO_DEMO_IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif']);
+const VIDEO_DEMO_DOC_EXTS = new Set(['.pdf']);
 
 // Read LM Studio config + raw collected data from the Electron app's data dir
 // — same source of truth as the Electron app, so generated posts use the exact same input.
@@ -551,6 +557,130 @@ app.post('/api/posts/generate-stream', async (_req, res) => {
       /* ignore */
     }
     res.end();
+  }
+});
+
+// POST /api/demo-video/generate-post — EPHEMERAL single post for a fake demo
+// user: generates a caption for a chosen public/videoDEMO asset via LM Studio
+// and returns it WITHOUT persisting anything (no profiles/, no posts/). The
+// asset is always the generator's slot index 1, so we force that slot.
+app.post('/api/demo-video/generate-post', async (req, res) => {
+  try {
+    const assetBasename = String(req.body?.assetBasename || '').trim();
+    if (!assetBasename || assetBasename.includes('/') || assetBasename.includes('..')) {
+      return res.status(400).json({ success: false, error: 'assetBasename required' });
+    }
+    const fakeUserName = String(req.body?.fakeUserName || '').trim();
+    const ext = path.extname(assetBasename).toLowerCase();
+    const isImage = VIDEO_DEMO_IMAGE_EXTS.has(ext);
+    const isDoc = VIDEO_DEMO_DOC_EXTS.has(ext);
+    if (!isImage && !isDoc) {
+      return res.status(400).json({ success: false, error: `unsupported asset type: ${ext}` });
+    }
+
+    let buf;
+    try {
+      buf = await fs.readFile(path.join(VIDEO_DEMO_CONTENT_DIR, assetBasename));
+    } catch {
+      return res.status(404).json({ success: false, error: 'asset not found' });
+    }
+
+    // The web app serves this file at /videoDEMO/...; the post's attachment URL
+    // points there directly (nothing is copied into public/uploads).
+    const publicUrl = `/videoDEMO/contentFakePeople/${encodeURIComponent(assetBasename)}`;
+    const relativePath = `public/videoDEMO/contentFakePeople/${assetBasename}`;
+
+    let assetAssignment;
+    if (isImage) {
+      assetAssignment = {
+        persona: 'popularite',
+        asset: {
+          kind: 'image',
+          base64: buf.toString('base64'),
+          mime: getMimeFromExt(ext),
+          filename: assetBasename,
+          url: publicUrl,
+          relativePath,
+        },
+      };
+    } else {
+      const text = await extractDocText(buf, ext);
+      if (!text) {
+        return res.status(422).json({ success: false, error: 'could not extract document text' });
+      }
+      assetAssignment = {
+        persona: 'productivite',
+        asset: {
+          kind: 'document',
+          text,
+          mime: getMimeFromExt(ext),
+          filename: assetBasename,
+          url: publicUrl,
+          relativePath,
+        },
+      };
+    }
+
+    // Lean LM context — reuse the operator's harvest signals/voice (same input
+    // the real generator uses), nudged toward the fake author's display name.
+    const newest = await getNewestProfileIdAndPath(PROFILES_DIR);
+    if (!newest) return res.status(400).json({ success: false, error: 'No profile found' });
+    const profile = await readProfileJson(newest.filepath);
+    const electronData = await readJsonOrNull(ELECTRON_DATA_JSON);
+    const electronUser = await readJsonOrNull(ELECTRON_USER_JSON);
+    let userPayload;
+    if (electronData) {
+      userPayload = buildLmUserPayload({ ...(electronUser ?? {}) }, electronData);
+    } else {
+      const { wallpaperBase64, personaPosts, ...profileForAI } = profile;
+      userPayload = JSON.stringify(profileForAI);
+    }
+    if (fakeUserName) userPayload = `Author display name: ${fakeUserName}\n\n${userPayload}`;
+
+    const lmCfg = await readLmStudioConfig();
+    const baseUrl = String(lmCfg.baseUrl).replace(/\/$/, '');
+    const model = lmCfg.model;
+    const prompts = await loadPrompts(ELECTRON_DATA_DIR);
+    try {
+      await ensureLmModelLoaded({ baseUrl, model, timeoutMs: LM_STUDIO_TIMEOUT_MS });
+    } catch (err) {
+      console.warn('[demo-video] model load failed (continuing):', err?.message || err);
+    }
+
+    const post = await generateSinglePersonaPost({
+      baseUrl,
+      model,
+      userPayload,
+      timeoutMs: LM_STUDIO_TIMEOUT_MS,
+      retries: LM_STUDIO_RETRIES,
+      assetAssignment,
+      prompts,
+      dataJson: electronData,
+      profile,
+      existingPosts: [],
+      chartUploadDir: UPLOADS_DIR,
+      skipLeaderboard: true,
+      slotOffset: ASSET_SLOT_INDEX,
+    });
+
+    if (!post || !post.content) {
+      return res.status(502).json({ success: false, error: 'Empty post from model' });
+    }
+
+    // Pin the attachment to the public videoDEMO file (ephemeral — never uploaded).
+    if (post.attachedAsset) {
+      post.attachedAsset.url = publicUrl;
+      post.attachedAsset.relativePath = relativePath;
+      post.attachedAsset.filename = assetBasename;
+    }
+
+    return res.json({ success: true, post });
+  } catch (err) {
+    console.error('[demo-video/generate-post] failed:', err?.message || err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message ? String(err.message) : 'Generation failed',
+    });
   }
 });
 

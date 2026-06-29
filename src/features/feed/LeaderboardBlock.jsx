@@ -7,6 +7,7 @@ import {
 import ProfileAvatarLink from '@/features/profile/ProfileAvatarLink.jsx';
 import ProfileNameLink from '@/features/profile/ProfileNameLink.jsx';
 import { leaderboardEntryProfileSlug } from '@/lib/leaderboardProfileSlug.js';
+import { spliceFakeUsersIntoBoard } from '@/lib/demoVideoFakeUsers.js';
 import './leaderboardBlock.css';
 
 function DeltaChip({ userRank, previousUserRank }) {
@@ -90,6 +91,8 @@ export default function LeaderboardBlock({
   } = useLiveScoring();
   const reactId = useId();
   if (!leaderboard || !Array.isArray(leaderboard.entries)) return null;
+  // When the demo-video is running, swap placeholder/clone rows for fake people.
+  const board = spliceFakeUsersIntoBoard(leaderboard);
   const {
     title,
     entries,
@@ -97,7 +100,7 @@ export default function LeaderboardBlock({
     previousUserRank,
     boardId,
     cloneHidden = [false, false, false, false],
-  } = leaderboard;
+  } = board;
   const viewerRowHidden = isLeaderboardSelfRowHidden?.(boardId) ?? false;
   const viewerRowRevealing = isLeaderboardSelfRowRevealing?.(boardId) ?? false;
   const titleId = `leaderboard-title-${boardId}-${reactId}`;

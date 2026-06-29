@@ -99,7 +99,9 @@ import {
   shouldResetHostedSessionForProfileMeStatus,
 } from '@/lib/hostedAccount.js';
 import DemoRotateButton from '@/features/debug/DemoRotateButton.jsx';
-import { canUseDemoRotateControl } from '@/lib/demoRotate.js';
+import DemoVideoButton from '@/features/debug/DemoVideoButton.jsx';
+import { canUseDemoRotateControl, canUseDemoVideoControl } from '@/lib/demoRotate.js';
+import { setDemoVideoActive, isDemoVideoFakeSlug, getFakeUsers } from '@/lib/demoVideoFakeUsers.js';
 import {
   persistProfileSlug,
   readStoredProfileSlug,
@@ -331,6 +333,8 @@ function AppInner({
   onDemoRotateActiveChange,
   demoGeneratingPersona = null,
   onDemoGeneratingPersona,
+  onDemoVideoActiveChange,
+  ensureFakeUser,
   setAllProfiles,
 }) {
   const {
@@ -1255,6 +1259,15 @@ function AppInner({
             onGeneratingPersona={onDemoGeneratingPersona}
           />
         )}
+        {canUseDemoVideoControl(profile) && (
+          <DemoVideoButton
+            generateApiOrigin={GENERATE_API_ORIGIN}
+            spectateController={spectateRevealRef.current}
+            ensureFakeUser={ensureFakeUser}
+            onActiveChange={onDemoVideoActiveChange}
+            onGeneratingPersona={onDemoGeneratingPersona}
+          />
+        )}
       </div>
       <Sidebar mainView={mainView} onSelectView={handleSelectView} />
       <div className="page">
@@ -1405,6 +1418,7 @@ export default function App() {
   const [demoRotateActive, setDemoRotateActive] = useState(false);
   const [demoGeneratingPersona, setDemoGeneratingPersona] = useState(null);
   const demoRotateActiveRef = useRef(false);
+  const demoVideoActiveRef = useRef(false);
   const personaDeltasClearRef = useRef(null);
   /** Bumps when user navigates onto the profile view — drives MainScoreStyle ring replay only then. */
   const [profileScoreReplayNonce, setProfileScoreReplayNonce] = useState(0);
@@ -1561,11 +1575,11 @@ export default function App() {
   }, []);
 
   const scheduleSpectatorIngest = useCallback((profiles, cancelledRef) => {
-    if (demoRotateActiveRef.current) return;
+    if (demoRotateActiveRef.current || demoVideoActiveRef.current) return;
     const snapshot = Array.isArray(profiles) ? profiles : [];
     queueMicrotask(() => {
       if (cancelledRef?.cancelled) return;
-      if (demoRotateActiveRef.current) return;
+      if (demoRotateActiveRef.current || demoVideoActiveRef.current) return;
       spectateRevealRef.current?.ingestProfiles(snapshot);
     });
   }, []);
@@ -1581,6 +1595,59 @@ export default function App() {
 
   const handleDemoGeneratingPersona = useCallback((persona) => {
     setDemoGeneratingPersona(persona ?? null);
+  }, []);
+
+  // ── Demo video (fake users, client-only/ephemeral) ──────────────────────────
+  const handleDemoVideoActiveChange = useCallback((active) => {
+    demoVideoActiveRef.current = active;
+    setDemoVideoActive(active); // module flag read by the leaderboard splicers
+    if (active) {
+      // Inject the whole roster up front (empty feeds) so the leaderboards
+      // populate with fake people immediately and the splice re-renders now,
+      // not only after the first post finishes generating.
+      const fakes = getFakeUsers();
+      setAllProfiles((prev) => {
+        const list = Array.isArray(prev) ? prev : [];
+        const present = new Set(list.map((p) => String(p?.slug ?? p?.id ?? '')));
+        const toAdd = fakes
+          .filter((u) => !present.has(String(u.slug)))
+          .map((u) => ({ ...u, personaPosts: [] }));
+        return toAdd.length ? [...toAdd, ...list] : list;
+      });
+    } else {
+      setDemoGeneratingPersona(null);
+      // Drop the ephemeral fake users from the feed/directory.
+      setAllProfiles((prev) =>
+        (Array.isArray(prev) ? prev : []).filter(
+          (p) => !isDemoVideoFakeSlug(p?.slug ?? p?.id),
+        ),
+      );
+    }
+  }, []);
+
+  /** Insert a fake user into allProfiles once; the reveal controller then owns its posts. */
+  const ensureFakeUser = useCallback((user, posts) => {
+    if (!user?.slug) return;
+    const slug = String(user.slug);
+    setAllProfiles((prev) => {
+      const list = Array.isArray(prev) ? prev : [];
+      if (list.some((p) => String(p?.slug ?? p?.id ?? '') === slug)) return list;
+      return [{ ...user, personaPosts: Array.isArray(posts) ? posts : [] }, ...list];
+    });
+  }, []);
+
+  /** Directory-poll writer that preserves ephemeral fake users while a demo video runs. */
+  const commitDirectoryProfiles = useCallback((next) => {
+    setAllProfiles((prev) => {
+      const prevList = Array.isArray(prev) ? prev : [];
+      const incoming = typeof next === 'function' ? next(prevList) : next;
+      const list = Array.isArray(incoming) ? incoming : [];
+      if (!demoVideoActiveRef.current) return list;
+      const fakes = prevList.filter((p) => isDemoVideoFakeSlug(p?.slug ?? p?.id));
+      if (fakes.length === 0) return list;
+      const fakeSlugs = new Set(fakes.map((p) => String(p.slug ?? p.id)));
+      return [...fakes, ...list.filter((p) => !fakeSlugs.has(String(p?.slug ?? p?.id)))];
+    });
   }, []);
 
   // Re-apply the live reveal order onto a fresh API snapshot before it replaces
@@ -1775,7 +1842,7 @@ export default function App() {
               } else {
                 directory.unshift(reconciledMe);
               }
-              setAllProfiles(directory);
+              commitDirectoryProfiles(directory);
               scheduleSpectatorIngest(directory, cancelledRef);
               return;
             }
@@ -1786,7 +1853,7 @@ export default function App() {
           }
         }
 
-        setAllProfiles(normalized);
+        commitDirectoryProfiles(normalized);
         scheduleSpectatorIngest(normalized, cancelledRef);
         const owned = resolveOwnedLandingProfile(normalized, linkedProfileSlug);
         if (linkedProfileSlug && !owned) {
@@ -2579,6 +2646,8 @@ export default function App() {
         onDemoRotateActiveChange={handleDemoRotateActiveChange}
         demoGeneratingPersona={demoGeneratingPersona}
         onDemoGeneratingPersona={handleDemoGeneratingPersona}
+        onDemoVideoActiveChange={handleDemoVideoActiveChange}
+        ensureFakeUser={ensureFakeUser}
         setAllProfiles={setAllProfiles}
       />
     </LiveScoringProvider>
