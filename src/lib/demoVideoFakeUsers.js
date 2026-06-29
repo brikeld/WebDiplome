@@ -5,8 +5,8 @@
  *
  * Assets:
  *   - profile pics are embedded as small data URIs for production rendering
- *   - post content basenames are read from `/Users/brikeld/Documents/videoDEMO`
- *     by the hosted AI worker and uploaded to public storage per generated post
+ *   - post content files are served from Vercel public assets for hosted jobs;
+ *     local filesystem lookup is only a worker fallback
  *
  * Single source of truth shared by:
  *   - the feed pipeline (src/lib/demoVideoFeed.js) — injects these into
@@ -18,11 +18,11 @@
 import { DEMO_VIDEO_AVATARS } from '@/lib/demoVideoAvatars.js';
 
 /**
- * Post attachment basenames (read from /Users/brikeld/Documents/videoDEMO/
- * contentFakePeople on the WORKER PC when a job runs). Order is the reveal
- * cycle: the pipeline walks this list round-robin so each pass attaches the
- * next piece of content. Images become `popularite` posts, PDFs `productivite`
- * (the generator's asset slot decides persona by kind — see personaPostGenerator).
+ * Post attachment basenames. Order is the reveal cycle: the pipeline walks this
+ * list round-robin so each pass attaches the next piece of content. Hosted jobs
+ * pass a Vercel public URL for the basename; local worker filesystem lookup is
+ * only a fallback. Images become `popularite` posts, PDFs `productivite` (the
+ * generator's asset slot decides persona by kind — see personaPostGenerator).
  */
 const CONTENT_FILES = [
   'lake.webp',

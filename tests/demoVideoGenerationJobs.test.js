@@ -67,7 +67,11 @@ describe('demo-video generation jobs', () => {
     const { status, json } = await postJson(
       app,
       '/api/debug/demo-video/post',
-      { assetBasename: 'lake.webp', fakeUserName: 'Camille Laurent' },
+      {
+        assetBasename: 'lake.webp',
+        fakeUserName: 'Camille Laurent',
+        assetUrl: 'https://web-diplome.vercel.app/videoDEMO/contentFakePeople/lake.webp',
+      },
       { authorization: 'Bearer valid-token' },
     );
 
@@ -81,9 +85,29 @@ describe('demo-video generation jobs', () => {
           jobType: 'demo-video',
           assetBasename: 'lake.webp',
           fakeUserName: 'Camille Laurent',
+          assetUrl: 'https://web-diplome.vercel.app/videoDEMO/contentFakePeople/lake.webp',
         },
       },
     ]);
+  });
+
+  it('rejects demo-video asset URLs that do not match the queued basename', async () => {
+    const { app, calls } = buildApp();
+
+    const { status, json } = await postJson(
+      app,
+      '/api/debug/demo-video/post',
+      {
+        assetBasename: 'lake.webp',
+        fakeUserName: 'Camille Laurent',
+        assetUrl: 'https://web-diplome.vercel.app/videoDEMO/contentFakePeople/cat.jpg',
+      },
+      { authorization: 'Bearer valid-token' },
+    );
+
+    expect(status).toBe(400);
+    expect(json.error).toMatch(/basename mismatch/);
+    expect(calls.createJob).toHaveLength(0);
   });
 
   it('does not allow demo-video jobs through the unauthenticated public queue', async () => {

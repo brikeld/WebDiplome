@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { mergeDemoVideoPostIntoProfiles, isLocalDemoVideoApiOrigin } from '../src/lib/demoVideoFeed.js';
+import {
+  buildHostedDemoVideoJobPayload,
+  demoVideoPublicAssetUrl,
+  mergeDemoVideoPostIntoProfiles,
+  isLocalDemoVideoApiOrigin,
+} from '../src/lib/demoVideoFeed.js';
 import { getFakeUsers } from '../src/lib/demoVideoFakeUsers.js';
 
 describe('demoVideoFeed API routing', () => {
@@ -7,6 +12,30 @@ describe('demoVideoFeed API routing', () => {
     expect(isLocalDemoVideoApiOrigin('http://localhost:3001')).toBe(true);
     expect(isLocalDemoVideoApiOrigin('http://127.0.0.1:3001')).toBe(true);
     expect(isLocalDemoVideoApiOrigin('https://webdiplome-production.up.railway.app')).toBe(false);
+  });
+
+  it('builds public Vercel asset URLs for hosted worker jobs', () => {
+    expect(
+      demoVideoPublicAssetUrl(
+        'Screenshot 2026-06-29 at 11.24.24.png',
+        'https://web-diplome.vercel.app/',
+      ),
+    ).toBe('https://web-diplome.vercel.app/videoDEMO/contentFakePeople/Screenshot%202026-06-29%20at%2011.24.24.png');
+  });
+
+  it('includes a public asset URL in hosted demo-video job payloads', () => {
+    const [fake] = getFakeUsers();
+
+    expect(
+      buildHostedDemoVideoJobPayload(
+        { assetBasename: 'lake.webp', user: fake },
+        'https://web-diplome.vercel.app',
+      ),
+    ).toEqual({
+      assetBasename: 'lake.webp',
+      fakeUserName: fake.displayName,
+      assetUrl: 'https://web-diplome.vercel.app/videoDEMO/contentFakePeople/lake.webp',
+    });
   });
 
   it('merges generated posts into an existing fake profile', () => {

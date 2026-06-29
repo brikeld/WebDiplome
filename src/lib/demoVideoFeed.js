@@ -3,11 +3,12 @@
  *
  * It runs the SAME hosted path as the demo button: each step queues an ephemeral
  * `demo-video` generation job (POST /api/debug/demo-video/post) that the
- * operator's worker PC picks up — the worker reads the asset from the local
- * /Users/brikeld/Documents/videoDEMO folder, captions it via LM Studio, uploads
- * the image to storage, and returns the post on the job row. The client polls
- * the job, then reveals the post through the spectator reveal controller, so the
- * descend/burst/materialize animation, pacing and ordering are identical.
+ * operator's worker PC picks up. Hosted jobs pass a public Vercel asset URL, so
+ * the worker can fetch the file over HTTP even though the original files live on
+ * a different computer. It captions the asset via LM Studio, uploads the image
+ * to storage, and returns the post on the job row. The client polls the job,
+ * then reveals the post through the spectator reveal controller, so the descend,
+ * burst, materialize animation, pacing and ordering are identical.
  *
  * Nothing is persisted as a profile: the fake users + posts live only in
  * `allProfiles` (React state) and the job rows; they vanish on refresh. This
@@ -40,6 +41,23 @@ function localContentAssetUrl(assetBasename) {
   return `${LOCAL_GENERATE_ORIGIN}/videoDEMO/contentFakePeople/${encodeURIComponent(assetBasename)}`;
 }
 
+export function demoVideoPublicAssetUrl(assetBasename, origin = '') {
+  const clean = String(assetBasename || '').trim();
+  if (!clean) return '';
+  const base = String(origin || '').replace(/\/$/, '');
+  const pathname = `/videoDEMO/contentFakePeople/${encodeURIComponent(clean)}`;
+  return base ? `${base}${pathname}` : pathname;
+}
+
+export function buildHostedDemoVideoJobPayload(step, publicOrigin = '') {
+  const assetBasename = String(step?.assetBasename || '').trim();
+  return {
+    assetBasename,
+    fakeUserName: String(step?.user?.displayName || '').trim() || 'A user',
+    assetUrl: demoVideoPublicAssetUrl(assetBasename, publicOrigin),
+  };
+}
+
 async function generateLocalFakePost(step) {
   const res = await fetch(`${LOCAL_GENERATE_ORIGIN}/api/demo-video/generate-post`, {
     method: 'POST',
@@ -66,14 +84,12 @@ async function generateLocalFakePost(step) {
 }
 
 async function generateHostedFakePost(step, shouldContinue) {
+  const publicOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   const queueRes = await fetchWithHostedAuth(`${API_ORIGIN}/api/debug/demo-video/post`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     cache: 'no-store',
-    body: JSON.stringify({
-      assetBasename: step.assetBasename,
-      fakeUserName: step.user.displayName,
-    }),
+    body: JSON.stringify(buildHostedDemoVideoJobPayload(step, publicOrigin)),
   });
   const queued = await queueRes.json().catch(() => ({}));
   if (!queueRes.ok || !queued?.jobId) {

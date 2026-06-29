@@ -20,6 +20,10 @@ import {
 } from '../lib/demoRotate.js';
 import { resolveDemoSinglePostPersona } from '../lib/demoRotatePersona.js';
 import { resolveProfileHarvestDataJson } from '../lib/resolveProfileHarvestData.js';
+import {
+  assertSafeDemoVideoBasename,
+  normalizeDemoVideoAssetUrl,
+} from '../lib/demoVideoContentPath.js';
 
 const workerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -86,9 +90,17 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         return res.status(400).json({ error: 'Operator profile id missing' });
       }
 
-      const assetBasename = String(req.body?.assetBasename || '').trim();
-      if (!assetBasename || assetBasename.includes('/') || assetBasename.includes('..')) {
+      let assetBasename;
+      try {
+        assetBasename = assertSafeDemoVideoBasename(req.body?.assetBasename);
+      } catch {
         return res.status(400).json({ error: 'assetBasename required' });
+      }
+      let assetUrl = '';
+      try {
+        assetUrl = normalizeDemoVideoAssetUrl(req.body?.assetUrl, assetBasename);
+      } catch (err) {
+        return res.status(400).json({ error: err.message });
       }
 
       const fakeUserName = String(req.body?.fakeUserName || '').trim() || 'A user';
@@ -99,6 +111,7 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
           jobType: 'demo-video',
           assetBasename,
           fakeUserName,
+          ...(assetUrl ? { assetUrl } : {}),
         },
       });
       res.json({ success: true, jobId: job.id, status: job.status });

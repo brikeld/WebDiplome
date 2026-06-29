@@ -29,6 +29,7 @@ import {
 import { extractDocText } from '../server/lib/docText.js';
 import { isCompletePublicStorageObjectUrl } from '../src/lib/uploadPublicUrl.js';
 import { ensureLmModelLoaded } from '../server/lib/lmStudioLoad.js';
+import { readDemoVideoAsset } from '../server/lib/demoVideoContentPath.js';
 
 const API = String(process.env.WEBDIPLOME_API_ORIGIN || 'http://localhost:3001').replace(/\/$/, '');
 const TOKEN = String(process.env.AI_WORKER_TOKEN || '');
@@ -41,11 +42,6 @@ const POLL_MS = parseInt(process.env.AI_WORKER_POLL_MS || '1500', 10);
 /** Parallel LM Studio slots — match demo pipeline size (default 4). */
 const CONCURRENCY = Math.max(1, parseInt(process.env.AI_WORKER_CONCURRENCY || '4', 10));
 const CHART_UPLOAD_DIR = path.join(os.tmpdir(), 'webdiplome-worker-charts');
-// Demo-video fake-user content lives on THIS machine (the worker PC), gitignored.
-const VIDEO_DEMO_CONTENT_DIR = path.join(
-  String(process.env.VIDEO_DEMO_DIR || '/Users/brikeld/Documents/videoDEMO'),
-  'contentFakePeople',
-);
 const DEMO_VIDEO_IMG_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif']);
 const DEMO_VIDEO_DOC_EXTS = new Set(['.pdf']);
 function demoVideoMime(ext) {
@@ -438,7 +434,7 @@ async function processBlurbsJob(payload) {
  */
 async function processDemoVideoJob(payload, jobId, ownerUserId) {
   const assetBasename = String(payload.assetBasename || '').trim();
-  if (!assetBasename || assetBasename.includes('/') || assetBasename.includes('..')) {
+  if (!assetBasename || assetBasename.includes('/') || assetBasename.includes('\\') || assetBasename.includes('..')) {
     throw new Error('invalid assetBasename');
   }
   const ext = path.extname(assetBasename).toLowerCase();
@@ -446,7 +442,10 @@ async function processDemoVideoJob(payload, jobId, ownerUserId) {
   const isDoc = DEMO_VIDEO_DOC_EXTS.has(ext);
   if (!isImage && !isDoc) throw new Error(`unsupported asset: ${ext}`);
 
-  const buf = await fs.readFile(path.join(VIDEO_DEMO_CONTENT_DIR, assetBasename));
+  const assetUrl = String(payload.assetUrl || payload.asset_url || '').trim();
+  const assetSource = await readDemoVideoAsset(assetBasename, { assetUrl });
+  console.log(`[worker] demo-video asset ${assetBasename} from ${assetSource.url || assetSource.dir}`);
+  const buf = assetSource.buffer;
   const mime = demoVideoMime(ext);
 
   let assetAssignment;
@@ -486,6 +485,9 @@ async function processDemoVideoJob(payload, jobId, ownerUserId) {
   });
 
   if (!post?.content) throw new Error('empty post from model');
+  if (post.attachedAsset && assetUrl) {
+    post.attachedAsset = { ...post.attachedAsset, url: assetUrl, filename: assetBasename, mime };
+  }
 
   // Upload the asset so the deployed site can load it (same path as demo-rotate).
   try {
