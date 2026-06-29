@@ -97,6 +97,9 @@ export function createGenerationJobRoutes({ config, supabaseService, profileStor
         return res.status(400).json({ error: 'assetBasename required' });
       }
       let assetUrl = '';
+      if (!String(req.body?.assetUrl || '').trim()) {
+        return res.status(400).json({ error: 'assetUrl required' });
+      }
       try {
         assetUrl = normalizeDemoVideoAssetUrl(req.body?.assetUrl, assetBasename);
       } catch (err) {

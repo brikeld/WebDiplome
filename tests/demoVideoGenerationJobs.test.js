@@ -110,6 +110,21 @@ describe('demo-video generation jobs', () => {
     expect(calls.createJob).toHaveLength(0);
   });
 
+  it('requires hosted demo-video jobs to include a public asset URL', async () => {
+    const { app, calls } = buildApp();
+
+    const { status, json } = await postJson(
+      app,
+      '/api/debug/demo-video/post',
+      { assetBasename: 'lake.webp', fakeUserName: 'Camille Laurent' },
+      { authorization: 'Bearer valid-token' },
+    );
+
+    expect(status).toBe(400);
+    expect(json.error).toBe('assetUrl required');
+    expect(calls.createJob).toHaveLength(0);
+  });
+
   it('does not allow demo-video jobs through the unauthenticated public queue', async () => {
     const { app, calls } = buildApp();
 
