@@ -5,8 +5,7 @@
  *
  * Assets:
  *   - profile pics are embedded as small data URIs for production rendering
- *   - post content files are served from Vercel public assets for hosted jobs;
- *     local filesystem lookup is only a worker fallback
+ *   - post content files are served from Vercel/Vite public assets
  *
  * Single source of truth shared by:
  *   - the feed pipeline (src/lib/demoVideoFeed.js) — injects these into
@@ -18,26 +17,111 @@
 import { DEMO_VIDEO_AVATARS } from '@/lib/demoVideoAvatars.js';
 
 /**
- * Post attachment basenames. Order is the reveal cycle: the pipeline walks this
- * list round-robin so each pass attaches the next piece of content. Hosted jobs
- * pass a Vercel public URL for the basename; local worker filesystem lookup is
- * only a fallback. Images become `popularite` posts, PDFs `productivite` (the
- * generator's asset slot decides persona by kind — see personaPostGenerator).
+ * Prewritten posts for the demo-video button. They are intentionally static:
+ * the button only reveals these posts one by one, with no LM Studio, Railway
+ * job, or AI worker dependency.
  */
-const CONTENT_FILES = [
-  'lake.webp',
-  '2024D117_ITALIANSEO_POMODORO_2_X-1-768x960.jpg',
-  'cat.jpg',
-  'cv-template.pdf',
-  'street-with-eiffel-tower-in-the-middle-on-a-sunny-royalty-free-image-1717187207.avif',
-  'invoice-number.jpeg',
-  'a49d7df20838811b3eee69a977e57c05.webp',
-  '35e66caf-c9a4-40a4-8e2d-fcad1a746ef9.pdf',
-  '637627ca9eebde45ae5f394c_Underwater-Nun.jpeg',
-  'gettyimages-586890581.avif',
-  '09feb3a7ff1c1ac852dc880a6e2ef70c.jpg',
-  '47f85bb0022f16eadee6761b7c7d9b06.webp',
-  'Screenshot 2026-06-29 at 11.24.24.png',
+const STATIC_POSTS = [
+  {
+    assetBasename: 'lake.webp',
+    persona: 'popularite',
+    content: 'Camille saved one calm lake photo and COMPLIANT immediately filed it under main-character recovery arc.',
+  },
+  {
+    assetBasename: '2024D117_ITALIANSEO_POMODORO_2_X-1-768x960.jpg',
+    persona: 'popularite',
+    content: 'Theo has restaurant-grade tomato content sitting in downloads, which is basically a soft launch for a food account.',
+  },
+  {
+    assetBasename: 'cat.jpg',
+    persona: 'popularite',
+    content: 'Lea kept the cat photo close enough to become evidence, and honestly the algorithm respects the engagement strategy.',
+  },
+  {
+    assetBasename: 'cv-template.pdf',
+    persona: 'productivite',
+    content: 'Hugo keeping a CV template ready feels less like admin and more like a carefully organized escape hatch.',
+  },
+  {
+    assetBasename: 'street-with-eiffel-tower-in-the-middle-on-a-sunny-royalty-free-image-1717187207.avif',
+    persona: 'popularite',
+    content: 'Manon saved a sunny Eiffel Tower street like she is three clicks away from turning the week into a travel moodboard.',
+  },
+  {
+    assetBasename: 'invoice-number.jpeg',
+    persona: 'productivite',
+    content: 'Lucas has invoice material in the mix, so COMPLIANT gave the folder productivity points and a tiny stress penalty.',
+  },
+  {
+    assetBasename: 'a49d7df20838811b3eee69a977e57c05.webp',
+    persona: 'popularite',
+    content: 'Chloe dropped another image into the archive with absolutely no context, which is exactly how visual lore starts.',
+  },
+  {
+    assetBasename: '35e66caf-c9a4-40a4-8e2d-fcad1a746ef9.pdf',
+    persona: 'productivite',
+    content: 'Camille left a PDF where COMPLIANT could find it, and now one document is being treated like a work ethic confession.',
+  },
+  {
+    assetBasename: '637627ca9eebde45ae5f394c_Underwater-Nun.jpeg',
+    persona: 'popularite',
+    content: 'Theo saved the underwater nun image, which is either niche taste or a cry for a better folder naming system.',
+  },
+  {
+    assetBasename: 'gettyimages-586890581.avif',
+    persona: 'popularite',
+    content: 'Lea has a stock-photo-looking asset in the folder, so COMPLIANT suspects a presentation, a bit, or both.',
+  },
+  {
+    assetBasename: '09feb3a7ff1c1ac852dc880a6e2ef70c.jpg',
+    persona: 'popularite',
+    content: 'Hugo kept a polished image with no explanation, and the social score machine loves a confident mystery.',
+  },
+  {
+    assetBasename: '47f85bb0022f16eadee6761b7c7d9b06.webp',
+    persona: 'securite',
+    content: 'Manon has one of those anonymous webp files that makes every security dashboard quietly sit up straighter.',
+  },
+  {
+    assetBasename: 'Screenshot 2026-06-29 at 11.24.24.png',
+    persona: 'securite',
+    content: 'Lucas kept a timestamped screenshot, which COMPLIANT reads as evidence, memory, and mild operational risk.',
+  },
+  {
+    assetBasename: 'lake.webp',
+    persona: 'popularite',
+    content: 'Chloe reposted the lake energy without saying anything, because apparently serenity performs better without captions.',
+  },
+  {
+    assetBasename: 'cat.jpg',
+    persona: 'popularite',
+    content: 'Camille brought the cat back into rotation, proving the most reliable social strategy is still having a better face in frame.',
+  },
+  {
+    assetBasename: 'cv-template.pdf',
+    persona: 'productivite',
+    content: 'Theo opened the CV template again, and COMPLIANT marked it as ambition with just enough plausible deniability.',
+  },
+  {
+    assetBasename: 'street-with-eiffel-tower-in-the-middle-on-a-sunny-royalty-free-image-1717187207.avif',
+    persona: 'popularite',
+    content: 'Lea has Paris queued twice, which is not a file pattern anymore, it is a destination campaign.',
+  },
+  {
+    assetBasename: 'invoice-number.jpeg',
+    persona: 'securite',
+    content: 'Hugo saved an invoice image where screenshots usually live, and the privacy score immediately started asking follow-up questions.',
+  },
+  {
+    assetBasename: '2024D117_ITALIANSEO_POMODORO_2_X-1-768x960.jpg',
+    persona: 'popularite',
+    content: 'Manon has tomato imagery sharp enough to make lunch look like a brand partnership.',
+  },
+  {
+    assetBasename: '637627ca9eebde45ae5f394c_Underwater-Nun.jpeg',
+    persona: 'popularite',
+    content: 'Lucas ended on the weirdest image in the folder, which is exactly the kind of choice COMPLIANT pretends to understand.',
+  },
 ];
 
 /** Made-up French-sounding identities, one per avatar. */
@@ -49,6 +133,19 @@ const PEOPLE = [
   { first: 'Manon', last: 'Girard', dominant: 'productivity', device: 'Manon MacBook Pro', focus: 'client decks, design files, and invoice admin' },
   { first: 'Lucas', last: 'Rousseau', dominant: 'security', device: 'Lucas Work Laptop', focus: 'network hygiene, backups, and private folders' },
   { first: 'Chloé', last: 'Lefèvre', dominant: 'popularity', device: 'Chloe Creator MacBook', focus: 'creator assets, image folders, and social posts' },
+  { first: 'Noah', last: 'Fontaine', dominant: 'productivity', device: 'Noah Office MacBook', focus: 'proposal drafts, shared drives, and calendar cleanup' },
+  { first: 'Inès', last: 'Mercier', dominant: 'popularity', device: 'Ines Photo Laptop', focus: 'travel photos, saved references, and social planning' },
+  { first: 'Jules', last: 'Garnier', dominant: 'security', device: 'Jules Secure ThinkPad', focus: 'network traces, screenshots, and private browser sessions' },
+  { first: 'Sarah', last: 'Blanc', dominant: 'productivity', device: 'Sarah Project MacBook', focus: 'client PDFs, budget sheets, and export folders' },
+  { first: 'Nina', last: 'Robin', dominant: 'popularity', device: 'Nina Creator Studio', focus: 'visual experiments, image pulls, and draft captions' },
+  { first: 'Maxime', last: 'Faure', dominant: 'security', device: 'Maxime Admin Laptop', focus: 'system settings, invoices, and cautious file handling' },
+  { first: 'Emma', last: 'Chevalier', dominant: 'popularity', device: 'Emma Air', focus: 'city guides, outfit references, and group chat assets' },
+  { first: 'Antoine', last: 'Perrin', dominant: 'productivity', device: 'Antoine Workstation', focus: 'resume edits, contracts, and late-night documents' },
+  { first: 'Zoé', last: 'Masson', dominant: 'popularity', device: 'Zoe Social MacBook', focus: 'pet photos, story drafts, and lifestyle folders' },
+  { first: 'Rayan', last: 'Lopez', dominant: 'security', device: 'Rayan Travel Laptop', focus: 'tickets, IDs, invoices, and screenshot evidence' },
+  { first: 'Clara', last: 'Aubert', dominant: 'productivity', device: 'Clara Studio Pro', focus: 'campaign folders, PDF proofs, and task boards' },
+  { first: 'Mathis', last: 'Renard', dominant: 'popularity', device: 'Mathis Media Laptop', focus: 'stock images, food photos, and visual references' },
+  { first: 'Eva', last: 'Marchand', dominant: 'security', device: 'Eva Private MacBook', focus: 'download hygiene, odd filenames, and locked notes' },
 ];
 
 const PERSONA_KEYS = ['productivity', 'security', 'social'];
@@ -220,12 +317,13 @@ export function getFakeUsers() {
   return cachedRoster;
 }
 
-/** Reveal cycle: { fakeUser, assetBasename } steps, round-robin over people × content. */
+/** Reveal cycle: { fakeUser, assetBasename, post } steps. */
 export function buildDemoVideoSchedule() {
   const users = getFakeUsers();
-  return CONTENT_FILES.map((assetBasename, i) => ({
+  return STATIC_POSTS.map((post, i) => ({
     user: users[i % users.length],
-    assetBasename,
+    assetBasename: post.assetBasename,
+    post,
   }));
 }
 

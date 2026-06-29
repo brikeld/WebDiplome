@@ -3,9 +3,8 @@ import { buildDemoVideoSchedule } from '@/lib/demoVideoFakeUsers.js';
 import { runDemoVideoPipeline } from '@/lib/demoVideoFeed.js';
 
 /**
- * Local "demo video" control — same start/stop UX as DemoRotateButton, but it
- * drives ephemeral fake users through the hosted worker queue. Sits next to the
- * demo-rotate dot in the brand cluster.
+ * Demo video control — same start/stop UX as DemoRotateButton, but it reveals
+ * prewritten fake-user posts with no generation service dependency.
  */
 export default function DemoVideoButton({
   spectateController,
@@ -34,6 +33,13 @@ export default function DemoVideoButton({
     pipelineRef.current = null;
   }, [onActiveChange, onGeneratingPersona]);
 
+  const finish = useCallback(() => {
+    runningRef.current = false;
+    setRunning(false);
+    onGeneratingPersona?.(null);
+    pipelineRef.current = null;
+  }, [onGeneratingPersona]);
+
   const start = useCallback(async () => {
     if (!runningRef.current) return;
     setError(null);
@@ -50,9 +56,9 @@ export default function DemoVideoButton({
       console.warn('[demo-video] pipeline exited:', err?.message || err);
       setError(err?.message || 'Demo video stopped');
     } finally {
-      if (runningRef.current) stop();
+      if (runningRef.current) finish();
     }
-  }, [spectateController, ensureFakeUser, onPostGenerated, onGeneratingPersona, stop]);
+  }, [spectateController, ensureFakeUser, onPostGenerated, onGeneratingPersona, finish]);
 
   const toggle = useCallback(() => {
     if (runningRef.current) {
@@ -73,7 +79,7 @@ export default function DemoVideoButton({
   }, []);
 
   const title = running
-    ? 'Demo video: generating fake-user posts…'
+    ? 'Demo video: posting fake-user updates...'
     : 'Start demo video (fake users, one post at a time)';
 
   return (

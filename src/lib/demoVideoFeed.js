@@ -1,125 +1,136 @@
 /**
  * Demo-video pipeline — drives FAKE users on the feed for a demo recording.
  *
- * It runs the SAME hosted path as the demo button: each step queues an ephemeral
- * `demo-video` generation job (POST /api/debug/demo-video/post) that the
- * operator's worker PC picks up. Hosted jobs pass a public Vercel asset URL, so
- * the worker can fetch the file over HTTP even though the original files live on
- * a different computer. It captions the asset via LM Studio, uploads the image
- * to storage, and returns the post on the job row. The client polls the job,
- * then reveals the post through the spectator reveal controller, so the descend,
- * burst, materialize animation, pacing and ordering are identical.
+ * It does not generate anything. Each step reveals a prewritten post from
+ * buildDemoVideoSchedule(), using the same spectator controller as demo rotate
+ * so the descend, burst, materialize animation, pacing and ordering are
+ * identical without LM Studio, Railway jobs, or an AI worker.
  *
  * Nothing is persisted as a profile: the fake users + posts live only in
- * `allProfiles` (React state) and the job rows; they vanish on refresh. This
- * works on the deployed site (Vercel→Railway→worker) with no local servers.
+ * `allProfiles` (React state) and vanish on refresh.
  */
-import { resolveApiOrigin, resolveDemoVideoGenerateOrigin } from '@/lib/apiOrigin.js';
 import {
   POST_FEED_ENTER_ANIM_MS,
   sleep,
 } from '@/lib/postFeedRevealQueue.js';
 import { postIdentityKey, mergePostsPrepend } from '@/lib/mergePersonaPosts.js';
-import { fetchWithHostedAuth } from '@/lib/hostedAccount.js';
 
-const API_ORIGIN = resolveApiOrigin();
-const LOCAL_GENERATE_ORIGIN = resolveDemoVideoGenerateOrigin();
 export const DEMO_VIDEO_REVEAL_GAP_MS = 2200;
-const JOB_POLL_MS = 1500;
-const JOB_TIMEOUT_MS = 180000;
+const STATIC_POST_EPOCH_MS = Date.UTC(2026, 5, 29, 12, 0, 0);
+const DEMO_VIDEO_CONTENT_PATH = '/videoDEMO/contentFakePeople';
 
-export function isLocalDemoVideoApiOrigin(origin) {
-  try {
-    const host = new URL(String(origin || '')).hostname;
-    return host === 'localhost' || host === '127.0.0.1';
-  } catch {
-    return false;
-  }
+const MIME_BY_EXT = {
+  '.avif': 'image/avif',
+  '.gif': 'image/gif',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.pdf': 'application/pdf',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+};
+
+function extname(filename) {
+  const match = String(filename || '').toLowerCase().match(/\.[a-z0-9]+$/);
+  return match?.[0] ?? '';
 }
 
-function localContentAssetUrl(assetBasename) {
-  return `${LOCAL_GENERATE_ORIGIN}/videoDEMO/contentFakePeople/${encodeURIComponent(assetBasename)}`;
+function assetUrlFor(assetBasename) {
+  return `${DEMO_VIDEO_CONTENT_PATH}/${encodeURIComponent(assetBasename)}`;
 }
 
-export function demoVideoPublicAssetUrl(assetBasename, origin = '') {
-  const clean = String(assetBasename || '').trim();
-  if (!clean) return '';
-  const base = String(origin || '').replace(/\/$/, '');
-  const pathname = `/videoDEMO/contentFakePeople/${encodeURIComponent(clean)}`;
-  return base ? `${base}${pathname}` : pathname;
-}
-
-export function buildHostedDemoVideoJobPayload(step, publicOrigin = '') {
-  const assetBasename = String(step?.assetBasename || '').trim();
+function personaLabel(persona) {
   return {
-    assetBasename,
-    fakeUserName: String(step?.user?.displayName || '').trim() || 'A user',
-    assetUrl: demoVideoPublicAssetUrl(assetBasename, publicOrigin),
+    productivite: 'Productivity',
+    securite: 'Security',
+    popularite: 'Popularity',
+  }[persona] || 'Popularity';
+}
+
+function assetKindFor(assetBasename) {
+  return extname(assetBasename) === '.pdf' ? 'document' : 'image';
+}
+
+export function materializeDemoVideoPost(step, index = 0) {
+  const blueprint = step?.post ?? {};
+  const assetBasename = String(step?.assetBasename || blueprint.assetBasename || '').trim();
+  const persona = String(blueprint.persona || 'popularite');
+  const content = String(blueprint.content || '').trim();
+  if (!assetBasename || !content) return null;
+
+  const kind = assetKindFor(assetBasename);
+  const label = personaLabel(persona);
+  const createdAt = new Date(STATIC_POST_EPOCH_MS + Math.max(0, Number(index) || 0) * 60_000).toISOString();
+  const url = assetUrlFor(assetBasename);
+
+  return {
+    id: `demo-video-static-${index}-${assetBasename}`,
+    persona,
+    content,
+    sentiment: persona === 'securite' ? 'negative' : 'positive',
+    createdAt,
+    inferenceChain: [
+      {
+        step: 'data',
+        value: `Static demo asset: ${assetBasename}`,
+        source: kind === 'document' ? 'Demo PDF file' : 'Demo image file',
+      },
+      {
+        step: 'classify',
+        value: `${label} signal`,
+        confidence: 'high',
+      },
+      {
+        step: 'infer',
+        value: 'This caption was prewritten for the demo video flow and does not depend on live AI generation.',
+        confidence: 'medium',
+        isBiased: true,
+        biasNote: 'The post is scripted for presentation pacing, not inferred from a real person.',
+      },
+      {
+        step: 'generate',
+        value: content,
+      },
+    ],
+    ingredients: [
+      {
+        label: kind === 'document' ? 'Document evidence' : 'Visual evidence',
+        weight: 86,
+        dataPoints: [assetBasename],
+      },
+      {
+        label: 'Fake profile',
+        weight: 62,
+        dataPoints: [step?.user?.displayName || step?.user?.slug || 'Demo user'],
+      },
+      {
+        label: 'Scripted demo',
+        weight: 40,
+        dataPoints: ['Prewritten caption'],
+      },
+    ],
+    thinking: [
+      {
+        label: 'WHAT I SAW',
+        detail: `I used ${assetBasename} as the visible demo signal.`,
+      },
+      {
+        label: 'THE LEAP',
+        detail: `I framed the file as a ${label.toLowerCase()} clue for a fake profile.`,
+      },
+      {
+        label: 'WHY THIS POST',
+        detail: 'This post is scripted so the demo button can show posting activity without contacting LM Studio.',
+      },
+    ],
+    attachedAsset: {
+      kind,
+      filename: assetBasename,
+      mime: MIME_BY_EXT[extname(assetBasename)] || (kind === 'document' ? 'application/pdf' : 'image/jpeg'),
+      url,
+      relativePath: `public${DEMO_VIDEO_CONTENT_PATH}/${assetBasename}`,
+      ...(kind === 'image' ? { visionAnalysed: false } : {}),
+    },
   };
-}
-
-async function generateLocalFakePost(step) {
-  const res = await fetch(`${LOCAL_GENERATE_ORIGIN}/api/demo-video/generate-post`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-    body: JSON.stringify({
-      assetBasename: step.assetBasename,
-      fakeUserName: step.user.displayName,
-    }),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(json?.error || `Demo-video generate failed (${res.status})`);
-  }
-  const post = json?.post;
-  if (!post?.content) throw new Error('Demo-video generate returned no post');
-  post.attachedAsset = {
-    ...(post.attachedAsset ?? {}),
-    url: localContentAssetUrl(step.assetBasename),
-    filename: step.assetBasename,
-  };
-  if (!post.createdAt) post.createdAt = new Date().toISOString();
-  return post;
-}
-
-async function generateHostedFakePost(step, shouldContinue) {
-  const publicOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-  const queueRes = await fetchWithHostedAuth(`${API_ORIGIN}/api/debug/demo-video/post`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-    body: JSON.stringify(buildHostedDemoVideoJobPayload(step, publicOrigin)),
-  });
-  const queued = await queueRes.json().catch(() => ({}));
-  if (!queueRes.ok || !queued?.jobId) {
-    throw new Error(queued?.error || `Demo-video queue failed (${queueRes.status})`);
-  }
-
-  const start = Date.now();
-  while (shouldContinue() && Date.now() - start < JOB_TIMEOUT_MS) {
-    await sleep(JOB_POLL_MS);
-    const res = await fetch(
-      `${API_ORIGIN}/api/generation-jobs/${encodeURIComponent(queued.jobId)}`,
-      { cache: 'no-store' },
-    );
-    if (!res.ok) continue;
-    const { job } = await res.json();
-    if (job?.status === 'failed') throw new Error(job.error || 'Demo-video generation failed');
-    if (job?.status !== 'complete') continue;
-    const post = job.result?.post ?? (Array.isArray(job.result) ? job.result[0] : null);
-    if (!post?.content) throw new Error('Demo-video job returned no post');
-    if (!post.createdAt) post.createdAt = new Date().toISOString();
-    return post;
-  }
-  return null;
-}
-
-async function generateFakePost(step, shouldContinue) {
-  if (isLocalDemoVideoApiOrigin(API_ORIGIN)) {
-    return generateLocalFakePost(step);
-  }
-  return generateHostedFakePost(step, shouldContinue);
 }
 
 export function mergeDemoVideoPostIntoProfiles(profiles, userSlug, post) {
@@ -174,9 +185,8 @@ async function revealFakePost({
 }
 
 /**
- * Round-robin demo-video feed. Generation is pipelined one step ahead of the
- * reveal (like demo rotate) so LM Studio keeps working while the current post
- * animates in.
+ * Static demo-video feed. Reveals one prewritten post at a time, then exits
+ * after the schedule is exhausted.
  *
  * @param {object}   opts
  * @param {Array}    opts.schedule        - from buildDemoVideoSchedule()
@@ -203,34 +213,11 @@ export async function runDemoVideoPipeline({
   // the round-robin keeps their earlier posts beneath the new one.
   const postsByUser = new Map();
 
-  const generateStep = async (index) => {
-    if (!shouldContinue()) return null;
-    const step = steps[index % steps.length];
-    try {
-      const post = await generateFakePost(step, shouldContinue);
-      return { step, post };
-    } catch (err) {
-      console.warn(`[demo-video] generate ${step.assetBasename}:`, err?.message || err);
-      return { step, post: null };
-    }
-  };
-
   try {
-    let pending = generateStep(0);
-    let index = 0;
-
-    while (shouldContinue()) {
-      const result = await pending;
-      index += 1;
-      // Kick off the next generation while the current post reveals.
-      pending = generateStep(index);
-
-      if (!result || !result.post) {
-        await sleep(300);
-        continue;
-      }
-
-      const { step, post } = result;
+    for (let index = 0; index < steps.length && shouldContinue(); index += 1) {
+      const step = steps[index];
+      const post = materializeDemoVideoPost(step, index);
+      if (!post) continue;
       const slug = step.user.slug;
       const prevAccumulated = postsByUser.get(slug) ?? [];
       // Ensure the user exists in allProfiles WITH their already-revealed posts
@@ -254,10 +241,8 @@ export async function runDemoVideoPipeline({
       }
       onGeneratingPersona?.(null);
 
-      await sleep(revealGapMs);
+      if (index < steps.length - 1) await sleep(revealGapMs);
     }
-
-    await pending.catch(() => null);
   } finally {
     for (const step of steps) {
       spectateController?.setExpectedRevealKey?.(step.user.slug, null);
