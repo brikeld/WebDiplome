@@ -28,10 +28,9 @@ export default function DemoVideoButton({
   const stop = useCallback(() => {
     runningRef.current = false;
     setRunning(false);
-    onActiveChange?.(false);
     onGeneratingPersona?.(null);
     pipelineRef.current = null;
-  }, [onActiveChange, onGeneratingPersona]);
+  }, [onGeneratingPersona]);
 
   const finish = useCallback(() => {
     runningRef.current = false;
