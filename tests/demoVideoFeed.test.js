@@ -4,6 +4,7 @@ import {
   mergeDemoVideoPostIntoProfiles,
 } from '../src/lib/demoVideoFeed.js';
 import { buildDemoVideoSchedule, getFakeUsers } from '../src/lib/demoVideoFakeUsers.js';
+import { resolveAttachedAsset } from '../src/features/feed/PostsTab.jsx';
 
 describe('demoVideoFeed static posts', () => {
   it('ships a prewritten post schedule long enough for a demo recording', () => {
@@ -24,6 +25,16 @@ describe('demoVideoFeed static posts', () => {
     expect(post.createdAt).toBeTruthy();
     expect(post.id).toContain('demo-video-static');
     expect(post.inferenceChain?.length).toBeGreaterThan(0);
+  });
+
+  it('keeps demo-video public asset URLs on the website origin', () => {
+    const asset = resolveAttachedAsset({
+      kind: 'image',
+      url: '/videoDEMO/contentFakePeople/cat.jpg',
+      filename: 'cat.jpg',
+    });
+
+    expect(asset.url).toBe('/videoDEMO/contentFakePeople/cat.jpg');
   });
 
   it('merges generated posts into an existing fake profile', () => {

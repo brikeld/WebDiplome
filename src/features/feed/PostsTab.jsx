@@ -55,15 +55,22 @@ function postStableKey(p, fallbackIndex) {
   return `idx-${fallbackIndex}`;
 }
 
-function resolveAttachedAsset(asset) {
+function isSitePublicAssetUrl(raw) {
+  return String(raw || '').startsWith('/videoDEMO/');
+}
+
+export function resolveAttachedAsset(asset) {
   if (!asset || typeof asset !== 'object') return null;
   const kind = asset.kind === 'document' ? 'document' : 'image';
   const config = getPublicMediaConfig();
-  const absolute = resolveAttachedAssetPublicUrl(asset, {
-    supabaseUrl: config?.supabaseUrl ?? null,
-    apiOrigin: API_ORIGIN,
-    uploadsBucket: config?.uploadsBucket,
-  }) ?? resolvePublicMediaUrl(asset.url ?? (asset.filename ? `/uploads/${asset.filename}` : null), API_ORIGIN);
+  const rawUrl = String(asset.url || '').trim();
+  const absolute = isSitePublicAssetUrl(rawUrl)
+    ? rawUrl
+    : resolveAttachedAssetPublicUrl(asset, {
+      supabaseUrl: config?.supabaseUrl ?? null,
+      apiOrigin: API_ORIGIN,
+      uploadsBucket: config?.uploadsBucket,
+    }) ?? resolvePublicMediaUrl(asset.url ?? (asset.filename ? `/uploads/${asset.filename}` : null), API_ORIGIN);
   if (!absolute) return null;
   const filename =
     asset.filename
