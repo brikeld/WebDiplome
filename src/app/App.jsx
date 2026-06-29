@@ -1088,6 +1088,18 @@ function AppInner({
     : personaKey;
   const displayPersonaColor = PERSONA_COLORS[displayPersonaKey] ?? PERSONA_COLORS.productivity;
 
+  const handleDemoVideoPostGenerated = useCallback((user, post) => {
+    const slug = String(user?.slug ?? user?.id ?? '').trim();
+    if (!slug || !post?.content) return;
+    setAllProfiles((prev) => mergeDemoVideoPostIntoProfiles(prev, slug, post));
+    setViewedProfile((prev) => {
+      const key = String(prev?.slug ?? prev?.id ?? '');
+      return key === slug
+        ? mergeDemoVideoPostIntoProfiles([prev], slug, post)[0] ?? prev
+        : prev;
+    });
+  }, [setAllProfiles]);
+
   const resetProfileChrome = useCallback(() => {
     setHighlightedPost(null);
     setHideTargetPost(null);
@@ -1636,18 +1648,6 @@ export default function App() {
       const list = Array.isArray(prev) ? prev : [];
       if (list.some((p) => String(p?.slug ?? p?.id ?? '') === slug)) return list;
       return [{ ...user, personaPosts: Array.isArray(posts) ? posts : [] }, ...list];
-    });
-  }, []);
-
-  const handleDemoVideoPostGenerated = useCallback((user, post) => {
-    const slug = String(user?.slug ?? user?.id ?? '').trim();
-    if (!slug || !post?.content) return;
-    setAllProfiles((prev) => mergeDemoVideoPostIntoProfiles(prev, slug, post));
-    setViewedProfile((prev) => {
-      const key = String(prev?.slug ?? prev?.id ?? '');
-      return key === slug
-        ? mergeDemoVideoPostIntoProfiles([prev], slug, post)[0] ?? prev
-        : prev;
     });
   }, []);
 
