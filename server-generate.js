@@ -376,6 +376,18 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
+// Serve the demo-video fake-user assets (memoji avatars + post content) from the
+// generator with CORS, so they load regardless of which origin the web app runs
+// on (localhost dev OR the deployed site driving this local generator). CORS is
+// required because the feed halftone reads the image into a canvas
+// (crossOrigin="anonymous").
+app.use(
+  '/videoDEMO',
+  express.static(path.join(__dirname, 'public', 'videoDEMO'), {
+    setHeaders: (res) => res.set('Access-Control-Allow-Origin', '*'),
+  }),
+);
+
 // GET /api/leaderboards — current user standings for every board, not just posted boards
 app.get('/api/leaderboards', async (_req, res) => {
   try {

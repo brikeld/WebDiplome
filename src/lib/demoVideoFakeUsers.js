@@ -14,6 +14,8 @@
  *     people so the boards look populated by real-looking strangers.
  */
 
+import { resolveDemoVideoGenerateOrigin } from '@/lib/apiOrigin.js';
+
 const AVATAR_DIR = '/videoDEMO/other users';
 const CONTENT_DIR = '/videoDEMO/contentFakePeople';
 
@@ -85,8 +87,9 @@ function mulberry32(seed) {
 }
 
 function publicUrl(relPath) {
-  const origin =
-    typeof window !== 'undefined' && window.location ? window.location.origin : '';
+  // Assets are served by the LOCAL generator (:3010), not the web app origin, so
+  // they resolve whether the app is opened on localhost or the deployed site.
+  const origin = resolveDemoVideoGenerateOrigin();
   // encodeURI keeps the path separators but escapes spaces (folder + filenames).
   return encodeURI(`${origin}${relPath}`);
 }

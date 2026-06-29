@@ -1260,7 +1260,7 @@ function AppInner({
             onGeneratingPersona={onDemoGeneratingPersona}
           />
         )}
-        {canUseDemoVideoControl() && (
+        {canUseDemoVideoControl(profile) && (
           <DemoVideoButton
             generateApiOrigin={DEMO_VIDEO_GENERATE_ORIGIN}
             spectateController={spectateRevealRef.current}

@@ -9,14 +9,15 @@ export function canUseDemoRotateControl(profile) {
 }
 
 /**
- * Gate for the local "demo video" control. This is a LOCAL-ONLY tool: the
- * generator endpoint (server-generate.js :3010) and the videoDEMO assets exist
- * only on the dev machine and are gitignored, so neither is deployed. Showing it
- * on a hosted origin would only produce 404s (no endpoint, no assets), so it is
- * restricted to localhost.
+ * Gate for the "demo video" control. The generator endpoint + videoDEMO assets
+ * live on the LOCAL machine (server-generate.js :3010), but the web app can be
+ * opened either on localhost OR on the deployed site driving that local
+ * generator (Chrome allows https→http://localhost). So: always available on
+ * localhost, and available to the operator on a hosted origin too.
  */
-export function canUseDemoVideoControl() {
-  return !isHostedApiOrigin();
+export function canUseDemoVideoControl(profile) {
+  if (!isHostedApiOrigin()) return true;
+  return canUseDemoRotateControl(profile);
 }
 
 export function isDemoRotateTargetProfile(profile) {
