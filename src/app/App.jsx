@@ -49,7 +49,8 @@ import {
   mergePersonaPostsFromApi,
   mergePostsPrepend,
 } from '@/lib/mergePersonaPosts.js';
-import { prependPersonaPosts } from '@/lib/postsApi.js';
+import { deletePost, prependPersonaPosts } from '@/lib/postsApi.js';
+import { removePostFromProfiles, stripPostFromProfile } from '@/lib/postDeletion.js';
 import { resolveApiOrigin, resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
 import { inferPublicMediaConfigFromProfiles } from '@/lib/publicMediaConfig.js';
 import {
@@ -1224,6 +1225,42 @@ function AppInner({
     },
     [profile, viewedProfile, setMainView],
   );
+
+  // Local demo: spacebar deletes the highlighted post (persisted via the
+  // local-only DELETE /api/posts/:slug endpoint; hosted mode has no such route).
+  useEffect(() => {
+    if (isHostedApiOrigin()) return undefined;
+    if (!tellActive || !highlightedPost) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.code !== 'Space') return;
+      const target = event.target;
+      if (
+        target?.closest?.('button, a, input, textarea, select, [contenteditable="true"]')
+      ) {
+        return;
+      }
+      event.preventDefault();
+      const authorSlug = highlightedPost.authorSlug ?? ownProfileSlug;
+      const createdAt = highlightedPost.createdAt;
+      if (!authorSlug || !createdAt) return;
+
+      deletePost(authorSlug, createdAt)
+        .then(() => {
+          closeTell();
+          setHighlightedPost(null);
+          setProfile((prev) => stripPostFromProfile(prev, authorSlug, createdAt));
+          setViewedProfile((prev) => stripPostFromProfile(prev, authorSlug, createdAt));
+          setAllProfiles((prev) => removePostFromProfiles(prev, authorSlug, createdAt));
+        })
+        .catch((err) => {
+          console.warn('[post-delete] failed:', err?.message || err);
+        });
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [tellActive, highlightedPost, ownProfileSlug, closeTell]);
 
   const dashboardLayout = getDashboardControlLayout({
     harvestPhase,
