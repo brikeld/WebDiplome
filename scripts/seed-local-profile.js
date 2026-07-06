@@ -9,10 +9,11 @@
  * populated profile, feed, dashboard, and leaderboard analysis.
  *
  * Data source: scripts/fixtures/{local-profile,local-posts}.json — a real
- * captured profile (Brikeld Hoxha) with the heavy wallpaper blob replaced by a
- * lightweight placeholder avatar. 24 posts including leaderboard posts with
- * inference-chain / ingredients metadata, so every "tell me more" view has
- * content.
+ * captured profile (Brikeld Hoxha) with the harvested wallpaper portrait in
+ * brikeld-wallpaper.json. Post attachments are remapped to
+ * public/videoDEMO/contentFakePeople at seed time. 24 posts including
+ * leaderboard posts with inference-chain / ingredients metadata, so every
+ * "tell me more" view has content.
  *
  * Idempotent: re-run any time to reset the local profile to the snapshot.
  *
@@ -22,6 +23,10 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, existsSync
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSeededFakeUsers, injectBrikeldComments } from './fixtures/buildDemoFakeUsers.js';
+import {
+  loadBrikeldHarvestedWallpaper,
+  remapBrikeldPostAssets,
+} from './fixtures/brikeldLocalContent.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -44,7 +49,10 @@ function readJson(path, fallback) {
 mkdirSync(PROFILES_DIR, { recursive: true });
 mkdirSync(POSTS_DIR, { recursive: true });
 
-const profile = readJson(join(FIXTURES, 'local-profile.json'));
+const profile = {
+  ...readJson(join(FIXTURES, 'local-profile.json')),
+  wallpaperBase64: loadBrikeldHarvestedWallpaper(),
+};
 const posts = readJson(join(FIXTURES, 'local-posts.json'));
 
 const NOW_MS = Date.now();
@@ -64,8 +72,8 @@ for (const file of readdirSync(PROFILES_DIR)) {
   }
 }
 
-// ── Brikeld: rebased timestamps + injected comments ──────────────────────────
-const brikeldPosts = injectBrikeldComments(posts, NOW_MS);
+// ── Brikeld: contentFakePeople assets, rebased timestamps + injected comments ──
+const brikeldPosts = injectBrikeldComments(remapBrikeldPostAssets(posts), NOW_MS);
 writeFileSync(join(PROFILES_DIR, `${SLUG}.json`), `${JSON.stringify(profile, null, 2)}\n`);
 writeFileSync(join(POSTS_DIR, `${SLUG}.json`), `${JSON.stringify(brikeldPosts, null, 2)}\n`);
 

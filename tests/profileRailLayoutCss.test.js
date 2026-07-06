@@ -33,16 +33,17 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(rail).toContain('--profile-rail-profile-min');
     expect(rail).toContain('--profile-rail-tabs-min');
     expect(rail).toContain('grid-template-rows');
-    expect(rail).toContain('minmax(var(--profile-rail-profile-min), max-content)');
+    expect(rail).toContain('auto');
+    expect(rail).toContain('minmax(0, 1fr)');
     expect(rail).toContain('var(--profile-rail-tabs-min)');
     expect(rail).toContain('--profile-rail-tab-font: var(--profile-rail-blurb-size)');
     expect(rail).toContain('--profile-rail-ring-center-factor: 0.58');
     expect(rail).toContain('--profile-rail-ring-center-y-factor: 0.43');
-    expect(profile).toContain('min-height: var(--profile-rail-profile-min)');
+    expect(profile).toContain('min-height: 0');
     expect(tabs).toContain('flex: 0 0 auto');
-    expect(tabs).toContain('grid-row: -2 / -1');
+    expect(tabs).toContain('grid-row: 3');
     expect(tabs).toContain('min-height: var(--profile-rail-tabs-min)');
-    expect(tabs).toContain('height: 100%');
+    expect(tabs).not.toContain('height: 100%');
     expect(tabs).not.toContain('max-height');
     expect(tab).toContain('flex: 0 0 var(--profile-rail-tab-h)');
   });
@@ -66,10 +67,10 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(rail).toContain('--profile-rail-scores-copy-size: var(--profile-rail-blurb-size)');
     expect(rail).toContain('--profile-rail-ring-size: clamp(10rem');
     expect(railCards).toContain('border: var(--capsule-shell-border-width) solid');
-    expect(hero).toContain('grid-template-rows: auto auto minmax(min-content, 1fr)');
+    expect(hero).toContain('grid-template-rows: auto auto auto');
     expect(hero).toContain('align-content: start');
-    expect(bioBlock).toContain('align-self: end');
-    expect(bioBlock).toContain('margin-top: var(--profile-rail-bio-gap)');
+    expect(bioBlock).toContain('align-self: start');
+    expect(bioBlock).toContain('margin-top: 0');
     expect(rowLabel).toContain('font-size: var(--profile-rail-scores-row-label-size)');
     expect(rowLabel).toContain('background: var(--profile-row-accent');
     expect(rowLabel).toContain('border-radius: var(--radius-pill)');
@@ -93,5 +94,14 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(largeDesktop).toContain('--profile-rail-scores-target');
     expect(largeDesktop).toContain('minmax(var(--profile-rail-scores-target), 1fr)');
     expect(largeDesktop).not.toContain('minmax(0, 1fr)');
+  });
+
+  it('lets persona rows hug their own content so leftover height collects in one place instead of stretching every row', () => {
+    const baseRowStart = profileCss.indexOf('min-height: min-content;');
+    expect(baseRowStart).toBeGreaterThanOrEqual(0);
+    const row = profileCss.slice(Math.max(0, baseRowStart - 200), baseRowStart + 200);
+
+    expect(row).not.toContain('flex: 1 1 0');
+    expect(row).toContain('flex: 0 0 auto');
   });
 });

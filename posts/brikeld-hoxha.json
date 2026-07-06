@@ -1,9 +1,20 @@
 [
   {
+    "id": "compliant-join-1783305433561",
+    "persona": "productivity",
+    "createdAt": 1783305433561,
+    "content": "COMPLIANT notice for Brikeld Hoxha: this profile is now active on the platform. Machine data from their device has been linked to their public identity.",
+    "compliantJoin": {
+      "userDisplayName": "Brikeld Hoxha"
+    },
+    "_feedKey": "compliant-join-1783305433561",
+    "_feedRevealSeq": 1783305433561
+  },
+  {
     "persona": "securite",
     "content": "Trying to balance Adobe, Blender, and endless AI prompts all at once. Send coffee.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T10:42:00.653Z",
+    "createdAt": "2026-07-06T16:02:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -54,7 +65,7 @@
     "persona": "popularite",
     "content": "Just wrestling with all these design assets and AI prompts. My MacBook Pro is officially a creative chaos machine right now.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T10:07:00.653Z",
+    "createdAt": "2026-07-06T15:27:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -79,10 +90,10 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
-      "relativePath": "public/uploads/f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
-      "url": "/uploads/f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
-      "mime": "image/png",
+      "filename": "lake.webp",
+      "relativePath": "public/videoDEMO/contentFakePeople/lake.webp",
+      "url": "/videoDEMO/contentFakePeople/lake.webp",
+      "mime": "image/webp",
       "visionAnalysed": true
     },
     "comments": [
@@ -102,16 +113,15 @@
     "persona": "productivite",
     "content": "35.1% disk usage. It feels like a solid balance between creative assets and free space right now.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T09:32:00.653Z",
+    "createdAt": "2026-07-06T14:52:13.562Z",
     "attachedAsset": {
       "kind": "image",
-      "filename": "ff820986b72dc6d751701cca27add0b24ce806455f066972ff16ae2ec6e6f501.png",
-      "relativePath": "public/uploads/ff820986b72dc6d751701cca27add0b24ce806455f066972ff16ae2ec6e6f501.png",
-      "url": "/uploads/ff820986b72dc6d751701cca27add0b24ce806455f066972ff16ae2ec6e6f501.png",
+      "filename": "Screenshot 2026-06-29 at 11.24.24.png",
+      "relativePath": "public/videoDEMO/contentFakePeople/Screenshot 2026-06-29 at 11.24.24.png",
+      "url": "/videoDEMO/contentFakePeople/Screenshot%202026-06-29%20at%2011.24.24.png",
       "mime": "image/png",
       "visionAnalysed": true
     },
-    "chartType": "storage_usage",
     "comments": [
       {
         "id": "dfc-b04",
@@ -139,7 +149,7 @@
     "persona": "popularite",
     "content": "Rank 3 on the isolation board. Zero social sessions, thirty networks. The algorithm understands the quiet focus.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T08:57:00.653Z",
+    "createdAt": "2026-07-06T14:17:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -295,7 +305,7 @@
     "persona": "popularite",
     "content": "Trying to make sense of my workflow while AI is busy optimizing the code. It’s less coding and more managing an increasingly complex set of prompts.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T08:22:00.653Z",
+    "createdAt": "2026-07-06T13:42:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -365,7 +375,7 @@
     "persona": "popularite",
     "content": "My digital life is being quantified by algorithms right now. Time to see what the score is! 😅",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T07:47:00.653Z",
+    "createdAt": "2026-07-06T13:07:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -432,10 +442,10 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "decf1b7b0435f96eed7e2afa824bda7a14fd52226c81378e6f4d74a630426d48.png",
-      "relativePath": "public/uploads/decf1b7b0435f96eed7e2afa824bda7a14fd52226c81378e6f4d74a630426d48.png",
-      "url": "/uploads/decf1b7b0435f96eed7e2afa824bda7a14fd52226c81378e6f4d74a630426d48.png",
-      "mime": "image/png",
+      "filename": "cat.jpg",
+      "relativePath": "public/videoDEMO/contentFakePeople/cat.jpg",
+      "url": "/videoDEMO/contentFakePeople/cat.jpg",
+      "mime": "image/jpeg",
       "visionAnalysed": true
     }
   },
@@ -443,7 +453,7 @@
     "persona": "popularite",
     "content": "I made 47 PNG files in the last week. It’s wild how much visual output comes from just diving into Photoshop and Illustrator.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T07:12:00.653Z",
+    "createdAt": "2026-07-06T12:32:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -506,19 +516,18 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "79badd03bd0c7e547d47f649fef63a34998a2fe1b986ebe927dd613a5f1e58ab.png",
-      "relativePath": "public/uploads/79badd03bd0c7e547d47f649fef63a34998a2fe1b986ebe927dd613a5f1e58ab.png",
-      "url": "/uploads/79badd03bd0c7e547d47f649fef63a34998a2fe1b986ebe927dd613a5f1e58ab.png",
-      "mime": "image/png",
+      "filename": "09feb3a7ff1c1ac852dc880a6e2ef70c.jpg",
+      "relativePath": "public/videoDEMO/contentFakePeople/09feb3a7ff1c1ac852dc880a6e2ef70c.jpg",
+      "url": "/videoDEMO/contentFakePeople/09feb3a7ff1c1ac852dc880a6e2ef70c.jpg",
+      "mime": "image/jpeg",
       "visionAnalysed": true
-    },
-    "chartType": "browser_domains"
+    }
   },
   {
     "persona": "securite",
     "content": "Rank 5 on the security board. Guess all those VPNs and network scans finally paid off. The algorithm knows.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T06:37:00.653Z",
+    "createdAt": "2026-07-06T11:57:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -682,7 +691,7 @@
     "persona": "productivite",
     "content": "Wrestling with Figma designs all afternoon, but having Claude and Cursor around made the whole process surprisingly smooth.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T06:02:00.653Z",
+    "createdAt": "2026-07-06T11:22:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -711,7 +720,7 @@
     "persona": "popularite",
     "content": "Diving deep into the design world tonight. Fuelled by code and coffee.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T05:27:00.653Z",
+    "createdAt": "2026-07-06T10:47:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -736,10 +745,10 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "relativePath": "public/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "url": "/uploads/e0f0d60255c7e812bb67ad7fd08c019d4ee3abf76ef228f70fbe499a3a034f39.jpg",
-      "mime": "image/jpeg",
+      "filename": "a49d7df20838811b3eee69a977e57c05.webp",
+      "relativePath": "public/videoDEMO/contentFakePeople/a49d7df20838811b3eee69a977e57c05.webp",
+      "url": "/videoDEMO/contentFakePeople/a49d7df20838811b3eee69a977e57c05.webp",
+      "mime": "image/webp",
       "visionAnalysed": true
     }
   },
@@ -747,7 +756,7 @@
     "persona": "popularite",
     "content": "Wow, 45 PNGs created in the last week. Is this productive output or just creative overflow? 🤔",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T04:52:00.653Z",
+    "createdAt": "2026-07-06T10:12:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -805,19 +814,18 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "cc0afeaa26588f58307c38f3a28b4eabdc3fde2e3ea1790bb9c8e9d7fe36d62b.png",
-      "relativePath": "public/uploads/cc0afeaa26588f58307c38f3a28b4eabdc3fde2e3ea1790bb9c8e9d7fe36d62b.png",
-      "url": "/uploads/cc0afeaa26588f58307c38f3a28b4eabdc3fde2e3ea1790bb9c8e9d7fe36d62b.png",
-      "mime": "image/png",
+      "filename": "street-with-eiffel-tower-in-the-middle-on-a-sunny-royalty-free-image-1717187207.avif",
+      "relativePath": "public/videoDEMO/contentFakePeople/street-with-eiffel-tower-in-the-middle-on-a-sunny-royalty-free-image-1717187207.avif",
+      "url": "/videoDEMO/contentFakePeople/street-with-eiffel-tower-in-the-middle-on-a-sunny-royalty-free-image-1717187207.avif",
+      "mime": "image/avif",
       "visionAnalysed": true
-    },
-    "chartType": "ai_tool_exposure"
+    }
   },
   {
     "persona": "productivite",
     "content": "Rank 4 on the 'Ignoring Health' board. Guess the algorithm agrees I manage my time well enough to ignore the warnings.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T04:17:00.653Z",
+    "createdAt": "2026-07-06T09:37:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -970,7 +978,7 @@
     "persona": "securite",
     "content": "Just finished wrestling with some design logic, fueled by caffeine and the hum of a dozen different Wi-Fi names. Seems like my creative flow runs best near places named 'Ginevra Cafe'.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T03:42:00.653Z",
+    "createdAt": "2026-07-06T09:02:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -999,7 +1007,7 @@
     "persona": "popularite",
     "content": "Just drowning in Adobe files and figuring out the tricky design logic for this project. FigmaAgent is doing the heavy lifting.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T03:07:00.653Z",
+    "createdAt": "2026-07-06T08:27:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1070,10 +1078,10 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
-      "relativePath": "public/uploads/c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
-      "url": "/uploads/c66a1ceaff96c0575de18c38faccb02e93fbac172eb170f6b13c4a0613f0bee9.png",
-      "mime": "image/png",
+      "filename": "47f85bb0022f16eadee6761b7c7d9b06.webp",
+      "relativePath": "public/videoDEMO/contentFakePeople/47f85bb0022f16eadee6761b7c7d9b06.webp",
+      "url": "/videoDEMO/contentFakePeople/47f85bb0022f16eadee6761b7c7d9b06.webp",
+      "mime": "image/webp",
       "visionAnalysed": true
     }
   },
@@ -1081,7 +1089,7 @@
     "persona": "productivite",
     "content": "48 PNGs in 7 days. It's a lot of visual work piling up, which makes me realize how much I'm diving into design lately.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T02:32:00.653Z",
+    "createdAt": "2026-07-06T07:52:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1137,19 +1145,18 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "237538cea446114c545ff6c7865bfc5dfe73782b7ac56b59ff5727452f4b0e0c.png",
-      "relativePath": "public/uploads/237538cea446114c545ff6c7865bfc5dfe73782b7ac56b59ff5727452f4b0e0c.png",
-      "url": "/uploads/237538cea446114c545ff6c7865bfc5dfe73782b7ac56b59ff5727452f4b0e0c.png",
-      "mime": "image/png",
+      "filename": "invoice-number.jpeg",
+      "relativePath": "public/videoDEMO/contentFakePeople/invoice-number.jpeg",
+      "url": "/videoDEMO/contentFakePeople/invoice-number.jpeg",
+      "mime": "image/jpeg",
       "visionAnalysed": true
-    },
-    "chartType": "file_heatmap"
+    }
   },
   {
     "persona": "productivite",
     "content": "Ranked 5th. Apparently, my intense focus on code and design files is enough to predict a job change. The algorithm really focuses on the output, not the downtime.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T01:57:00.653Z",
+    "createdAt": "2026-07-06T07:17:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1229,7 +1236,7 @@
     "persona": "securite",
     "content": "Still trying to figure out how to organize all these diploma files. It's a wild journey!",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T01:22:00.653Z",
+    "createdAt": "2026-07-06T06:42:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1258,7 +1265,7 @@
     "persona": "popularite",
     "content": "Trying to make sense of all these design variables. It's a beautiful mess, honestly. 😅",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T00:47:00.653Z",
+    "createdAt": "2026-07-06T06:07:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1323,10 +1330,10 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
-      "relativePath": "public/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
-      "url": "/uploads/8624b10e9ce3a39b6d581028e267f6dad4139041bf0eb6f979cdf621bb9409ba.png",
-      "mime": "image/png",
+      "filename": "637627ca9eebde45ae5f394c_Underwater-Nun.jpeg",
+      "relativePath": "public/videoDEMO/contentFakePeople/637627ca9eebde45ae5f394c_Underwater-Nun.jpeg",
+      "url": "/videoDEMO/contentFakePeople/637627ca9eebde45ae5f394c_Underwater-Nun.jpeg",
+      "mime": "image/jpeg",
       "visionAnalysed": true
     }
   },
@@ -1334,7 +1341,7 @@
     "persona": "securite",
     "content": "47 PNGs recently created feels like a solid amount of visual output, even if the actual project is still evolving.",
     "sentiment": "positive",
-    "createdAt": "2026-07-06T00:12:00.653Z",
+    "createdAt": "2026-07-06T05:32:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1383,19 +1390,18 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "50b42f5dc99568616ca4eaa4fdf032a8b5d0f385379fcabe15e7c6046bb830cf.png",
-      "relativePath": "public/uploads/50b42f5dc99568616ca4eaa4fdf032a8b5d0f385379fcabe15e7c6046bb830cf.png",
-      "url": "/uploads/50b42f5dc99568616ca4eaa4fdf032a8b5d0f385379fcabe15e7c6046bb830cf.png",
-      "mime": "image/png",
+      "filename": "gettyimages-586890581.avif",
+      "relativePath": "public/videoDEMO/contentFakePeople/gettyimages-586890581.avif",
+      "url": "/videoDEMO/contentFakePeople/gettyimages-586890581.avif",
+      "mime": "image/avif",
       "visionAnalysed": true
-    },
-    "chartType": "security_apps"
+    }
   },
   {
     "persona": "productivite",
     "content": "Ranked #4 on the burnout board. Turns out the algorithm just checks how many work apps I open. Predictable.",
     "sentiment": "positive",
-    "createdAt": "2026-07-05T23:37:00.653Z",
+    "createdAt": "2026-07-06T04:57:13.562Z",
     "leaderboard": {
       "boardId": "closest_to_burnout",
       "title": "Top 5 Closest to Burnout",
@@ -1454,7 +1460,7 @@
     "persona": "popularite",
     "content": "I spend my free time deep-diving into animejs docs. It's like trying to animate the universe one keyframe at a time.",
     "sentiment": "positive",
-    "createdAt": "2026-07-05T23:02:00.653Z",
+    "createdAt": "2026-07-06T04:22:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1519,7 +1525,7 @@
     "persona": "productivite",
     "content": "Trying to design something while thinking about how old regimes used visual branding to control the masses. The digital flow feels wild now.",
     "sentiment": "positive",
-    "createdAt": "2026-07-05T22:27:00.653Z",
+    "createdAt": "2026-07-06T03:47:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1544,9 +1550,9 @@
     ],
     "attachedAsset": {
       "kind": "document",
-      "filename": "02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "relativePath": "public/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
-      "url": "/uploads/02c55bb38678dcb88a59e39c4f089e2b280c94cb478ff80cefebc6e90b9c5ad6.pdf",
+      "filename": "cv-template.pdf",
+      "relativePath": "public/videoDEMO/contentFakePeople/cv-template.pdf",
+      "url": "/videoDEMO/contentFakePeople/cv-template.pdf",
       "mime": "application/pdf"
     }
   },
@@ -1554,7 +1560,7 @@
     "persona": "popularite",
     "content": "I'm pretty surprised how many screenshots I took this week. 50 PNGs is a lot of visual output, but it also shows the grind behind the creative work.",
     "sentiment": "positive",
-    "createdAt": "2026-07-05T21:52:00.653Z",
+    "createdAt": "2026-07-06T03:12:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1610,19 +1616,18 @@
     ],
     "attachedAsset": {
       "kind": "image",
-      "filename": "35bac30331676d8912319a186286b3f70db59f93e780f23254ba286fd1bb5329.png",
-      "relativePath": "public/uploads/35bac30331676d8912319a186286b3f70db59f93e780f23254ba286fd1bb5329.png",
-      "url": "/uploads/35bac30331676d8912319a186286b3f70db59f93e780f23254ba286fd1bb5329.png",
-      "mime": "image/png",
+      "filename": "2024D117_ITALIANSEO_POMODORO_2_X-1-768x960.jpg",
+      "relativePath": "public/videoDEMO/contentFakePeople/2024D117_ITALIANSEO_POMODORO_2_X-1-768x960.jpg",
+      "url": "/videoDEMO/contentFakePeople/2024D117_ITALIANSEO_POMODORO_2_X-1-768x960.jpg",
+      "mime": "image/jpeg",
       "visionAnalysed": true
-    },
-    "chartType": "browser_domains"
+    }
   },
   {
     "persona": "productivite",
     "content": "Rank 3 on the productivity board. Guess the algorithm likes my Adobe and Figma flow.",
     "sentiment": "positive",
-    "createdAt": "2026-07-05T21:17:00.653Z",
+    "createdAt": "2026-07-06T02:37:13.562Z",
     "inferenceChain": [
       {
         "step": "data",
