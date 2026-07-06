@@ -7,6 +7,7 @@ import {
   mockCommentTimeAgo,
 } from '@/lib/commentMetaStrip.js';
 import { getMockCommentsFor } from './commentingMock.js';
+import { buildThreadComments } from './threadComments.js';
 import { DEMO_OTHER_COMMENTER } from '@/lib/demoCommentIdentity.js';
 import { fetchCommentSuggestions } from './fetchCommentSuggestions.js';
 import { LiveScoringContext } from '@/features/liveScoring/LiveScoringContext.jsx';
@@ -230,9 +231,7 @@ export default function CommentsCapsule({
     }
   };
 
-  const mockComments = getMockCommentsFor(post.id).comments;
-  const persistedComments = Array.isArray(realComments) ? realComments : [];
-  const comments = [...mockComments, ...persistedComments];
+  const comments = buildThreadComments(post, realComments, getMockCommentsFor);
 
   return (
     <div
@@ -260,7 +259,7 @@ export default function CommentsCapsule({
             <div className="commenting-thread-stack">
               {comments.map((c, i) => (
                 <Comment
-                  key={c.persona ?? c.id ?? i}
+                  key={c.id ?? `${c.persona ?? 'c'}-${i}`}
                   persona={c.persona}
                   content={c.content}
                   metaLeft={mockCommentTimeAgo(post.id, c.persona, i)}

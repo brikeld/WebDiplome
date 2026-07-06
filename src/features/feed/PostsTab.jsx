@@ -209,6 +209,7 @@ function buildEnrichedPosts(
       ingredients: Array.isArray(p.ingredients) ? p.ingredients : null,
       highlights: Array.isArray(p.highlights) ? p.highlights : null,
       thinking: Array.isArray(p.thinking) ? p.thinking : null,
+      comments: Array.isArray(p.comments) ? p.comments : null,
       compliantPersonaChange: p.compliantPersonaChange ?? null,
       compliantLowScore: p.compliantLowScore ?? null,
       compliantJoin: p.compliantJoin ?? null,
