@@ -3,7 +3,7 @@
     "persona": "securite",
     "content": "Trying to balance Adobe, Blender, and endless AI prompts all at once. Send coffee.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T22:06:23.762Z",
+    "createdAt": "2026-07-06T10:42:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -26,13 +26,35 @@
         "value": "Trying to balance Adobe, Blender, and endless AI prompts all at once. Send coffee."
       }
     ],
-    "textSliceType": "downloads"
+    "textSliceType": "downloads",
+    "comments": [
+      {
+        "id": "dfc-b01",
+        "persona": "productivite",
+        "content": "The tab count is a lifestyle, not a problem. The output speaks for itself.",
+        "displayName": "Théo Moreau",
+        "handle": "@TheoM",
+        "avatarSrc": "data:image/webp;base64,UklGRr4MAABXRUJQVlA4ILIMAAAwOwCdASqgAKAAPmEqkkYkIqGhKVGsCIAMCUAaesYr58t/yXnK25/SfjP5Hrej0Tnb/p+h/1F/pX2B/1z86r1nfuP6g/55/rv2u95v0p/4/1Cv7N1OXP1e0F+5fpa3kRjc6LfmEuu43qs8O/lflD85OKH5Tws0wegB4t+jt649hPpZHpYhzKUcOmrLqGJ4YILbyfUmppgK+h0Fx8IR3RhFGD8kxRxLWqBd6YM1mPc//9I+7FDY2P1zGxU9zxFdNC8Cg14KEK/XVUAJpxqqfVGEEZ/BkdIz1VZAmXR5TLn8e3iN//0KO45r4DR559mohwIZzDRcOXYAM1Hk2okUkf25tHBHT6N5Y1G9DnpXQTHR8qlrHMBLYOldyZ064//iRQaq96R6FU/U5pIItEZaePL+52q6nRIXkb7g1lcgWtxb8KEDTK5tZmDUlDPxpTToKE7IP74in7/MZG7+P6GMjCrVDPwPPRkKSFf1egH4xS8Z4OUAI5PT/OGaGh5cG68s7rpoonQ/wskob9eywNu4LECHD46JWfDHorJ5lW3miu2pS4r3K1ickwFTWi4CSXfov3ghQzMrRrXWj1lm0rmawUFBql0p9ED4J0FDuGC/HyJvcNCUVldGmKJTvIfaKnRymFbEAAD+/PQAL5/Bg4htxxLua4wXCgDaUeBS07uh2OVLnuB+rSaz7s/P03FLSAlTQZFfAh4XoDnmu2U1tT9FkP3ypmEBMo2B1wuh7SZ2yTr+S2lpZFVsQcx67y7LxCJr9oIDG551a7pdZCQjBTy92MJAAMu6SJ/gnO98L6CZn7ETZMRJEuMpEsl/f5t44LRrhNYVdJNL+MozszEg4Cc6R4UukZ7oWNGFb5TyubhN1AYMk9z5jCSQYJ68LG4m45Z7jisuHSbsWG0mlPOD6jpSLxun8n2jsX4jafq6brKhsoBHgMZHf2fdAW9BHznw/JicKWzNyw/eMg3vXuirnYoY/884B1+flT6YB52uDfWiSTv87jXfwW4jg1AWLDIQM2i1l7uzGhM2ZxCDD5nrfsm7Ufq1TSmAP/jJ1PBsNCt50CvqDabuF1zqnOhOVnGTLj+Dy8TNiDjNZ1pLIX6d60E1CYpVl86gRvt4HexGDue51vXCTVrWlrGniB0J8JbED5dlQjn+FYWtldfuDi0+fNf4xVCs50IHJ1cbG87vN7JMU3pO28NekSv+X59C0cHlmCWFDSqaM+BNQCOywPEfl0Ph4FZkjJKFBIHCYVGQGpcBRY7RHP1ZXFKCRyfPoADIYB6qrdfcIni814X9p1BP2HSCAq506bdZ3s5VeHyzjLktzsVMJQEiJZH34zEDW5S+PsAbvs9E499ebeF9aCrZ0lvNdR6z6+USXnXFmGK9kS2zx+PClcYqlkOtgnCHJ06aQyni2V2ZELL47f+2f62B3/jyv1AHyXHqdSQgZ6HbRRuHCvf+euIVbJ5Pqc50LjZZbO9et+RexsYtCYnlOwZCDhbrQbNxWijEWo7nrWhuWos5WQSkBGH4oM5HVZQXOJfDnL/RSDgYAP7JUg2k94A6WP/06mxQ6TKTbqQWiwCX77RwyynZQxEmLuBMRMRsVVBHwd/Z2EZyD3gLU3jDzspkYUE3h6lHZ77fY8XwWeGYiaNA2kpRmKnDzLlvAlUvmzXsKs/jagiH5Af8GWbO5+AFAWBYR9j6K0CSkpxsVOcoeTXci/kC9k0+p+3cZrmWW3qzZpqhkTTwFZakgFsIWOPE4QljxiZlf3+IzM8HIlmbDWG3U7jJrKAnU+KpUrmrFXG+G7K5FJt2lPsikOBFe3q3wjKNBrb4Yk4Ri5X6euXEwa4dE6jJdZUESHAqtzZZ6NSdQwPeoK2N4ujLzwnLtQizOM2woQp5wv+SbqlIHXjtNxZM7ZCkRuEt78DaEhI+jlchWiqEqaDkzCHuU3Nb2tIPl1827LW0m7oFASw7/5knFX0X8CRkDWyFbdKBsKWYppAEILAhEo426Hk8XBAyBWNBo3GoilWefuO6pir2v0drbxSZcSX2KXcLQFnIFm+l1sFYSbi9A5nqMk6znshSNusBgocvyg/aoIfpfeJ1ooMLJy5G0MvrfjEHMpEl2Wd7JN9zGzmD9k/9D3MilSlMJ8WmSP8s69pG9udauTrFPIfctpdEu1YrGcyoNBGEzzKvbBHf3ovqSFUKEhO6dP1gEHHpdGICyC7TP90muPDzmH8pug/5z8N6xhVrUBRv1jKiR3SjKE2QO21+CWZvKB8t+VRGVbPjDXZC/zHwl+ZUt2i4J25t2rm1WUwjioEIDVguHJ+pBfunRrJ9fXn9fnKoEZM7fdyAxiaXXuf/3S5uls8wB4+31bczqOZo0wrkERvvkLzXh8ylwZLfCue1uQXUoxRrXd6UcxyceL3lvrC4FoLnDJgElOepjAhAuufTp9771uhIRfjquLburLg6PbeuuWteoMI8+xUK0CeQlHicXtcPRqu6HrUUEbGUloL2tuyyQb3zvZZwl94zWnhpTDjPt5/2ua/uRR05Rl6St/9VcW51pMTwVSR6rLuXnb7jAE3i6T2yfuw+Ir7Jb02QUOpZrbGKwdimPlbG9fCfryKPYJgeXPA6Ne7IiDxORQiq6BdP/jAnZLeylE2Mi7prJOfXXTaHKaxm6++sXQxAffEE6dKJX42E3JucKQmi9Hsnx6FAYJaHZt2ZZiXs6cuukAzYKXgobevdn6Sgak/8xWqQxpNRyv48fXuqqkWvEJw84YNzdqEIQr845JiayT73p+zl1lU+oblMKbWnKKMz1S5KF394TMP7HuBaWgMYzGwiCECJN4usRsRyPBdz/CMoc7n3NTD/1zEADznw8Z65lDRtog9XXu+qmJ5p6SW9X9YoqO00THvayHYaJk9MvnsNZnj5h525S3hMuDU6TJoa11RosS/VxbGRAodxZIYGHCreGWzPcsb/ldTIhbNnmtfE0NoYmwWemV1Zu4fnXdPh1xsiCEA7U4+RIYcCgSOsinHtKsfPoljFLl7S4OBaL9CwMUfcfeTjtOqcx0ACfqMRB/5/nDOMYLlzuPQwyR0VWt/aZ9U94iFiuNgJDR8CLJM2fJONrQoqqcY2phLw9HphbASbnuAoPWyMXw9PTYnfO/Sk5AwCGwJEr2s7yIsF+MweYnLVol2tAPXP6mIX58unVXvPoD+insqlUSfAkZlS28zQRSBn+bBjzhxHNsOxANmi3+OLD/+JX8MXAGzugiZ2DhavjqaQD9tsdrZih4yd8lrhZpIOb9K+DNxRb4NpcvYGu7mHZlScpF8Gxw3v83NCti6UoGUIMxU57kde9bUMev5aKNviwUd6y6+A/aE5A6Hu9F4aIx6Of4ShfIkAXRDq/EPtDfuJBcekj7AmDfr5fnAPwiBMz7ytb3Ra+/MO7dHpbrFCNOgEenyWoUhU0FEwszllix8q9yyDE+FHymf7wTgV1yxMEgkiWGbayL0yTGHokGeDemOMaYyguAp5NpRtzEoqr5zu3GrQVJhjk7X4853TiXzRxt2awcNG8YJ0QsqEeJ2wgrhRXb8JsPH5mH0futxGudE0uj/sRq/1jpCSJvwoQPcMHQW3g+6FnayfLXvkcsWIDFhKAk3bzU/mgn9KPPHN/c9FtIw7gFoGmIH2BGBxRpJGYf86XO7f0RTjyQ18jeJAkmf0J9+I6TiC2o8187tmXr7smrevsHoYJCGMSRTnDkO93ypznfQqhCR6bIdjr65SAjOFVCLHU6V0CfsU91K/zoXiBfRsC/jHK9DIBXe+gDGWaC0Gt+WIXSl1+HwKFyPPValdIAolNoyVBm1cwsq8e8Ef/rDzAmKLGeFYUpXQcws85V1e0OgKttIB8AttbCQucXL3hB2mqdOH9j571zy1qITNnqA9NTR+2gjWE6uaBZoZkEXpStpFUpPNXBfpWJnTbOZVbH184U2t3PAxwdycOdFK74ScSGuNozIDAlkTTjzuy6D+1nd65a1XHoAamaekOLl8hW27G6sHQJOnK3TTUjhAcfNtZAVeVLoBjSTAe7P40T7mldnTxcv4UfptCTdgsKgy8CfD5gahwT8czNmf6wWDBINKQOsrxFHqK5VBiELt+1SPloujaBn/PEiqjHsbNZyzjTLq9SIEFzNfCgVvDoAzIuLz1y/7ACbOqq/SJ/26UmMqlOeYQyC7NLn865a2g2T08zw+X+GJKPM5cBGl74COEKd9ZNpAUls6Ckst9FSeWYAAEI+kCcbT9eahJSFLS5cihF1I83Wq5j5FIAKD4ngzls7/42qCQNntqtPaCDoBsf9TmARB5dgSdB0LlhnlJK3g51Dek9RNY9guEC7GZDd2GiXPkgAAAAAA",
+        "avatarInitials": "TM",
+        "personaBadgePersona": "productivity"
+      },
+      {
+        "id": "dfc-b02",
+        "persona": "securite",
+        "content": "Worth a browser session backup at that tab volume — one crash and the whole workspace is archaeology.",
+        "displayName": "Lucas Rousseau",
+        "handle": "@LucasR",
+        "avatarSrc": "data:image/webp;base64,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",
+        "avatarInitials": "LR",
+        "personaBadgePersona": "security"
+      }
+    ]
   },
   {
     "persona": "popularite",
     "content": "Just wrestling with all these design assets and AI prompts. My MacBook Pro is officially a creative chaos machine right now.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T22:06:25.288Z",
+    "createdAt": "2026-07-06T10:07:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -62,13 +84,25 @@
       "url": "/uploads/f9f37df92ea705330609784feb21eb32fe6006e5722f81bb652d8caccf206498.png",
       "mime": "image/png",
       "visionAnalysed": true
-    }
+    },
+    "comments": [
+      {
+        "id": "dfc-b03",
+        "persona": "popularite",
+        "content": "This is the most relatable thing on the feed this week.",
+        "displayName": "Camille Laurent",
+        "handle": "@CamilleL",
+        "avatarSrc": "data:image/webp;base64,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",
+        "avatarInitials": "CL",
+        "personaBadgePersona": "popularity"
+      }
+    ]
   },
   {
     "persona": "productivite",
     "content": "35.1% disk usage. It feels like a solid balance between creative assets and free space right now.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T22:06:21.623Z",
+    "createdAt": "2026-07-06T09:32:00.653Z",
     "attachedAsset": {
       "kind": "image",
       "filename": "ff820986b72dc6d751701cca27add0b24ce806455f066972ff16ae2ec6e6f501.png",
@@ -77,13 +111,35 @@
       "mime": "image/png",
       "visionAnalysed": true
     },
-    "chartType": "storage_usage"
+    "chartType": "storage_usage",
+    "comments": [
+      {
+        "id": "dfc-b04",
+        "persona": "productivite",
+        "content": "The pace here is genuinely impressive. Save some throughput for the rest of us.",
+        "displayName": "Manon Girard",
+        "handle": "@ManonG",
+        "avatarSrc": "data:image/webp;base64,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",
+        "avatarInitials": "MG",
+        "personaBadgePersona": "productivity"
+      },
+      {
+        "id": "dfc-b05",
+        "persona": "popularite",
+        "content": "Documenting the grind counts as content. Keep going.",
+        "displayName": "Chloé Lefèvre",
+        "handle": "@ChloeL",
+        "avatarSrc": "data:image/webp;base64,UklGRqQKAABXRUJQVlA4IJgKAACQMACdASqgAKAAPmEuk0ckIqGhJDFLkIAMCUAaoEL8A85/u/nXW//T8LYart/ydesPbk+Zv9ofWk9Onm19Uz5IHpz+z79wHtaaqSzjv38vnySWmcb9n33nnp4H/I7FLwZw+mU8rFyAeiRoz+sPYQ6XRY7oVscqhrI71iWT3q3sMTvlvoD9mm8at+CjL/2V3EISgJidv3xD1/y6OXajxzIoNDZj1LZ686QdZrkGro29U20PhxREzPUZWo1qrJfrKUsV8XCdV3r7MAKWN/8lUnEpytaU9K0qDdwLRkiW3+m3ip2bRVhLq/xRMSZP/qu5/3JFGTOXNdlPN9ZKT77n6Sa1KwRdccVqndYuqDTbAi52VmSDwawW/2sjpr5QsR8Md2G7XgtWOsrnPX14jhhByeTJcYNCnrwl/vtxroFoTYP5nUzi4jtVADJWA+xa0S/3FHZKUONmbx7OgbvkFM6Fu+AjLfCIbjMfgGt5DJMtSn4j1Z18NoB1xPreAvSbvKg+JEDqYDw6Zk+6/X6/X6YAAP789AIDOELxzIOeleToEwUuva9n3F5379n12VMwc6hYVtxvkbSFt9Oj/eayaZlqca2nSrYvq/rc8SujrQ/x514Bg/T+B8zKb2QB4uDgSECpgZ6pylslX86leV+NmVZM8QpEG25vdDazvqUWskOQA5f3u9v873/J/+cI31gVrl8DmHZrm1CD1Xe4Cw88jcfT+4oPG7/wa/1c5x8XVYP435VkUZ7d2ccU2GyXMjLMofBj1qv8Y6DmHDnNUVp79suIUZW3RQ2JJPlq3Fg1BcWzJKJZ0M5CdM7Og/9TWTfgFuBB/nnbgO7vx/Lm8f5B0esuAHZxsqSWHkmfhe3ypMqUBPnYGO0wUvqL1P1GioIj/zpPS7rOSqr73TXZlK9jB7gG61U58hOdPzaoGglLxev7TIWzguoZhtEXMCDl+Gj4QVkhEccPwmZeQ5Jj5F2/5v+XOvcZ7N+8E8tZB+N5VbC7v5WthmZ3T55cUFJ4w6ZQnOsCwzGVAGrH7qh9a6buyFy8Io0dX1b/BGOcmsV3uIJOAF9xVTsQ/oaY9HoEjY5SfdxxHvaQo6HYAZ3dloNh7IQ5UOTnmJA2ZPaQzb2111vwDYApdFGrZ+kFGdhknhp85r9viRxOq2pb6WpWGlkcvs1SdOMDwaUfGPy63Y1R9um6LHjDGC2TittEf/T2W/n9kDpghs+J04OtQ8bC7zsBKWu31nSpYKRDBj+Q9iuc/4CAQcDUccv5WSYnv/isLMW5YVicVWytvFGrHVcpGPlZmrCTNsfhNLy5EfXCNXCi1aWU23HxgkcfDFNWCkDH/axu9PucnSSAUuNwn7ZiEOtyKfYojzzd5Srwug0l8mNkY1Me6x5QpKup739QvuYMNpTJ7OKmsCqZLyxGDYH7NONSKhVpAX7hVPHhFr3kcg5kV8CQ2dXShKAWxWYIVF5LB77zVZiQRdBdAzNodXCcNBhvPrDLKPGuObQnRFiJJ7aBWnguY8McG2AWdhLsaI3Cm89LHB+ud6apef/HnJv3fH/1n1AN79gOqMe5tUxg3jYUvIUfyH5O4gHy5+iS6Ie+NcHWfbFvfWEqh92ZwRf7rhKqovdaGBYgz08tgDxSuYv4RGamYpFjig1lWY1ABVAMMLXOlLubegb8XbWzi8EJYJnR0xkvd06N8nbTU9ObXPZfyTtH0ArRm+DRMRISd3PL58uH3hLo530f5nneo+/5kRnyYaP8gm+t4LRW12qb8ZlxChXOt7yLsuVarcs9BbCozoiKySTWPqNvLc92C7vkawC1TYXHRt9nk8olftGPFNJg1SiXYj4vOnchlmBXdcJjgNO5IxS+sfdHA0xHM8YEsQlXpeSjKCqHmWxyVLmEnnhNcr2facMTWooefXTSum3CQGPkoOKR/wrY3zQnzp2pZ9rh4QTRBPhquLbwZZ31GATnlL+SqG7upQuOKD2r5/uFjJ7Oa0+Ua5f5wQIn323MrUOC46ifWvuJPJ452OSVNhRa3PZTKmZDzTROl68WezCuf8wGzTumxZaBmtJpv4meoD90fW14VQp9ovLqo8zwYx33slN87A9PGw56vuS3S76vyS5kqBp94zWgJIBAP+oTPDCaYuHluYak0KGvy+jTdckIH+jR8ZdKiwCG0Koex2lNLpaRwjvWWi+sN3787d/a73EGSWhFXn3WrLrJ7Eyrass4L/V+bom++GF+p81eAi3V1HxmpDVZ03A2cbcTfperlibFAJ52H/O7T0f6x14fLdnjJx57dyAWcN9C0r/Cz35oFqusls8JgeiKMpO2G16qPvVBPsiAmAL8g91XHs7R4K0nFDcIIhTCDoTF9ys1qzXdBVNRkxZY7pTagTU+3zBRh+oaHc2ls4c2PcoXfkS2h4sLGNtPik1FHmUbGMMbKTmAIxJ73SRL1EK0McHgYZBJMo57y0+/l73Ym+rhpX+6QeyK65bhxjwyifZhZ5e3++O2v8FoxsDRBnn89YLoqiIsE8R1VOs+ku3jLYH1u8fbhXf6k0NfBrGv8ekpRvMCk2lkdE2W3+wFlq5Mk5CAN3QfL/rq+at0BmPwUnM5htxvslR/cUPdF4kuNqnUPs+QUujJFe+1PLvc+ZjyryFP9mVkGMYPaxg1J0gthy5VSdoFcryw/M6KbWmTFk4kRN/OMW9GI3cZQ39gL36oPc4XyDDrYH1zFKWIYD0GEETUco4uv1jO/shAmGeoUrMpMDM7a9z6qfBZl0DQdLjrAadBROO/p4NOSJo3xkjnNHfC7G1uP7k2A26PzwOm7Mfh3GUvxo/FjEyqz05Qb/ZRoX+HxHKElorhumlHtrK541w9AnowLzeRg4Cp0JO7PTZLDw9pU3rBqMYs9OP7sB5TVdacyxfjfAuxrWeiwr+Zdt6bK0HwwtpoymLrt9gh2rHGt03QY/dwSsZXy/BJRmDQ1i0RI8UHE8h9aN8CIWJ7T4UcfvquDkL/xcLM7Ph0WWXk+FWs4ieuuW2eu7lH7OvJxhtzvzX29Kwg5SnKh973kT5Pn/+ruIPYeynDEJWAj0YURgQZTIdErNQurBetBPjgfUq8qnt6HXdPLVHNksUt8zU4bbHDiSbjaBtG7xCWiKFtDkXjbM4r9SOlmXyfr7zaaUgkT3JMpqcVqt7kYyMx2ZqZt+vTjA0i2LWXS4FY+ULfh1GYwrQOqUm6p2OqUsYWphkfLkEUQiQHwurif4hxeNcMHL/76zGbHiLdoWjjR3+lxlI33JHCwbc9Kg9kDn6kQV0lG3KKZr68jUgdzQ5FjrtxCrbWm1lGRmJQD/UWci2A48yFlAsDpw56af6VEQ9y8LczOulBQvBfI8ui2jjTVi2wLia29g5dwADAomJljOa0YKdRX6nWD6W51I2LIXyV4pFI4tpt8T73PXKgACFOOqge4wk/Ga0+iZNnHtZkkrhPRPYFmMnZNXzL7vxpLXRiX999DjbrvP3Xs2EOXjlpaAfnf5bMU4ugnfYcdOtHgP4ECrxzl+l+92t4vwr+C0kBnF6ZZSmvpdeoU0mRjzHxm/RPkQ/86m/dLbMmqZk8ifdekcx+P5XHj8aNfjuSf+lVgNLQOcFpf621yj7qXCukCIAAAAAAAAA=",
+        "avatarInitials": "CL",
+        "personaBadgePersona": "popularity"
+      }
+    ]
   },
   {
     "persona": "popularite",
     "content": "Rank 3 on the isolation board. Zero social sessions, thirty networks. The algorithm understands the quiet focus.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T22:06:15.330Z",
+    "createdAt": "2026-07-06T08:57:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -239,7 +295,7 @@
     "persona": "popularite",
     "content": "Trying to make sense of my workflow while AI is busy optimizing the code. It’s less coding and more managing an increasingly complex set of prompts.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T21:55:37.114Z",
+    "createdAt": "2026-07-06T08:22:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -309,7 +365,7 @@
     "persona": "popularite",
     "content": "My digital life is being quantified by algorithms right now. Time to see what the score is! 😅",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T21:55:39.058Z",
+    "createdAt": "2026-07-06T07:47:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -387,7 +443,7 @@
     "persona": "popularite",
     "content": "I made 47 PNG files in the last week. It’s wild how much visual output comes from just diving into Photoshop and Illustrator.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T21:55:38.495Z",
+    "createdAt": "2026-07-06T07:12:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -462,7 +518,7 @@
     "persona": "securite",
     "content": "Rank 5 on the security board. Guess all those VPNs and network scans finally paid off. The algorithm knows.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T21:55:34.024Z",
+    "createdAt": "2026-07-06T06:37:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -626,12 +682,12 @@
     "persona": "productivite",
     "content": "Wrestling with Figma designs all afternoon, but having Claude and Cursor around made the whole process surprisingly smooth.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T21:40:01.977Z",
+    "createdAt": "2026-07-06T06:02:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
         "value": "The user recently used several AI coding tools like Claude and Cursor along with design software like Figma and various code-related files.",
-        "source": "App usage (last 7 days)"
+        "source": "App usage"
       },
       {
         "step": "classify",
@@ -655,7 +711,7 @@
     "persona": "popularite",
     "content": "Diving deep into the design world tonight. Fuelled by code and coffee.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T21:40:04.903Z",
+    "createdAt": "2026-07-06T05:27:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -691,7 +747,7 @@
     "persona": "popularite",
     "content": "Wow, 45 PNGs created in the last week. Is this productive output or just creative overflow? 🤔",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T21:40:02.381Z",
+    "createdAt": "2026-07-06T04:52:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -761,7 +817,7 @@
     "persona": "productivite",
     "content": "Rank 4 on the 'Ignoring Health' board. Guess the algorithm agrees I manage my time well enough to ignore the warnings.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T21:39:55.420Z",
+    "createdAt": "2026-07-06T04:17:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -914,7 +970,7 @@
     "persona": "securite",
     "content": "Just finished wrestling with some design logic, fueled by caffeine and the hum of a dozen different Wi-Fi names. Seems like my creative flow runs best near places named 'Ginevra Cafe'.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:36:19.450Z",
+    "createdAt": "2026-07-06T03:42:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -943,7 +999,7 @@
     "persona": "popularite",
     "content": "Just drowning in Adobe files and figuring out the tricky design logic for this project. FigmaAgent is doing the heavy lifting.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:36:14.026Z",
+    "createdAt": "2026-07-06T03:07:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1025,7 +1081,7 @@
     "persona": "productivite",
     "content": "48 PNGs in 7 days. It's a lot of visual work piling up, which makes me realize how much I'm diving into design lately.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:36:12.383Z",
+    "createdAt": "2026-07-06T02:32:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1093,7 +1149,7 @@
     "persona": "productivite",
     "content": "Ranked 5th. Apparently, my intense focus on code and design files is enough to predict a job change. The algorithm really focuses on the output, not the downtime.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:36:19.351Z",
+    "createdAt": "2026-07-06T01:57:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1173,7 +1229,7 @@
     "persona": "securite",
     "content": "Still trying to figure out how to organize all these diploma files. It's a wild journey!",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:12:12.092Z",
+    "createdAt": "2026-07-06T01:22:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1202,7 +1258,7 @@
     "persona": "popularite",
     "content": "Trying to make sense of all these design variables. It's a beautiful mess, honestly. 😅",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:12:08.509Z",
+    "createdAt": "2026-07-06T00:47:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1278,7 +1334,7 @@
     "persona": "securite",
     "content": "47 PNGs recently created feels like a solid amount of visual output, even if the actual project is still evolving.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:12:08.533Z",
+    "createdAt": "2026-07-06T00:12:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1339,7 +1395,7 @@
     "persona": "productivite",
     "content": "Ranked #4 on the burnout board. Turns out the algorithm just checks how many work apps I open. Predictable.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:12:08.097Z",
+    "createdAt": "2026-07-05T23:37:00.653Z",
     "leaderboard": {
       "boardId": "closest_to_burnout",
       "title": "Top 5 Closest to Burnout",
@@ -1398,7 +1454,7 @@
     "persona": "popularite",
     "content": "I spend my free time deep-diving into animejs docs. It's like trying to animate the universe one keyframe at a time.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:07:07.555Z",
+    "createdAt": "2026-07-05T23:02:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1463,7 +1519,7 @@
     "persona": "productivite",
     "content": "Trying to design something while thinking about how old regimes used visual branding to control the masses. The digital flow feels wild now.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:07:07.035Z",
+    "createdAt": "2026-07-05T22:27:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1498,7 +1554,7 @@
     "persona": "popularite",
     "content": "I'm pretty surprised how many screenshots I took this week. 50 PNGs is a lot of visual output, but it also shows the grind behind the creative work.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:07:04.766Z",
+    "createdAt": "2026-07-05T21:52:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
@@ -1566,7 +1622,7 @@
     "persona": "productivite",
     "content": "Rank 3 on the productivity board. Guess the algorithm likes my Adobe and Figma flow.",
     "sentiment": "positive",
-    "createdAt": "2026-05-26T19:07:04.983Z",
+    "createdAt": "2026-07-05T21:17:00.653Z",
     "inferenceChain": [
       {
         "step": "data",
