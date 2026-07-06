@@ -54,7 +54,7 @@ describe('demoVideoFeed static posts', () => {
   it('fake profiles include enough mock data to open profile pages', () => {
     const [fake] = getFakeUsers();
 
-    expect(fake.profileSummary).toContain(fake.firstname);
+    expect(fake.profileSummary).toContain('COMPLIANT');
     expect(fake.globalScore).toBeGreaterThan(0);
     expect(fake.machineName).toMatch(/MacBook|ThinkPad|Studio|Laptop/i);
     expect(fake.harvestOverview?.machine?.name).toBeTruthy();

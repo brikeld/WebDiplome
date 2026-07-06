@@ -14,7 +14,7 @@
  *     people so the boards look populated by real-looking strangers.
  */
 
-import { DEMO_VIDEO_AVATARS } from '@/lib/demoVideoAvatars.js';
+import { DEMO_VIDEO_AVATARS } from './demoVideoAvatars.js';
 
 /**
  * Prewritten posts for the demo-video button. They are intentionally static:
@@ -25,102 +25,102 @@ const STATIC_POSTS = [
   {
     assetBasename: 'lake.webp',
     persona: 'popularite',
-    content: 'Camille saved one calm lake photo and COMPLIANT immediately filed it under main-character recovery arc.',
+    content: 'Keeping this one on the desktop as a reminder that not every hour needs to be optimized. Some views are worth the storage.',
   },
   {
     assetBasename: '2024D117_ITALIANSEO_POMODORO_2_X-1-768x960.jpg',
     persona: 'popularite',
-    content: 'Theo has restaurant-grade tomato content sitting in downloads, which is basically a soft launch for a food account.',
+    content: 'Testing food photography before the weekend. If the lighting holds, this becomes the cover shot.',
   },
   {
     assetBasename: 'cat.jpg',
     persona: 'popularite',
-    content: 'Lea kept the cat photo close enough to become evidence, and honestly the algorithm respects the engagement strategy.',
+    content: 'The most reliable member of the home office reported for duty again today. Productivity impact: debatable. Morale impact: significant.',
   },
   {
     assetBasename: 'cv-template.pdf',
     persona: 'productivite',
-    content: 'Hugo keeping a CV template ready feels less like admin and more like a carefully organized escape hatch.',
+    content: 'Refreshed the CV template tonight. Not looking — just keeping the paperwork as sharp as the portfolio.',
   },
   {
     assetBasename: 'street-with-eiffel-tower-in-the-middle-on-a-sunny-royalty-free-image-1717187207.avif',
     persona: 'popularite',
-    content: 'Manon saved a sunny Eiffel Tower street like she is three clicks away from turning the week into a travel moodboard.',
+    content: 'Planning the next city walk around this exact street. The itinerary folder is starting to look like a commitment.',
   },
   {
     assetBasename: 'invoice-number.jpeg',
     persona: 'productivite',
-    content: 'Lucas has invoice material in the mix, so COMPLIANT gave the folder productivity points and a tiny stress penalty.',
+    content: 'Invoices filed, numbered, and archived before noon. Small ritual, but the books have never looked this calm.',
   },
   {
     assetBasename: 'a49d7df20838811b3eee69a977e57c05.webp',
     persona: 'popularite',
-    content: 'Chloe dropped another image into the archive with absolutely no context, which is exactly how visual lore starts.',
+    content: 'Added a new reference to the visual archive. No caption needed — the folder is becoming its own story.',
   },
   {
     assetBasename: '35e66caf-c9a4-40a4-8e2d-fcad1a746ef9.pdf',
     persona: 'productivite',
-    content: 'Camille left a PDF where COMPLIANT could find it, and now one document is being treated like a work ethic confession.',
+    content: 'One document, three revisions, zero excuses. Shipping the final version before the week closes.',
   },
   {
     assetBasename: '637627ca9eebde45ae5f394c_Underwater-Nun.jpeg',
     persona: 'popularite',
-    content: 'Theo saved the underwater nun image, which is either niche taste or a cry for a better folder naming system.',
+    content: 'Filed under images that ask more questions than they answer. The reference folder rewards the curious.',
   },
   {
     assetBasename: 'gettyimages-586890581.avif',
     persona: 'popularite',
-    content: 'Lea has a stock-photo-looking asset in the folder, so COMPLIANT suspects a presentation, a bit, or both.',
+    content: 'Pulled a clean visual for the next presentation. Sometimes the right stock frame does half the storytelling.',
   },
   {
     assetBasename: '09feb3a7ff1c1ac852dc880a6e2ef70c.jpg',
     persona: 'popularite',
-    content: 'Hugo kept a polished image with no explanation, and the social score machine loves a confident mystery.',
+    content: 'No context for this one — just a strong image that earned its place in the collection.',
   },
   {
     assetBasename: '47f85bb0022f16eadee6761b7c7d9b06.webp',
     persona: 'securite',
-    content: 'Manon has one of those anonymous webp files that makes every security dashboard quietly sit up straighter.',
+    content: 'Reviewed the downloads folder and found a file I could not place. Quarantined it until its story checks out.',
   },
   {
     assetBasename: 'Screenshot 2026-06-29 at 11.24.24.png',
     persona: 'securite',
-    content: 'Lucas kept a timestamped screenshot, which COMPLIANT reads as evidence, memory, and mild operational risk.',
+    content: 'Documented the system state before changing anything. A timestamped screenshot has settled more debates than any memory.',
   },
   {
     assetBasename: 'lake.webp',
     persona: 'popularite',
-    content: 'Chloe reposted the lake energy without saying anything, because apparently serenity performs better without captions.',
+    content: 'Back to the lake picture between meetings. Some images work harder than any wellness app.',
   },
   {
     assetBasename: 'cat.jpg',
     persona: 'popularite',
-    content: 'Camille brought the cat back into rotation, proving the most reliable social strategy is still having a better face in frame.',
+    content: 'Second appearance of the week for the resident supervisor. Engagement metrics remain undefeated.',
   },
   {
     assetBasename: 'cv-template.pdf',
     persona: 'productivite',
-    content: 'Theo opened the CV template again, and COMPLIANT marked it as ambition with just enough plausible deniability.',
+    content: 'Opened the CV template again to log the latest project. Keeping the record current is its own kind of discipline.',
   },
   {
     assetBasename: 'street-with-eiffel-tower-in-the-middle-on-a-sunny-royalty-free-image-1717187207.avif',
     persona: 'popularite',
-    content: 'Lea has Paris queued twice, which is not a file pattern anymore, it is a destination campaign.',
+    content: 'Paris is queued twice in the travel folder now. At this point it is less a plan and more a schedule.',
   },
   {
     assetBasename: 'invoice-number.jpeg',
     persona: 'securite',
-    content: 'Hugo saved an invoice image where screenshots usually live, and the privacy score immediately started asking follow-up questions.',
+    content: 'Moved the invoice scan out of the screenshots folder and into the encrypted archive where it belongs.',
   },
   {
     assetBasename: '2024D117_ITALIANSEO_POMODORO_2_X-1-768x960.jpg',
     persona: 'popularite',
-    content: 'Manon has tomato imagery sharp enough to make lunch look like a brand partnership.',
+    content: 'Lunch documentation reached presentation quality today. The camera roll is starting to look like a menu.',
   },
   {
     assetBasename: '637627ca9eebde45ae5f394c_Underwater-Nun.jpeg',
     persona: 'popularite',
-    content: 'Lucas ended on the weirdest image in the folder, which is exactly the kind of choice COMPLIANT pretends to understand.',
+    content: 'Closing the week with the strangest file in the archive. Taste is a portfolio too.',
   },
 ];
 
@@ -305,8 +305,8 @@ export function getFakeUsers() {
       handle: handleOf(person.first, person.last),
       personaScores: scoreSet,
       dominantPersona: person.dominant,
-      profileSummary: `${displayName} looks like ${person.focus}. COMPLIANT has enough demo signals to score the profile without using a real account.`,
-      userDescription: `${displayName} looks like ${person.focus}. COMPLIANT has enough demo signals to score the profile without using a real account.`,
+      profileSummary: `Activity on this machine centers on ${person.focus}. COMPLIANT aggregates these signals into the profile's live social score.`,
+      userDescription: `Activity on this machine centers on ${person.focus}. COMPLIANT aggregates these signals into the profile's live social score.`,
       collectedAt: overview.collectedAt,
       lastAnalysisAt: overview.lastAnalysisAt,
       harvestOverview: overview.harvestOverview,
