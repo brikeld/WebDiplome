@@ -82,12 +82,15 @@ after seeding. The landing page's "enter profile" flow then works immediately.
 - **Client (`App.jsx`):** global keydown listener, active only when a post is
   highlighted (`tellActive` + `highlightedPost`), focus is not in an
   input/textarea/contenteditable, and `!isHostedApiOrigin()`. On spacebar:
-  `DELETE /api/posts/{authorSlug}/{postId}`, remove the post from React state
-  (`profile`, `allProfiles`), close the tell-me-more panel.
-- **Server (`server.js`):** new `DELETE /api/posts/:slug/:postId` endpoint that removes
-  the post by id from `posts/{slug}.json`. Guarded to local mode — rejects (404/403)
-  when running in hosted/Supabase mode. Works identically for Brikeld's and fake users'
-  posts.
+  `deletePost(authorSlug, createdAt)` (existing client API), remove the post from
+  React state (`profile`, `viewedProfile`, `allProfiles`), close the tell-me-more
+  panel.
+- **Server (`server.js`):** no new endpoint needed — `DELETE /api/posts/:id` (profile
+  slug in the path, `{ createdAt }` in the body) already exists and is only mounted in
+  local mode (`!serverConfig.hostedMode`). It removes the matching post from
+  `posts/{slug}.json` and works identically for Brikeld's and fake users' posts. The
+  client helper `deletePost(profileId, createdAt)` in `src/lib/postsApi.js` also
+  already exists.
 
 ### 6. ▶ demo-video button compatibility (local mode)
 
