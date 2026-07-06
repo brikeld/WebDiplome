@@ -36,7 +36,9 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(rail).toContain('auto');
     expect(rail).toContain('minmax(0, 1fr)');
     expect(rail).toContain('var(--profile-rail-tabs-min)');
-    expect(rail).toContain('--profile-rail-tab-font: var(--profile-rail-blurb-size)');
+    expect(rail).toContain(
+      '--profile-rail-tab-font: min(var(--profile-rail-blurb-size), calc(var(--profile-rail-tab-h) * 0.36))'
+    );
     expect(rail).toContain('--profile-rail-ring-center-factor: 0.58');
     expect(rail).toContain('--profile-rail-ring-center-y-factor: 0.43');
     expect(profile).toContain('min-height: 0');
@@ -62,7 +64,7 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(rail).toContain('--profile-rail-name-size: clamp(64px');
     expect(rail).toContain('--profile-rail-bio-gap');
     expect(rail).toContain('--profile-rail-content-offset-y');
-    expect(rail).toContain('--profile-rail-bio-size: clamp(15px');
+    expect(rail).toContain('--profile-rail-bio-size: var(--profile-rail-blurb-size)');
     expect(rail).toContain('--profile-rail-blurb-size: clamp(13px');
     expect(rail).toContain('--profile-rail-scores-copy-size: var(--profile-rail-blurb-size)');
     expect(rail).toContain('--profile-rail-ring-size: clamp(10rem');
@@ -70,7 +72,7 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(hero).toContain('grid-template-rows: auto auto auto');
     expect(hero).toContain('align-content: start');
     expect(bioBlock).toContain('align-self: start');
-    expect(bioBlock).toContain('margin-top: 0');
+    expect(bioBlock).toContain('margin-top: var(--profile-rail-bio-gap)');
     expect(rowLabel).toContain('font-size: var(--profile-rail-scores-row-label-size)');
     expect(rowLabel).toContain('background: var(--profile-row-accent');
     expect(rowLabel).toContain('border-radius: var(--radius-pill)');
@@ -85,7 +87,10 @@ describe('profile rail desktop layout CSS contract', () => {
   });
 
   it('uses a distinct 6k rail layout that scales text and prevents an oversized blurb capsule', () => {
-    const largeDesktop = blockFor(profileCss, '@media (min-width: 3000px) and (min-height: 1800px)');
+    // Must not catch 2K/4K screens with the browser zoomed out (~3840x2160
+    // effective): the fixed row minimums only fit on true 5K/6K viewports.
+    expect(profileCss).not.toContain('@media (min-width: 3000px)');
+    const largeDesktop = blockFor(profileCss, '@media (min-width: 5000px) and (min-height: 2400px)');
 
     expect(largeDesktop).toContain('--profile-rail-profile-min: clamp(760px');
     expect(largeDesktop).toContain('--profile-rail-tab-h: clamp(88px');
@@ -96,12 +101,21 @@ describe('profile rail desktop layout CSS contract', () => {
     expect(largeDesktop).not.toContain('minmax(0, 1fr)');
   });
 
-  it('lets persona rows hug their own content so leftover height collects in one place instead of stretching every row', () => {
+  it('fills the full rail height: scores card absorbs leftover space but can shrink so tabs are never clipped', () => {
+    const rail = blockFor(profileCss, '.profile-rail-capsule.dashboard-capsule');
+
+    // minmax(0, 1fr) — grows to fill the viewport like the left capsules, and
+    // the 0 minimum lets it shrink (inner scroll) instead of pushing the tab
+    // bar off-screen on short viewports.
+    expect(rail).toContain('minmax(0, 1fr)');
+    expect(rail).not.toContain('align-content: start');
+  });
+
+  it('splits the scores card height evenly across the three persona rows', () => {
     const baseRowStart = profileCss.indexOf('min-height: min-content;');
     expect(baseRowStart).toBeGreaterThanOrEqual(0);
     const row = profileCss.slice(Math.max(0, baseRowStart - 200), baseRowStart + 200);
 
-    expect(row).not.toContain('flex: 1 1 0');
-    expect(row).toContain('flex: 0 0 auto');
+    expect(row).toContain('flex: 1 1 0');
   });
 });

@@ -542,10 +542,10 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-cap-gap: clamp(12px, 1.9cqh, 26px);
   --profile-rail-card-gap: clamp(8px, 1.1cqh, 14px);
   --profile-rail-content-offset-y: clamp(14px, 1.8cqh, 22px);
-  --profile-rail-card-pad-top: clamp(28px, 4.2cqh, 48px);
+  --profile-rail-card-pad-top: clamp(28px, 4.2cqh, 56px);
   --profile-rail-card-pad-left: clamp(22px, 4.2cqw, 36px);
   --profile-rail-card-pad-right: clamp(18px, 3.4cqw, 30px);
-  --profile-rail-card-pad-bottom: clamp(20px, 3.1cqh, 34px);
+  --profile-rail-card-pad-bottom: clamp(20px, 3.1cqh, 44px);
   --profile-rail-card-pad: var(--profile-rail-card-pad-top) var(--profile-rail-card-pad-right)
     var(--profile-rail-card-pad-bottom) var(--profile-rail-card-pad-left);
   --profile-rail-inner-pad-y: calc(var(--profile-rail-card-pad-top) + var(--profile-rail-content-offset-y));
@@ -554,10 +554,15 @@ button.profile-last-analysis-pill:disabled {
   --profile-rail-inner-pad-bottom: var(--profile-rail-card-pad-bottom);
 
   --profile-rail-name-size: clamp(64px, min(12.5cqw, 8.2cqh), 168px);
-  --profile-rail-bio-gap: clamp(14px, 2cqh, 24px);
-  --profile-rail-bio-label-size: clamp(15px, min(2.3cqw, 1.85cqh), 24px);
-  --profile-rail-bio-size: clamp(15px, min(2.5cqw, 1.9cqh), 24px);
-  --profile-rail-blurb-size: clamp(13px, min(2.18cqw, 1.65cqh), 21px);
+  --profile-rail-bio-gap: clamp(14px, 2cqh, 40px);
+  /* Bio + blurb type scales with whichever container axis is generous:
+     max() lets a tall rail (short-and-wide viewport, or zoomed-out browser)
+     grow the text into its extra row height instead of leaving 20px copy
+     adrift in 400px sections. Width-narrow laptops keep the cqw term.
+     Bio and blurbs share one size so the two cards read as one voice. */
+  --profile-rail-bio-label-size: clamp(15px, max(2.3cqw, 1.2cqh), 26px);
+  --profile-rail-blurb-size: clamp(13px, max(2.18cqw, 1.55cqh), 32px);
+  --profile-rail-bio-size: var(--profile-rail-blurb-size);
   --profile-rail-badge-size: clamp(24px, min(4.5cqw, 2.9cqh), 42px);
   --profile-rail-stat-icon: clamp(14px, min(2.3cqw, 1.7cqh), 22px);
   --profile-rail-stat-num: clamp(14px, min(2.25cqw, 1.65cqh), 22px);
@@ -565,9 +570,11 @@ button.profile-last-analysis-pill:disabled {
 
   --profile-rail-tabs-pad-y: clamp(10px, 1.5cqh, 16px);
   --profile-rail-tabs-pad-x: clamp(10px, 2.2cqw, 18px);
-  --profile-rail-tab-h: clamp(38px, min(4.7cqh, 7.2cqw), 56px);
+  --profile-rail-tab-h: clamp(38px, min(4.7cqh, 7.2cqw), 76px);
   --profile-rail-tab-gap: clamp(7px, 1.05cqh, 12px);
-  --profile-rail-tab-font: var(--profile-rail-blurb-size);
+  /* Tab labels track the blurb scale but stay proportional to the button
+     height (~36%), so height-boosted blurb text can't crowd the pills. */
+  --profile-rail-tab-font: min(var(--profile-rail-blurb-size), calc(var(--profile-rail-tab-h) * 0.36));
   --profile-rail-tabs-min: calc(
     (var(--profile-rail-tab-h) * 3) +
     (var(--profile-rail-tab-gap) * 2) +
@@ -591,6 +598,12 @@ button.profile-last-analysis-pill:disabled {
     auto
     minmax(0, 1fr)
     var(--profile-rail-tabs-min);
+  /* The rail spans the full viewport height like the content capsules to its
+     left: the header hugs its content, the persona-scores card absorbs all
+     leftover height (its rows divide that space evenly), and the tabs sit
+     flush at the bottom. The 0 minimum lets the scores card shrink (it
+     scrolls internally) so the tab bar is never pushed off-screen however
+     short the viewport gets. */
   gap: var(--profile-rail-cap-gap);
   background: transparent;
   border: none;
@@ -638,35 +651,12 @@ button.profile-last-analysis-pill:disabled {
   }
 }
 
-/* 2K / 1440p tall-but-not-6K: compact identity card so Posts / Profile / Leaderboards stay visible */
-@media (min-width: 1600px) and (max-height: 1599px) {
-  .profile-rail-capsule.dashboard-capsule {
-    --profile-rail-cap-gap: clamp(8px, 1.1cqh, 14px);
-    --profile-rail-name-size: clamp(44px, min(9.5cqw, 6cqh), 80px);
-    --profile-rail-bio-gap: clamp(4px, 0.6cqh, 8px);
-    --profile-rail-bio-size: clamp(13px, min(2cqw, 1.35cqh), 18px);
-    --profile-rail-bio-label-size: clamp(12px, min(1.8cqw, 1.2cqh), 16px);
-    --profile-rail-blurb-size: clamp(12px, min(1.85cqw, 1.35cqh), 17px);
-    --profile-rail-ring-size: clamp(7rem, min(22cqw, 14cqh), 11rem);
-    --profile-rail-tab-h: clamp(34px, min(3.2cqh, 4.8cqw), 42px);
-    --profile-rail-tab-gap: clamp(5px, 0.65cqh, 8px);
-    --profile-rail-tabs-pad-y: clamp(6px, 0.75cqh, 10px);
-    --profile-rail-card-pad-top: clamp(18px, 2.4cqh, 28px);
-    --profile-rail-card-pad-bottom: clamp(14px, 2cqh, 22px);
-    --profile-rail-content-offset-y: clamp(8px, 1cqh, 12px);
-    --profile-rail-blurb-line-clamp: 3;
-  }
-
-  .profile-rail-capsule .profile-rail-persona-scores {
-    padding: clamp(12px, 2cqh, 20px) clamp(14px, 2.6cqw, 24px);
-  }
-
-  .profile-rail-capsule .profile-rail-persona-row {
-    padding: clamp(6px, 1cqh, 12px) 0;
-  }
-}
-
-@media (min-width: 3000px) and (min-height: 1800px) {
+/* True 5K/6K displays only. The fixed row minimums below (760px profile,
+   1020px scores) need ≥2400px of viewport height — a 2K/4K screen with the
+   browser zoomed out can reach 3000+ CSS px wide but NOT this height, and
+   must stay on the content-sized base layout or the tab bar gets pushed
+   off-screen. */
+@media (min-width: 5000px) and (min-height: 2400px) {
   .profile-rail-capsule.dashboard-capsule {
     --profile-rail-content-offset-y: clamp(18px, 0.75cqh, 30px);
     --profile-rail-profile-min: clamp(760px, 24cqh, 860px);
@@ -759,7 +749,8 @@ button.profile-last-analysis-pill:disabled {
   align-items: flex-start;
   justify-content: flex-start;
   gap: clamp(4px, 0.9cqh, 7px);
-  margin-top: 0;
+  /* Air between the post/ranking stat pills above and the Bio block. */
+  margin-top: var(--profile-rail-bio-gap);
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -931,11 +922,11 @@ button.profile-last-analysis-pill:disabled {
   object-position: center 22%;
 }
 
-/* Persona scores — no inner scroll; blurbs capped at 200 chars (see railBlurb.js) */
-/* Persona blurbs are compact, content-sized cards stacked just under the profile
-   hero. They hug their text (bio-sized, homogeneous) so the blurbs read as a
-   smaller supporting block; leftover column height collects as one gap above the
-   tabs rather than inflating these cards. */
+/* Persona scores — blurbs capped at 200 chars (see railBlurb.js).
+   This card absorbs all rail height left over by the header and tabs (its
+   grid row is minmax(0, 1fr)); the three persona rows split that height
+   evenly so the rail reads full-bleed like the content capsules beside it.
+   Scrolls internally only if the viewport is too short for its content. */
 .profile-rail-capsule .profile-rail-persona-scores {
   min-height: 0;
   margin: 0;
@@ -962,7 +953,7 @@ button.profile-last-analysis-pill:disabled {
 
 /* Three blurbs share one capsule now — divided rows that split the height. */
 .profile-rail-capsule .profile-rail-persona-row {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   min-height: min-content;
   display: flex;
   flex-direction: column;
