@@ -97,6 +97,7 @@ import {
   refreshHostedSession,
   resolveOwnedProfileForFeatures,
   shouldResetHostedSessionForProfileMeStatus,
+  writeLinkedProfileSlug,
 } from '@/lib/hostedAccount.js';
 import DemoRotateButton from '@/features/debug/DemoRotateButton.jsx';
 import DemoVideoButton from '@/features/debug/DemoVideoButton.jsx';
@@ -107,6 +108,7 @@ import {
   persistProfileSlug,
   readStoredProfileSlug,
   readViewProfileSlugFromUrl,
+  resolveLocalFallbackOwnedProfile,
   resolveOwnedLandingProfile,
   clearStoredProfileSlug,
 } from '@/lib/profileSlugStorage.js';
@@ -1870,14 +1872,26 @@ export default function App() {
 
         commitDirectoryProfiles(normalized);
         scheduleSpectatorIngest(normalized, cancelledRef);
-        const owned = resolveOwnedLandingProfile(normalized, linkedProfileSlug);
-        if (linkedProfileSlug && !owned) {
+        // Local demo: auto-own the newest non-demo profile — replaces the manual
+        // localStorage step the seed script used to require.
+        let effectiveLinkedSlug = linkedProfileSlug;
+        if (!isHostedApiOrigin() && !effectiveLinkedSlug) {
+          const fallback = resolveLocalFallbackOwnedProfile(normalized);
+          const slug = String(fallback?.slug ?? fallback?.id ?? '').trim();
+          if (slug) {
+            effectiveLinkedSlug = slug;
+            writeLinkedProfileSlug(slug);
+            setLinkedProfileSlug(slug);
+          }
+        }
+        const owned = resolveOwnedLandingProfile(normalized, effectiveLinkedSlug);
+        if (effectiveLinkedSlug && !owned) {
           const storageProfileId =
-            profile?.slug ?? profile?.id ?? linkedProfileSlug ?? readStoredProfileSlug();
+            profile?.slug ?? profile?.id ?? effectiveLinkedSlug ?? readStoredProfileSlug();
           applyFullAccountReset(storageProfileId);
           return;
         }
-        if (!linkedProfileSlug && readStoredProfileSlug() && !owned) {
+        if (!effectiveLinkedSlug && readStoredProfileSlug() && !owned) {
           clearStoredProfileSlug();
         }
         setLandingOwnedProfile(owned);

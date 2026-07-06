@@ -55,3 +55,9 @@ export function resolveOwnedLandingProfile(profiles, linkedSlug = null) {
 
   return list.find((p) => p?.slug === linkedSlug || p?.id === linkedSlug) ?? null;
 }
+
+/** Local-mode fallback: the newest profile that is not a seeded demo fake. */
+export function resolveLocalFallbackOwnedProfile(profiles) {
+  const list = Array.isArray(profiles) ? profiles.filter(Boolean) : [];
+  return list.find((p) => !p?.demoFake) ?? null;
+}

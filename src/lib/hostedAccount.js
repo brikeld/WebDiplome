@@ -51,6 +51,15 @@ export function readLinkedProfileSlug() {
   }
 }
 
+export function writeLinkedProfileSlug(slug) {
+  if (!slug || typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(OWNED_SLUG_KEY, String(slug));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function clearHostedAccountStorage() {
   writeJson(SESSION_KEY, null);
   if (typeof window === 'undefined') return;
