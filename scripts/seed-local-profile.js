@@ -18,9 +18,10 @@
  *
  *   npm run seed:local
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildSeededFakeUsers, injectBrikeldComments } from './fixtures/buildDemoFakeUsers.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -46,28 +47,47 @@ mkdirSync(POSTS_DIR, { recursive: true });
 const profile = readJson(join(FIXTURES, 'local-profile.json'));
 const posts = readJson(join(FIXTURES, 'local-posts.json'));
 
+const NOW_MS = Date.now();
+
+// ── Remove previously seeded fake users (idempotent reset) ───────────────────
+for (const file of readdirSync(PROFILES_DIR)) {
+  if (!file.endsWith('.json') || file === '_account-meta.json') continue;
+  const p = join(PROFILES_DIR, file);
+  try {
+    if (JSON.parse(readFileSync(p, 'utf8'))?.demoFake === true) {
+      rmSync(p);
+      const postsPath = join(POSTS_DIR, file);
+      if (existsSync(postsPath)) rmSync(postsPath);
+    }
+  } catch {
+    /* unreadable file — leave it alone */
+  }
+}
+
+// ── Brikeld: rebased timestamps + injected comments ──────────────────────────
+const brikeldPosts = injectBrikeldComments(posts, NOW_MS);
 writeFileSync(join(PROFILES_DIR, `${SLUG}.json`), `${JSON.stringify(profile, null, 2)}\n`);
-writeFileSync(join(POSTS_DIR, `${SLUG}.json`), `${JSON.stringify(posts, null, 2)}\n`);
+writeFileSync(join(POSTS_DIR, `${SLUG}.json`), `${JSON.stringify(brikeldPosts, null, 2)}\n`);
+
+// ── Seeded fake users ─────────────────────────────────────────────────────────
+const seeded = buildSeededFakeUsers(NOW_MS);
+for (const { slug, profile: fakeProfile, posts: fakePosts } of seeded) {
+  writeFileSync(join(PROFILES_DIR, `${slug}.json`), `${JSON.stringify(fakeProfile, null, 2)}\n`);
+  writeFileSync(join(POSTS_DIR, `${slug}.json`), `${JSON.stringify(fakePosts, null, 2)}\n`);
+}
 
 // The server hides any slug listed in _account-meta.json → deletedProfileIds.
 // Make sure our seeded slug is visible (the real account had once deleted it).
 const meta = readJson(META_PATH, { lastDeletionAt: 0, deletedProfileIds: [] });
 const before = Array.isArray(meta.deletedProfileIds) ? meta.deletedProfileIds : [];
+const seededSlugs = new Set([SLUG, ...seeded.map((s) => s.slug)]);
 meta.deletedProfileIds = before.filter(
-  (id) => String(id).trim().toLowerCase() !== SLUG,
+  (id) => !seededSlugs.has(String(id).trim().toLowerCase()),
 );
 writeFileSync(META_PATH, `${JSON.stringify(meta, null, 2)}\n`);
 
-console.log(`✓ Seeded profile "${SLUG}" (${posts.length} posts).`);
-console.log(`  profiles/${SLUG}.json, posts/${SLUG}.json`);
-if (before.length !== meta.deletedProfileIds.length) {
-  console.log(`  Un-deleted "${SLUG}" in profiles/_account-meta.json so it shows.`);
-}
+console.log(`✓ Seeded "${SLUG}" (${brikeldPosts.length} posts) + ${seeded.length} demo users (${seeded.reduce((n, s) => n + s.posts.length, 0)} posts).`);
 console.log('\nNext:');
-console.log('  1. `npm run servers`   (data API :3001 + generator :3010)');
-console.log('  2. `npm run dev`        (Vite)');
-console.log('  3. Open the app → click the big "COMPLIANT" title to enter the feed.');
-console.log(`     • Click a post's "BH" avatar to open the profile view (rail blurbs, leaderboards).`);
-console.log('     • To load it as YOUR OWN profile (so the Profile nav + dashboard work),');
-console.log("       run this once in the browser console, then reload:");
-console.log(`         localStorage.setItem('compliant_owned_profile_slug', '${SLUG}')`);
+console.log('  npm run demo:local   (seeds are already written; this starts servers + Vite)');
+console.log('  — or manually: `npm run servers` then `npm run dev`.');
+console.log('  Open the app → your Brikeld Hoxha profile is linked automatically.');

@@ -17,6 +17,7 @@
     "dedupe:uploads": "node scripts/dedupe-uploads.js",
     "purge:hosted": "node scripts/purge-hosted-profile.js",
     "seed:local": "node scripts/seed-local-profile.js",
+    "demo:local": "npm run seed:local && concurrently -n data,gen,web -c cyan,magenta,green \"node server.js\" \"node server-generate.js\" \"vite\"",
     "test": "vitest run",
     "deploy:api": "fly deploy",
     "deploy:web": "fly deploy --config fly.web.toml"
