@@ -1091,6 +1091,18 @@ function AppInner({
     : personaKey;
   const displayPersonaColor = PERSONA_COLORS[displayPersonaKey] ?? PERSONA_COLORS.productivity;
 
+  const allProfilesRef = useRef([]);
+  useEffect(() => {
+    allProfilesRef.current = Array.isArray(allProfiles) ? allProfiles : [];
+  }, [allProfiles]);
+
+  const getDemoBaselinePosts = useCallback((slug) => {
+    const match = allProfilesRef.current.find(
+      (p) => String(p?.slug ?? p?.id ?? '') === String(slug),
+    );
+    return Array.isArray(match?.personaPosts) ? match.personaPosts : [];
+  }, []);
+
   const handleDemoVideoPostGenerated = useCallback((user, post) => {
     const slug = String(user?.slug ?? user?.id ?? '').trim();
     if (!slug || !post?.content) return;
@@ -1101,6 +1113,13 @@ function AppInner({
         ? mergeDemoVideoPostIntoProfiles([prev], slug, post)[0] ?? prev
         : prev;
     });
+    // Local mode: the target is a real server-backed profile — persist so the
+    // post survives directory polls and page refreshes.
+    if (!isHostedApiOrigin() && !isDemoVideoFakeSlug(slug)) {
+      prependPersonaPosts(slug, [post]).catch((err) => {
+        console.warn('[demo-video] persist failed:', err?.message || err);
+      });
+    }
   }, [setAllProfiles]);
 
   const resetProfileChrome = useCallback(() => {
@@ -1317,6 +1336,7 @@ function AppInner({
           <DemoVideoButton
             spectateController={spectateRevealRef.current}
             ensureFakeUser={ensureFakeUser}
+            getBaselinePosts={getDemoBaselinePosts}
             onPostGenerated={handleDemoVideoPostGenerated}
             onActiveChange={onDemoVideoActiveChange}
             onGeneratingPersona={onDemoGeneratingPersona}
@@ -1656,18 +1676,19 @@ export default function App() {
     demoVideoActiveRef.current = active;
     setDemoVideoActive(active); // module flag read by the leaderboard splicers
     if (active) {
-      // Inject the whole roster up front (empty feeds) so the leaderboards
-      // populate with fake people immediately and the splice re-renders now,
-      // not only after the first post finishes generating.
-      const fakes = getFakeUsers();
-      setAllProfiles((prev) => {
-        const list = Array.isArray(prev) ? prev : [];
-        const present = new Set(list.map((p) => String(p?.slug ?? p?.id ?? '')));
-        const toAdd = fakes
-          .filter((u) => !present.has(String(u.slug)))
-          .map((u) => ({ ...u, personaPosts: [] }));
-        return toAdd.length ? [...toAdd, ...list] : list;
-      });
+      if (isHostedApiOrigin()) {
+        // Inject the whole roster up front (hosted only — locally the seeded
+        // profiles already populate the feed and leaderboards).
+        const fakes = getFakeUsers();
+        setAllProfiles((prev) => {
+          const list = Array.isArray(prev) ? prev : [];
+          const present = new Set(list.map((p) => String(p?.slug ?? p?.id ?? '')));
+          const toAdd = fakes
+            .filter((u) => !present.has(String(u.slug)))
+            .map((u) => ({ ...u, personaPosts: [] }));
+          return toAdd.length ? [...toAdd, ...list] : list;
+        });
+      }
     } else {
       setDemoGeneratingPersona(null);
       // Drop the ephemeral fake users from the feed/directory.

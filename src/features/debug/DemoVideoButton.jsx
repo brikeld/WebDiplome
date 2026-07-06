@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildDemoVideoSchedule } from '@/lib/demoVideoFakeUsers.js';
 import { runDemoVideoPipeline } from '@/lib/demoVideoFeed.js';
+import { isHostedApiOrigin } from '@/lib/aiJobClient.js';
+import { mapScheduleToSeededUsers } from '@/lib/demoVideoLocal.js';
 
 /**
  * Demo video control — same start/stop UX as DemoRotateButton, but it reveals
@@ -9,6 +11,7 @@ import { runDemoVideoPipeline } from '@/lib/demoVideoFeed.js';
 export default function DemoVideoButton({
   spectateController,
   ensureFakeUser,
+  getBaselinePosts,
   onPostGenerated,
   onActiveChange,
   onGeneratingPersona,
@@ -43,13 +46,21 @@ export default function DemoVideoButton({
     if (!runningRef.current) return;
     setError(null);
     try {
+      const local = !isHostedApiOrigin();
+      const schedule = local
+        ? mapScheduleToSeededUsers(buildDemoVideoSchedule())
+        : buildDemoVideoSchedule();
       await runDemoVideoPipeline({
-        schedule: buildDemoVideoSchedule(),
+        schedule,
         spectateController,
         ensureFakeUser,
         onPostGenerated,
         onGeneratingPersona,
         shouldContinue: () => runningRef.current,
+        getBaselinePosts,
+        materializeOptions: local
+          ? { epochMs: Date.now(), runKey: Date.now().toString(36) }
+          : undefined,
       });
     } catch (err) {
       console.warn('[demo-video] pipeline exited:', err?.message || err);
@@ -57,7 +68,7 @@ export default function DemoVideoButton({
     } finally {
       if (runningRef.current) finish();
     }
-  }, [spectateController, ensureFakeUser, onPostGenerated, onGeneratingPersona, finish]);
+  }, [spectateController, ensureFakeUser, getBaselinePosts, onPostGenerated, onGeneratingPersona, finish]);
 
   const toggle = useCallback(() => {
     if (runningRef.current) {

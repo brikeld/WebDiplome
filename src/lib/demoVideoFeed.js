@@ -50,7 +50,8 @@ function assetKindFor(assetBasename) {
   return extname(assetBasename) === '.pdf' ? 'document' : 'image';
 }
 
-export function materializeDemoVideoPost(step, index = 0) {
+export function materializeDemoVideoPost(step, index = 0, options = {}) {
+  const { epochMs = STATIC_POST_EPOCH_MS, runKey = 'static' } = options;
   const blueprint = step?.post ?? {};
   const assetBasename = String(step?.assetBasename || blueprint.assetBasename || '').trim();
   const persona = String(blueprint.persona || 'popularite');
@@ -59,11 +60,11 @@ export function materializeDemoVideoPost(step, index = 0) {
 
   const kind = assetKindFor(assetBasename);
   const label = personaLabel(persona);
-  const createdAt = new Date(STATIC_POST_EPOCH_MS + Math.max(0, Number(index) || 0) * 60_000).toISOString();
+  const createdAt = new Date(epochMs + Math.max(0, Number(index) || 0) * 60_000).toISOString();
   const url = assetUrlFor(assetBasename);
 
   return {
-    id: `demo-video-static-${index}-${assetBasename}`,
+    id: `demo-video-${runKey}-${index}-${assetBasename}`,
     persona,
     content,
     sentiment: persona === 'securite' ? 'negative' : 'positive',
@@ -71,8 +72,8 @@ export function materializeDemoVideoPost(step, index = 0) {
     inferenceChain: [
       {
         step: 'data',
-        value: `Static demo asset: ${assetBasename}`,
-        source: kind === 'document' ? 'Demo PDF file' : 'Demo image file',
+        value: `${assetBasename} surfaced in the user's recent activity.`,
+        source: kind === 'document' ? 'Recent documents' : 'Recent images',
       },
       {
         step: 'classify',
@@ -81,10 +82,10 @@ export function materializeDemoVideoPost(step, index = 0) {
       },
       {
         step: 'infer',
-        value: 'This caption was prewritten for the demo video flow and does not depend on live AI generation.',
+        value: `The file's presence and handling pattern align with the profile's ${label.toLowerCase()} behavior.`,
         confidence: 'medium',
         isBiased: true,
-        biasNote: 'The post is scripted for presentation pacing, not inferred from a real person.',
+        biasNote: 'A single file is treated as representative of a broader behavioral pattern.',
       },
       {
         step: 'generate',
@@ -98,28 +99,28 @@ export function materializeDemoVideoPost(step, index = 0) {
         dataPoints: [assetBasename],
       },
       {
-        label: 'Fake profile',
+        label: 'Profile context',
         weight: 62,
-        dataPoints: [step?.user?.displayName || step?.user?.slug || 'Demo user'],
+        dataPoints: [step?.user?.displayName || step?.user?.slug || 'User profile'],
       },
       {
-        label: 'Scripted demo',
+        label: 'Persona alignment',
         weight: 40,
-        dataPoints: ['Prewritten caption'],
+        dataPoints: [`${label} signal weighting`],
       },
     ],
     thinking: [
       {
         label: 'WHAT I SAW',
-        detail: `I used ${assetBasename} as the visible demo signal.`,
+        detail: `${assetBasename} appeared in recent activity with a consistent handling pattern.`,
       },
       {
         label: 'THE LEAP',
-        detail: `I framed the file as a ${label.toLowerCase()} clue for a fake profile.`,
+        detail: `I read the file as a ${label.toLowerCase()} clue about how this user works and shares.`,
       },
       {
         label: 'WHY THIS POST',
-        detail: 'This post is scripted so the demo button can show posting activity without contacting LM Studio.',
+        detail: `A ${label.toLowerCase()} update keeps the profile's public activity current.`,
       },
     ],
     attachedAsset: {
@@ -205,6 +206,8 @@ export async function runDemoVideoPipeline({
   onGeneratingPersona,
   shouldContinue = () => true,
   revealGapMs = DEMO_VIDEO_REVEAL_GAP_MS,
+  getBaselinePosts = null,
+  materializeOptions = undefined,
 }) {
   const steps = Array.isArray(schedule) ? schedule : [];
   if (steps.length === 0) throw new Error('No demo-video schedule available');
@@ -216,10 +219,12 @@ export async function runDemoVideoPipeline({
   try {
     for (let index = 0; index < steps.length && shouldContinue(); index += 1) {
       const step = steps[index];
-      const post = materializeDemoVideoPost(step, index);
+      const post = materializeDemoVideoPost(step, index, materializeOptions);
       if (!post) continue;
       const slug = step.user.slug;
-      const prevAccumulated = postsByUser.get(slug) ?? [];
+      const prevAccumulated = postsByUser.has(slug)
+        ? postsByUser.get(slug)
+        : (getBaselinePosts?.(slug) ?? []);
       // Ensure the user exists in allProfiles WITH their already-revealed posts
       // only — the new post must arrive through the reveal animation below, not
       // pre-injected, or it would pop in without the descend/burst effect.
