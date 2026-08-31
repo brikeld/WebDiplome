@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -56,11 +56,11 @@ describe('demoFakeContent', () => {
     }
   });
 
-  it('comments: 1-3 per post, authored by OTHER seeded users, unique ids', () => {
+  it('comments: 3-5 per post, authored by OTHER seeded users, unique ids', () => {
     const ids = new Set();
     for (const { authorSlug, post } of DEMO_FAKE_POSTS) {
-      expect(post.comments.length).toBeGreaterThanOrEqual(1);
-      expect(post.comments.length).toBeLessThanOrEqual(3);
+      expect(post.comments.length).toBeGreaterThanOrEqual(3);
+      expect(post.comments.length).toBeLessThanOrEqual(5);
       for (const c of post.comments) {
         expect(SEEDED_SLUGS).toContain(c.bySlug);
         expect(c.bySlug).not.toBe(authorSlug);
@@ -78,9 +78,14 @@ describe('demoFakeContent', () => {
     expect(new Set(ages).size).toBe(ages.length);
   });
 
-  it('brikeld comment sets are valid', () => {
-    expect(BRIKELD_POST_COMMENTS.length).toBeGreaterThanOrEqual(2);
+  it('brikeld comment sets cover every local post with 3-4 cross-user comments', () => {
+    const localPosts = JSON.parse(
+      readFileSync(join(ROOT, 'scripts/fixtures/local-posts.json'), 'utf8'),
+    );
+    expect(BRIKELD_POST_COMMENTS).toHaveLength(localPosts.length);
     for (const set of BRIKELD_POST_COMMENTS) {
+      expect(set.length).toBeGreaterThanOrEqual(3);
+      expect(set.length).toBeLessThanOrEqual(4);
       for (const c of set) {
         expect(SEEDED_SLUGS).toContain(c.bySlug);
         expect(c.content).not.toMatch(BANNED);

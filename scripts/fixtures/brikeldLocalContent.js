@@ -1,29 +1,65 @@
 /**
- * Local-demo overrides for Brikeld Hoxha: harvested avatar + contentFakePeople
- * post attachments (same pool as the seeded fake-user posts).
+ * Local-demo overrides for Brikeld Hoxha: harvested avatar wallpaper +
+ * post attachments from the dedicated contentDemoBrikeld folder (not
+ * contentFakePeople, which is reserved for the other seeded users).
  */
-import { readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assetFor } from './demoFakeContent.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-/** Filenames in public/videoDEMO/contentFakePeople — one per post that has an attachment. */
-export const BRIKELD_DEMO_ASSETS = [
-  'lake.webp',
-  'Screenshot 2026-06-29 at 11.24.24.png',
-  'cat.jpg',
-  '09feb3a7ff1c1ac852dc880a6e2ef70c.jpg',
-  'a49d7df20838811b3eee69a977e57c05.webp',
-  'street-with-eiffel-tower-in-the-middle-on-a-sunny-royalty-free-image-1717187207.avif',
-  '47f85bb0022f16eadee6761b7c7d9b06.webp',
-  'invoice-number.jpeg',
-  '637627ca9eebde45ae5f394c_Underwater-Nun.jpeg',
-  'gettyimages-586890581.avif',
-  'cv-template.pdf',
-  '2024D117_ITALIANSEO_POMODORO_2_X-1-768x960.jpg',
+/** Authoritative source on disk (sibling to the repo, not inside WebDiplome). */
+export const BRIKELD_CONTENT_SOURCE_DIR =
+  process.env.BRIKELD_DEMO_CONTENT_DIR?.trim()
+  || '/Users/brikeld/Documents/contentDemoBrikeld';
+
+/** Vite/static URL path after `npm run seed:local` copies assets into public/. */
+export const BRIKELD_CONTENT_WEB_PATH = '/videoDEMO/contentDemoBrikeld';
+
+const MIME_BY_EXT = {
+  '.avif': 'image/avif',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.pdf': 'application/pdf',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+};
+
+function extname(filename) {
+  const match = String(filename || '').toLowerCase().match(/\.[a-z0-9]+$/);
+  return match?.[0] ?? '';
+}
+
+/**
+ * Post attachment pool (excludes profile.png). Cycled when there are more
+ * attached posts than unique files.
+ */
+export const BRIKELD_POST_ASSET_POOL = [
+  'ecal.jpg',
+  'hahaha.jpg',
+  'jeff.jpg',
+  'Screenshot 2026-06-14 at 22.29.30.png',
+  '00_Planning Diplômes  25-26.pdf',
+  'HG Studio - Offre Carres Surprises.pdf',
+  '004-02+_Systeme-de-calcul-des-honoraires-SGD.pdf',
 ];
+
+/** @deprecated Use BRIKELD_POST_ASSET_POOL — kept for tests that import the old name. */
+export const BRIKELD_DEMO_ASSETS = BRIKELD_POST_ASSET_POOL;
+
+export function brikeldAssetFor(filename) {
+  const ext = extname(filename);
+  const kind = ext === '.pdf' ? 'document' : 'image';
+  return {
+    kind,
+    filename,
+    mime: MIME_BY_EXT[ext] ?? 'application/octet-stream',
+    url: `${BRIKELD_CONTENT_WEB_PATH}/${encodeURIComponent(filename)}`,
+    relativePath: `public${BRIKELD_CONTENT_WEB_PATH}/${filename}`,
+    ...(kind === 'image' ? { visionAnalysed: true } : {}),
+  };
+}
 
 let cachedWallpaper = null;
 
@@ -39,17 +75,40 @@ export function loadBrikeldHarvestedWallpaper() {
   return cachedWallpaper;
 }
 
-/** Swap /uploads attachments for contentFakePeople assets (order matches fixture posts). */
+/**
+ * Copy Brikeld demo assets from contentDemoBrikeld into public/ so Vite can
+ * serve them at BRIKELD_CONTENT_WEB_PATH.
+ */
+export function syncBrikeldContentAssets(
+  publicDir,
+  sourceDir = BRIKELD_CONTENT_SOURCE_DIR,
+) {
+  if (!existsSync(sourceDir)) {
+    throw new Error(
+      `Brikeld demo content folder not found: ${sourceDir}\n`
+      + 'Set BRIKELD_DEMO_CONTENT_DIR or place assets at the default path.',
+    );
+  }
+  mkdirSync(publicDir, { recursive: true });
+  for (const filename of BRIKELD_POST_ASSET_POOL) {
+    const src = join(sourceDir, filename);
+    if (!existsSync(src)) {
+      throw new Error(`Missing Brikeld demo asset "${filename}" in ${sourceDir}`);
+    }
+    copyFileSync(src, join(publicDir, filename));
+  }
+}
+
+/** Swap /uploads attachments for contentDemoBrikeld assets (cycled pool). */
 export function remapBrikeldPostAssets(posts) {
   let assetIdx = 0;
   return (Array.isArray(posts) ? posts : []).map((post) => {
     if (!post?.attachedAsset) return post;
-    const filename = BRIKELD_DEMO_ASSETS[assetIdx];
+    const filename = BRIKELD_POST_ASSET_POOL[assetIdx % BRIKELD_POST_ASSET_POOL.length];
     assetIdx += 1;
-    if (!filename) return post;
     // Demo photo attachments are not algorithm charts — strip chartType so halftone
     // FX applies like the other seeded fake-user posts.
     const { chartType, chart_type, chartContext, chart_context, ...rest } = post;
-    return { ...rest, attachedAsset: assetFor(filename) };
+    return { ...rest, attachedAsset: brikeldAssetFor(filename) };
   });
 }

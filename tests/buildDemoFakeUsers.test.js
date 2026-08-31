@@ -56,20 +56,20 @@ describe('expandComments', () => {
 });
 
 describe('injectBrikeldComments', () => {
-  it('rebases timestamps (newest = now - 45min, 35min steps) and injects comments', () => {
+  it('rebases timestamps and injects comments on every post', () => {
     const posts = [
       { persona: 'securite', content: 'a', createdAt: '2026-05-26T22:06:23.762Z' },
       { persona: 'popularite', content: 'b', createdAt: '2026-05-26T21:00:00.000Z' },
       { persona: 'productivite', content: 'c', createdAt: '2026-05-26T20:00:00.000Z' },
-      { persona: 'productivite', content: 'd', createdAt: '2026-05-26T19:00:00.000Z' },
     ];
     const out = injectBrikeldComments(posts, NOW);
-    expect(out).toHaveLength(4);
+    expect(out).toHaveLength(3);
     expect(new Date(out[0].createdAt).getTime()).toBe(NOW - 45 * 60_000);
     expect(new Date(out[1].createdAt).getTime()).toBe(NOW - 80 * 60_000);
     expect(new Date(out[2].createdAt).getTime()).toBe(NOW - 115 * 60_000);
-    expect(out[0].comments).toHaveLength(BRIKELD_POST_COMMENTS[0].length);
-    expect(out[0].comments[0].displayName.length).toBeGreaterThan(3);
-    expect(out[3].comments).toBeUndefined();
+    for (let i = 0; i < out.length; i += 1) {
+      expect(out[i].comments).toHaveLength(BRIKELD_POST_COMMENTS[i].length);
+      expect(out[i].comments[0].displayName.length).toBeGreaterThan(3);
+    }
   });
 });

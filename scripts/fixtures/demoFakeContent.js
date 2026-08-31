@@ -10,6 +10,8 @@
  * generator. Persona keys are French (productivite/securite/popularite).
  */
 
+export { BRIKELD_POST_COMMENTS } from './brikeldPostComments.js';
+
 const CONTENT_PATH = '/videoDEMO/contentFakePeople';
 
 const MIME_BY_EXT = {
@@ -82,6 +84,8 @@ export const DEMO_FAKE_POSTS = [
       comments: [
         { id: 'dfc-c01', bySlug: 'lea-bernard', persona: 'popularite', content: 'This is exactly the energy the feed needed today. Saving it to my own references.' },
         { id: 'dfc-c02', bySlug: 'lucas-rousseau', persona: 'securite', content: 'Nice shot. Worth checking the photo metadata before posting location-tagged scenery, though.' },
+        { id: 'dfc-c02b', bySlug: 'chloe-lefevre', persona: 'popularite', content: 'Calm desktop energy is underrated. The lake earns its place.' },
+        { id: 'dfc-c02c', bySlug: 'theo-moreau', persona: 'productivite', content: 'Sometimes the best productivity move is choosing the right wallpaper. Not joking.' },
       ],
     },
   },
@@ -113,6 +117,7 @@ export const DEMO_FAKE_POSTS = [
         { id: 'dfc-c03', bySlug: 'manon-girard', persona: 'productivite', content: 'The quiet discipline of keeping documents current is underrated. Respect.' },
         { id: 'dfc-c04', bySlug: 'camille-laurent', persona: 'popularite', content: 'Sharp paperwork, sharp portfolio — the order of operations checks out.' },
         { id: 'dfc-c05', bySlug: 'hugo-petit', persona: 'securite', content: 'Just make sure the version history does not keep old addresses in it.' },
+        { id: 'dfc-c05b', bySlug: 'lucas-rousseau', persona: 'securite', content: 'Late-night CV edits are a fingerprint. Encrypt the folder if it syncs.' },
       ],
     },
   },
@@ -142,6 +147,9 @@ export const DEMO_FAKE_POSTS = [
       ],
       comments: [
         { id: 'dfc-c06', bySlug: 'camille-laurent', persona: 'popularite', content: 'The itinerary folder is where dreams either happen or quietly expire. Rooting for this one.' },
+        { id: 'dfc-c06b', bySlug: 'chloe-lefevre', persona: 'popularite', content: 'Paris crossing from moodboard to commitment is the best kind of file move.' },
+        { id: 'dfc-c06c', bySlug: 'theo-moreau', persona: 'productivite', content: 'Lock the dates before the references multiply. One folder, one decision.' },
+        { id: 'dfc-c06d', bySlug: 'hugo-petit', persona: 'securite', content: 'Travel folders often carry boarding passes — keep that directory encrypted.' },
       ],
     },
   },
@@ -172,6 +180,8 @@ export const DEMO_FAKE_POSTS = [
       comments: [
         { id: 'dfc-c07', bySlug: 'lucas-rousseau', persona: 'securite', content: 'Screenshot-before-change should be mandatory practice. The audit trail thanks you.' },
         { id: 'dfc-c08', bySlug: 'theo-moreau', persona: 'productivite', content: 'Adopting this immediately. Cheaper than the argument it prevents.' },
+        { id: 'dfc-c08b', bySlug: 'manon-girard', persona: 'productivite', content: 'Timestamped evidence is the adult version of "I told you so."' },
+        { id: 'dfc-c08c', bySlug: 'lea-bernard', persona: 'popularite', content: 'The most responsible post on the feed today and it is not close.' },
       ],
     },
   },
@@ -202,6 +212,8 @@ export const DEMO_FAKE_POSTS = [
       comments: [
         { id: 'dfc-c09', bySlug: 'theo-moreau', persona: 'productivite', content: 'Archived before noon is the part that hurts. Well played.' },
         { id: 'dfc-c10', bySlug: 'hugo-petit', persona: 'securite', content: 'Consider keeping the archive encrypted — invoice scans carry more personal data than people think.' },
+        { id: 'dfc-c10b', bySlug: 'camille-laurent', persona: 'popularite', content: 'Calm books energy is contagious. This post makes admin look aspirational.' },
+        { id: 'dfc-c10c', bySlug: 'lucas-rousseau', persona: 'securite', content: 'Sequential numbering is a small habit that prevents big disputes later.' },
       ],
     },
   },
@@ -230,6 +242,9 @@ export const DEMO_FAKE_POSTS = [
       ],
       comments: [
         { id: 'dfc-c11', bySlug: 'hugo-petit', persona: 'securite', content: 'Checksum verification is the step everyone skips. Not skipping it is the whole job.' },
+        { id: 'dfc-c11b', bySlug: 'theo-moreau', persona: 'productivite', content: 'Boring recovery day is the goal. This is how professionals talk about backups.' },
+        { id: 'dfc-c11c', bySlug: 'manon-girard', persona: 'productivite', content: 'Off-site copy noted. The redundancy story is complete.' },
+        { id: 'dfc-c11d', bySlug: 'chloe-lefevre', persona: 'popularite', content: 'Making backups sound interesting is a skill. Nailed it.' },
       ],
     },
   },
@@ -260,6 +275,8 @@ export const DEMO_FAKE_POSTS = [
       comments: [
         { id: 'dfc-c12', bySlug: 'camille-laurent', persona: 'popularite', content: 'The most consistent performer on this entire feed, and it is not close.' },
         { id: 'dfc-c13', bySlug: 'manon-girard', persona: 'productivite', content: 'Filing this under sustainable content strategy. The colleague deserves a raise.' },
+        { id: 'dfc-c13b', bySlug: 'lea-bernard', persona: 'popularite', content: 'Morale impact undeniable is the correct metric. Engagement follows.' },
+        { id: 'dfc-c13c', bySlug: 'lucas-rousseau', persona: 'securite', content: 'Pet photos in work folders sync everywhere by default. Worth checking permissions.' },
       ],
     },
   },
@@ -289,6 +306,8 @@ export const DEMO_FAKE_POSTS = [
       ],
       comments: [
         { id: 'dfc-c14', bySlug: 'lea-bernard', persona: 'popularite', content: 'Zero loose ends before a weekend should be a protected category of achievement.' },
+        { id: 'dfc-c14b', bySlug: 'theo-moreau', persona: 'productivite', content: 'Three drafts to one final is the right ratio. Ship and rest.' },
+        { id: 'dfc-c14c', bySlug: 'hugo-petit', persona: 'securite', content: 'Make sure the final PDF metadata does not still say draft in the title field.' },
       ],
     },
   },
@@ -319,6 +338,8 @@ export const DEMO_FAKE_POSTS = [
       comments: [
         { id: 'dfc-c15', bySlug: 'chloe-lefevre', persona: 'popularite', content: 'The composition on this is genuinely strong. The menu pivot is available whenever you want it.' },
         { id: 'dfc-c16', bySlug: 'camille-laurent', persona: 'popularite', content: 'Presentation-quality lunch is a lifestyle statement and I support it entirely.' },
+        { id: 'dfc-c16b', bySlug: 'manon-girard', persona: 'productivite', content: 'Editing within the hour is fast turnaround. Treat it as a reusable asset.' },
+        { id: 'dfc-c16c', bySlug: 'lucas-rousseau', persona: 'securite', content: 'Food photos often geotag by default. Scrub location before sharing wider.' },
       ],
     },
   },
@@ -348,6 +369,8 @@ export const DEMO_FAKE_POSTS = [
       ],
       comments: [
         { id: 'dfc-c17', bySlug: 'chloe-lefevre', persona: 'popularite', content: 'A folder that tells its own story is the highest form of moodboard. Impeccable.' },
+        { id: 'dfc-c17b', bySlug: 'camille-laurent', persona: 'popularite', content: 'No caption needed is a power move when the image carries.' },
+        { id: 'dfc-c17c', bySlug: 'theo-moreau', persona: 'productivite', content: 'Twelve additions this month is steady curation, not hoarding. Good pace.' },
       ],
     },
   },
@@ -377,6 +400,8 @@ export const DEMO_FAKE_POSTS = [
       comments: [
         { id: 'dfc-c18', bySlug: 'manon-girard', persona: 'productivite', content: '"A name, a place, and a reason to exist" is now my filing standard. Thank you.' },
         { id: 'dfc-c19', bySlug: 'lucas-rousseau', persona: 'securite', content: 'Fewer stray files, smaller attack surface. Cleanup is security work in disguise.' },
+        { id: 'dfc-c19b', bySlug: 'camille-laurent', persona: 'popularite', content: 'Forty-one files gone in one morning is cathartic content. Well done.' },
+        { id: 'dfc-c19c', bySlug: 'lea-bernard', persona: 'popularite', content: 'Downloads folder peace is a vibe. Sharing the win helps the rest of us.' },
       ],
     },
   },
@@ -406,6 +431,9 @@ export const DEMO_FAKE_POSTS = [
       ],
       comments: [
         { id: 'dfc-c20', bySlug: 'theo-moreau', persona: 'productivite', content: 'Cover slide locked before the content exists — that is real confidence in the outline.' },
+        { id: 'dfc-c20b', bySlug: 'chloe-lefevre', persona: 'popularite', content: 'Stock frame as storytelling shortcut is valid. The deck already feels half done.' },
+        { id: 'dfc-c20c', bySlug: 'lea-bernard', persona: 'popularite', content: 'Visual polish on client work always reads well beyond the client. Smart pull.' },
+        { id: 'dfc-c20d', bySlug: 'hugo-petit', persona: 'securite', content: 'Keep the license receipt with the project folder. Provenance matters on stock.' },
       ],
     },
   },
@@ -436,6 +464,8 @@ export const DEMO_FAKE_POSTS = [
       comments: [
         { id: 'dfc-c21', bySlug: 'hugo-petit', persona: 'securite', content: 'Quarantine-first is the correct posture. Most people just rename these and move on.' },
         { id: 'dfc-c22', bySlug: 'lea-bernard', persona: 'popularite', content: 'The suspense of a mystery file is honestly better than most series right now.' },
+        { id: 'dfc-c22b', bySlug: 'theo-moreau', persona: 'productivite', content: 'No download trail is the red flag. Good catch holding it.' },
+        { id: 'dfc-c22c', bySlug: 'manon-girard', persona: 'productivite', content: 'Document the quarantine decision while it is fresh. Future you will want the note.' },
       ],
     },
   },
@@ -466,25 +496,9 @@ export const DEMO_FAKE_POSTS = [
       comments: [
         { id: 'dfc-c23', bySlug: 'lea-bernard', persona: 'popularite', content: 'Surviving two purges makes it a permanent collection piece. The museum is real.' },
         { id: 'dfc-c24', bySlug: 'camille-laurent', persona: 'popularite', content: 'This image has more lore than most accounts. Correct decision to keep it.' },
+        { id: 'dfc-c24b', bySlug: 'theo-moreau', persona: 'productivite', content: 'Distinctive taste in the archive is a portfolio strategy, not an accident.' },
+        { id: 'dfc-c24c', bySlug: 'hugo-petit', persona: 'securite', content: 'Unusual downloads deserve the same provenance check as boring ones. Good hygiene.' },
       ],
     },
   },
-];
-
-/**
- * Comments injected onto Brikeld's newest posts (index-aligned: set 0 → his
- * newest post, set 1 → second newest, …).
- */
-export const BRIKELD_POST_COMMENTS = [
-  [
-    { id: 'dfc-b01', bySlug: 'theo-moreau', persona: 'productivite', content: 'The tab count is a lifestyle, not a problem. The output speaks for itself.' },
-    { id: 'dfc-b02', bySlug: 'lucas-rousseau', persona: 'securite', content: 'Worth a browser session backup at that tab volume — one crash and the whole workspace is archaeology.' },
-  ],
-  [
-    { id: 'dfc-b03', bySlug: 'camille-laurent', persona: 'popularite', content: 'This is the most relatable thing on the feed this week.' },
-  ],
-  [
-    { id: 'dfc-b04', bySlug: 'manon-girard', persona: 'productivite', content: 'The pace here is genuinely impressive. Save some throughput for the rest of us.' },
-    { id: 'dfc-b05', bySlug: 'chloe-lefevre', persona: 'popularite', content: 'Documenting the grind counts as content. Keep going.' },
-  ],
 ];

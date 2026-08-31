@@ -10,8 +10,9 @@
  *
  * Data source: scripts/fixtures/{local-profile,local-posts}.json — a real
  * captured profile (Brikeld Hoxha) with the harvested wallpaper portrait in
- * brikeld-wallpaper.json. Post attachments are remapped to
- * public/videoDEMO/contentFakePeople at seed time. 24 posts including
+ * brikeld-wallpaper.json. Post attachments are copied from
+ * /Users/brikeld/Documents/contentDemoBrikeld into
+ * public/videoDEMO/contentDemoBrikeld at seed time. 24 posts including
  * leaderboard posts with inference-chain / ingredients metadata, so every
  * "tell me more" view has content.
  *
@@ -26,6 +27,7 @@ import { buildSeededFakeUsers, injectBrikeldComments } from './fixtures/buildDem
 import {
   loadBrikeldHarvestedWallpaper,
   remapBrikeldPostAssets,
+  syncBrikeldContentAssets,
 } from './fixtures/brikeldLocalContent.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -72,7 +74,8 @@ for (const file of readdirSync(PROFILES_DIR)) {
   }
 }
 
-// ── Brikeld: contentFakePeople assets, rebased timestamps + injected comments ──
+// ── Brikeld: contentDemoBrikeld assets, rebased timestamps + injected comments ──
+syncBrikeldContentAssets(join(ROOT, 'public', 'videoDEMO', 'contentDemoBrikeld'));
 const brikeldPosts = injectBrikeldComments(remapBrikeldPostAssets(posts), NOW_MS);
 writeFileSync(join(PROFILES_DIR, `${SLUG}.json`), `${JSON.stringify(profile, null, 2)}\n`);
 writeFileSync(join(POSTS_DIR, `${SLUG}.json`), `${JSON.stringify(brikeldPosts, null, 2)}\n`);

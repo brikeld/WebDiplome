@@ -1,4 +1,4 @@
-import { PROFILE_TABS } from '@/features/profile/profileTabs.js';
+import { getProfileTabs } from '@/features/profile/profileTabs.js';
 
 export default function TabBar({
   activeTab,
@@ -7,7 +7,7 @@ export default function TabBar({
   className = '',
   variant = 'inline',
 }) {
-  const tabs = PROFILE_TABS;
+  const tabs = getProfileTabs();
 
   const rowClass =
     variant === 'rail'
