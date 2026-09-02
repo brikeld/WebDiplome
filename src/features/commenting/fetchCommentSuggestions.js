@@ -4,6 +4,7 @@ import {
   saveCommentSuggestions,
 } from '@/lib/commentSuggestionsStorage.js';
 import { isHostedApiOrigin, profileSlugFromProfile, slimProfileForAiRequest, submitQueuedAiEndpoint } from '@/lib/aiJobClient.js';
+import { getLocalCommentSuggestions } from './localCommentSuggestions.js';
 import { canUseHostedAccountFeatures, readLinkedProfileSlug } from '@/lib/hostedAccount.js';
 import { resolveGenerateApiOrigin } from '@/lib/apiOrigin.js';
 
@@ -79,6 +80,10 @@ const commentInflight = new Map();
  * @param {{ allowedPersonas?: string[], viewerProfile?: object }} options
  */
 export async function fetchCommentSuggestions(post, { allowedPersonas, viewerProfile } = {}) {
+  if (!isHostedApiOrigin()) {
+    return getLocalCommentSuggestions(post.id, allowedPersonas);
+  }
+
   const viewerSlug = profileSlugFromProfile(viewerProfile);
   const cached = loadCommentSuggestions(viewerSlug, post.id);
   if (cached?.length) return cached;

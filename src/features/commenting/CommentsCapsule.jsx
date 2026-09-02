@@ -43,7 +43,11 @@ export default function CommentsCapsule({
   realComments,
   onCommentPosted,
 }) {
+  const isLocalDemo = !isHostedApiOrigin();
+  const suggestionsEnabled = aiSuggestionsEnabled || isLocalDemo;
+
   const [picked, setPicked] = useState(() => {
+    if (isLocalDemo) return null;
     const slug = profileSlugFromProfile(commenterProfile);
     return loadCommentPick(slug, post.id) ?? migrateLegacyCommentPick(slug, post.id);
   });
@@ -66,10 +70,14 @@ export default function CommentsCapsule({
   const commentsRestricted = allowedCommentPersonas.length < 3;
 
   useEffect(() => {
+    if (isLocalDemo) {
+      if (!isOpen) setPicked(null);
+      return;
+    }
     setPicked(
       loadCommentPick(viewerSlug, post.id) ?? migrateLegacyCommentPick(viewerSlug, post.id),
     );
-  }, [post.id, viewerSlug]);
+  }, [post.id, viewerSlug, isOpen, isLocalDemo]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -98,7 +106,7 @@ export default function CommentsCapsule({
   }, [isOpen, post.id]);
 
   useEffect(() => {
-    if (!isOpen || picked || !aiSuggestionsEnabled) return undefined;
+    if (!isOpen || picked || !suggestionsEnabled) return undefined;
 
     const gen = fetchGenRef.current + 1;
     fetchGenRef.current = gen;
@@ -123,7 +131,7 @@ export default function CommentsCapsule({
     return () => {
       fetchGenRef.current += 1;
     };
-  }, [isOpen, post.id, post.content, picked, commenterProfile, aiSuggestionsEnabled, viewerSlug]);
+  }, [isOpen, post.id, post.content, picked, commenterProfile, suggestionsEnabled, viewerSlug]);
 
   // Set max-height to measured scroll height when open
   useEffect(() => {
@@ -213,7 +221,9 @@ export default function CommentsCapsule({
     }
 
     setPicked(s);
-    saveCommentPick(viewerSlug, post.id, s);
+    if (!isLocalDemo) {
+      saveCommentPick(viewerSlug, post.id, s);
+    }
 
     if (isHostedApiOrigin() && viewerSlug) {
       postComment({
